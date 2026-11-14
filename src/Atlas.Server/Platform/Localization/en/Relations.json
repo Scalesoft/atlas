@@ -1,0 +1,7 @@
+{
+  "Hloubka vazeb je 1 nebo 2.": "The depth of relations is 1 or 2.",
+  "Druhy vazeb jsou čárkou oddělené názvy.": "Relation kinds are names separated by commas.",
+  "Vztah je unused, noIncoming, broken, attached nebo mostUsed.": "The relation is unused, noIncoming, broken, attached or mostUsed.",
+  "Řazení je title, updated nebo used.": "The sorting is title, updated or used.",
+  "Neplatný kurzor; začněte znovu bez něj.": "Invalid cursor; start again without it."
+}

@@ -1,0 +1,16 @@
+deploy/*.sh text eol=lf
+deploy/postgres/*.sh text eol=lf
+deploy/*.service text eol=lf
+tooling/**/*.sh text eol=lf
+*.pdf binary
+# Test fixtures are byte-exact: golden files hash imported attachments, so an autocrlf checkout must not rewrite them.
+tests/fixtures/** -text
+# Unified patch context requires space-prefixed tabs and blank context lines.
+src/Atlas.Web/patches/*.patch text eol=lf whitespace=-blank-at-eol,-space-before-tab
+# Atlas.Markdown came from the editor repository, which checks out LF everywhere (* text=auto eol=lf); its Yjs and schema
+# corpora are compared byte for byte, like tests/fixtures.
+src/Atlas.Markdown/** text=auto eol=lf
+src/Atlas.Markdown.Sync/** text=auto eol=lf
+tests/Atlas.Markdown.Sync.Tests/** text=auto eol=lf
+tests/Atlas.Markdown.Sync.Tests/Fixtures/** -text
+docs/markdown/** text=auto eol=lf

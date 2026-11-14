@@ -1,0 +1,8 @@
+{
+  "Popis verze smí mít nejvýše 500 znaků na jednom řádku.": "A version description can have at most 500 characters on a single line.",
+  "Aktuální verze stránky není dostupná.": "The current version of the page is not available.",
+  "Byl dosažen limit verzí stránky.": "The page version limit has been reached.",
+  "Verze stránky nebyla nalezena.": "Page version not found.",
+  "Neplatné stránkování historie.": "Invalid history pagination.",
+  "Historii stránky vidí a obnovuje jen ten, kdo smí stránku upravovat.": "Only those who may edit the page can see and restore its history."
+}

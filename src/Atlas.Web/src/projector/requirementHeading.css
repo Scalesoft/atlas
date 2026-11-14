@@ -1,0 +1,141 @@
+/* A requirement heading (requirementHeadingView.ts): the heading as it is, its level's own typography (content.css), so a requirement
+   reads as any heading (owner 2026-11-04). In the line: a round checkbox, the title, the quiet label chips (kind with the party, service,
+   what it waits for, „Blokuje: …“), and in a reserve at the line's end the state pill and the heading's fold chevron after it. A tinted
+   section is a card behind it (`.rq-tint`). Only CSS and decoration widgets: the schema is the heading's. */
+
+/* The end of the first line is a reserve: „Odkaz na nadpis“ (48px, heading-anchors puts it after the chips), the pill (at most 7.5rem)
+   and the chevron (28px), so the pill and the chevron never move to a wrapped line and the button never covers them. z-index: the card
+   stays behind its text. --rq-line: the first line's height, so the pill and the chevron stand in its middle at every level. */
+@property --rq-line { syntax: "<length>"; inherits: true; initial-value: 24px; }
+.md-editor .editor-body .ProseMirror > :is(h1, h2, h3, h4, h5, h6)[data-state][data-state] { --rq-line: 1lh; z-index: 0; padding-right: calc(7.5rem + 76px); }
+/* Done and not applicable: the title as muted as a checked task item's (content.css), never struck through. Above content.css's
+   `.md-editor .editor-body h3` colour in specificity. */
+.md-editor .editor-body :is(h1, h2, h3, h4, h5, h6):is([data-state="done"], [data-state="not_applicable"]) { color: var(--text-dim, var(--muted)); }
+
+/* The checkbox IS the state (checked = hotovo): round, as 3.5.2's; the plain task list keeps its square. Done = filled with a check. The
+   negative block margins keep the 18px box out of the title's line; its ring reads at 3:1 on the paper and the card. Both classes in the
+   selector: content.css's square `input.md-task-check` has the same weight otherwise, and the bundle's order is no rule. */
+.md-editor .editor-body input.md-task-check.rq-check {
+  width: 18px; height: 18px; margin: -3px .5rem -3px 0; vertical-align: middle; translate: 0 -.08em; border-radius: 50%;
+  border-color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+.md-editor .editor-body input.md-task-check.rq-check:checked { background: var(--success, #2f855a); border-color: var(--success, #2f855a); }
+.md-editor .editor-body input.md-task-check.rq-check:checked::after { left: 5px; top: 1.5px; width: 4px; height: 8px; border-color: var(--on-accent, #fff); }
+.md-editor .editor-body input.md-task-check.rq-check:not([aria-disabled="true"]):hover { border-color: var(--success, #2f855a); }
+.md-editor .editor-body input.md-task-check.rq-check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Ticked by the user (requirementHeadingView.ts `data-rq-toggled`, the redrawn box once): the green fills the ring, a halo rings out, the
+   tick is written and pops (motion.css atlas-check-*), 320 ms; unticked, the fill drains quietly. Nothing scales the box or moves the
+   line (popStatus did: the jump). The keyframes take the green as --atlas-check-tone. Reduced motion: the new state at once. */
+.md-editor .editor-body input.md-task-check.rq-check { --atlas-check-tone: var(--success, #2f855a); }
+.md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled="done"] { animation: atlas-check-fill var(--atlas-motion-pop) var(--atlas-ease-out) backwards; }
+.md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled="done"]::after { animation: atlas-check-draw var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-fast) backwards; }
+.md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled="undone"] { animation: atlas-check-drain var(--atlas-motion-fast) var(--atlas-ease-out); }
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion never snaps (AGENTS.md): the new state only brightens, briefly; no fill, halo or drawn tick. */
+  .md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled] { animation: atlas-reveal var(--atlas-motion-fast) var(--atlas-ease-out); }
+  .md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled]::after { animation: none; }
+}
+[data-atlas-reduced-motion] .md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled] { animation: atlas-reveal var(--atlas-motion-fast) var(--atlas-ease-out); }
+[data-atlas-reduced-motion] .md-editor .editor-body input.md-task-check.rq-check[data-rq-toggled]::after { animation: none; }
+/* Over the task check's own pointer (@atlas/markdown content.css): a reader's checkbox is inert. */
+.md-editor .editor-body input.md-task-check.rq-check[aria-disabled="true"], .rq-check[aria-disabled="true"] { cursor: default; }
+
+/* An empty title's placeholder stands after the checkbox (requirementHeadingView.ts), in the heading's own placeholder's look (content.css),
+   which would stand under the checkbox; a reader does not see it, its place kept (J7.1). */
+.md-editor .editor-body .ProseMirror :is(h1, h2, h3, h4, h5, h6)[data-state].is-empty::before { content: none; }
+.rq-title-placeholder { color: var(--text-dimmer, var(--muted)); pointer-events: none; }
+.ProseMirror[contenteditable="false"] .rq-title-placeholder { visibility: hidden; }
+
+/* The chips run with the title and wrap with it (each one whole); the state pill stands in the line's reserve, the fold chevron after it. */
+.rq-chips { font-size: .8125rem; font-weight: 400; letter-spacing: normal; text-transform: none; user-select: none; }
+.rq-chips > .rq-chip {
+  --md-chip-padding: 0 7px; --md-chip-radius: 6px; --md-chip-border: transparent; --md-chip-hover-border: transparent; --md-chip-font-size: 12.5px;
+  --md-chip-line-height: 20px; --md-chip-bg: color-mix(in srgb, var(--text) 6%, transparent); --md-chip-hover-bg: color-mix(in srgb, var(--text) 11%, transparent);
+  --md-chip-ink: var(--text-dim, var(--muted)); --md-chip-align: center;
+  margin: -2px 0 -2px 6px; vertical-align: 1px; white-space: nowrap;
+}
+.rq-chip .md-chip-media { width: 12px; height: 12px; }
+/* The party or the awaited requirement: in the text's colour and bold, as 3.5.2's „od **DODAVATEL**“. */
+.rq-chip .rq-chip-value { color: var(--text); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rq-chip[data-tone="waiting_for_input"] { --md-chip-bg: color-mix(in srgb, var(--tone) 16%, transparent); --md-chip-hover-bg: color-mix(in srgb, var(--tone) 24%, transparent); --md-chip-ink: color-mix(in srgb, var(--tone) 80%, var(--text)); }
+.rq-chip[data-tone] .rq-chip-value { color: inherit; }
+.rq-chip:not([data-rq-chip="state"])[data-tone] .md-chip-media { color: var(--tone); }
+/* The state pill (3.5.2's): round, framed when nothing is going on, the state's tone when something is; a long own word ends in „…“. */
+.rq-chips > .rq-chip[data-rq-chip="state"] {
+  position: absolute; top: calc((var(--rq-line) - 22px) / 2); right: 28px; height: 22px; max-width: 7.5rem; margin: 0; overflow: hidden;
+  --md-chip-radius: 999px; --md-chip-padding: 0 8px; --md-chip-font-size: 12px; --md-chip-weight: 600;
+  --md-chip-bg: transparent; --md-chip-border: var(--line); --md-chip-hover-border: var(--line-2, var(--input-line)); --md-chip-ink: var(--text-dim, var(--muted));
+}
+.rq-chips > .rq-chip[data-rq-chip="state"] .md-chip-label { overflow: hidden; text-overflow: ellipsis; }
+.rq-chip[data-rq-chip="state"]:is([data-tone="done"], [data-tone="in_progress"], [data-tone="waiting_for_input"], [data-tone="blocked"]) {
+  --md-chip-bg: color-mix(in srgb, var(--tone) 14%, transparent); --md-chip-hover-bg: color-mix(in srgb, var(--tone) 22%, transparent);
+  --md-chip-border: transparent; --md-chip-hover-border: transparent; --md-chip-ink: color-mix(in srgb, var(--tone) 85%, var(--text));
+}
+.rq-chip[data-rq-chip="state"][data-tone="in_progress"] { --md-chip-ink: var(--accent-ink, var(--accent)); }
+.rq-chip[aria-disabled="true"] { cursor: default; }
+/* Under an H5/H6 (13–14px) a compact chip stays within the title's line. */
+:is(h5, h6) .rq-chip { --md-chip-line-height: 18px; }
+/* The blocked reason („Blokuje: …“, the section's first note): text in the blocked tone, no control; a long one ends in „…“. */
+.rq-chips > .rq-chip[data-rq-chip="reason"] {
+  --md-chip-bg: color-mix(in srgb, var(--tone) 12%, transparent); --md-chip-hover-bg: var(--md-chip-bg); --md-chip-ink: color-mix(in srgb, var(--tone) 85%, var(--text));
+  max-width: min(20rem, calc(100% - 8px)); cursor: default;
+}
+.rq-chips > .rq-chip[data-rq-chip="reason"] > .md-chip-label:not(.rq-chip-value) { flex-shrink: 0; }
+/* The fold chevron of a requirement stands after the state pill, in the first line's middle (not the middle of a wrapped title). */
+.md-editor .editor-body .ProseMirror > [data-state] > .atlas-heading-fold { top: calc((var(--rq-line) - 1.5rem) / 2); translate: none; }
+/* The facts line („od … · do …“) under the title reads as 3.5.2's quiet row under it: the same text, smaller and muted. */
+.ProseMirror > p[data-rq-facts] { color: var(--text-dim, var(--muted)); font-size: .875em; }
+/* A phone: the pill keeps its icon and tone (its label names the state), the title keeps the row. */
+@media (max-width: 480px) {
+  .md-editor .editor-body .ProseMirror > :is(h1, h2, h3, h4, h5, h6)[data-state][data-state] { padding-right: 62px; }
+  .rq-chips > .rq-chip[data-rq-chip="state"] { --md-chip-padding: 0 5px; }
+  .rq-chips > .rq-chip[data-rq-chip="state"] .md-chip-label { display: none; }
+}
+
+/* The section card (requirementHeadingView.ts tints, sizeTints): one element in the heading, behind the heading's and the section's text
+   (z-index -1 in the heading's stacking context; the blocks after it paint over it), 10px wider than the column on each side, 7px over
+   the title and under the section's last block that shows (folded: the title alone, the Detail slider's S). Its colour fades away to the
+   right, to transparent, with a soft glow from its top-left corner (owner: „lehce do přechodu barvy… do ztracena – do nějakého rohu“);
+   a blocked one has a thin red edge fading the same way. Only in progress, waiting and blocked sections have one. */
+.rq-tint {
+  --rq-fill: color-mix(in srgb, var(--rq-tone) var(--rq-strength, 8%), transparent);
+  position: absolute; z-index: -1; top: -7px; left: -10px; right: -10px; height: calc(var(--rq-section, 100%) + 14px);
+  border-radius: 8px; pointer-events: none;
+  background: radial-gradient(ellipse 45% 56px at 0 0, color-mix(in srgb, var(--rq-tone) var(--rq-glow, 8%), transparent), transparent),
+    linear-gradient(to right, var(--rq-fill), transparent 88%);
+}
+/* The card paints far below its heading: a tinted heading is never clipped nor skipped (content.css contains the editor's blocks). */
+.md-editor.paper .editor-body .ProseMirror > [data-state]:has(> .rq-tint) { contain: none; content-visibility: visible; }
+[data-state="blocked"] > .rq-tint { --rq-tone: var(--error, #c53030); --rq-strength: 8%; }
+[data-state="waiting_for_input"] > .rq-tint { --rq-tone: var(--warning, #975a16); }
+[data-state="in_progress"] > .rq-tint { --rq-tone: var(--accent); --rq-strength: 7%; }
+[data-mode="dark"] .rq-tint { --rq-strength: 12%; --rq-glow: 11%; }
+[data-mode="dark"] [data-state="blocked"] > .rq-tint { --rq-strength: 15%; }
+/* The blocked edge: a 1px ring (the padding box cut out of the border box) in red fading to the right. */
+[data-state="blocked"] > .rq-tint::before {
+  content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit;
+  background: linear-gradient(to right, color-mix(in srgb, var(--error, #c53030) 38%, transparent), transparent 92%);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+}
+
+/* The dependency line: its label „Závislosti:“ is drawn, not text (nothing the caret stands in is hidden), always; the line goes with
+   its last link (requirementHeadingView.ts Rules). */
+.ProseMirror > p[data-dependencies] { color: var(--muted, var(--text-dim)); }
+.ProseMirror > p[data-dependencies]::before { content: var(--rq-dependencies-label, "Závislosti:"); padding-right: .375rem; font-size: .8125rem; pointer-events: none; user-select: none; }
+
+/* A touch screen: the checkbox, the chips, the pill and the chevron take a 44 px hit area (states.css D5); the boxes and the line stay
+   as they are. The checkbox's and the chevron's areas lie under the heading's text (z-index -1). A chip's own does not: under a
+   z-index -1 the heading's box took a tap above the chip (measured on a phone: 22 px tall), so a chip grows to 44 px across and up and
+   down (J2.6) over the title's text, and a later chip of the next line paints over it; the checkbox, the pill and the chevron, at the
+   line's ends, get the whole 44 × 44. The pill and the chevron
+   share their 4 px gap: the pill's area ends in its middle to the left, the chevron's starts there. The pill's clip would cut its area:
+   its label clips itself. */
+@media (pointer: coarse) {
+  /* Above the chips: on a phone they wrap under the title and the first one's area covered the box itself (F6, measured 0 px hit). */
+  .md-editor .editor-body input.md-task-check.rq-check { position: relative; z-index: 1; }
+  .md-editor .editor-body input.md-task-check.rq-check::before { content: ""; position: absolute; z-index: -1; inset: -15px; }
+  .rq-chips > .rq-chip::after { z-index: auto; height: max(100%, var(--touch-target, 44px)); }
+  .rq-chips > .rq-chip, .rq-chips > .rq-chip[data-rq-chip="state"] { overflow: visible; }
+  .rq-chips > .rq-chip[data-rq-chip="state"]::after { left: auto; right: -2px; translate: 0 -50%; }
+  .md-editor .editor-body .ProseMirror > [data-state] > .atlas-heading-fold::after { z-index: -1; inset: -10px -18px -10px -2px; }
+}

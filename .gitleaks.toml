@@ -1,0 +1,130 @@
+title = "Atlas public source"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "internal-company-domain"
+description = "Internal company hosts and mail addresses do not belong in public sources or commit metadata"
+regex = '''(?i)\b(?:[a-z0-9-]+\.)*scalesoft\.(?:cz|com)\b'''
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Deliberately invalid secret reference in the Markdown serialization test"
+regexes = ['''^0123456789abcdef0123456789abcdef$''']
+paths = [
+  '''(^|/)src/Atlas\.Markdown/src/plugins/secrets/secrets\.markdown\.test\.ts$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^0b6a0d9e\-6e4e\-4a8e\-9a3f\-1c2d3e4f5a61$''']
+paths = [
+  '''(^|/)src/Atlas\.Web/src/assist/atlasAssist\.test\.ts$''',
+  '''(^|/)src/Atlas\.Web/src/secrets/moveSecretToVault\.test\.ts$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^0b9f6a52\-7c1e\-4d3a\-9a58\-3f2b1c4d5e6f$''']
+paths = [
+  '''(^|/)src/Atlas\.Web/src/components/dev/EditabilityExample\.vue$''',
+  '''(^|/)src/Atlas\.Web/src/contracts/editability\.secrets\.contract\.test\.ts$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^2538F90A\-733E\-4F69\-BAFE\-5F71086739BE$''']
+paths = [
+  '''(^|/)tests/Atlas\.Server\.Tests/SecretReferenceContentTests\.cs$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^2538f90a\-733e\-4f69\-bafe\-5f71086739be$''']
+paths = [
+  '''(^|/)tests/Atlas\.Server\.Tests/SecretReferenceContentTests\.cs$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^5b2f6a3c\-1d4e\-4f5a\-8b6c\-7d8e9f0a1b2c$''']
+paths = [
+  '''(^|/)src/Atlas\.Markdown/src/schema/manifest\.test\.ts$''',
+  '''(^|/)src/Atlas\.Web/src/components/dev/ChipExample\.vue$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/document\-schema/verdicts\.json$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/document\-schema/web\-document\.json$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-web\-document/expected\.jsonl$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/MarkdownDocumentValidatorTests\.cs$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^5c1f6b7a\-2d3e\-4f50\-8a9b\-0c1d2e3f4a5b$''']
+paths = [
+  '''(^|/)src/Atlas\.Web/src/assist/atlasAssist\.test\.ts$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^8d2f7a1c\-5b3e\-4c6d\-9e0f\-1a2b3c4d5e6f$''']
+paths = [
+  '''(^|/)tests/Atlas\.Server\.Tests/SecretReferenceContentTests\.cs$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Stable Data Protection purpose, not an encryption key"
+regexes = ['''^ScaleAtlas\.Ai\.ApiKey\.v1$''']
+paths = [
+  '''(^|/)src/Atlas\.Server/Features/Ai/Settings/Commands/SaveAiProfileHandler\.cs$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Local gallery invitation example; no account or backend"
+regexes = ['''^UKAZKA\-7QK4\-M2XP\-91TD$''']
+paths = [
+  '''(^|/)src/Atlas\.Web/src/components/dev/PeopleExample\.vue$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Object identifier in schema and secret-reference fixtures, not a credential"
+regexes = ['''^ccff88d6\-437d\-4665\-83a8\-4c179ad8a523$''']
+paths = [
+  '''(^|/)src/Atlas\.Markdown/src/plugins/secrets/fixtures/secrets\-v2\.json$''',
+  '''(^|/)src/Atlas\.Markdown/src/plugins/secrets/fixtures/secrets\-v3\.json$''',
+  '''(^|/)src/Atlas\.Markdown/src/plugins/secrets/fixtures/secrets\-v4\.json$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-secrets\-v2/expected\.jsonl$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-secrets\-v3/expected\.jsonl$''',
+  '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-secrets\-v4/expected\.jsonl$''',
+]
+
+[[rules.allowlists]]
+condition = "AND"
+description = "Synthetic alphabet-and-digits token used to test secret detection"
+regexes = ['''^ghp_aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA$''']
+paths = [
+  '''(^|/)src/Atlas\.Web/src/assist/rules/secretDetector\.test\.ts$''',
+]
+
+
+[[allowlists]]
+condition = "AND"
+description = "Synthetic alphabet-and-digits token used to test that a paragraph with a secret is not sent"
+targetRules = ["github-pat", "generic-api-key"]
+regexes = ['''^ghp_abcdefghijklmnopqrstuvwxyz0123456789$''']
+paths = [
+  '''(^|/)src/Atlas\.Web/src/assist/rules/linkPhrases\.test\.ts$''',
+]

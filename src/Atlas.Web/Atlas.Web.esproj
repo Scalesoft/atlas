@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.SDK/1.0.5836340">
+    <PropertyGroup>
+        <ShouldRunNpmInstall>false</ShouldRunNpmInstall>
+        <ShouldRunBuildScript>false</ShouldRunBuildScript>
+        <ShouldRunNpmAudit>false</ShouldRunNpmAudit>
+        <BuildCommand>pnpm run build</BuildCommand>
+        <ProductionBuildCommand>pnpm run build</ProductionBuildCommand>
+        <StartupCommand>pnpm run dev</StartupCommand>
+    </PropertyGroup>
+</Project>

@@ -1,0 +1,269 @@
+/* Atlas 2.5 UI refresh – theme
+   Já – vzhled (motiv, akcent), tmavé schéma tónované akcentem, shell na mobilu a úzkých šířkách.
+   Pohyb jen přes tokeny z motion.css; žádné doslovné délky ani křivky (motionLiterals.guard.test.ts). */
+
+/* ---------- 1. The theme changes softly ----------
+   Switching the accent or the mode (the profile previews it live) fades the shell's colours instead of
+   flashing them. Gradients cannot interpolate; the solid fills under them carry the fade. */
+.atlas:not(.md-editor):not(.md-editor *),
+.atlas :is(.sidebar, .workspace, .workspace-bar):not(.md-editor):not(.md-editor *) {
+  transition:
+    background-color var(--atlas-motion-slow) var(--atlas-ease-out),
+    border-color var(--atlas-motion-slow) var(--atlas-ease-out),
+    color var(--atlas-motion-slow) var(--atlas-ease-out);
+}
+
+/* ---------- 2. Dark: tinted surfaces and the accent's glow (board 15) ----------
+   palettes.css draws the graphite scale in the accent's hue; here the shell gets the soft light of it:
+   a glow over the top of the workspace, a faint one in the navigation corner, and a quiet halo around
+   what is selected. */
+[data-mode="dark"] .atlas .workspace:not(.md-editor):not(.md-editor *) {
+  background: var(--atlas-glow) no-repeat, var(--surface);
+}
+[data-mode="dark"] .atlas .sidebar:not(.md-editor):not(.md-editor *) {
+  background: var(--sidebar-fill);
+}
+[data-mode="dark"][data-layout="islands"] .atlas:not(.md-editor):not(.md-editor *) { background: var(--canvas); }
+[data-mode="dark"] .atlas .sidebar :is(.nav-link, .settings-nav-link, .sidebar-space-row, .tree-row):is(.active, [aria-current="page"]):not(.md-editor):not(.md-editor *),
+[data-mode="dark"] .atlas .sidebar .sidebar-space-row.active:not(.md-editor):not(.md-editor *) {
+  box-shadow: var(--atlas-glow-ring);
+}
+[data-mode="dark"] .atlas .sidebar .avatar:not(.md-editor):not(.md-editor *) { box-shadow: 0 0 0 1px oklch(80% 0.12 var(--atlas-hue) / 0.18); }
+/* Code and quiet wells sit a step below the paper, as on the board. */
+[data-mode="dark"] .atlas-document-editor.md-editor.md-theme-midnight { --code-bg: var(--canvas); }
+
+/* ---------- Caret ----------
+   The native caret follows `color`, which an editable surface can inherit from an inverted or dark-mode parent (white on a
+   white field). It follows the theme's text token instead, in light and dark; `:where` keeps the specificity at zero so a
+   surface that is dark on purpose can still say otherwise. caretColor.guard.test.ts guards the rule and forbids literals. */
+:where(input, textarea, [contenteditable="true"], .ProseMirror) { caret-color: var(--text); }
+
+/* ---------- 3. Top bar: a quiet glass over the content ----------
+   The bar stays sticky; the page (and in dark the glow) shows through it, softened. */
+/* The bar, not the workspace, is the container its own width queries need: on the column-flex workspace a size container made
+   every change in the document lay the whole page out again (~15 ms a keystroke on a 2 MB page, UX EP2-1). The bar spans the
+   workspace, so the widths are the same. */
+.atlas .workspace-bar:not(.md-editor):not(.md-editor *) { container: workspace / inline-size; }
+.atlas .workspace-bar:not(.md-editor):not(.md-editor *) {
+  background: color-mix(in oklab, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+}
+/* Respond to space left after the navigation, including a user-widened rail. The bar stays one row at every width
+   (a second row pushed the sticky formatting row down while editing): the actions keep their size and the trail
+   takes what is left, down to the space icon and „…“ (up to 1100 px: a draft's actions take 675 px, and at 1280 px of window the
+   page's name was left 44 px or none). Its clip leaves room for a focus ring: a crumb hangs 4 px out
+   (its hover box, refresh.css) and the ring 4 px more, so 4 px cut the ring off the first crumb's left side. */
+.atlas .breadcrumb-trail:not(.md-editor):not(.md-editor *) { overflow: clip; overflow-clip-margin: 8px; }
+@container workspace (max-width: 1100px) {
+  /* The bar's 12 px gap less 4 px (a container cannot restyle itself, only what it holds). */
+  .atlas .breadcrumbs:not(.md-editor):not(.md-editor *) { flex: 1 1 0; margin-inline-end: -4px; }
+  .atlas .bar-actions:not(.md-editor):not(.md-editor *) { justify-content: flex-end; margin-left: auto; }
+  /* No room for the path: the parents fold into the „…“ menu, which lists every one of them. */
+  .atlas .breadcrumb-trail li:has(> a.breadcrumb-ancestor):not(.md-editor):not(.md-editor *) { display: none; }
+  .atlas .breadcrumb-trail li.breadcrumb-folded:not([data-folded]):not(.md-editor):not(.md-editor *) { display: flex; }
+}
+/* A phone's bar on the access tab holds the space and „Přístup“, the place itself. The page's name and its parents had
+   7 px left beside it; the heading under the bar names the page and leads back to it. */
+@container workspace (max-width: 520px) {
+  .atlas .breadcrumb-trail ol:has([data-breadcrumb-page]) > li:is(.breadcrumb-folded, :has(> [data-breadcrumb-page])):not(.md-editor):not(.md-editor *) { display: none; }
+}
+[data-mode="dark"] .atlas .workspace-bar:not(.md-editor):not(.md-editor *) {
+  background: color-mix(in oklab, var(--surface) 72%, transparent);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .atlas .workspace-bar:not(.md-editor):not(.md-editor *) { background: var(--surface); }
+}
+/* A writer's draft (koncept, owner 2026-11-07, board „Koncept v horní liště“ A): the bar runs from its surface into the soft
+   accent towards its actions, which keep their contrast on it (--accent-soft carries accent and muted text by design). The
+   strength is a registered percentage, so the gradient itself fades in and out with the motion tokens. After the bar's own
+   `background` shorthands above, which reset the image. PagePublicationState says the same in words. */
+@property --atlas-draft-tint { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+.atlas :is(.workspace-bar, .publication-bar)[data-publication]:not(.md-editor):not(.md-editor *) {
+  background-image: linear-gradient(90deg, transparent 22%,
+    color-mix(in srgb, var(--accent-soft) calc(var(--atlas-draft-tint) * .55), transparent) 62%,
+    color-mix(in srgb, var(--accent-soft) var(--atlas-draft-tint), transparent));
+  transition: --atlas-draft-tint var(--atlas-motion-slow) var(--atlas-ease-out);
+}
+.atlas [data-publication="draft"] { --atlas-draft-tint: 100%; }
+
+/* ---------- 4. Desktop: the navigation folds away and back (motion board 16) ----------
+   The rail slides out by its own width while the workspace widens with it; it stays in the layout
+   (hidden from focus and assistive technology once folded) so both ways can animate. */
+@media (min-width: 1025px) {
+  .atlas { --atlas-shell-gap: 0px; }
+  [data-layout="islands"] .atlas { --atlas-shell-gap: 12px; }
+  /* Returning, the rail is visible at once and slides in: a `visibility` in transition still computes to hidden at
+     its first instant, which is when the shell hands the focus to the rail's own toggle, and the browser refuses to
+     focus what is hidden (the keyboard lost its place every time the rail was shown again). */
+  .atlas .sidebar:not(.md-editor):not(.md-editor *) {
+    transition:
+      margin-inline-start var(--atlas-motion-slow) var(--atlas-ease-inout),
+      opacity var(--atlas-motion-base) var(--atlas-ease-out),
+      background-color var(--atlas-motion-slow) var(--atlas-ease-out),
+      border-color var(--atlas-motion-slow) var(--atlas-ease-out);
+  }
+  /* Leaving, it fades as it slides, on the slide's own clock, and stays visible until it is out. On the quicker curve
+     it had faded away before it moved (at 70 ms: 19 of 272 px, opacity .12), so nothing was seen to leave. */
+  .atlas[data-sidebar-collapsed="true"] .sidebar:not(.md-editor):not(.md-editor *) {
+    display: flex;
+    margin-inline-start: calc((var(--atlas-sidebar-width) + var(--atlas-shell-gap)) * -1);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      margin-inline-start var(--atlas-motion-slow) var(--atlas-ease-inout),
+      opacity var(--atlas-motion-slow) var(--atlas-ease-inout),
+      visibility var(--atlas-motion-slow),
+      background-color var(--atlas-motion-slow) var(--atlas-ease-out),
+      border-color var(--atlas-motion-slow) var(--atlas-ease-out);
+  }
+  /* The way back to the rail takes its room in the bar while the rail leaves and gives it up while the rail returns,
+     on the rail's clock. Inserted and removed with the state, it pushed the breadcrumbs 40 px sideways in one frame
+     at the start of each move. It is in the bar all the time (App.vue): while the rail is shown it has no room and
+     is neither seen nor focusable. Like the rail, it is visible at once when it is needed, to take the focus. */
+  .atlas .breadcrumbs > .sidebar-expand:not(.md-editor):not(.md-editor *) {
+    overflow: clip;
+    /* The icon is centred in a fixed square; padding would only be a floor under the width while it grows. */
+    padding-inline: 0;
+    transition:
+      width var(--atlas-motion-slow) var(--atlas-ease-inout),
+      margin-inline-end var(--atlas-motion-slow) var(--atlas-ease-inout),
+      opacity var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-fast);
+  }
+  /* -8 px: the gap of the breadcrumbs row (refresh.css §3), which a button without width would still be given. */
+  .atlas[data-sidebar-collapsed="false"] .breadcrumbs > .sidebar-expand:not(.md-editor):not(.md-editor *) {
+    width: 0;
+    min-width: 0;
+    margin-inline-end: -8px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      width var(--atlas-motion-slow) var(--atlas-ease-inout),
+      margin-inline-end var(--atlas-motion-slow) var(--atlas-ease-inout),
+      opacity var(--atlas-motion-fast) var(--atlas-ease-out),
+      visibility var(--atlas-motion-slow);
+  }
+}
+/* Reduced motion: the layout changes at once and the rail only fades. Folding, it fades where it stands and the
+   layout follows when the fade ends (step-end); it used to jump off the screen first and fade there, unseen. The
+   way back takes and gives up its room together with that change of layout. */
+@media (min-width: 1025px) and (prefers-reduced-motion: reduce) {
+  .atlas .sidebar:not(.md-editor):not(.md-editor *) { transition-property: opacity, background-color, border-color; }
+  .atlas[data-sidebar-collapsed="true"] .sidebar:not(.md-editor):not(.md-editor *) { transition: margin-inline-start var(--atlas-motion-base) step-end, opacity var(--atlas-motion-base) var(--atlas-ease-out), visibility var(--atlas-motion-base); }
+  .atlas .breadcrumbs > .sidebar-expand:not(.md-editor):not(.md-editor *) { transition: width var(--atlas-motion-base) step-end, margin-inline-end var(--atlas-motion-base) step-end, opacity var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-base); }
+  .atlas[data-sidebar-collapsed="false"] .breadcrumbs > .sidebar-expand:not(.md-editor):not(.md-editor *) { transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), visibility var(--atlas-motion-fast); }
+}
+@media (min-width: 1025px) {
+  [data-atlas-reduced-motion] .atlas .sidebar:not(.md-editor):not(.md-editor *) { transition-property: opacity, background-color, border-color; }
+  [data-atlas-reduced-motion] .atlas[data-sidebar-collapsed="true"] .sidebar:not(.md-editor):not(.md-editor *) { transition: margin-inline-start var(--atlas-motion-base) step-end, opacity var(--atlas-motion-base) var(--atlas-ease-out), visibility var(--atlas-motion-base); }
+  [data-atlas-reduced-motion] .atlas .breadcrumbs > .sidebar-expand:not(.md-editor):not(.md-editor *) { transition: width var(--atlas-motion-base) step-end, margin-inline-end var(--atlas-motion-base) step-end, opacity var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-base); }
+  [data-atlas-reduced-motion] .atlas[data-sidebar-collapsed="false"] .breadcrumbs > .sidebar-expand:not(.md-editor):not(.md-editor *) { transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), visibility var(--atlas-motion-fast); }
+}
+
+/* ---------- 5. Phones and tablets: the navigation drawer (≤ 1024 px) ----------
+   A drawer from the left edge with a fading backdrop, a close button and the same backdrop, radius and
+   motion as the "Sekce" sheet of the settings. A strip of the page stays visible to tap it closed. */
+.atlas .sidebar-close:not(.md-editor):not(.md-editor *) { display: none; }
+@media (max-width: 1024px) {
+  .atlas .sidebar:not(.md-editor):not(.md-editor *),
+  [data-layout="islands"] .atlas .sidebar:not(.md-editor):not(.md-editor *) {
+    width: min(320px, calc(100vw - 56px));
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0 18px 18px 0;
+    box-shadow: none;
+    /* Above its backdrop also while it slides out. */
+    z-index: 7;
+    /* Closing is quicker than opening, as for the sheet: base out, slow in. */
+    transition:
+      transform var(--atlas-motion-base) var(--atlas-ease-out),
+      box-shadow var(--atlas-motion-base) var(--atlas-ease-out),
+      visibility var(--atlas-motion-base);
+  }
+  /* Opening, the drawer is visible at once and only slides in: a `visibility` in transition still computes to hidden at
+     its first instant, which is when the shell focuses the drawer's first control, and the browser refuses to focus
+     what is hidden. Closing, the rule above keeps it visible until it has slid out. */
+  .atlas .sidebar.mobile-open:not(.md-editor):not(.md-editor *) {
+    box-shadow: var(--shadow-modal);
+    transition: transform var(--atlas-motion-slow) var(--atlas-ease-out), box-shadow var(--atlas-motion-slow) var(--atlas-ease-out);
+    z-index: 7;
+  }
+  /* Above the sticky top bar (z-index 5): the whole page dims, not only the content under the bar. */
+  .atlas .sidebar-backdrop:not(.md-editor):not(.md-editor *) { z-index: 6; cursor: default; }
+  .atlas .sidebar-close:not(.md-editor):not(.md-editor *) { display: inline-flex; flex: none; width: 40px; height: 40px; }
+  /* Touch targets of the drawer: rows and buttons at least 40 px. */
+  .atlas .sidebar :is(.nav-link, .sidebar-primary .nav-link, .sidebar-space-row, .settings-nav-link, .profile-launch, .settings-back):not(.md-editor):not(.md-editor *) { min-height: 40px; }
+  .atlas .sidebar .tree-row:not(.md-editor):not(.md-editor *) { --tree-row-h: 38px; min-height: 38px; }
+  .atlas .sidebar :is(.search-launch, .sidebar-new-page, .settings-rail-search):not(.md-editor):not(.md-editor *) { min-height: 42px; }
+  .atlas .sidebar .sidebar-new-page:not(.md-editor):not(.md-editor *) { width: 42px; height: 42px; }
+  .atlas .sidebar .account .settings-nav:not(.md-editor):not(.md-editor *) { width: 40px; min-height: 40px; }
+  /* The drawer's column of controls is centred on its 42 px „+“: the 32 px button of the heading keeps 5 px from the edge. */
+  .atlas .sidebar-spaces-heading:not(.md-editor):not(.md-editor *) { padding-right: 5px; }
+  /* The top bar of a phone: 16 px gutters, 40 px controls. */
+  .atlas .workspace-bar:not(.md-editor):not(.md-editor *) { padding-inline: 12px; gap: 8px; }
+  .atlas .breadcrumbs:not(.md-editor):not(.md-editor *) { margin-inline-end: 0; }
+  .atlas .workspace-bar .mobile-menu:not(.md-editor):not(.md-editor *) { width: 40px; height: 40px; flex: none; }
+}
+/* One fade each way: the shared entrance (motion.css) would start again, from clear, when the enter class leaves. */
+.atlas .sidebar-backdrop:not(.sidebar-backdrop-enter-active, .sidebar-backdrop-leave-active) { animation: none; }
+.atlas .sidebar-backdrop-enter-active { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas .sidebar-backdrop-leave-active { animation: st-fade-out var(--atlas-motion-base) var(--atlas-ease-out); }
+/* Reduced motion keeps the drawer's fade from shell.css; its shadow appears with it. Opening, it is visible at once here
+   too and only fades in, so that it can take the focus. Closing, the islands selector of the drawer above would outweigh
+   the plain one, so it is repeated here. */
+@media (max-width: 1024px) and (prefers-reduced-motion: reduce) {
+  .atlas .sidebar:not(.md-editor):not(.md-editor *),
+  [data-layout="islands"] .atlas .sidebar:not(.md-editor):not(.md-editor *) { transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out), visibility var(--atlas-motion-surface); }
+  .atlas .sidebar.mobile-open:not(.md-editor):not(.md-editor *) { transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out); }
+}
+@media (max-width: 1024px) {
+  [data-atlas-reduced-motion] .atlas .sidebar:not(.md-editor):not(.md-editor *) { transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out), visibility var(--atlas-motion-surface); }
+  [data-atlas-reduced-motion] .atlas .sidebar.mobile-open:not(.md-editor):not(.md-editor *) { transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out); }
+}
+
+/* The way back and the close button of the drawer share the top row of settings. */
+.atlas .settings-sidebar-top .settings-back:not(.md-editor):not(.md-editor *) { margin-right: auto; }
+
+/* ---------- 6. Sign-in, the first-run wizard and module onboarding ----------
+   The entry screens share the shell's light: a wash of the accent in light, its glow in dark; the card rises
+   into place once (reduced motion: a fade). */
+[data-mode="dark"] .atlas .entry-shell:not(.md-editor):not(.md-editor *) {
+  background: var(--atlas-glow) no-repeat, radial-gradient(ellipse at 20% 15%, var(--accent-soft), transparent 65%), var(--canvas);
+}
+.atlas .entry-shell > .login-layout:not(.md-editor):not(.md-editor *) {
+  animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both;
+}
+/* Signing in and out cross-fades the entry screen and the wiki (motion/crossFade.ts); the only view transition of the app.
+   The screen that leaves is gone by the fast token, so its text does not ghost through the one arriving behind it.
+   The tokens are the page's, so the system's reduced motion (and the page's own setting, while it is on <html>) makes it a
+   linear fade of 160 ms at most. A sign-out resets the page's own setting inside the update, so crossFade keeps it on
+   data-crossfade-reduced until the fade has finished, and these rules give the same result without the tokens. */
+/* The overlay of the fade takes no pointer, so an engine that hit-tests the live screen under it delivers a click to the
+   screen that has just arrived (the leaving one is already gone from the document). Chromium does not: measured, <html> is
+   the target for the whole fade whatever this says, so motion/crossFade.ts ends the fade on such a click and replays it. */
+::view-transition { pointer-events: none; }
+::view-transition-group(root), ::view-transition-new(root) {
+  animation-duration: var(--atlas-motion-base);
+  animation-timing-function: var(--atlas-ease-out);
+}
+::view-transition-old(root) {
+  animation-duration: var(--atlas-motion-fast);
+  animation-timing-function: var(--atlas-ease-out);
+}
+html[data-crossfade-reduced]::view-transition-group(root), html[data-crossfade-reduced]::view-transition-new(root) {
+  animation-duration: var(--atlas-motion-surface);
+  animation-timing-function: linear;
+}
+html[data-crossfade-reduced]::view-transition-old(root) {
+  animation-duration: var(--atlas-motion-fast);
+  animation-timing-function: linear;
+}
+[data-mode="dark"] .atlas .entry-shell .login-layout:not(.md-editor):not(.md-editor *) { box-shadow: var(--shadow-modal), var(--atlas-glow-ring); }
+[data-mode="dark"] .atlas .entry-shell .login-art:not(.md-editor):not(.md-editor *) { background: var(--atlas-glow) no-repeat, var(--sidebar); }
+.atlas .module-onboarding:not(.md-editor):not(.md-editor *) {
+  background: radial-gradient(ellipse at 18% 0%, var(--accent-soft), transparent 60%), var(--canvas);
+}
+[data-mode="dark"] .atlas .module-onboarding:not(.md-editor):not(.md-editor *) { background: var(--atlas-glow) no-repeat, var(--canvas); }
+.atlas .module-onboarding > :not(.md-editor):not(.md-editor *) { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }

@@ -1,0 +1,2143 @@
+{
+  "format": "atlas-markdown-schema",
+  "version": 1,
+  "profile": "rich",
+  "schemaRevision": 7,
+  "topNode": "doc",
+  "plugins": [
+    {
+      "id": "attachments",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "charts",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "concealed",
+      "version": 2,
+      "migratesFrom": [
+        1
+      ]
+    },
+    {
+      "id": "contacts",
+      "version": 2,
+      "migratesFrom": [
+        1
+      ]
+    },
+    {
+      "id": "diagrams",
+      "version": 2,
+      "migratesFrom": [
+        1
+      ]
+    },
+    {
+      "id": "emoji",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "heading-anchors",
+      "version": 2,
+      "migratesFrom": [
+        1
+      ]
+    },
+    {
+      "id": "math",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "openapi",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "pages",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "secrets",
+      "version": 4,
+      "migratesFrom": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "toc",
+      "version": 1,
+      "migratesFrom": []
+    },
+    {
+      "id": "youtrack",
+      "version": 1,
+      "migratesFrom": []
+    }
+  ],
+  "nodes": [
+    {
+      "name": "paragraph",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "inline*",
+      "marks": [
+        "link",
+        "bold",
+        "italic",
+        "strike",
+        "highlight",
+        "underline",
+        "code"
+      ],
+      "attrs": [
+        {
+          "name": "textAlign",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "blockquote",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "block+",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "bulletList",
+      "inline": false,
+      "groups": [
+        "block",
+        "list"
+      ],
+      "content": "listItem+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "tight",
+          "default": true,
+          "constraint": {
+            "kind": "boolean",
+            "nullable": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "codeBlock",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "text*",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "language",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "maxLength": 200,
+            "singleLine": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "doc",
+      "inline": false,
+      "groups": [],
+      "content": "block+",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "hardBreak",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "heading",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "inline*",
+      "marks": [
+        "link",
+        "bold",
+        "italic",
+        "strike",
+        "highlight",
+        "underline",
+        "code"
+      ],
+      "attrs": [
+        {
+          "name": "headingId",
+          "owner": "heading-anchors",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "aliases",
+          "owner": "heading-anchors",
+          "default": "",
+          "constraint": {
+            "kind": "text",
+            "maxLength": 1000,
+            "singleLine": true,
+            "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,127}(?:,[A-Za-z0-9][A-Za-z0-9._-]{0,127})*)?$"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "textAlign",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "level",
+          "default": 1,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "horizontalRule",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "listItem",
+      "inline": false,
+      "groups": [],
+      "content": "paragraph block*",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "orderedList",
+      "inline": false,
+      "groups": [
+        "block",
+        "list"
+      ],
+      "content": "listItem+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "tight",
+          "default": true,
+          "constraint": {
+            "kind": "boolean",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "start",
+          "default": 1,
+          "constraint": {
+            "kind": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "type",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "maxLength": 100,
+            "singleLine": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "text",
+      "text": true,
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "image",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "src",
+          "default": null,
+          "constraint": {
+            "kind": "url",
+            "policy": "image",
+            "nullable": true,
+            "imageSources": {}
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "alt",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "title",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "width",
+          "default": null,
+          "constraint": {
+            "kind": "dimension"
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "height",
+          "default": null,
+          "constraint": {
+            "kind": "dimension"
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "presentation",
+          "default": null,
+          "constraint": {
+            "kind": "structured",
+            "validator": "imagePresentation"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "tableRow+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "chartRef",
+          "owner": "charts",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "tableRow",
+      "inline": false,
+      "groups": [],
+      "content": "(tableCell | tableHeader)*",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "height",
+          "default": null,
+          "constraint": {
+            "kind": "number",
+            "minimum": 24,
+            "maximum": 2000,
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "chartRef",
+          "owner": "charts",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "tableHeader",
+      "inline": false,
+      "groups": [],
+      "content": "block+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "textAlign",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "backgroundColor",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "accent",
+              "green",
+              "amber",
+              "red"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "chartRef",
+          "owner": "charts",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "colspan",
+          "default": 1,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "rowspan",
+          "default": 1,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "colwidth",
+          "default": null,
+          "constraint": {
+            "kind": "structured",
+            "validator": "columnWidths",
+            "context": [
+              "colspan"
+            ]
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "align",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "tableCell",
+      "inline": false,
+      "groups": [],
+      "content": "block+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "textAlign",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "backgroundColor",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "accent",
+              "green",
+              "amber",
+              "red"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "chartRef",
+          "owner": "charts",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true,
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "colspan",
+          "default": 1,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "rowspan",
+          "default": 1,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "colwidth",
+          "default": null,
+          "constraint": {
+            "kind": "structured",
+            "validator": "columnWidths",
+            "context": [
+              "colspan"
+            ]
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "align",
+          "default": null,
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ],
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "taskList",
+      "inline": false,
+      "groups": [
+        "block",
+        "list"
+      ],
+      "content": "taskItem+",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "taskItem",
+      "inline": false,
+      "groups": [],
+      "content": "paragraph block*",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "checked",
+          "default": false,
+          "constraint": {
+            "kind": "boolean",
+            "nullable": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "callout",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "block+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "variant",
+          "default": "note",
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "note",
+              "tip",
+              "warning",
+              "important",
+              "caution"
+            ]
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "timedList",
+      "inline": false,
+      "groups": [
+        "block",
+        "list"
+      ],
+      "content": "timedItem+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "tight",
+          "default": true,
+          "constraint": {
+            "kind": "boolean",
+            "nullable": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "timedItem",
+      "inline": false,
+      "groups": [],
+      "content": "paragraph block*",
+      "marks": [],
+      "attrs": []
+    },
+    {
+      "name": "attachment",
+      "owner": "attachments",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "name": "Nová příloha",
+            "url": ""
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "attachment"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "chart",
+      "owner": "charts",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "title": "Nový graf",
+            "kind": "bar",
+            "grid": [
+              [
+                "Období",
+                "Hodnota"
+              ],
+              [
+                "Leden",
+                "12"
+              ],
+              [
+                "Únor",
+                "18"
+              ]
+            ],
+            "source": null,
+            "sourceStatus": null
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "chart"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "concealedContent",
+      "owner": "concealed",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "block+",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "reveal",
+          "default": "scratch",
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "scratch",
+              "button"
+            ]
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "reconcealAfterMs",
+          "default": 1500,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 0,
+            "maximum": 600000,
+            "nullable": true
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "completeAtPercent",
+          "default": 70,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 10,
+            "maximum": 100,
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "contactCard",
+      "owner": "contacts",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "contacts": [
+              {
+                "name": "Nový kontakt"
+              }
+            ]
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "contacts"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "contactInline",
+      "owner": "contacts",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "contacts": [
+              {
+                "name": "Nový kontakt"
+              }
+            ]
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "contact"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "diagram",
+      "owner": "diagrams",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "source": "flowchart LR\n  A[Začátek] --> B[Konec]",
+            "caption": ""
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "diagram"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "emoji",
+      "owner": "emoji",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "name",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "mathBlock",
+      "owner": "math",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "expression": "E = mc^2"
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "math"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "mathInline",
+      "owner": "math",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "expression": "E = mc^2"
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "math"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "openapi",
+      "owner": "openapi",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "filename": "openapi.yaml",
+            "source": "openapi: 3.1.0\ninfo:\n  title: New API\n  version: '1.0'\npaths: {}\n"
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "openapi"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "pageReference",
+      "owner": "pages",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "id",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nonBlank": true,
+            "singleLine": true,
+            "maxLength": 4096
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "title",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nonBlank": true,
+            "singleLine": true,
+            "maxLength": 4096
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "url",
+          "default": null,
+          "constraint": {
+            "kind": "url",
+            "policy": "http",
+            "maxLength": 4096
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "secretReference",
+      "owner": "secrets",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "secretId",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "field",
+          "default": "password",
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "title",
+              "path",
+              "username",
+              "password",
+              "url",
+              "notes"
+            ]
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "fields",
+          "default": null,
+          "constraint": {
+            "kind": "structured",
+            "validator": "secretFields"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "showCopy",
+          "default": true,
+          "constraint": {
+            "kind": "boolean"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "showDetails",
+          "default": false,
+          "constraint": {
+            "kind": "boolean"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "autoHideSeconds",
+          "default": 60,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 5,
+            "maximum": 3600,
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "secretInlineReference",
+      "owner": "secrets",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "secretId",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "field",
+          "default": "password",
+          "constraint": {
+            "kind": "enum",
+            "values": [
+              "title",
+              "path",
+              "username",
+              "password",
+              "url",
+              "notes"
+            ]
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "fields",
+          "default": null,
+          "constraint": {
+            "kind": "structured",
+            "validator": "secretFields"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "showCopy",
+          "default": true,
+          "constraint": {
+            "kind": "boolean"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "showDetails",
+          "default": false,
+          "constraint": {
+            "kind": "boolean"
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "autoHideSeconds",
+          "default": 60,
+          "constraint": {
+            "kind": "integer",
+            "minimum": 5,
+            "maximum": 3600,
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "tableOfContents",
+      "owner": "toc",
+      "inline": false,
+      "groups": [
+        "block"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "data",
+          "default": {
+            "version": 1,
+            "title": "Obsah dokumentu",
+            "minLevel": 1,
+            "maxLevel": 3
+          },
+          "constraint": {
+            "kind": "structured",
+            "validator": "tableOfContents"
+          },
+          "enforcement": "editor"
+        }
+      ]
+    },
+    {
+      "name": "youtrackIssue",
+      "owner": "youtrack",
+      "inline": true,
+      "groups": [
+        "inline"
+      ],
+      "content": "",
+      "marks": [],
+      "attrs": [
+        {
+          "name": "id",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nonBlank": true,
+            "singleLine": true,
+            "maxLength": 2000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "key",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nonBlank": true,
+            "singleLine": true,
+            "maxLength": 2000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "title",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nonBlank": true,
+            "singleLine": true,
+            "maxLength": 2000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "url",
+          "default": null,
+          "constraint": {
+            "kind": "url",
+            "policy": "absolute-http",
+            "maxLength": 2000
+          },
+          "enforcement": "editor"
+        },
+        {
+          "name": "state",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nonBlank": true,
+            "singleLine": true,
+            "maxLength": 2000,
+            "nullable": true
+          },
+          "enforcement": "editor"
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "name": "link",
+      "excludes": [
+        "link"
+      ],
+      "attrs": [
+        {
+          "name": "href",
+          "default": null,
+          "constraint": {
+            "kind": "url",
+            "policy": "link",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "target",
+          "default": "_blank",
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "rel",
+          "default": "noopener noreferrer",
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "class",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        },
+        {
+          "name": "title",
+          "default": null,
+          "constraint": {
+            "kind": "text",
+            "nullable": true
+          },
+          "enforcement": "server"
+        }
+      ]
+    },
+    {
+      "name": "bold",
+      "excludes": [
+        "bold"
+      ],
+      "attrs": []
+    },
+    {
+      "name": "italic",
+      "excludes": [
+        "italic"
+      ],
+      "attrs": []
+    },
+    {
+      "name": "strike",
+      "excludes": [
+        "strike"
+      ],
+      "attrs": []
+    },
+    {
+      "name": "highlight",
+      "excludes": [
+        "highlight"
+      ],
+      "attrs": []
+    },
+    {
+      "name": "underline",
+      "excludes": [
+        "underline"
+      ],
+      "attrs": []
+    },
+    {
+      "name": "code",
+      "excludes": [
+        "code"
+      ],
+      "attrs": []
+    }
+  ],
+  "validators": {
+    "attachment": {
+      "description": "plugins/attachments/data.ts normalizeAttachment. Unknown keys are ignored.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "name",
+          "url"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "description": "No control characters."
+          },
+          "url": {
+            "type": "string",
+            "maxLength": 8192,
+            "format": "http-or-relative-url",
+            "description": "Empty, or an http(s) or relative URL without credentials, on one line."
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mimeType": {
+            "type": "string",
+            "pattern": "^$|^[a-z0-9!#$&^_.+-]+/[a-z0-9!#$&^_.+-]+$"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 4096
+          }
+        }
+      }
+    },
+    "chart": {
+      "description": "plugins/charts/data.ts normalizeChart: a header row and 1–200 rows of 1–20 series; value cells are empty or numbers (Czech decimal comma and grouped thousands allowed; pie and doughnut charts refuse negative values). A linked chart names its table and one distinct cell id per grid cell.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "kind",
+          "title",
+          "grid"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "bar",
+              "line",
+              "pie",
+              "doughnut"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "grid": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 201,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 21,
+              "items": {
+                "type": "string",
+                "maxLength": 2000
+              }
+            }
+          },
+          "source": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "required": [
+              "tableId",
+              "cells"
+            ],
+            "properties": {
+              "tableId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "cells": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                }
+              }
+            }
+          },
+          "sourceStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "linked",
+              "missing",
+              "invalid",
+              null
+            ]
+          }
+        }
+      }
+    },
+    "columnWidths": {
+      "description": "core/documentConstraints.ts isValidColumnWidths: null, or one width from 0 to 10000 per column the cell spans (its colspan).",
+      "schema": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "items": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      }
+    },
+    "contact": {
+      "description": "The inline contact: normalizeContacts with exactly one contact.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "contacts"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "contacts": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "description": "Unknown keys are ignored; text fields hold at most 4096 characters without control characters other than tab and line breaks.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "role": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Page-local role or note: trimmed, at most 400 characters on one line."
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "auto",
+                    "internal",
+                    "external"
+                  ]
+                },
+                "organization": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "department": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "directoryId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "objectId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Directory contact object id (lower-case GUID); an invalid value is dropped."
+                },
+                "username": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Trimmed: at most 256 characters on one line."
+                },
+                "photo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "http-or-relative-url",
+                  "description": "http(s) or relative URL without credentials"
+                },
+                "website": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "http-or-relative-url",
+                  "description": "http(s) or relative URL without credentials"
+                },
+                "phones": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "maxItems": 20,
+                  "items": {
+                    "type": "string",
+                    "format": "phone",
+                    "description": "+, digits, spaces, ( ) . - # *; at most 80 characters"
+                  }
+                },
+                "emails": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "maxItems": 20,
+                  "items": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "unresolved": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Several known people have this name and nobody was picked yet; never linked automatically."
+                },
+                "internalUser": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "photo": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "http-or-relative-url",
+                      "description": "http(s) or relative URL without credentials"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "contacts": {
+      "description": "plugins/contacts/data.ts normalizeContacts: 1–100 contacts.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "contacts"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "contacts": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": [
+                "name"
+              ],
+              "description": "Unknown keys are ignored; text fields hold at most 4096 characters without control characters other than tab and line breaks.",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096
+                },
+                "role": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Page-local role or note: trimmed, at most 400 characters on one line."
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "auto",
+                    "internal",
+                    "external"
+                  ]
+                },
+                "organization": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "department": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "title": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "directoryId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "objectId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Directory contact object id (lower-case GUID); an invalid value is dropped."
+                },
+                "username": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Trimmed: at most 256 characters on one line."
+                },
+                "photo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "http-or-relative-url",
+                  "description": "http(s) or relative URL without credentials"
+                },
+                "website": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "http-or-relative-url",
+                  "description": "http(s) or relative URL without credentials"
+                },
+                "phones": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "maxItems": 20,
+                  "items": {
+                    "type": "string",
+                    "format": "phone",
+                    "description": "+, digits, spaces, ( ) . - # *; at most 80 characters"
+                  }
+                },
+                "emails": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "maxItems": 20,
+                  "items": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "unresolved": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ],
+                  "description": "Several known people have this name and nobody was picked yet; never linked automatically."
+                },
+                "internalUser": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "photo": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "http-or-relative-url",
+                      "description": "http(s) or relative URL without credentials"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "diagram": {
+      "description": "plugins/diagrams/index.ts normalizeDiagram: Mermaid source without init directives (%%{), front matter (---) or HTML tags.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "source",
+          "caption"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "caption": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "imagePresentation": {
+      "description": "features/images/presentation.ts imagePresentation: null, or the image presentation; absent keys take their defaults. The crops of each axis leave at least 5 % of the image; naturalWidth and naturalHeight are both 0 or both positive.",
+      "schema": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "width": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 100
+          },
+          "align": {
+            "type": "string",
+            "enum": [
+              "left",
+              "center",
+              "right"
+            ]
+          },
+          "caption": {
+            "type": "string"
+          },
+          "rotate": {
+            "type": "number",
+            "enum": [
+              0,
+              90,
+              180,
+              270
+            ]
+          },
+          "flip": {
+            "type": "boolean"
+          },
+          "brightness": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 200
+          },
+          "contrast": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 200
+          },
+          "saturation": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 200
+          },
+          "filter": {
+            "type": "string",
+            "enum": [
+              "none",
+              "grayscale",
+              "sepia"
+            ]
+          },
+          "cropLeft": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "cropRight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "cropTop": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "cropBottom": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 90
+          },
+          "naturalWidth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          },
+          "naturalHeight": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000
+          }
+        }
+      }
+    },
+    "math": {
+      "description": "plugins/math/index.ts normalizeMath.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "expression"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "expression": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "description": "TeX"
+          }
+        }
+      }
+    },
+    "openapi": {
+      "description": "plugins/openapi/data.ts normalizeOpenApi. The editor also parses the source as an OpenAPI 3.0/3.1 YAML document; a server checks the fields and the size of the source (512 KiB of UTF-8) only.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "filename",
+          "source"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "A file name without slashes or control characters."
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "format": "openapi-yaml"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "download",
+              "reference",
+              "interactive"
+            ]
+          },
+          "uploadedBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        }
+      }
+    },
+    "secretFields": {
+      "description": "plugins/secrets/model.ts validateFields: null, or 1–6 distinct secret fields.",
+      "schema": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "minItems": 1,
+        "maxItems": 6,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "title",
+            "path",
+            "username",
+            "password",
+            "url",
+            "notes"
+          ]
+        }
+      }
+    },
+    "tableOfContents": {
+      "description": "plugins/toc/index.ts normalizeToc: 1 ≤ minLevel ≤ maxLevel ≤ 6.",
+      "schema": {
+        "type": "object",
+        "required": [
+          "version",
+          "title",
+          "minLevel",
+          "maxLevel"
+        ],
+        "properties": {
+          "version": {
+            "const": 1
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "minLevel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          },
+          "maxLevel": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 6
+          }
+        }
+      }
+    }
+  },
+  "entities": [
+    {
+      "kind": "emoji",
+      "owner": "emoji",
+      "inline": "emoji"
+    },
+    {
+      "kind": "issue",
+      "owner": "youtrack",
+      "inline": "youtrackIssue"
+    },
+    {
+      "kind": "math",
+      "owner": "math",
+      "inline": "mathInline"
+    },
+    {
+      "kind": "page",
+      "owner": "pages",
+      "inline": "pageReference"
+    },
+    {
+      "kind": "person",
+      "owner": "contacts",
+      "inline": "contactInline"
+    },
+    {
+      "kind": "secret",
+      "owner": "secrets",
+      "inline": "secretInlineReference"
+    }
+  ],
+  "recognizers": [
+    {
+      "id": "issue.key",
+      "kind": "issue",
+      "pattern": "issue-key"
+    }
+  ],
+  "patterns": {
+    "issue-key": "[A-Z][A-Z0-9]+-[1-9][0-9]{0,6}"
+  },
+  "limits": {
+    "maxTableCells": 1000,
+    "maxTableSpan": 1000
+  }
+}

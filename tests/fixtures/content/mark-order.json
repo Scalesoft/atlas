@@ -1,0 +1,43 @@
+[
+  {
+    "name": "mark-outlives-two-opened-before-it",
+    "content": {
+      "format": "atlas-rich", "version": 1,
+      "document": { "type": "doc", "content": [
+        { "type": "paragraph", "content": [
+          { "type": "text", "text": "a", "marks": [{ "type": "bold" }, { "type": "italic" }, { "type": "highlight" }] },
+          { "type": "text", "text": "b", "marks": [{ "type": "highlight" }] }
+        ] }
+      ] },
+      "plugins": [{ "id": "heading-anchors", "version": 2 }]
+    }
+  },
+  {
+    "name": "reordered-then-outlived",
+    "content": {
+      "format": "atlas-rich", "version": 1,
+      "document": { "type": "doc", "content": [
+        { "type": "paragraph", "content": [
+          { "type": "text", "text": "a", "marks": [{ "type": "italic" }] },
+          { "type": "text", "text": "b", "marks": [{ "type": "bold" }, { "type": "italic" }, { "type": "highlight" }] },
+          { "type": "text", "text": "c", "marks": [{ "type": "highlight" }] }
+        ] }
+      ] },
+      "plugins": [{ "id": "heading-anchors", "version": 2 }]
+    }
+  },
+  {
+    "name": "mark-moved-behind-the-rest",
+    "content": {
+      "format": "atlas-rich", "version": 1,
+      "document": { "type": "doc", "content": [
+        { "type": "paragraph", "content": [
+          { "type": "text", "text": "a", "marks": [{ "type": "highlight" }] },
+          { "type": "text", "text": "b", "marks": [{ "type": "link", "attrs": { "href": "https://example.com/a", "target": "_blank", "rel": "noopener noreferrer" } }, { "type": "bold" }, { "type": "italic" }, { "type": "highlight" }] },
+          { "type": "text", "text": "c", "marks": [{ "type": "italic" }, { "type": "strike" }] }
+        ] }
+      ] },
+      "plugins": [{ "id": "heading-anchors", "version": 2 }]
+    }
+  }
+]

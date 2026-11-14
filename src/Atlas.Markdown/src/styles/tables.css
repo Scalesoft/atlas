@@ -1,0 +1,535 @@
+/* A table must remain legible in its completely passive state. These are component-owned
+   defaults rather than playground styles, so every consuming project gets the same safe
+   baseline even when it supplies no table CSS at all. */
+/* A paragraph's spacing: the controls need only the wrapper's own gutter (its padding below), the table toolbar and menus are
+   fixed portals. The same for a reader, so a change of the right to write moves nothing (one-editor contract J7.1). */
+.md-editor .editor-body .tableWrapper {
+  margin: 14px 0;
+}
+.md-editor .editor-body .tableWrapper > table {
+  width: 100%;
+  min-width: max-content;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  color: var(--text, #12333a);
+  background: var(--paper, #ffffff);
+  border: 1px solid color-mix(in oklab, var(--accent-line, #9dcbd6) 72%, #d8e7eb);
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(17, 58, 68, 0.035);
+}
+/* Seven-plus columns rarely fit a document column even at their minimum readable width — force
+   the table to its natural (content) width so the wrapper's scrollbar takes over instead of
+   every column being squeezed until words break mid-word. */
+.md-editor .editor-body .tableWrapper:has(> table tr:first-child > :nth-child(6)) > table {
+  width: max-content;
+}
+.md-editor .editor-body .tableWrapper > table th,
+.md-editor .editor-body .tableWrapper > table td {
+  position: relative;
+  min-width: 96px;
+  min-height: 44px;
+  height: 44px;
+  padding: 9px 12px;
+  vertical-align: top;
+  background: var(--tt-cell-bg, color-mix(in oklab, var(--paper, #ffffff) 96%, #eaf6f9));
+  border: 0;
+  border-right: 1px solid color-mix(in oklab, var(--accent-line, #9dcbd6) 48%, #e1ecef);
+  border-bottom: 1px solid color-mix(in oklab, var(--accent-line, #9dcbd6) 48%, #e1ecef);
+  transition: background-color var(--md-motion-fast), box-shadow var(--md-motion-fast);
+}
+.md-editor .editor-body .tableWrapper > table th {
+  color: color-mix(in oklab, var(--text, #12333a) 88%, #416d77);
+  background: var(--tt-th-bg, color-mix(in oklab, var(--accent-soft, #e5f5f8) 68%, #ffffff));
+  font-weight: 650;
+  text-align: start;
+}
+.md-editor .editor-body .tableWrapper > table tr:last-child > * { border-bottom: 0; }
+.md-editor .editor-body .tableWrapper > table tr > *:last-child { border-right: 0; }
+.md-editor .editor-body .tableWrapper > table td:hover,
+.md-editor .editor-body .tableWrapper > table th:hover {
+  background: color-mix(in oklab, var(--accent-soft, #e5f5f8) 48%, var(--paper, #ffffff));
+}
+.md-editor .editor-body .tableWrapper > table :is(td, th) {
+  transition: box-shadow var(--md-motion-base);
+}
+.md-editor .editor-body .tableWrapper > table .selectedCell {
+  background: var(--tt-selected-bg, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #4f9fb1) 65%, transparent);
+}
+.md-editor .editor-body .tableWrapper > table :is(td, th)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* No z-index: as the cell's last box it already paints over the cell's content. A stacking layer per cell inside the scrolling
+     wrapper made every frame's layerization cost ~190 ms on an 846-row page (3.6-G open trace). */
+  pointer-events: none;
+  background: color-mix(in oklab, var(--accent, #4f9fb1) 7%, transparent);
+  opacity: 0; transition: opacity var(--md-motion-base);
+}
+.md-editor .editor-body .tableWrapper > table .selectedCell::after { opacity: 1; }
+/* The selected table is a selected component (P12): the shared outline, as .md-component-selected draws it. */
+.md-editor .tableWrapper.ProseMirror-selectednode { outline: var(--state-selected-outline, 2px solid var(--accent, #58a9b9)); outline-offset: var(--focus-offset, 2px); }
+
+/* A wide table scrolls inside its own wrapper instead of squeezing every column to fit, or
+   overflowing the whole page (390px viewports measurably regressed on this before — see
+   tests/e2e/table-safe-ui.spec.ts). Edit mode reserves a small gutter (padding, not a negative
+   offset) so the row/column selection rail and the round "+" inserter — both absolutely
+   positioned siblings of <table> that used to sit at a negative left/top offset — land inside
+   the wrapper's own visible area instead of being clipped by the new overflow. Only the
+   horizontal axis is contained (no history swipe at the scroll edge); a vertical wheel over the
+   table must keep scrolling the document. The right and bottom gutters hold the "+" inserters,
+   which sit centred on the last column/row edge (a 26px circle, 28px when hovered): without them
+   the wrapper overflowed and showed scrollbars around a table that fits. */
+.md-editor .editor-body .tableWrapper { overflow: auto; overscroll-behavior-x: contain; position: relative; }
+.md-editor .editor-body .tableWrapper { padding: 30px 16px 16px 28px; }
+.md-editor .editor-body .resize-cursor { cursor: col-resize; }
+
+/* V25 Phase 5 — table hover controls overlay. The plugin paints chips + insert
+   markers as siblings of the table inside .tableWrapper; container is
+   pointer-events:none, interactive children re-enable them. */
+.md-editor .editor-body .tt-table-controls {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateZ(0);
+  transition: opacity var(--md-motion-target) var(--md-motion-ease);
+  z-index: 4;
+}
+/* Overlay is surfaced when the cursor sits anywhere over the table OR over
+   one of the chips/inserts (they live geometrically outside the wrapper
+   rect, so the wrapper's `:hover` doesn't catch them — `:has()` does). */
+.md-editor .editor-body .tableWrapper:hover .tt-table-controls,
+.md-editor .editor-body .tt-table-controls:hover,
+.md-editor .editor-body .tt-table-controls:focus-within,
+.md-editor .editor-body .tableWrapper:has(.tt-table-controls [data-selected]) .tt-table-controls,
+.md-editor .editor-body .tableWrapper:has(.tt-table-controls [data-active]) .tt-table-controls {
+  opacity: 1;
+}
+.md-editor .editor-body .tt-table-col-rail,
+.md-editor .editor-body .tt-table-row-rail {
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+}
+.md-editor .editor-body .tt-table-col-chip,
+.md-editor .editor-body .tt-table-row-chip {
+  position: absolute;
+  /* Opacity alone leaves invisible buttons clickable and tabbable. */
+  visibility: hidden;
+  pointer-events: none;
+  background: color-mix(in oklab, var(--accent-soft, #e5f5f8) 72%, #ffffff);
+  border: 1px solid color-mix(in oklab, var(--accent-line, #9dcbd6) 66%, transparent);
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-dimmer, #71878c);
+  /* Per-row/col hover gate: chips are hidden by default and surface only
+     when their row/col matches the cell currently pointed at (via
+     `data-active="1"` set by TableControls). Pre-fix every chip was
+     visible whenever the table was hovered, which made the gutter noisy
+     and made it hard to spot which row/col an action targets. */
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity var(--md-motion-target) var(--md-motion-ease), transform var(--md-motion-target) var(--md-motion-ease), background var(--md-motion-fast), color var(--md-motion-fast);
+  font-family: inherit;
+  padding: 0;
+}
+.md-editor .editor-body .tt-table-col-chip[data-active],
+.md-editor .editor-body .tt-table-row-chip[data-active],
+.md-editor .editor-body .tt-table-col-chip[data-selected],
+.md-editor .editor-body .tt-table-row-chip[data-selected],
+.md-editor .editor-body .tt-table-col-chip:focus,
+.md-editor .editor-body .tt-table-row-chip:focus {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: scale(1);
+}
+.md-editor .editor-body .tt-table-col-chip {
+  cursor: grab;
+  touch-action: none;
+  top: -26px;
+  height: 24px;
+  border-radius: 6px 6px 2px 2px;
+}
+
+/* Column reordering changes presentation during the gesture, then commits once.
+   Only neighbours interpolate; the grabbed column follows the pointer directly. */
+.md-editor .editor-body .tableWrapper:has([data-column-dragging]) table { overflow: visible; }
+.md-editor .editor-body [data-column-drag="neighbor"] {
+  transition: transform var(--md-motion-target) var(--md-motion-ease);
+}
+.md-editor .editor-body [data-column-drag="source"],
+.md-editor .editor-body .tableWrapper:has([data-column-dragging]) .selectedCell {
+  z-index: 9;
+  transition: none;
+  cursor: grabbing;
+  box-shadow: 0 3px 12px #163f4926, inset 0 0 0 1px var(--accent, #58a9b9);
+}
+.md-editor .editor-body .tt-table-controls[data-column-dragging] { opacity: 1; }
+.md-editor .editor-body .tt-table-controls[data-column-dragging] .tt-table-col-chip {
+  visibility: visible; opacity: 1;
+}
+.md-editor .editor-body .tt-table-controls[data-column-dragging] :is(.tt-table-row-chip, .tt-table-col-insert, .tt-table-row-insert, .tt-table-handle-del, .tt-table-row-resize) {
+  visibility: hidden; pointer-events: none;
+}
+/* A column or row drag (the editor root carries it, axisDragPreview.ts; a :has() over the editor restyled the page on each edit). */
+.md-editor[data-table-dragging] :is(.bubble-menu, .tt-cell-control) { visibility: hidden !important; pointer-events: none; }
+.md-editor .tt-column-drop-guide {
+  position: absolute; top: -28px; bottom: 0; pointer-events: none;
+  box-sizing: border-box; border: 2px dashed var(--accent, #58a9b9); border-radius: 6px;
+  background: color-mix(in oklab, var(--accent, #58a9b9) 7%, transparent);
+  transition: left var(--md-motion-target) var(--md-motion-ease);
+}
+.md-editor .editor-body .tableWrapper:has([data-row-dragging]) table { overflow: visible; }
+.md-editor .editor-body [data-row-drag="neighbor"] {
+  transition: transform var(--md-motion-target) var(--md-motion-ease);
+}
+.md-editor .editor-body [data-row-drag="source"],
+.md-editor .editor-body .tableWrapper:has([data-row-dragging]) .selectedCell {
+  z-index: 9;
+  transition: none;
+  cursor: grabbing;
+  box-shadow: 0 3px 12px #163f4926, inset 0 0 0 1px var(--accent, #58a9b9);
+}
+.md-editor .editor-body .tt-table-controls[data-row-dragging] { opacity: 1; }
+.md-editor .editor-body .tt-table-controls[data-row-dragging] .tt-table-row-chip {
+  visibility: visible; opacity: 1;
+}
+.md-editor .editor-body .tt-table-controls[data-row-dragging] :is(.tt-table-col-chip, .tt-table-col-insert, .tt-table-row-insert, .tt-table-handle-del, .tt-table-row-resize) {
+  visibility: hidden; pointer-events: none;
+}
+.md-editor .tt-row-drop-guide {
+  position: absolute; left: -28px; right: 0; pointer-events: none;
+  box-sizing: border-box; border: 2px dashed var(--accent, #58a9b9); border-radius: 6px;
+  background: color-mix(in oklab, var(--accent, #58a9b9) 7%, transparent);
+  transition: top var(--md-motion-target) var(--md-motion-ease);
+}
+.md-editor .editor-body .tt-table-row-chip {
+  left: -28px;
+  width: 24px;
+  border-radius: 6px 2px 2px 6px;
+}
+.md-editor .editor-body .tt-table-col-chip:hover,
+.md-editor .editor-body .tt-table-row-chip:hover,
+.md-editor .editor-body .tt-table-col-chip:focus-visible,
+.md-editor .editor-body .tt-table-row-chip:focus-visible {
+  background: color-mix(in oklab, var(--accent-soft, #e5f5f8) 90%, #ffffff);
+  color: var(--accent-ink, #123f49);
+}
+.md-editor .editor-body .tt-table-handle-grip {
+  display: inline-flex;
+  width: var(--icon-sm, 16px);
+  height: var(--icon-sm, 16px);
+  color: var(--text-dimmer, #71878c);
+}
+.md-editor .editor-body .tt-table-row-chip .tt-table-handle-grip {
+  position: absolute;
+  top: 4px;
+  transform: rotate(90deg);
+}
+.md-editor .editor-body .tt-table-handle-del {
+  position: absolute;
+  right: 2px;
+  display: inline-flex;
+  pointer-events: auto;
+  width: 20px; height: 20px;
+  align-items: center; justify-content: center;
+  border-radius: 4px;
+  color: var(--chip-red-fg, var(--red, #b83e46));
+  cursor: pointer;
+  opacity: 0;
+  transition: background var(--md-motion-fast), opacity var(--md-motion-fast);
+}
+.md-editor .editor-body .tt-table-row-chip .tt-table-handle-del {
+  right: calc(50% - 10px);
+  bottom: 2px;
+}
+.md-editor .editor-body .tt-table-col-chip:hover .tt-table-handle-del,
+.md-editor .editor-body .tt-table-col-chip:focus .tt-table-handle-del,
+.md-editor .editor-body .tt-table-row-chip:hover .tt-table-handle-del,
+.md-editor .editor-body .tt-table-row-chip:focus .tt-table-handle-del {
+  opacity: 1;
+}
+.md-editor .editor-body .tt-table-handle-del:hover {
+  background: var(--accent-soft, #e3f4f7);
+  background: color-mix(in oklab, var(--red, #b83e46) 14%, transparent);
+}
+.md-editor .editor-body .tt-table-handle-del::after { content: ""; width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); background: currentColor; mask: var(--tt-ic-trash) center / contain no-repeat; }
+.md-editor .editor-body .tt-table-handle-grip { background: currentColor; mask: var(--tt-ic-grip) center / contain no-repeat; }
+.md-editor .editor-body .tt-insert-icon { display: block; }
+.md-editor .editor-body .tt-insert-icon::after { content: ""; display: block; width: 100%; height: 100%; background: currentColor; mask: var(--tt-ic-plus) center / contain no-repeat; }
+
+.md-editor .editor-body .tt-table-col-insert,
+.md-editor .editor-body .tt-table-row-insert {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--accent-ink, #123f49);
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  filter: drop-shadow(0 3px 8px rgba(19, 63, 73, 0.05));
+  transition:
+    opacity var(--md-motion-fast),
+    background-color var(--md-motion-fast),
+    border-color var(--md-motion-fast);
+  padding: 0;
+}
+.md-editor .editor-body .tt-table-col-insert::before,
+.md-editor .editor-body .tt-table-row-insert::before {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent-line, #9dcbd6) 66%, transparent);
+  opacity: .72;
+  transition: opacity var(--md-motion-fast), background-color var(--md-motion-fast), transform var(--md-motion-target) var(--md-motion-ease);
+}
+.md-editor .editor-body .tt-table-col-insert::before {
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  transform: scaleY(.98);
+}
+.md-editor .editor-body .tt-table-row-insert::before {
+  left: 0;
+  right: 0;
+  top: calc(50% - 1px);
+  height: 2px;
+  transform: scaleX(.99);
+}
+.md-editor .editor-body .tt-table-col-insert {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 20px;
+  height: 100%;
+  transform: translateX(calc(var(--tt-insert-offset, 0px) - 50%)) scaleY(.96);
+}
+.md-editor .editor-body .tt-table-row-insert {
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 20px;
+  transform: translateY(calc(var(--tt-insert-offset, 0px) - 50%)) scaleX(.985);
+}
+.md-editor .editor-body .tt-table-col-insert[data-active],
+.md-editor .editor-body .tt-table-row-insert[data-active],
+.md-editor .editor-body .tt-table-col-insert:focus,
+.md-editor .editor-body .tt-table-row-insert:focus {
+  visibility: visible;
+  opacity: 1;
+}
+.md-editor .editor-body .tt-table-col-insert[data-active] {
+  transform: translateX(calc(var(--tt-insert-offset, 0px) - 50%)) scaleY(1);
+}
+.md-editor .editor-body .tt-table-row-insert[data-active] {
+  transform: translateY(calc(var(--tt-insert-offset, 0px) - 50%)) scaleX(1);
+}
+.md-editor .editor-body .tt-table-col-insert:hover,
+.md-editor .editor-body .tt-table-row-insert:hover {
+  background: transparent;
+}
+.md-editor .editor-body .tt-table-col-insert:hover::before,
+.md-editor .editor-body .tt-table-row-insert:hover::before,
+.md-editor .editor-body .tt-table-col-insert:focus-visible::before,
+.md-editor .editor-body .tt-table-row-insert:focus-visible::before {
+  opacity: 1;
+  background: var(--accent, #58a9b9);
+}
+.md-editor .editor-body .tt-table-row-insert:hover {
+  transform: translateY(calc(var(--tt-insert-offset, 0px) - 50%)) scaleX(1);
+}
+.md-editor .editor-body .tt-table-col-insert:hover {
+  transform: translateX(calc(var(--tt-insert-offset, 0px) - 50%)) scaleY(1);
+}
+.md-editor .editor-body .tt-table-col-insert .tt-insert-icon,
+.md-editor .editor-body .tt-table-row-insert .tt-insert-icon {
+  position: absolute;
+  pointer-events: auto;
+  z-index: 1;
+  /* border-box at an allowed rendered size (census: {14,16,18,22,26}). The
+     halo used to be content-box 20px + 5px padding = 30px; it is now 26px,
+     deliberately one step smaller so the insert affordance sits inside the
+     icon-size scale, and the 16px icon (createIconElement(doc, 'plus', 16))
+     keeps 5px of breathing room inside it. */
+  box-sizing: border-box;
+  width: 26px; height: 26px;
+  padding: 5px;
+  overflow: visible;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--paper, #ffffff) 88%, var(--accent-soft, #e5f5f8));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent-line, #9dcbd6) 64%, transparent);
+  transition: transform var(--md-motion-fast) var(--md-motion-ease), background-color var(--md-motion-fast), box-shadow var(--md-motion-fast);
+}
+/* Keep the col-inserter's hit-region inside the wrapper's reserved 30px top gutter
+   (see the .tableWrapper padding comment above), clear of the table itself. At the
+   old -10px offset the 26px icon dipped 16px below the table's top edge, so its
+   pointer-events:auto svg (not the inert, always -10px-offset button) sat on top
+   of the first column's right border — exactly where a user drags to resize — and
+   silently ate the mousemove prosemirror-tables needs to show .column-resize-handle
+   (tests/e2e/table-interactions.spec.ts:5).
+   The row-inserter's mirror offset (`left`) is deliberately left at -10px: the
+   28px left gutter is already fully claimed by the row chip's own -28px..-4px
+   band, and retreating the icon into it the same way collides with a *focused*
+   chip sitting right there (tests/e2e/table-row-drag.spec.ts:49) — a same-shaped
+   but untested left-edge/row-resize overlap this task doesn't cover. */
+.md-editor .editor-body .tt-table-col-insert .tt-insert-icon { top: -27px; }
+.md-editor .editor-body .tt-table-row-insert .tt-insert-icon { left: -10px; }
+.md-editor .editor-body .tt-table-col-insert,
+.md-editor .editor-body .tt-table-row-insert { z-index: 6; }
+.md-editor .editor-body .tt-table-col-insert:hover .tt-insert-icon,
+.md-editor .editor-body .tt-table-row-insert:hover .tt-insert-icon,
+.md-editor .editor-body .tt-table-col-insert:focus-visible .tt-insert-icon,
+.md-editor .editor-body .tt-table-row-insert:focus-visible .tt-insert-icon {
+  transform: scale(1.08);
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--accent, #58a9b9), 0 4px 12px rgba(16, 63, 73, .12);
+}
+
+/* V25 Phase 7 — column resize affordance. ProseMirror's tableColumnResizing
+   plugin paints `.column-resize-handle` on cell border hover, but ships
+   without any visual styling. Without this rule the only feedback that
+   resize is even possible is the col-resize cursor — and only in the 4px
+   pixel-precise strip. Word/Notion give a clearly visible vertical bar.
+   The handle is positioned absolutely by ProseMirror inside the cell at
+   right: -2px so it spans the full cell height across the border. */
+.md-editor .editor-body .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background-color: var(--accent, #58a9b9);
+  pointer-events: none;
+  /* Slight transparency so it reads as a hover affordance, not a hard
+     vertical rule when the user is just reading the table. */
+  opacity: 0.55;
+  z-index: 6;
+}
+/* Body class set during the drag — keep the handle solid while dragging. */
+body.resize-cursor .md-editor .editor-body .column-resize-handle {
+  opacity: 1;
+}
+/* Cells get the col-resize cursor on the rightmost few pixels via the
+   tableColumnResizing plugin's body.resize-cursor class. Without this, no
+   cursor change tells the user "you can drag here." */
+body.resize-cursor,
+body.resize-cursor * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+/* V25 Phase 6 — row resize handle. 4px strip at row's bottom edge. */
+.md-editor .editor-body .tt-table-row-resize {
+  position: absolute;
+  pointer-events: auto;
+  left: 0;
+  right: 0;
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+  transition: background var(--md-motion-fast);
+  z-index: 5;
+  /* Disable browser scroll/zoom gestures on touch so pointermove keeps
+     firing instead of pointercancel. Without this, touch resize cancels
+     on the first vertical move because the browser claims the gesture. */
+  touch-action: none;
+}
+.md-editor .editor-body .tt-table-row-resize:hover,
+body.tt-row-resizing .md-editor .editor-body .tt-table-row-resize {
+  background: var(--accent, #58a9b9);
+}
+body.tt-row-resizing {
+  cursor: row-resize !important;
+  user-select: none;
+}
+
+.md-editor .bubble-menu.table-menu .bb-danger { color: var(--chip-red-fg, #a62d38); }
+.md-editor .bubble-menu.table-menu .bb-danger:hover,
+.md-editor .bubble-menu.table-menu .bb-danger:focus-visible { background: var(--accent-soft, #e3f4f7); background: color-mix(in oklab, var(--red, #b83e46) 12%, transparent); }
+.md-editor .bubble-menu .bb-danger-hover:hover,
+.md-editor .bubble-menu .bb-danger-hover:focus-visible { color: var(--chip-red-fg, #a62d38); background: var(--accent-soft, #e3f4f7); background: color-mix(in oklab, var(--red, #b83e46) 10%, transparent); }
+.md-editor .bubble-menu.table-menu {
+  width: max-content;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  max-width: min(360px, calc(100vw - 24px));
+  animation: md-popover-enter var(--md-motion-menu) var(--md-motion-ease) both;
+}
+/* Same padding as every other .bb icon button (census: one icon-only tuple) — the
+   trailing chevron just needs a tighter gap, not its own asymmetric padding. */
+.md-editor .bubble-menu.table-menu .bb-menu-trigger { gap: 3px; }
+.md-editor .bb-table-actions { width: max-content; min-width: 190px; }
+.md-editor .bb-table-actions > button { width: 100%; }
+
+.md-editor .bb-table-actions > button.danger { color: var(--chip-red-fg, var(--red, #b83e46)); }
+.md-editor .bb-table-actions > button svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); }
+
+
+/* V25 Phase 5b — cell-toolbar bg palette popover */
+.md-editor .bb-bg-palette {
+  display: grid; grid-template-columns: repeat(5, auto); gap: 4px;
+  padding: 6px;
+}
+.md-editor .bb-bg-swatch {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line, #d4e4e7);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0;
+  transition: transform var(--md-motion-fast), border-color var(--md-motion-fast);
+}
+.md-editor .bb-bg-swatch:hover,
+.md-editor .bb-bg-swatch:focus-visible { transform: scale(1.08); border-color: var(--text-dim, #49676e); }
+.md-editor .bb-bg-swatch .bb-bg-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.md-editor .bb-bg-swatch.tone-none .bb-bg-dot {
+  background: transparent;
+  background-image:
+    linear-gradient(45deg, transparent calc(50% - 1px), var(--red, #b83e46) calc(50% - 1px), var(--red, #b83e46) calc(50% + 1px), transparent calc(50% + 1px));
+}
+.md-editor .bb-bg-swatch.tone-accent .bb-bg-dot { background: var(--accent, #58a9b9); background: color-mix(in oklab, var(--accent, #58a9b9) 35%, transparent); }
+.md-editor .bb-bg-swatch.tone-green  .bb-bg-dot { background: var(--green, #137b70);  background: color-mix(in oklab, var(--green, #137b70)  35%, transparent); }
+.md-editor .bb-bg-swatch.tone-amber  .bb-bg-dot { background: var(--amber, #b66b12);  background: color-mix(in oklab, var(--amber, #b66b12)  40%, transparent); }
+.md-editor .bb-bg-swatch.tone-red    .bb-bg-dot { background: var(--red, #b83e46);    background: color-mix(in oklab, var(--red, #b83e46)    35%, transparent); }
+
+/* Cell-bg attribute applied to <td>/<th>. Soft tints from the project palette. */
+.md-editor .editor-body .tableWrapper > table td[data-bg="accent"],
+.md-editor .editor-body .tableWrapper > table th[data-bg="accent"] {
+  background: var(--accent-soft, #e3f4f7);
+  background: color-mix(in oklab, var(--accent, #58a9b9) 12%, transparent);
+}
+.md-editor .editor-body .tableWrapper > table td[data-bg="green"],
+.md-editor .editor-body .tableWrapper > table th[data-bg="green"] {
+  background: var(--green, #137b70);
+  background: color-mix(in oklab, var(--green, #137b70) 14%, transparent);
+}
+.md-editor .editor-body .tableWrapper > table td[data-bg="amber"],
+.md-editor .editor-body .tableWrapper > table th[data-bg="amber"] {
+  background: var(--amber, #b66b12);
+  background: color-mix(in oklab, var(--amber, #b66b12) 16%, transparent);
+}
+.md-editor .editor-body .tableWrapper > table td[data-bg="red"],
+.md-editor .editor-body .tableWrapper > table th[data-bg="red"] {
+  background: var(--red, #b83e46);
+  background: color-mix(in oklab, var(--red, #b83e46) 12%, transparent);
+}
+
+.md-editor .bb-table-actions hr { width: 100%; border: 0; border-top: 1px solid var(--border, #dbe8eb); margin: 4px 0; }
+
+/* The same quiet selection and content preview as document block dragging. */
+.md-editor .tt-axis-drop-label {
+  position: absolute; left: 6px; top: 34px; padding: 2px 8px; border-radius: 10px;
+  color: var(--text); background: var(--bg-2); border: 1px solid var(--accent);
+  font: 500 11px/18px var(--font-sans, sans-serif); white-space: nowrap;
+}
+.md-editor .tt-row-drop-guide .tt-axis-drop-label { left: 36px; top: 4px; }
+.md-editor .tt-column-drop-guide, .md-editor .tt-row-drop-guide { border-style: solid; animation: md-block-drop-enter var(--md-motion-base); }

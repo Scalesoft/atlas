@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220">
+<rect width="640" height="220" fill="#ffffff"/>
+<rect x="60" y="40" width="140" height="120" rx="10" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M60 68V52a12 12 0 0 1 12-12h116a12 12 0 0 1 12 12v16z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="74" y="82" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="74" y="106" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="74" y="130" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="98" y="82" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="98" y="106" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="98" y="130" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="122" y="82" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="122" y="106" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="122" y="130" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="146" y="82" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="146" y="106" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="146" y="130" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="170" y="82" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="170" y="106" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<rect x="170" y="130" width="16" height="16" rx="3" fill="#e6e6e6"/>
+<path d="M100 110l12 12M112 110l-12 12M124 110l12 12M136 110l-12 12M148 110l12 12M160 110l-12 12" fill="none" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="400" cy="200" rx="100" ry="18" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M398 196c-2-50 6-90 24-124" fill="none" stroke="#5a5a5a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M422 72c-20-22-52-22-72-4 24-4 48 0 72 4zM422 72c22-22 54-20 72 0-24-6-48-4-72 0zM422 72c-8-26-30-40-56-38 22 8 40 20 56 38zM422 72c10-26 32-38 58-34-22 8-42 18-58 34z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="520" cy="62" r="22" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M550 62L560 62M541.2 83.2L548.3 90.3M520 92L520 102M498.8 83.2L491.7 90.3M490 62L480 62M498.8 40.8L491.7 33.7M520 32L520 22M541.2 40.8L548.3 33.7" fill="none" stroke="#9a9a9a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M470 170c10-8 20-8 30 0s20 8 30 0 20-8 30 0" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

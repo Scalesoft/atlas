@@ -1,0 +1,4 @@
+{
+  "Pošlete nejvýše {maxPhrases} frází, každou nejvýše o {maxPhraseLength} znacích.": "Send at most {maxPhrases} phrases, each of at most {maxPhraseLength} characters.",
+  "Pošlete text sekce nejvýše o {maxContextLength} znacích a nejvýše {maxCandidates} stránek.": "Send a section text of at most {maxContextLength} characters and at most {maxCandidates} pages."
+}

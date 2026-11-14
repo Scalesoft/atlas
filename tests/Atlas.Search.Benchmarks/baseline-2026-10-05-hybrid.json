@@ -1,0 +1,280 @@
+{
+  "utc": "2026-10-05T06:53:20.3240305Z",
+  "pages": 10000,
+  "revisions": 50000,
+  "publishedHistoricalAliases": 0,
+  "importedPathAliases": 0,
+  "results": [
+    {
+      "query": "pristupy",
+      "rowsReturned": 21,
+      "samples": 14,
+      "p50Ms": 24.73,
+      "p95Ms": 28.29
+    },
+    {
+      "query": "autentikace",
+      "rowsReturned": 21,
+      "samples": 14,
+      "p50Ms": 120.55,
+      "p95Ms": 140.9
+    },
+    {
+      "query": "nasazeni kube",
+      "rowsReturned": 21,
+      "samples": 14,
+      "p50Ms": 32.68,
+      "p95Ms": 34.78
+    },
+    {
+      "query": "monitoring serveru 500",
+      "rowsReturned": 21,
+      "samples": 14,
+      "p50Ms": 40.67,
+      "p95Ms": 57.73
+    }
+  ],
+  "concurrent": {
+    "readers": 2,
+    "projectionRefreshBatches": 40,
+    "pagesPerBatch": 10,
+    "samples": 48,
+    "searchP95Ms": 148.62,
+    "refreshBatchP95Ms": 10.15
+  },
+  "hybrid": {
+    "pages": 10000,
+    "chunks": 25000,
+    "seedSeconds": 4.6,
+    "hnswBuildSeconds": 7.2,
+    "vectorRoundTripP50Ms": {
+      "text": 44.01,
+      "binary": 44.17,
+      "scaled": 0.54
+    },
+    "exactTitleKept": true,
+    "results": [
+      {
+        "query": "pristupy",
+        "scope": "published-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 23.51,
+        "p95Ms": 24.72,
+        "serverP50Ms": 23.12,
+        "serverP95Ms": 24.57,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "pristupy",
+        "scope": "published-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 33.06,
+        "p95Ms": 35.39,
+        "serverP50Ms": 34.51,
+        "serverP95Ms": 36.71,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "pristupy",
+        "scope": "all-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 61.36,
+        "p95Ms": 87.02,
+        "serverP50Ms": 62.96,
+        "serverP95Ms": 68.95,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "pristupy",
+        "scope": "all-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 69.06,
+        "p95Ms": 72.72,
+        "serverP50Ms": 70.29,
+        "serverP95Ms": 74.04,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "autentikace",
+        "scope": "published-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 114.93,
+        "p95Ms": 118.37,
+        "serverP50Ms": 112.57,
+        "serverP95Ms": 115.87,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "autentikace",
+        "scope": "published-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 120.5,
+        "p95Ms": 149.2,
+        "serverP50Ms": 120.49,
+        "serverP95Ms": 126.56,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "autentikace",
+        "scope": "all-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 153.92,
+        "p95Ms": 160.6,
+        "serverP50Ms": 162.12,
+        "serverP95Ms": 171.49,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "autentikace",
+        "scope": "all-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 170.5,
+        "p95Ms": 182.88,
+        "serverP50Ms": 166.03,
+        "serverP95Ms": 172.72,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "nasazeni kube",
+        "scope": "published-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 27.95,
+        "p95Ms": 29.78,
+        "serverP50Ms": 28.53,
+        "serverP95Ms": 31.2,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "nasazeni kube",
+        "scope": "published-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 44.9,
+        "p95Ms": 73.64,
+        "serverP50Ms": 37.75,
+        "serverP95Ms": 40.27,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "nasazeni kube",
+        "scope": "all-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 62.69,
+        "p95Ms": 66.06,
+        "serverP50Ms": 66.07,
+        "serverP95Ms": 77.32,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "nasazeni kube",
+        "scope": "all-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 76.83,
+        "p95Ms": 93.76,
+        "serverP50Ms": 72.7,
+        "serverP95Ms": 101.38,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "monitoring serveru 500",
+        "scope": "published-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 32.9,
+        "p95Ms": 37.59,
+        "serverP50Ms": 34.9,
+        "serverP95Ms": 40.59,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "monitoring serveru 500",
+        "scope": "published-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 43.44,
+        "p95Ms": 48.83,
+        "serverP50Ms": 42.53,
+        "serverP95Ms": 44.57,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "monitoring serveru 500",
+        "scope": "all-lexical",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 72.18,
+        "p95Ms": 75.93,
+        "serverP50Ms": 79.46,
+        "serverP95Ms": 82.58,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "monitoring serveru 500",
+        "scope": "all-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 82.28,
+        "p95Ms": 90.31,
+        "serverP50Ms": 89.14,
+        "serverP95Ms": 101.42,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "zotaveni po havarii",
+        "scope": "published-lexical",
+        "rowsReturned": 0,
+        "samples": 14,
+        "p50Ms": 7.17,
+        "p95Ms": 7.99,
+        "serverP50Ms": 6.02,
+        "serverP95Ms": 6.34,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "zotaveni po havarii",
+        "scope": "published-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 18.76,
+        "p95Ms": 22.9,
+        "serverP50Ms": 18.49,
+        "serverP95Ms": 20.07,
+        "hnswIndexScan": true
+      },
+      {
+        "query": "zotaveni po havarii",
+        "scope": "all-lexical",
+        "rowsReturned": 0,
+        "samples": 14,
+        "p50Ms": 38.15,
+        "p95Ms": 46.81,
+        "serverP50Ms": 38.98,
+        "serverP95Ms": 44.67,
+        "hnswIndexScan": false
+      },
+      {
+        "query": "zotaveni po havarii",
+        "scope": "all-hybrid",
+        "rowsReturned": 51,
+        "samples": 14,
+        "p50Ms": 49.11,
+        "p95Ms": 52.06,
+        "serverP50Ms": 49.8,
+        "serverP95Ms": 56.22,
+        "hnswIndexScan": true
+      }
+    ]
+  },
+  "note": "V3 hybrid search (plan phase 2 section 11): ATLAS_BENCHMARK_HYBRID=1 on the Podman test database (pgvector 0.8.1, PostgreSQL 18) from Windows through WSL port forwarding. explain removed (the plans carry the query vector); p50Ms/p95Ms are client times, serverP50Ms/serverP95Ms planning plus execution."
+}

@@ -1,0 +1,2226 @@
+[
+  {
+    "id": "it-ai-ml",
+    "name": "AI a strojové učení",
+    "group": "it",
+    "tags": [
+      "AI",
+      "strojové učení",
+      "modely",
+      "neuronové sítě",
+      "data science"
+    ],
+    "hue": 275,
+    "stems": [
+      "ai",
+      "ml",
+      "strojove",
+      "neuron",
+      "inteligenc",
+      "machine"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-analytics",
+    "name": "Analytika a reporty",
+    "group": "it",
+    "tags": [
+      "analytika",
+      "BI",
+      "Power BI",
+      "reporty",
+      "KPI",
+      "dashboardy"
+    ],
+    "hue": 35,
+    "stems": [
+      "analyti",
+      "report",
+      "bi",
+      "dashboard",
+      "statisti"
+    ],
+    "icons": [
+      "bar-chart-3",
+      "layout-dashboard"
+    ]
+  },
+  {
+    "id": "it-api",
+    "name": "API a integrace",
+    "group": "it",
+    "tags": [
+      "rozhraní",
+      "integrace",
+      "webhooky",
+      "služby"
+    ],
+    "hue": 200,
+    "stems": [
+      "api",
+      "integrac",
+      "webhook",
+      "endpoint",
+      "graphql"
+    ],
+    "icons": [
+      "plug"
+    ]
+  },
+  {
+    "id": "it-automation",
+    "name": "Automatizace a workflow",
+    "group": "it",
+    "tags": [
+      "automatizace",
+      "workflow",
+      "skripty",
+      "roboti",
+      "integrace"
+    ],
+    "hue": 110,
+    "stems": [
+      "automatiza",
+      "workflow",
+      "skript",
+      "robot"
+    ],
+    "icons": [
+      "workflow"
+    ]
+  },
+  {
+    "id": "it-backup",
+    "name": "Zálohy a obnova",
+    "group": "it",
+    "tags": [
+      "zálohy",
+      "obnova",
+      "disaster recovery",
+      "archiv",
+      "snapshot"
+    ],
+    "hue": 160,
+    "stems": [
+      "zaloh",
+      "obnov",
+      "backup",
+      "restore",
+      "recovery",
+      "archivac",
+      "snapshot"
+    ],
+    "icons": [
+      "refresh-cw"
+    ]
+  },
+  {
+    "id": "it-bugs",
+    "name": "Chyby a issue tracking",
+    "group": "it",
+    "tags": [
+      "chyby",
+      "bugy",
+      "issue tracker",
+      "YouTrack",
+      "Jira",
+      "tikety"
+    ],
+    "hue": 5,
+    "stems": [
+      "chyby",
+      "chyba",
+      "chybov",
+      "bug",
+      "bugy",
+      "bugs",
+      "issue",
+      "youtrack",
+      "jira"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-certificates",
+    "name": "Certifikáty a klíče",
+    "group": "it",
+    "tags": [
+      "certifikáty",
+      "šifrování",
+      "klíče",
+      "TLS",
+      "podpisy"
+    ],
+    "hue": 50,
+    "stems": [
+      "certifikat",
+      "klice",
+      "klicu",
+      "sifrov",
+      "tls",
+      "ssl",
+      "pki"
+    ],
+    "icons": [
+      "key-round"
+    ]
+  },
+  {
+    "id": "it-cicd",
+    "name": "CI/CD a nasazení",
+    "group": "it",
+    "tags": [
+      "build",
+      "pipeline",
+      "release",
+      "nasazení",
+      "git"
+    ],
+    "hue": 152,
+    "stems": [
+      "ci",
+      "cd",
+      "cicd",
+      "build",
+      "pipeline",
+      "nasazen",
+      "deploy"
+    ],
+    "icons": [
+      "rotate-cw"
+    ]
+  },
+  {
+    "id": "it-cloud",
+    "name": "Cloud a hosting",
+    "group": "it",
+    "tags": [
+      "cloud",
+      "hosting",
+      "Azure",
+      "AWS",
+      "škálování"
+    ],
+    "hue": 210,
+    "stems": [
+      "cloud",
+      "hosting",
+      "azure",
+      "aws",
+      "gcp",
+      "skalov"
+    ],
+    "icons": [
+      "server"
+    ]
+  },
+  {
+    "id": "it-cluster",
+    "name": "Cluster a orchestrace",
+    "group": "it",
+    "tags": [
+      "Kubernetes",
+      "cluster",
+      "uzly",
+      "orchestrace",
+      "škálování"
+    ],
+    "hue": 250,
+    "stems": [
+      "cluster",
+      "klastr",
+      "kubernetes",
+      "k8s",
+      "orchestra",
+      "uzly",
+      "helm"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-code",
+    "name": "Vývoj a kód",
+    "group": "it",
+    "tags": [
+      "kód",
+      "repozitář",
+      "editor",
+      "terminál",
+      "programování"
+    ],
+    "hue": 27,
+    "stems": [
+      "kod",
+      "kodu",
+      "kody",
+      "kodov",
+      "code",
+      "vyvoj",
+      "programov"
+    ],
+    "icons": [
+      "code-xml",
+      "code"
+    ]
+  },
+  {
+    "id": "it-code-review",
+    "name": "Code review",
+    "group": "it",
+    "tags": [
+      "code review",
+      "diff",
+      "schvalování",
+      "komentáře",
+      "pull request"
+    ],
+    "hue": 215,
+    "stems": [
+      "review",
+      "code",
+      "diff",
+      "pull"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-config",
+    "name": "Konfigurace a nastavení",
+    "group": "it",
+    "tags": [
+      "konfigurace",
+      "nastavení",
+      "parametry",
+      "feature flags",
+      "prostředí"
+    ],
+    "hue": 175,
+    "stems": [
+      "konfigura",
+      "nastaven",
+      "parametr",
+      "config",
+      "prostredi"
+    ],
+    "icons": [
+      "settings-2",
+      "sliders-horizontal"
+    ]
+  },
+  {
+    "id": "it-containers",
+    "name": "Kontejnery a Docker",
+    "group": "it",
+    "tags": [
+      "Docker",
+      "kontejnery",
+      "image",
+      "registry",
+      "Podman"
+    ],
+    "hue": 200,
+    "stems": [
+      "kontejner",
+      "docker",
+      "podman",
+      "registry"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-data-pipeline",
+    "name": "Datové toky a ETL",
+    "group": "it",
+    "tags": [
+      "ETL",
+      "datové toky",
+      "import",
+      "transformace",
+      "sklad dat"
+    ],
+    "hue": 290,
+    "stems": [
+      "etl",
+      "datov",
+      "transformac",
+      "dwh"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-database",
+    "name": "Databáze a data",
+    "group": "it",
+    "tags": [
+      "databáze",
+      "SQL",
+      "tabulky",
+      "dotazy",
+      "reporting"
+    ],
+    "hue": 302,
+    "stems": [
+      "data",
+      "sql",
+      "db",
+      "tabulk",
+      "postgres",
+      "mysql",
+      "mssql"
+    ],
+    "icons": [
+      "database"
+    ]
+  },
+  {
+    "id": "it-design",
+    "name": "UX a návrh rozhraní",
+    "group": "it",
+    "tags": [
+      "UX",
+      "UI",
+      "design",
+      "Figma",
+      "prototypy",
+      "wireframy"
+    ],
+    "hue": 320,
+    "stems": [
+      "ux",
+      "ui",
+      "design",
+      "figma",
+      "prototyp",
+      "wirefram",
+      "rozhran"
+    ],
+    "icons": [
+      "palette"
+    ]
+  },
+  {
+    "id": "it-dev-docs",
+    "name": "Vývojářská dokumentace",
+    "group": "it",
+    "tags": [
+      "dokumentace",
+      "API reference",
+      "návody",
+      "README",
+      "SDK"
+    ],
+    "hue": 230,
+    "stems": [
+      "dokumentac",
+      "vyvojar",
+      "readme",
+      "sdk",
+      "navod",
+      "docs"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-devices",
+    "name": "Zařízení a správa",
+    "group": "it",
+    "tags": [
+      "zařízení",
+      "notebooky",
+      "mobily",
+      "MDM",
+      "Intune",
+      "inventář"
+    ],
+    "hue": 300,
+    "stems": [
+      "zarizen",
+      "notebook",
+      "mobily",
+      "mdm",
+      "intune",
+      "telefon"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-email",
+    "name": "E-mail a pošta",
+    "group": "it",
+    "tags": [
+      "e-mail",
+      "pošta",
+      "Exchange",
+      "schránky",
+      "newslettery"
+    ],
+    "hue": 330,
+    "stems": [
+      "mail",
+      "email",
+      "exchange",
+      "schrank",
+      "newsletter",
+      "outlook",
+      "smtp"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-firewall",
+    "name": "Firewall a ochrana sítě",
+    "group": "it",
+    "tags": [
+      "firewall",
+      "ochrana sítě",
+      "pravidla",
+      "filtrování",
+      "DDoS"
+    ],
+    "hue": 15,
+    "stems": [
+      "firewall",
+      "ddos",
+      "filtrovan",
+      "waf"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-frontend",
+    "name": "Webový frontend",
+    "group": "it",
+    "tags": [
+      "frontend",
+      "web",
+      "Vue",
+      "React",
+      "komponenty",
+      "CSS"
+    ],
+    "hue": 265,
+    "stems": [
+      "frontend",
+      "vue",
+      "react",
+      "css",
+      "komponent",
+      "html",
+      "javascript",
+      "typescript"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-git",
+    "name": "Git a repozitáře",
+    "group": "it",
+    "tags": [
+      "git",
+      "větve",
+      "merge",
+      "pull requesty",
+      "GitHub",
+      "GitLab"
+    ],
+    "hue": 20,
+    "stems": [
+      "git",
+      "repozitar",
+      "vetv",
+      "merge",
+      "github",
+      "gitlab",
+      "commit",
+      "branch"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-hardware",
+    "name": "Hardware a pracoviště",
+    "group": "it",
+    "tags": [
+      "hardware",
+      "počítače",
+      "monitory",
+      "periferie",
+      "vybavení"
+    ],
+    "hue": 120,
+    "stems": [
+      "hardware",
+      "hw",
+      "pocitace",
+      "pocitacu",
+      "pocitacich",
+      "monitory",
+      "periferi",
+      "vybaven",
+      "pracovist",
+      "tiskar"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-iam",
+    "name": "Identity a přístupy",
+    "group": "it",
+    "tags": [
+      "identity",
+      "účty",
+      "role",
+      "oprávnění",
+      "SSO",
+      "Entra ID"
+    ],
+    "hue": 290,
+    "stems": [
+      "identit",
+      "pristup",
+      "opravnen",
+      "sso",
+      "entra",
+      "ldap"
+    ],
+    "icons": [
+      "fingerprint"
+    ]
+  },
+  {
+    "id": "it-incident",
+    "name": "Incidenty a výpadky",
+    "group": "it",
+    "tags": [
+      "incident",
+      "výpadek",
+      "eskalace",
+      "postmortem",
+      "krizový plán"
+    ],
+    "hue": 25,
+    "stems": [
+      "incident",
+      "vypadk",
+      "vypadek",
+      "eskalac",
+      "postmortem",
+      "krizov",
+      "havari"
+    ],
+    "icons": [
+      "shield-alert"
+    ]
+  },
+  {
+    "id": "it-iot",
+    "name": "IoT a senzory",
+    "group": "it",
+    "tags": [
+      "IoT",
+      "senzory",
+      "telemetrie",
+      "zařízení",
+      "měření"
+    ],
+    "hue": 145,
+    "stems": [
+      "iot",
+      "senzor",
+      "telemetri",
+      "cidl",
+      "meren"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-licenses",
+    "name": "Licence a předplatné",
+    "group": "it",
+    "tags": [
+      "licence",
+      "předplatné",
+      "SaaS",
+      "klíče",
+      "nákup softwaru"
+    ],
+    "hue": 55,
+    "stems": [
+      "licenc",
+      "predplat",
+      "saas",
+      "subscription"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-llm",
+    "name": "AI asistenti a LLM",
+    "group": "it",
+    "tags": [
+      "LLM",
+      "chatbot",
+      "asistent",
+      "prompty",
+      "RAG",
+      "Claude",
+      "GPT"
+    ],
+    "hue": 260,
+    "stems": [
+      "llm",
+      "ai",
+      "asistent",
+      "chatbot",
+      "prompt",
+      "rag",
+      "claude",
+      "gpt",
+      "copilot"
+    ],
+    "icons": [
+      "sparkles"
+    ]
+  },
+  {
+    "id": "it-logs",
+    "name": "Logy a audit",
+    "group": "it",
+    "tags": [
+      "logy",
+      "auditní stopa",
+      "události",
+      "záznamy",
+      "diagnostika"
+    ],
+    "hue": 75,
+    "stems": [
+      "log",
+      "logy",
+      "logu",
+      "logov",
+      "diagnosti"
+    ],
+    "icons": [
+      "history"
+    ]
+  },
+  {
+    "id": "it-messaging",
+    "name": "Fronty a události",
+    "group": "it",
+    "tags": [
+      "fronty",
+      "zprávy",
+      "události",
+      "RabbitMQ",
+      "Kafka",
+      "Wolverine"
+    ],
+    "hue": 185,
+    "stems": [
+      "fronty",
+      "fronta",
+      "udalost",
+      "rabbitmq",
+      "kafka",
+      "wolverine",
+      "messaging"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-migration",
+    "name": "Migrace a modernizace",
+    "group": "it",
+    "tags": [
+      "migrace",
+      "modernizace",
+      "přechod do cloudu",
+      "legacy",
+      "upgrade"
+    ],
+    "hue": 240,
+    "stems": [
+      "migrac",
+      "moderniza",
+      "legacy",
+      "upgrade",
+      "prechod"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-mobile",
+    "name": "Mobilní aplikace",
+    "group": "it",
+    "tags": [
+      "mobilní aplikace",
+      "iOS",
+      "Android",
+      "Flutter",
+      "React Native"
+    ],
+    "hue": 345,
+    "stems": [
+      "mobiln",
+      "ios",
+      "android",
+      "flutter"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-monitoring",
+    "name": "Monitoring a provoz",
+    "group": "it",
+    "tags": [
+      "dohled",
+      "metriky",
+      "alerty",
+      "incidenty",
+      "SLA"
+    ],
+    "hue": 80,
+    "stems": [
+      "monitoring",
+      "provoz",
+      "dohled",
+      "alert",
+      "sla",
+      "metrik"
+    ],
+    "icons": [
+      "activity"
+    ]
+  },
+  {
+    "id": "it-network",
+    "name": "Sítě a konektivita",
+    "group": "it",
+    "tags": [
+      "síť",
+      "LAN",
+      "Wi-Fi",
+      "router",
+      "switch",
+      "kabeláž"
+    ],
+    "hue": 230,
+    "stems": [
+      "sit",
+      "site",
+      "siti",
+      "sitov",
+      "lan",
+      "wifi",
+      "router",
+      "switch",
+      "kabel",
+      "konektivit"
+    ],
+    "icons": [
+      "network"
+    ]
+  },
+  {
+    "id": "it-on-call",
+    "name": "Pohotovost a služby",
+    "group": "it",
+    "tags": [
+      "pohotovost",
+      "on-call",
+      "služby",
+      "rozpis",
+      "eskalace"
+    ],
+    "hue": 285,
+    "stems": [
+      "pohotovost",
+      "oncall",
+      "rozpis"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-performance",
+    "name": "Výkon a optimalizace",
+    "group": "it",
+    "tags": [
+      "výkon",
+      "rychlost",
+      "latence",
+      "optimalizace",
+      "zátěžové testy"
+    ],
+    "hue": 95,
+    "stems": [
+      "vykon",
+      "optimaliz",
+      "latenc",
+      "rychlost",
+      "zatez",
+      "performance",
+      "benchmark"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-release",
+    "name": "Release a vydání",
+    "group": "it",
+    "tags": [
+      "release",
+      "vydání verze",
+      "changelog",
+      "launch",
+      "nasazení"
+    ],
+    "hue": 15,
+    "stems": [
+      "release",
+      "vydani",
+      "changelog",
+      "launch",
+      "verz"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-scheduling",
+    "name": "Plánované úlohy",
+    "group": "it",
+    "tags": [
+      "plánování",
+      "cron",
+      "plánované úlohy",
+      "termíny",
+      "opakování"
+    ],
+    "hue": 70,
+    "stems": [
+      "cron",
+      "planovane",
+      "uloh",
+      "job",
+      "joby",
+      "scheduler"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-search",
+    "name": "Vyhledávání a indexace",
+    "group": "it",
+    "tags": [
+      "vyhledávání",
+      "indexace",
+      "fulltext",
+      "Elasticsearch",
+      "embeddings"
+    ],
+    "hue": 200,
+    "stems": [
+      "vyhledav",
+      "hledan",
+      "indexac",
+      "fulltext",
+      "elasticsearch",
+      "embedding",
+      "search"
+    ],
+    "icons": [
+      "search"
+    ]
+  },
+  {
+    "id": "it-security",
+    "name": "Bezpečnost",
+    "group": "it",
+    "tags": [
+      "zabezpečení",
+      "přístupy",
+      "hesla",
+      "audit",
+      "GDPR"
+    ],
+    "hue": 255,
+    "stems": [
+      "bezpecnost",
+      "zabezpec",
+      "hesl",
+      "hesel",
+      "security",
+      "kyber",
+      "pentest"
+    ],
+    "icons": [
+      "shield",
+      "shield-check",
+      "lock"
+    ]
+  },
+  {
+    "id": "it-storage",
+    "name": "Úložiště a soubory",
+    "group": "it",
+    "tags": [
+      "úložiště",
+      "disky",
+      "NAS",
+      "sdílené složky",
+      "soubory"
+    ],
+    "hue": 45,
+    "stems": [
+      "ulozist",
+      "disky",
+      "diskov",
+      "nas",
+      "soubor",
+      "slozk",
+      "sharepoint",
+      "onedrive"
+    ],
+    "icons": [
+      "folder"
+    ]
+  },
+  {
+    "id": "it-terminal",
+    "name": "Příkazová řádka",
+    "group": "it",
+    "tags": [
+      "terminál",
+      "CLI",
+      "PowerShell",
+      "bash",
+      "skripty",
+      "SSH"
+    ],
+    "hue": 160,
+    "stems": [
+      "terminal",
+      "cli",
+      "powershell",
+      "bash",
+      "shell",
+      "ssh",
+      "skript",
+      "prikazov",
+      "konzol"
+    ],
+    "icons": [
+      "square-code"
+    ]
+  },
+  {
+    "id": "it-testing",
+    "name": "Testování a kvalita",
+    "group": "it",
+    "tags": [
+      "testy",
+      "QA",
+      "automatizace testů",
+      "regrese",
+      "kvalita"
+    ],
+    "hue": 140,
+    "stems": [
+      "test",
+      "qa",
+      "regres"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-tracing",
+    "name": "Observabilita a tracing",
+    "group": "it",
+    "tags": [
+      "observabilita",
+      "tracing",
+      "OpenTelemetry",
+      "metriky",
+      "profilování"
+    ],
+    "hue": 205,
+    "stems": [
+      "observabilit",
+      "tracing",
+      "opentelemetry",
+      "otel",
+      "profilov",
+      "trasov",
+      "trace"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-virtualization",
+    "name": "Virtualizace",
+    "group": "it",
+    "tags": [
+      "virtualizace",
+      "VM",
+      "Hyper-V",
+      "VMware",
+      "hypervisor"
+    ],
+    "hue": 255,
+    "stems": [
+      "virtual",
+      "vm",
+      "hyper",
+      "vmware"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-vpn",
+    "name": "VPN a vzdálený přístup",
+    "group": "it",
+    "tags": [
+      "VPN",
+      "vzdálený přístup",
+      "home office",
+      "tunel",
+      "zabezpečené připojení"
+    ],
+    "hue": 175,
+    "stems": [
+      "vpn",
+      "vzdalen",
+      "tunel",
+      "remote"
+    ],
+    "icons": []
+  },
+  {
+    "id": "it-web",
+    "name": "Web a domény",
+    "group": "it",
+    "tags": [
+      "web",
+      "domény",
+      "DNS",
+      "hosting",
+      "certifikáty",
+      "URL"
+    ],
+    "hue": 185,
+    "stems": [
+      "web",
+      "weby",
+      "webu",
+      "webov",
+      "domen",
+      "dns",
+      "url",
+      "www"
+    ],
+    "icons": [
+      "globe"
+    ]
+  },
+  {
+    "id": "ops-benefits",
+    "name": "Benefity",
+    "group": "business",
+    "tags": [
+      "benefity",
+      "odměny",
+      "stravenky",
+      "příspěvky",
+      "zaměstnanecké výhody"
+    ],
+    "hue": 345,
+    "stems": [
+      "benefit",
+      "stravenk",
+      "prispev",
+      "vyhody"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-brand",
+    "name": "Značka a vizuální styl",
+    "group": "business",
+    "tags": [
+      "značka",
+      "brand",
+      "logo",
+      "vizuální styl",
+      "grafický manuál"
+    ],
+    "hue": 320,
+    "stems": [
+      "znack",
+      "brand",
+      "loga",
+      "vizualn"
+    ],
+    "icons": [
+      "palette"
+    ]
+  },
+  {
+    "id": "ops-budget",
+    "name": "Rozpočet a úspory",
+    "group": "business",
+    "tags": [
+      "rozpočet",
+      "úspory",
+      "náklady",
+      "plánování financí",
+      "cashflow"
+    ],
+    "hue": 340,
+    "stems": [
+      "rozpoc",
+      "uspory",
+      "uspora",
+      "cashflow"
+    ],
+    "icons": [
+      "pie-chart"
+    ]
+  },
+  {
+    "id": "ops-communication",
+    "name": "Interní komunikace",
+    "group": "business",
+    "tags": [
+      "interní komunikace",
+      "novinky",
+      "intranet",
+      "oznámení",
+      "zpravodaj"
+    ],
+    "hue": 190,
+    "stems": [
+      "komunikac",
+      "novink",
+      "intranet",
+      "oznamen",
+      "zpravodaj",
+      "datov",
+      "schran"
+    ],
+    "icons": [
+      "megaphone"
+    ]
+  },
+  {
+    "id": "ops-content",
+    "name": "Obsah a texty",
+    "group": "business",
+    "tags": [
+      "obsah",
+      "copywriting",
+      "články",
+      "redakce",
+      "publikace"
+    ],
+    "hue": 20,
+    "stems": [
+      "obsahov",
+      "copywrit",
+      "clank",
+      "redakc",
+      "publikac",
+      "text",
+      "blog"
+    ],
+    "icons": [
+      "pencil"
+    ]
+  },
+  {
+    "id": "ops-crm",
+    "name": "CRM a kontakty",
+    "group": "business",
+    "tags": [
+      "CRM",
+      "kontakty",
+      "adresář",
+      "klienti",
+      "příležitosti"
+    ],
+    "hue": 255,
+    "stems": [
+      "crm",
+      "kontakt",
+      "adresar",
+      "klient"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-customer-journey",
+    "name": "Zákaznická cesta",
+    "group": "business",
+    "tags": [
+      "zákazníci",
+      "zákaznická zkušenost",
+      "customer success",
+      "péče",
+      "retence"
+    ],
+    "hue": 15,
+    "stems": [
+      "zakazni",
+      "journey",
+      "retenc"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-decisions",
+    "name": "Rozhodnutí a hlasování",
+    "group": "business",
+    "tags": [
+      "rozhodnutí",
+      "hlasování",
+      "schvalování",
+      "varianty",
+      "ADR"
+    ],
+    "hue": 260,
+    "stems": [
+      "rozhodnut",
+      "hlasovan",
+      "schval",
+      "adr"
+    ],
+    "icons": [
+      "user-check"
+    ]
+  },
+  {
+    "id": "ops-events",
+    "name": "Akce a teambuilding",
+    "group": "business",
+    "tags": [
+      "firemní akce",
+      "teambuilding",
+      "oslavy",
+      "večírky",
+      "výročí"
+    ],
+    "hue": 330,
+    "stems": [
+      "teambuilding",
+      "akce",
+      "akci",
+      "oslav",
+      "vecirk",
+      "vyroci",
+      "event"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-feedback",
+    "name": "Zpětná vazba",
+    "group": "business",
+    "tags": [
+      "zpětná vazba",
+      "hodnocení",
+      "NPS",
+      "ankety",
+      "spokojenost"
+    ],
+    "hue": 50,
+    "stems": [
+      "zpetn",
+      "feedback",
+      "nps",
+      "anket",
+      "spokojenost",
+      "dotaznik"
+    ],
+    "icons": [
+      "smile"
+    ]
+  },
+  {
+    "id": "ops-finance",
+    "name": "Finance a účetnictví",
+    "group": "business",
+    "tags": [
+      "faktury",
+      "rozpočet",
+      "náklady",
+      "výkazy"
+    ],
+    "hue": 130,
+    "stems": [
+      "financ",
+      "ucetn",
+      "naklad",
+      "dane",
+      "danov",
+      "bank"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-gdpr",
+    "name": "GDPR a osobní údaje",
+    "group": "business",
+    "tags": [
+      "GDPR",
+      "osobní údaje",
+      "ochrana soukromí",
+      "souhlasy",
+      "DPO"
+    ],
+    "hue": 230,
+    "stems": [
+      "gdpr",
+      "udaj",
+      "soukrom",
+      "souhlas",
+      "dpo"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-hr",
+    "name": "Lidé a HR",
+    "group": "business",
+    "tags": [
+      "HR",
+      "personalistika",
+      "zaměstnanci",
+      "týmy",
+      "kariéra"
+    ],
+    "hue": 350,
+    "stems": [
+      "hr",
+      "lide",
+      "lidsk",
+      "personal",
+      "zamestnan",
+      "prace",
+      "karier"
+    ],
+    "icons": [
+      "users",
+      "user"
+    ]
+  },
+  {
+    "id": "ops-invoicing",
+    "name": "Fakturace",
+    "group": "business",
+    "tags": [
+      "fakturace",
+      "faktury",
+      "platby",
+      "pohledávky",
+      "účetní doklady"
+    ],
+    "hue": 120,
+    "stems": [
+      "faktur",
+      "platb",
+      "plateb",
+      "zalohove",
+      "zalohovych",
+      "pohledav",
+      "doklad",
+      "uhrad"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-kpi",
+    "name": "KPI a výsledky",
+    "group": "business",
+    "tags": [
+      "KPI",
+      "metriky",
+      "scorecard",
+      "výkonnost",
+      "cíle"
+    ],
+    "hue": 140,
+    "stems": [
+      "kpi",
+      "vysledk",
+      "scorecard",
+      "okr",
+      "cile"
+    ],
+    "icons": [
+      "line-chart"
+    ]
+  },
+  {
+    "id": "ops-legal",
+    "name": "Právo a smlouvy",
+    "group": "business",
+    "tags": [
+      "smlouvy",
+      "podpisy",
+      "směrnice",
+      "compliance"
+    ],
+    "hue": 280,
+    "stems": [
+      "pravo",
+      "pravn",
+      "smlouv",
+      "smluv",
+      "compliance",
+      "legal"
+    ],
+    "icons": [
+      "scroll-text"
+    ]
+  },
+  {
+    "id": "ops-logistics",
+    "name": "Logistika a doprava",
+    "group": "business",
+    "tags": [
+      "doprava",
+      "rozvoz",
+      "trasy",
+      "zásilky",
+      "dodavatelé"
+    ],
+    "hue": 60,
+    "stems": [
+      "logisti",
+      "doprav",
+      "rozvoz",
+      "tras",
+      "zasilk",
+      "preprav"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-marketing",
+    "name": "Marketing",
+    "group": "business",
+    "tags": [
+      "kampaně",
+      "sociální sítě",
+      "web",
+      "PR"
+    ],
+    "hue": 340,
+    "stems": [
+      "marketing",
+      "kampan",
+      "socialn",
+      "site",
+      "siti",
+      "pr",
+      "seo",
+      "reklamy",
+      "reklamn",
+      "propagac"
+    ],
+    "icons": [
+      "megaphone"
+    ]
+  },
+  {
+    "id": "ops-meetings",
+    "name": "Porady a schůzky",
+    "group": "business",
+    "tags": [
+      "porady",
+      "schůzky",
+      "zápisy",
+      "agenda",
+      "meeting"
+    ],
+    "hue": 45,
+    "stems": [
+      "porady",
+      "porada",
+      "poradu",
+      "schuzk",
+      "meeting",
+      "zapis"
+    ],
+    "icons": [
+      "calendar"
+    ]
+  },
+  {
+    "id": "ops-mgmt-reporting",
+    "name": "Reporting pro vedení",
+    "group": "business",
+    "tags": [
+      "reporting",
+      "vedení",
+      "výsledky",
+      "měsíční report",
+      "board"
+    ],
+    "hue": 220,
+    "stems": [
+      "report",
+      "vedeni",
+      "board",
+      "manazer"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-office",
+    "name": "Kancelář a facility",
+    "group": "business",
+    "tags": [
+      "kancelář",
+      "facility",
+      "vybavení",
+      "rezervace místností",
+      "údržba"
+    ],
+    "hue": 90,
+    "stems": [
+      "kancelar",
+      "provoz",
+      "facility",
+      "udrzb",
+      "rezervac",
+      "mistnost",
+      "recepc"
+    ],
+    "icons": [
+      "building-2"
+    ]
+  },
+  {
+    "id": "ops-onboarding",
+    "name": "Nástup a onboarding",
+    "group": "business",
+    "tags": [
+      "onboarding",
+      "nástup",
+      "první den",
+      "zaškolení",
+      "checklist"
+    ],
+    "hue": 160,
+    "stems": [
+      "onboarding",
+      "nastup",
+      "zamestnan",
+      "zaskolen",
+      "adaptac"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-org-chart",
+    "name": "Organizační struktura",
+    "group": "business",
+    "tags": [
+      "organizační struktura",
+      "oddělení",
+      "vedení",
+      "role",
+      "odpovědnosti"
+    ],
+    "hue": 175,
+    "stems": [
+      "organizacn",
+      "struktur",
+      "organigram",
+      "odpovednost",
+      "role"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-partners",
+    "name": "Partneři a dodavatelé",
+    "group": "business",
+    "tags": [
+      "partneři",
+      "dodavatelé",
+      "spolupráce",
+      "smlouvy",
+      "outsourcing"
+    ],
+    "hue": 125,
+    "stems": [
+      "partner",
+      "dodavatel",
+      "spoluprac",
+      "outsourc"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-payroll",
+    "name": "Mzdy a odměny",
+    "group": "business",
+    "tags": [
+      "mzdy",
+      "výplaty",
+      "odměny",
+      "výplatní pásky",
+      "bonusy"
+    ],
+    "hue": 100,
+    "stems": [
+      "mzdy",
+      "mzda",
+      "mzdov",
+      "mezd",
+      "vyplat",
+      "odmen",
+      "bonus"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-pipeline",
+    "name": "Obchodní pipeline",
+    "group": "business",
+    "tags": [
+      "pipeline",
+      "příležitosti",
+      "prodejní fáze",
+      "forecast",
+      "konverze"
+    ],
+    "hue": 35,
+    "stems": [
+      "pipeline",
+      "obchodn",
+      "prilezitost",
+      "forecast",
+      "konverze",
+      "konverzi",
+      "leady",
+      "funnel"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-policies",
+    "name": "Směrnice a pravidla",
+    "group": "business",
+    "tags": [
+      "směrnice",
+      "pravidla",
+      "interní předpisy",
+      "příručka",
+      "postupy"
+    ],
+    "hue": 280,
+    "stems": [
+      "smernic",
+      "pravidl",
+      "predpis",
+      "priruc",
+      "postup",
+      "politik"
+    ],
+    "icons": [
+      "list-ordered"
+    ]
+  },
+  {
+    "id": "ops-procurement",
+    "name": "Nákup a objednávky",
+    "group": "business",
+    "tags": [
+      "nákup",
+      "objednávky",
+      "dodavatelé",
+      "poptávky",
+      "e-shop"
+    ],
+    "hue": 70,
+    "stems": [
+      "nakup",
+      "objednav",
+      "poptav",
+      "eshop"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-product",
+    "name": "Produktový management",
+    "group": "business",
+    "tags": [
+      "produkt",
+      "backlog",
+      "požadavky",
+      "priority",
+      "roadmapa produktu"
+    ],
+    "hue": 300,
+    "stems": [
+      "produkt",
+      "product",
+      "backlog",
+      "pozadav",
+      "priorit"
+    ],
+    "icons": [
+      "box"
+    ]
+  },
+  {
+    "id": "ops-project",
+    "name": "Projekty a plánování",
+    "group": "business",
+    "tags": [
+      "kanban",
+      "harmonogram",
+      "úkoly",
+      "sprinty"
+    ],
+    "hue": 230,
+    "stems": [
+      "projekt",
+      "planovan",
+      "kanban",
+      "harmonogram",
+      "ukol",
+      "sprint",
+      "scrum",
+      "agil"
+    ],
+    "icons": [
+      "list-checks"
+    ]
+  },
+  {
+    "id": "ops-quality",
+    "name": "Kvalita a ISO",
+    "group": "business",
+    "tags": [
+      "kvalita",
+      "ISO",
+      "audity",
+      "procesy",
+      "neshody",
+      "zlepšování"
+    ],
+    "hue": 150,
+    "stems": [
+      "kvalit",
+      "iso",
+      "audit",
+      "neshod",
+      "zlepsov",
+      "proces"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-quotes",
+    "name": "Nabídky a poptávky",
+    "group": "business",
+    "tags": [
+      "nabídky",
+      "poptávky",
+      "ceník",
+      "kalkulace",
+      "obchodní případy"
+    ],
+    "hue": 85,
+    "stems": [
+      "nabidk",
+      "poptav",
+      "cenik",
+      "kalkulac",
+      "cenov"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-recruitment",
+    "name": "Nábor a výběr",
+    "group": "business",
+    "tags": [
+      "nábor",
+      "výběrová řízení",
+      "kandidáti",
+      "pohovory",
+      "CV"
+    ],
+    "hue": 30,
+    "stems": [
+      "nabor",
+      "zamestnan",
+      "kandidat",
+      "pohovor",
+      "cv",
+      "recruit"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-research",
+    "name": "Výzkum a analýzy",
+    "group": "business",
+    "tags": [
+      "výzkum",
+      "analýzy",
+      "průzkumy",
+      "persony",
+      "rozhovory"
+    ],
+    "hue": 230,
+    "stems": [
+      "vyzkum",
+      "vyvoj",
+      "analyz",
+      "pruzkum",
+      "rozhovor",
+      "studie"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-risk",
+    "name": "Rizika a kontinuita",
+    "group": "business",
+    "tags": [
+      "rizika",
+      "řízení rizik",
+      "kontinuita",
+      "BCP",
+      "pojištění"
+    ],
+    "hue": 20,
+    "stems": [
+      "rizik",
+      "kontinuit",
+      "bcp",
+      "pojist",
+      "hrozb"
+    ],
+    "icons": [
+      "triangle-alert"
+    ]
+  },
+  {
+    "id": "ops-roadmap",
+    "name": "Roadmapa a milníky",
+    "group": "business",
+    "tags": [
+      "roadmapa",
+      "milníky",
+      "harmonogram",
+      "plán",
+      "termíny"
+    ],
+    "hue": 200,
+    "stems": [
+      "roadmap",
+      "milnik",
+      "terminy",
+      "terminu"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-safety",
+    "name": "BOZP a bezpečnost práce",
+    "group": "business",
+    "tags": [
+      "BOZP",
+      "bezpečnost práce",
+      "školení BOZP",
+      "ochranné pomůcky",
+      "první pomoc"
+    ],
+    "hue": 30,
+    "stems": [
+      "bozp",
+      "bezpecnost",
+      "prace",
+      "pomuck",
+      "uraz",
+      "pozarn"
+    ],
+    "icons": [
+      "octagon-alert"
+    ]
+  },
+  {
+    "id": "ops-sales",
+    "name": "Obchod a klienti",
+    "group": "business",
+    "tags": [
+      "obchod",
+      "CRM",
+      "nabídky",
+      "cíle",
+      "klienti"
+    ],
+    "hue": 40,
+    "stems": [
+      "obchod",
+      "klient",
+      "prodej",
+      "sales"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-strategy",
+    "name": "Strategie a cíle",
+    "group": "business",
+    "tags": [
+      "strategie",
+      "vize",
+      "cíle",
+      "směřování",
+      "plánování"
+    ],
+    "hue": 140,
+    "stems": [
+      "strategi",
+      "vize",
+      "vizi",
+      "cile"
+    ],
+    "icons": [
+      "compass"
+    ]
+  },
+  {
+    "id": "ops-support",
+    "name": "Podpora a helpdesk",
+    "group": "business",
+    "tags": [
+      "zákaznická péče",
+      "tikety",
+      "chat",
+      "FAQ"
+    ],
+    "hue": 182,
+    "stems": [
+      "podpor",
+      "helpdesk",
+      "tiket",
+      "ticket",
+      "faq",
+      "zakazni",
+      "servis",
+      "servicedesk",
+      "support",
+      "reklamac"
+    ],
+    "icons": [
+      "ticket",
+      "circle-help"
+    ]
+  },
+  {
+    "id": "ops-sustainability",
+    "name": "Udržitelnost a ESG",
+    "group": "business",
+    "tags": [
+      "udržitelnost",
+      "ESG",
+      "ekologie",
+      "recyklace",
+      "uhlíková stopa"
+    ],
+    "hue": 130,
+    "stems": [
+      "udrzitelnost",
+      "esg",
+      "ekolog",
+      "recykl",
+      "uhlik",
+      "emis"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-tenders",
+    "name": "Výběrová řízení",
+    "group": "business",
+    "tags": [
+      "výběrová řízení",
+      "tendry",
+      "zakázky",
+      "nabídky",
+      "hodnocení"
+    ],
+    "hue": 270,
+    "stems": [
+      "vyberov",
+      "tendr",
+      "tender",
+      "zakazk"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-time-tracking",
+    "name": "Výkazy a docházka",
+    "group": "business",
+    "tags": [
+      "výkazy práce",
+      "docházka",
+      "timesheety",
+      "čas",
+      "projekty"
+    ],
+    "hue": 60,
+    "stems": [
+      "vykaz",
+      "dochazk",
+      "timesheet"
+    ],
+    "icons": [
+      "clock"
+    ]
+  },
+  {
+    "id": "ops-training",
+    "name": "Školení a vzdělávání",
+    "group": "business",
+    "tags": [
+      "školení",
+      "vzdělávání",
+      "kurzy",
+      "e-learning",
+      "certifikace"
+    ],
+    "hue": 210,
+    "stems": [
+      "skolen",
+      "zamestnan",
+      "vzdelav",
+      "kurz",
+      "learning",
+      "trenink",
+      "akademi"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-travel",
+    "name": "Služební cesty",
+    "group": "business",
+    "tags": [
+      "služební cesty",
+      "cestovní náhrady",
+      "letenky",
+      "ubytování"
+    ],
+    "hue": 210,
+    "stems": [
+      "sluzebn",
+      "cest",
+      "letenk",
+      "ubytovan"
+    ],
+    "icons": [
+      "map-pin"
+    ]
+  },
+  {
+    "id": "ops-vacation",
+    "name": "Dovolená a absence",
+    "group": "business",
+    "tags": [
+      "dovolená",
+      "absence",
+      "volno",
+      "nemoc",
+      "plánování směn"
+    ],
+    "hue": 55,
+    "stems": [
+      "dovolen",
+      "absenc",
+      "volno",
+      "nemocensk",
+      "smeny"
+    ],
+    "icons": []
+  },
+  {
+    "id": "ops-warehouse",
+    "name": "Sklad a zásoby",
+    "group": "business",
+    "tags": [
+      "sklad",
+      "zásoby",
+      "inventura",
+      "čárové kódy",
+      "expedice"
+    ],
+    "hue": 40,
+    "stems": [
+      "sklad",
+      "zasob",
+      "inventur",
+      "expedic"
+    ],
+    "icons": []
+  },
+  {
+    "id": "dom-health",
+    "name": "Zdravotnictví",
+    "group": "industry",
+    "tags": [
+      "pacienti",
+      "péče",
+      "telemedicína",
+      "klinika"
+    ],
+    "hue": 10,
+    "stems": [
+      "zdravotn",
+      "pacient",
+      "telemedicin",
+      "klinik",
+      "nemocnic",
+      "lekar",
+      "ordinac"
+    ],
+    "icons": []
+  },
+  {
+    "id": "gen-ideas",
+    "name": "Nápady a sandbox",
+    "group": "general",
+    "tags": [
+      "nápady",
+      "brainstorming",
+      "pokusy",
+      "poznámky"
+    ],
+    "hue": 100,
+    "stems": [
+      "napad",
+      "sandbox",
+      "brainstorm",
+      "pokus",
+      "poznamk",
+      "piskovist",
+      "experiment",
+      "inovac"
+    ],
+    "icons": [
+      "lightbulb"
+    ]
+  }
+]

@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><TargetFramework>net11.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><UserSecretsId>scaleatlas-server</UserSecretsId></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="1.10.2" />
+    <PackageReference Include="Anthropic" Version="13.8.0" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <PackageReference Include="Markdig" Version="1.6.0" />
+    <PackageReference Include="PuppeteerSharp" Version="25.15.0" />
+    <PackageReference Include="OpenIddict.Client.AspNetCore" Version="7.8.0" /><PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="7.8.0" /><PackageReference Include="OpenIddict.Client.DataProtection" Version="7.8.0" /><PackageReference Include="OpenIddict.Core" Version="7.8.0" /><PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="11.0.0" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.4.0" />
+    <PackageReference Include="NHibernate" Version="5.7.1" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="OpenAI" Version="2.15.0" />
+    <PackageReference Include="SMBLibrary" Version="1.5.8.1" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.21.0" />
+    <PackageReference Include="WolverineFx" Version="6.64.0" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="6.64.0" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.64.0" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+  </ItemGroup>
+  <!-- Development settings (developer sign-in on) stay out of every publish; a published build run in Development names its switches. -->
+  <ItemGroup><Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Persistence/Migrations/*.sql" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Features/Assistant/Prompts/*.txt" LogicalName="Atlas.Server.Features.Assistant.Prompts.%(Filename)%(Extension)" /></ItemGroup>
+  <ItemGroup><Content Remove="Platform/Content/emoji-shortcodes.json" /><EmbeddedResource Include="Platform/Content/emoji-shortcodes.json" LogicalName="Atlas.Server.Platform.Content.emoji-shortcodes.json" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Platform/Validation/icon-pack-names.txt" LogicalName="Atlas.Server.Platform.Validation.icon-pack-names.txt" /></ItemGroup>
+  <ItemGroup><Content Remove="Platform/Validation/host-markdown-schema.json" /><EmbeddedResource Include="Platform/Validation/host-markdown-schema.json" LogicalName="Atlas.Server.Platform.Validation.host-markdown-schema.json" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="../Atlas.Web/src/assets/space-covers/catalog.json" LogicalName="Atlas.Server.Features.SpaceCovers.cover-catalog.json" Link="Features/SpaceCovers/cover-catalog.json" /></ItemGroup>
+  <ItemGroup><Content Remove="Platform/Localization/en/*.json" /><EmbeddedResource Include="Platform/Localization/en/*.json" LogicalName="Atlas.Server.Platform.Localization.en.%(Filename)%(Extension)" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Features/AiWriting/Prompts/*.txt" LogicalName="Atlas.Server.Features.AiWriting.Prompts.%(Filename)%(Extension)" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../Atlas.YouTrack/Atlas.YouTrack.csproj" /><ProjectReference Include="../Atlas.Markdown.Sync/Atlas.Markdown.Sync.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Using Include="Atlas.Server.Platform.Persistence" />
+    <Using Include="Atlas.Server.Platform.Identity" />
+    <Using Include="Atlas.Server.Platform.Validation" />
+    <Using Include="Atlas.Server.Platform.Hosting" />
+    <Using Include="Atlas.Server.Features.Spaces.Domain" />
+    <Using Include="Atlas.Server.Features.Pages.Domain" />
+    <Using Include="Atlas.Server.Features.Setup.Domain" />
+    <Using Include="Atlas.Server.Features.Collaboration.Domain" />
+    <Using Include="Atlas.Server.Features.Collaboration.Contracts" />
+    <Using Include="Atlas.Server.Features.Pages.Contracts" />
+    <Using Include="Atlas.Server.Features.PageHistory.Contracts" />
+  </ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Features/KnowledgeMaintenance/*.json" /></ItemGroup>
+</Project>

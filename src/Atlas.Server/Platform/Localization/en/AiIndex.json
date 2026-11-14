@@ -1,0 +1,13 @@
+{
+  "Zvolte stavbu, přestavbu, nebo výměnu modelu.": "Choose build, rebuild or model replacement.",
+  "Stavba indexu už běží. Dokončete ji, nebo ji zrušte.": "An index build is already running. Finish it or cancel it.",
+  "Index už existuje. Použijte Přestavět, nebo Vyměnit model.": "The index already exists. Use Rebuild or Replace model.",
+  "Vyberte právě jeden uložený profil nebo vyplňte nový model.": "Choose exactly one saved profile or fill in a new model.",
+  "Nový model musí být zapnutý.": "The new model must be turned on.",
+  "Nejdřív uložte a zapněte profil Embeddingy.": "Save and turn on the Embeddings profile first.",
+  "Generace už skončila.": "The generation has already finished.",
+  "Profil generace už neexistuje.": "The generation profile no longer exists.",
+  "Generace se nestaví; aktivovat jde jen rozestavěná generace.": "The generation is not being built; only a generation under construction can be activated.",
+  "Index ještě není úplný. Počkejte na dokončení stavby a ověřte ho znovu.": "The index is not complete yet. Wait for the build to finish and verify it again.",
+  "Zrušit jde jen rozestavěná generace.": "Only a generation under construction can be canceled."
+}

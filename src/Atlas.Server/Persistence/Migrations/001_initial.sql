@@ -1,0 +1,20 @@
+CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;
+CREATE TABLE "Workspace" ("Id" integer PRIMARY KEY CHECK ("Id" = 1), "Name" varchar(200) NOT NULL, "CreatedAt" timestamptz NOT NULL);
+CREATE TABLE "UserAccount" ("Id" uuid PRIMARY KEY, "Username" varchar(100) NOT NULL UNIQUE, "DisplayName" varchar(200) NOT NULL, "IsWikiAdmin" boolean NOT NULL, "IsActive" boolean NOT NULL, "SecurityStamp" varchar(64) NOT NULL);
+CREATE TABLE "BuiltinCredential" ("UserId" uuid PRIMARY KEY REFERENCES "UserAccount"("Id"), "PasswordHash" text NOT NULL);
+CREATE TABLE "UserAppearancePreference" ("UserId" uuid PRIMARY KEY REFERENCES "UserAccount"("Id"), "Layout" varchar(20) NOT NULL, "Accent" varchar(20) NOT NULL, "Mode" varchar(20) NOT NULL);
+CREATE TABLE "Space" ("Id" uuid PRIMARY KEY, "Name" varchar(200) NOT NULL, "Icon" varchar(40) NOT NULL, "Color" varchar(20) NOT NULL);
+CREATE TABLE "UserGroup" ("Id" uuid PRIMARY KEY, "Name" varchar(200) NOT NULL);
+CREATE TABLE "GroupMember" ("Id" uuid PRIMARY KEY, "GroupId" uuid NOT NULL REFERENCES "UserGroup"("Id"), "UserId" uuid NOT NULL REFERENCES "UserAccount"("Id"), "ActiveFrom" timestamptz NOT NULL, "ActiveTo" timestamptz NULL, CHECK ("ActiveTo" IS NULL OR "ActiveTo" > "ActiveFrom"));
+CREATE UNIQUE INDEX "UX_GroupMember_Current" ON "GroupMember"("GroupId","UserId") WHERE "ActiveTo" IS NULL;
+CREATE TABLE "SpaceGrant" ("Id" uuid PRIMARY KEY, "SpaceId" uuid NOT NULL REFERENCES "Space"("Id"), "UserId" uuid NULL REFERENCES "UserAccount"("Id"), "GroupId" uuid NULL REFERENCES "UserGroup"("Id"), "Role" integer NOT NULL CHECK ("Role" BETWEEN 1 AND 3), "ActiveFrom" timestamptz NOT NULL DEFAULT now(), "ActiveTo" timestamptz NULL, CHECK (("UserId" IS NULL) <> ("GroupId" IS NULL)), CHECK ("ActiveTo" IS NULL OR "ActiveTo" > "ActiveFrom"));
+CREATE UNIQUE INDEX "UX_SpaceGrant_UserCurrent" ON "SpaceGrant"("SpaceId","UserId") WHERE "ActiveTo" IS NULL AND "UserId" IS NOT NULL;
+CREATE UNIQUE INDEX "UX_SpaceGrant_GroupCurrent" ON "SpaceGrant"("SpaceId","GroupId") WHERE "ActiveTo" IS NULL AND "GroupId" IS NOT NULL;
+CREATE TABLE "Page" ("Id" uuid PRIMARY KEY, "SpaceId" uuid NOT NULL REFERENCES "Space"("Id"), "ParentId" uuid NULL REFERENCES "Page"("Id"), "OwnerId" uuid NOT NULL REFERENCES "UserAccount"("Id"), "Version" integer NOT NULL, "PublishedRevisionId" uuid NULL);
+CREATE INDEX "IX_Page_Space" ON "Page"("SpaceId");
+CREATE TABLE "PageRevision" ("Id" uuid PRIMARY KEY, "PageId" uuid NOT NULL REFERENCES "Page"("Id"), "Version" integer NOT NULL, "Title" varchar(200) NOT NULL, "ContentJson" text NOT NULL, "Markdown" text NOT NULL, "AuthorId" uuid NOT NULL REFERENCES "UserAccount"("Id"), "ActiveFrom" timestamptz NOT NULL, "ActiveTo" timestamptz NULL, UNIQUE("PageId","Version"), UNIQUE("PageId","Id"), CHECK ("ActiveTo" IS NULL OR "ActiveTo" > "ActiveFrom"));
+CREATE UNIQUE INDEX "UX_PageRevision_Current" ON "PageRevision"("PageId") WHERE "ActiveTo" IS NULL;
+CREATE INDEX "IX_PageRevision_History" ON "PageRevision"("PageId","ActiveFrom" DESC);
+ALTER TABLE "Page" ADD CONSTRAINT "FK_Page_PublishedRevision" FOREIGN KEY ("Id","PublishedRevisionId") REFERENCES "PageRevision"("PageId","Id") DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE "PageRevision" ADD CONSTRAINT "EX_PageRevision_NoOverlap" EXCLUDE USING gist ("PageId" WITH =, tstzrange("ActiveFrom", "ActiveTo", '[)') WITH &&);
+

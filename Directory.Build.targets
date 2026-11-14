@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'Atlas.Server'">
+    <AtlasWebRoot>$(MSBuildThisFileDirectory)src/Atlas.Web/</AtlasWebRoot>
+    <AtlasBuildFrontend Condition="'$(AtlasBuildFrontend)' == '' and '$(SkipFrontendBuild)' != 'true' and '$(_IsPublishing)' == 'true'">true</AtlasBuildFrontend>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'Atlas.Server'">
+    <Content Remove="wwwroot/**/*" />
+  </ItemGroup>
+
+  <Target Name="AtlasBuildFrontend" AfterTargets="Publish"
+          Condition="'$(AtlasBuildFrontend)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('$(AtlasWebRoot)pnpm-lock.yaml')" Text="Missing src/Atlas.Web/pnpm-lock.yaml. Restore and commit frontend dependencies before publishing Atlas." />
+    <Error Condition="'$(ATLAS_EDITOR_MODE)' == 'source' and '$(AllowEditorSourcePublish)' != 'true'" Text="ATLAS_EDITOR_MODE=source is for local editor development only; a publish always uses the built editor package (src/Atlas.Markdown). Unset the variable (local test builds only: -p:AllowEditorSourcePublish=true)." />
+    <Exec Command="pnpm install --frozen-lockfile" WorkingDirectory="$(AtlasWebRoot)" />
+    <!-- The editor's dist from src/Atlas.Markdown, what the frontend build imports. -->
+    <Exec Command="pnpm run build:editor" WorkingDirectory="$(AtlasWebRoot)" />
+    <Exec Command="pnpm run build --outDir &quot;$(PublishDir)wwwroot&quot;" WorkingDirectory="$(AtlasWebRoot)" />
+    <Error Condition="!Exists('$(PublishDir)wwwroot/index.html')" Text="Frontend build did not produce $(PublishDir)wwwroot/index.html." />
+    <Exec Command="pnpm run verify:editor --dist &quot;$(PublishDir)wwwroot&quot;" WorkingDirectory="$(AtlasWebRoot)" />
+  </Target>
+</Project>

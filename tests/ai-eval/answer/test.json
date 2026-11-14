@@ -1,0 +1,6 @@
+{
+  "set": "test",
+  "status": "template",
+  "description": "Oddělená testovací (held-out) sada. Čeká na reálné otázky vlastníka, viz README.md. Při ladění promptu se nepoužívá, nečte ji ani nespouští žádný skript.",
+  "cases": []
+}

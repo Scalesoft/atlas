@@ -1,0 +1,14 @@
+[
+  { "name": "a day and a time", "text": "1. 11. 2026 23:40 — Urgováno: IT KBN", "history": true },
+  { "name": "a day without a time", "text": "15. 10. 2026 — telefonát s IT", "history": true },
+  { "name": "no spaces in the day, an en dash", "text": "3.2.2026 9:05 – vnořený záznam", "history": true },
+  { "name": "a hyphen", "text": "3. 2. 2026 - záznam", "history": true },
+  { "name": "an empty rest (a fresh stamp)", "text": "1. 11. 2026 23:40 —", "history": true },
+  { "name": "an empty rest without a time", "text": "1. 11. 2026 —", "history": true },
+  { "name": "an impossible day", "text": "31. 2. 2026 — den, který není", "history": false },
+  { "name": "an impossible day with an empty rest", "text": "31. 2. 2026 —", "history": false },
+  { "name": "an impossible month", "text": "1. 13. 2026 — měsíc, který není", "history": false },
+  { "name": "an impossible time", "text": "1. 11. 2026 24:00 — čas, který není", "history": false },
+  { "name": "a dash glued to the text", "text": "1. 11. 2026 —text", "history": false },
+  { "name": "plain text", "text": "Stav: hotovo", "history": false }
+]

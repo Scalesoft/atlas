@@ -1,0 +1,1958 @@
+/* All application rules are scoped to shell classes. Editor internals retain
+   their own public styles, toolbar, overlays and theme classes. */
+body {
+  margin: 0;
+}
+.atlas:not(.md-editor):not(.md-editor *),
+.atlas *:not(.md-editor):not(.md-editor *):not(.md-editor):not(.md-editor *) {
+  box-sizing: border-box;
+}
+/* Colour tokens of the unthemed document: the values while <html> has no data-mode / data-accent
+   (the dev gallery, which never mounts App.vue). The themed palettes, the status colours and the
+   dark scale live in styles/palettes.css only. Rules below only ever reference the custom properties. */
+:root {
+  --input-line: #72959f;
+  --canvas: #f0f9fb;
+  --surface: #fff;
+  --sidebar: #dbf2f5;
+  --text: #142f3b;
+  --muted: #4e6874;
+  --line: #c5dade;
+  --hover: #cceef1;
+  --accent: #006f84;
+  --accent-soft: #cceef1;
+  --on-accent: #fff;
+  --shadow: 0 1px 2px 0 #18181b0d, 0 1px 3px 0 #18181b0f;
+}
+/* Dimension tokens (spec D2/D3). The editor declares the same names with its own
+   defaults, so a value set here reaches the editor surfaces and its portals. */
+:root {
+  /* Portal menus and tooltips inherit the same dimensions as the shell. */
+  /* Radius has one source of truth under an app-private name, because Tailwind's
+     own radius namespace is literally `--radius-*`: mapping the shared names onto
+     themselves in `@theme inline` compiles to `--radius-md: var(--radius-md)`,
+     a cycle that silently resolves to nothing. */
+  --atlas-radius-sm: 6px;
+  --atlas-radius-md: 10px;
+  --atlas-radius-lg: 14px;
+  /* The shared names stay, and stay authoritative: the editor package reads
+     `var(--radius-sm, 6px)` and friends (markdown/src/styles/controls.css) and
+     inherits whatever the wiki sets here. Renaming these would sever that
+     contract silently — the values happen to match the editor's fallbacks
+     today, so the editor would only drift the next time the wiki changed one. */
+  --radius-sm: var(--atlas-radius-sm);
+  --radius-md: var(--atlas-radius-md);
+  --radius-lg: var(--atlas-radius-lg);
+  --control-h: 36px;
+  --control-h-sm: 32px;
+  --touch-target: 44px;
+  --icon: 18px;
+  --icon-sm: 16px;
+  --atlas-focus-ring: 2px solid var(--accent);
+  --focus-ring: var(--atlas-focus-ring);
+  --focus-offset: 2px;
+  --shadow-menu: 0 4px 6px -1px #18181b12, 0 10px 15px -3px #18181b1a;
+  --shadow-modal: 0 10px 15px -3px #18181b1a, 0 25px 50px -12px #18181b40;
+  --backdrop: rgb(24 24 27 / 0.5);
+}
+/* Touch: one 44 px control height for everything sized by the shell tokens. */
+@media (pointer: coarse) { :root { --control-h: 44px; --control-h-sm: 40px; } }
+.atlas:not(.md-editor):not(.md-editor *) {
+  min-height: 100dvh;
+  display: flex;
+  color: var(--text);
+  background: var(--canvas);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  isolation: isolate;
+}
+.atlas button:not(.md-editor):not(.md-editor *) {
+  cursor: pointer;
+}
+.atlas button:disabled:not(.md-editor):not(.md-editor *),
+.atlas fieldset:disabled:not(.md-editor):not(.md-editor *) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/* The editor's tokens.css redeclares --focus-ring with the editor theme's accent (#58a9b9), which showed a second ring colour
+   inside the page; in the application the ring is the application's, on the editor and on the portals that copy its tokens (D6). */
+.atlas :where(.md-editor, .md-context-popover, .md-suggestion-popup, .md-picker, .md-module-dialog) {
+  --focus-ring: var(--atlas-focus-ring);
+}
+/* One focus ring for everything the generated components do not already ring.
+   Input, Textarea and select carry `focus-visible:ring-3` of their own; listing
+   them here too would draw a second, differently offset ring around the same
+   field. Plain buttons, links, summaries and roving tab stops are not shadcn
+   components and still need this.
+   It is a default, so it stays as weak as a default (0,2,0 through :where): with
+   :is() it weighed 0,5,0 and overrode every component's own ring, so a ring meant
+   to sit inside a clipping row (−2 px) was cut off and an intended `outline: none`
+   (a resizer's accent line, a row that rings itself) drew a second ring anyway.
+   A component may still set --focus-offset instead of outline-offset. */
+.atlas
+  :where(button, a, summary, [tabindex]):focus-visible:where(:not(.md-editor, .md-editor *)) {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset, 2px);
+}
+/* Focus placed by the app (navigation.ts focusQuietly) paints no ring until a key press or blur removes the attribute. */
+.atlas [data-quiet-focus]:focus-visible:not(.md-editor *) { outline: none !important; }
+/* The route heading takes programmatic focus; it must not paint a ring. */
+.atlas h1[tabindex="-1"]:focus-visible:not(.md-editor):not(.md-editor *) {
+  outline: none;
+}
+.atlas button svg:not(.md-editor):not(.md-editor *) {
+  flex-shrink: 0;
+}
+.atlas .muted:not(.md-editor):not(.md-editor *),
+.atlas .help:not(.md-editor):not(.md-editor *) {
+  color: var(--muted);
+}
+.atlas .help:not(.md-editor):not(.md-editor *) {
+  font-size: 12px;
+  line-height: 1.55;
+}
+.atlas .eyebrow:not(.md-editor):not(.md-editor *) {
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  font-weight: 700;
+  color: var(--muted);
+}
+.atlas button:not(.md-editor button):not(.md-editor):not(.md-editor *) {
+  -webkit-tap-highlight-color: transparent;
+}
+/* The four control variants are shadcn's now (`variant="default|outline|
+   destructive|ghost"`), and the generated Button carries its own geometry,
+   states and disabled treatment. The block that used to live here styled
+   `.primary`/`.subtle`/`.danger`/`.ghost` plus every `button` inside a handful
+   of container classes -- that second half kept matching the migrated buttons
+   and overrode their background, so it had to go rather than merely stop being
+   referenced. */
+.atlas kbd:not(.md-editor):not(.md-editor *) {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--hover);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+@media (pointer: coarse) {
+  .atlas kbd:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+}
+.atlas ::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.atlas .brand-mark:not(.md-editor):not(.md-editor *) {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.atlas .sidebar:not(.md-editor):not(.md-editor *) {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 16px 10px 10px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--line);
+  height: 100dvh;
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+.atlas .sidebar > :not(.sidebar-spaces) { flex-shrink: 0; }
+.atlas .sidebar :is(a, button):focus-visible:not(.md-editor):not(.md-editor *) { outline-offset: -2px; }
+.atlas .brand:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  padding: 8px;
+  margin: 0 2px 10px;
+  border-radius: var(--radius-md);
+  border: 0;
+  background: none;
+  align-items: center;
+  text-align: left;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -.02em;
+}
+@media (hover: hover) and (pointer: fine) { .atlas .brand:hover { background: var(--hover); } }
+.atlas .brand .brand-mark {
+  width: 48px; height: 48px; padding: 0;
+  border: 0; border-radius: 0;
+  background: transparent; box-shadow: none;
+}
+.atlas .brand-name {
+  font-size: 17px; font-weight: 700; line-height: 1.2; letter-spacing: -.025em;
+  min-width: 0; overflow-wrap: anywhere; overflow: hidden;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+}
+.atlas .brand small:not(.md-editor):not(.md-editor *) {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.atlas .search-launch:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 15px;
+  min-height: 37px;
+}
+.atlas .search-launch span:not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .search-launch:hover:not(.md-editor):not(.md-editor *) {
+    border-color: var(--accent);
+  }
+}
+/* One navigation family. .nav-item[data-variant] is the target shape; the
+   existing selectors are listed alongside it so the templates can migrate
+   without a visual step. */
+.atlas
+  :is(
+    .nav-item,
+    .nav-link,
+    .library-tabs button
+  ):not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--control-h);
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 550;
+  text-align: left;
+}
+.atlas
+  :is(
+    .nav-item[data-variant="rail"],
+    .nav-item[data-variant="list"],
+    .nav-link
+  ):not(.md-editor):not(.md-editor *) {
+  width: 100%;
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas
+    :is(
+      .nav-item,
+      .nav-link,
+      .library-tabs button
+    ):hover:not(.md-editor):not(.md-editor *) {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+.atlas
+  :is(
+    .nav-item[aria-current],
+    .nav-item[data-state="active"],
+    .nav-item.active,
+    .nav-link[aria-current="page"],
+    .nav-link.active,
+    .library-tabs button[aria-current]
+  ):not(.md-editor):not(.md-editor *) {
+  background: var(--navigation-selected-bg);
+  color: var(--accent);
+  border-color: transparent;
+}
+.atlas .nav-section:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 4px 6px 10px;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.09em;
+  font-weight: 700;
+}
+.atlas .spaces-scroll:not(.md-editor):not(.md-editor *) {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  flex: 1;
+  /* Room for the first row's focus ring, taken from the heading's bottom margin. */
+  padding-top: 2px;
+  padding-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  scroll-padding-block: 8px;
+}
+/* A docked sidebar on a touch screen (a tablet in landscape) is a third of the page: a swipe
+   over its tree, which usually does not overflow, has to move the page instead of stopping
+   dead. The drawer below 1025px keeps containing its own scroll over the page. */
+@media (min-width: 1025px) and (pointer: coarse) {
+  .atlas .spaces-scroll:not(.md-editor):not(.md-editor *) { overscroll-behavior: auto; }
+}
+/* Pinned spaces (SidebarSpace.vue): the section heading and the link to all spaces stay put
+   while the rows and their trees scroll between them. A space row reads like a tree row one
+   level up: the chevron on the left, the space icon, the name; its tree stands below in the same columns. */
+.atlas .sidebar-spaces:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-top: 10px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.atlas .sidebar-spaces > :not(.spaces-scroll) { flex-shrink: 0; }
+.atlas .sidebar-spaces-heading:not(.md-editor):not(.md-editor *) { min-height: 32px; margin: 4px 0 0 10px; }
+.atlas .sidebar-spaces-heading h2 { margin: 0; font: inherit; letter-spacing: inherit; text-transform: uppercase; }
+/* A column whose items take its width, so a long space name ellipsises instead of widening the list past the sidebar.
+   Flex, not grid: an item that enters or leaves the list opens and closes its place through a negative margin, the
+   gap included (App.vue), and a grid track cannot be smaller than nothing. */
+.atlas .sidebar-space-list { display: flex; flex-direction: column; gap: 1px; margin: 0; padding: 0; list-style: none; }
+.atlas .sidebar-space { min-width: 0; }
+.atlas .sidebar-space-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;
+  margin: 10px 0 1px 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.atlas .sidebar-space:first-child > .sidebar-space-caption { margin-top: 0; }
+.atlas .sidebar-space-pin:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 7px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar-space-pin:hover:not(:disabled) { background: var(--accent-soft); } }
+.atlas .sidebar-space-pin:disabled { opacity: .6; cursor: default; }
+.atlas .sidebar-space-row:not(.md-editor):not(.md-editor *) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar-space-row:hover:not(.md-editor):not(.md-editor *) { background: var(--hover); } }
+.atlas .sidebar-space-row.active:not(.md-editor):not(.md-editor *) { background: var(--navigation-selected-bg); color: var(--accent); }
+.atlas .sidebar-space-row.contains-active .sidebar-space-name { color: var(--accent); }
+.atlas .sidebar-space-row.drop-inside:not(.md-editor):not(.md-editor *) { background: var(--accent-soft); outline: 1px solid var(--accent); outline-offset: -1px; }
+.atlas .sidebar-space-link:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  padding: 5px 4px 5px 0;
+  /* Its focus ring ends in the row's own corners. */
+  border-radius: inherit;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  text-decoration: none;
+}
+.atlas .sidebar-space-row .sidebar-space-link > .space-icon:not(.md-editor):not(.md-editor *) { width: 22px; height: 22px; border-radius: 6px; }
+.atlas .sidebar-space-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas .sidebar-space-lock { display: inline-flex; flex: 0 0 auto; color: var(--muted); }
+/* The row's menu costs the name no width: it fades in over the row's end while the row is pointed at or
+   focused (and while it is open, the row keeps its hover colour), and the link fades out under it. The link is
+   masked, not covered: a patch in „the row's colour“ matched only some of them (glass over the rail's gradient, the
+   hover tint, the selection, a drop target, nothing at all under keyboard focus) and showed as a box at the row's
+   end. A mask would cut the link's own focus ring too, so a link focused from the keyboard makes room for the menu
+   instead. Touch keeps the menu in the row, always shown. */
+@property --sidebar-space-fade { syntax: "<length>"; inherits: false; initial-value: 0px; }
+.atlas .sidebar-space-row:has(.sidebar-space-actions [data-state="open"]):not(.active) { background: var(--sidebar-space-row-hover, var(--hover)); }
+.atlas .sidebar-space-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--atlas-motion-fast) var(--atlas-motion-ease);
+}
+.atlas .sidebar-space-row:is(:hover, :focus-within) .sidebar-space-actions,
+.atlas .sidebar-space-actions:has([data-state="open"]) { opacity: 1; pointer-events: auto; }
+/* The menu's button answers like the row's arrow: a small chip in a tint of its own ink, in the middle of a 32 px
+   column that is the whole target. As tall as the row and flush with its end, in the accent's soft colour, it was a
+   block stuck on the row's end on the rail, and on a card it had the row's own hover colour and did not answer at all. */
+.atlas .sidebar-space-actions > button:not(.md-editor):not(.md-editor *) {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: none;
+  color: var(--sidebar-space-menu-rest, var(--muted));
+}
+.atlas .sidebar-space-actions > button:not(.md-editor):not(.md-editor *)::after { content: ""; position: absolute; inset: 0; }
+.atlas .sidebar-space-row.active .sidebar-space-actions { --sidebar-space-menu-ink: var(--accent); --sidebar-space-menu-rest: color-mix(in srgb, var(--accent) 72%, transparent); }
+.atlas .sidebar-space-actions > button[data-state="open"]:not(.md-editor):not(.md-editor *) {
+  background: color-mix(in srgb, var(--sidebar-space-menu-ink, var(--text)) 14%, transparent);
+  color: var(--sidebar-space-menu-ink, var(--text));
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .sidebar-space-actions > button:hover:not(:disabled):not(.md-editor):not(.md-editor *) {
+    background: color-mix(in srgb, var(--sidebar-space-menu-ink, var(--text)) 11%, transparent);
+    color: var(--sidebar-space-menu-ink, var(--text));
+  }
+}
+@media (hover: hover) {
+  /* The menu button is 32 px wide; the link fades over the 14 px before it, in step with the button's own fade. */
+  .atlas .sidebar-space-row > .sidebar-space-link {
+    -webkit-mask-image: linear-gradient(to left, transparent calc(var(--sidebar-space-fade, 0px) - 14px), #000 var(--sidebar-space-fade, 0px));
+    mask-image: linear-gradient(to left, transparent calc(var(--sidebar-space-fade, 0px) - 14px), #000 var(--sidebar-space-fade, 0px));
+    transition-property: background-color, color, border-color, box-shadow, filter, opacity, --sidebar-space-fade;
+  }
+  /* Only a row that has the menu: a reader's row has nothing to make room for, and its name would fade under nothing. */
+  .atlas .sidebar-space-row:has(> .sidebar-space-actions):is(:hover, :focus-within, :has(.sidebar-space-actions [data-state="open"])) > .sidebar-space-link:not(:focus-visible) { --sidebar-space-fade: 46px; }
+  .atlas .sidebar-space-row:has(> .sidebar-space-actions) > .sidebar-space-link:focus-visible { padding-right: 36px; }
+}
+@media (hover: none) {
+  .atlas .sidebar-space-actions { position: relative; align-self: stretch; opacity: 1; pointer-events: auto; }
+}
+/* The tree's first level stands in the space row's own columns: arrow under arrow, a title where the space's icon
+   starts (and, once pages carry icons, icon under icon and title under the name). */
+.atlas .sidebar-space-tree:not(.md-editor):not(.md-editor *) {
+  margin: 1px 0 4px;
+  animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out);
+}
+.atlas .sidebar-space-tree > .sidebar-empty:not(.md-editor):not(.md-editor *) { margin: 0; padding: 6px 10px 6px 30px; }
+/* A quick answer never flashes the loading line. */
+.atlas .sidebar-space-loading { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both; }
+.atlas .sidebar-space-retry, .atlas .sidebar-empty a { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.atlas .profile-launch[aria-current="page"]:not(.md-editor):not(.md-editor *) { background: var(--navigation-selected-bg); color: var(--accent); }
+.atlas .sidebar .space-icon:not(.md-editor):not(.md-editor *) { width: 24px; height: 24px; border-radius: 7px; }
+.atlas .sidebar .brand-mark:not(.md-editor):not(.md-editor *) { width: 32px; height: 32px; }
+.atlas .space-icon:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  /* The appearance palette (styles/appearance.css) colours every space by its data-color. */
+  background: var(--appearance-bg, var(--space-blue-bg));
+  color: var(--appearance-fg, var(--space-blue-fg));
+}
+/* The arrow of a space or a branch. Its column, 28 px wide and as tall as the row, is the whole target; what answers
+   the pointer is a small chip in the middle of it, in a tint of the arrow's own ink, so it reads the same on the
+   rail, on a card, in a row that is pointed at and in the selected one. A block as tall as the row, flush with its
+   edge and in the row's own hover colour, looked like a second, misplaced row. */
+.atlas .tree-toggle-col:not(.md-editor):not(.md-editor *) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  flex: 0 0 28px;
+}
+.atlas .tree-toggle:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tree-toggle-rest, var(--muted));
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  flex: 0 0 22px;
+  margin: 0;
+}
+.atlas .tree-toggle:not(.md-editor):not(.md-editor *)::after { content: ""; position: absolute; inset: 0; }
+/* In the selected row the arrow is in the selection's ink, a shade quieter until it is pointed at. The colours are
+   variables of the row, so the pointer's rule below is never outweighed by the row's. */
+.atlas :is(.tree-row, .sidebar-space-row).active > .tree-toggle-col { --tree-toggle-ink: var(--accent); --tree-toggle-rest: color-mix(in srgb, var(--accent) 72%, transparent); }
+@media (hover: hover) and (pointer: fine) {
+  .atlas .tree-toggle:hover:not(.md-editor):not(.md-editor *) {
+    background: color-mix(in srgb, var(--tree-toggle-ink, var(--text)) 11%, transparent);
+    color: var(--tree-toggle-ink, var(--text));
+  }
+}
+.atlas .page-tree:not(.md-editor):not(.md-editor *) {
+  --tree-step: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* Every row is as wide as the tree, so the pointer and the selection light the same band at every depth; a level is
+   an indent inside the row (PageTree sets --tree-depth on each nested list). The first eight nested lists indent by a
+   step of 14 px and carry a guide line under the centre of the parent's arrow, so it visibly runs from that arrow
+   down to its children; level 10 onward shares the ninth column: deeper levels stay reachable but stop growing the
+   indentation (spec D3.5). The line lies over the rows it passes, as an indent guide does. */
+.atlas .page-tree-nested:not(.md-editor):not(.md-editor *) { position: relative; }
+.atlas .page-tree-nested:not(.md-editor):not(.md-editor *)::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: calc((var(--tree-depth, 1) - 1) * var(--tree-step) + 13px);
+  width: 1px;
+  background: var(--tree-guide, var(--line));
+  pointer-events: none;
+}
+.atlas .tree-row:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 32px;
+  padding-left: calc(var(--tree-depth, 0) * var(--tree-step, 14px));
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .tree-row:hover:not(.md-editor):not(.md-editor *) {
+    background: var(--hover);
+  }
+}
+.atlas .tree-row.active:not(.md-editor):not(.md-editor *) {
+  --tree-row-bg: var(--navigation-selected-bg);
+  background: var(--navigation-selected-bg);
+  color: var(--accent);
+}
+.atlas .tree-row.tree-branch .tree-page-title { font-weight: 550; }
+.atlas .page-tree li:has(.tree-row.active) > .tree-row:not(.active) .tree-page-title { color: var(--accent); }
+.atlas .tree-row.active .tree-page-title { font-weight: 600; }
+/* The title shrinks; icons and the branch toggle keep their own hit areas. */
+.atlas .tree-page:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  border: 0;
+  /* Its focus ring ends in the row's own corners. */
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  text-align: left;
+  padding: 6px 4px 6px 0;
+  font-size: 13px;
+  overflow: hidden;
+}
+.atlas .sidebar-empty:not(.md-editor):not(.md-editor *) {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 0 10px;
+}
+.atlas .account:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding-top: 13px;
+  gap: 4px;
+}
+.atlas .profile-launch:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  padding: 3px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .profile-launch:hover:not(.md-editor):not(.md-editor *) {
+    background: var(--hover);
+  }
+}
+.atlas .profile-launch > span:nth-child(2):not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.atlas .profile-launch small:not(.md-editor):not(.md-editor *) {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+.atlas .avatar:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.atlas .workspace:not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+  min-height: 100dvh;
+}
+/* Sticky: the page actions (lock, Publikovat, "…") live here, so the bar
+   must stay reachable on a long document. Its z-index also keeps the "…" menu above
+   the document; the mobile drawer (z-index 6) still paints over it. */
+.atlas .workspace-bar:not(.md-editor):not(.md-editor *) {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--surface);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  min-height: 56px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 27px;
+}
+.atlas .breadcrumbs:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.atlas .breadcrumb-space:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 5px 0;
+  font-size: 12px;
+  font-weight: 400;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atlas .breadcrumb-space.breadcrumb-current:not(.md-editor):not(.md-editor *) {
+  color: var(--text);
+  font-weight: 600;
+}
+.atlas .breadcrumb-title:not(.md-editor):not(.md-editor *) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  font-weight: 600;
+}
+/* The crumbs moved into a nav > ol for list semantics. `.breadcrumbs` keeps its
+   own flex row for the toggles beside them, so the list has to carry the same
+   spacing the crumbs used to get from it directly. */
+.atlas .breadcrumb-trail:not(.md-editor):not(.md-editor *) {
+  min-width: 0;
+}
+.atlas .breadcrumb-trail > ol:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.atlas .breadcrumb-trail li:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.atlas .breadcrumb-separator:not(.md-editor):not(.md-editor *) {
+  color: var(--muted);
+}
+/* A crumb's separator and its label are one unit, so a narrow-screen rule that
+   hides the label can never leave a dangling "/" behind (finding 3.2). */
+.atlas .breadcrumb-crumb:not(.md-editor):not(.md-editor *) {
+  display: contents;
+}
+.atlas .bar-actions:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.atlas .mobile-menu:not(.md-editor):not(.md-editor *) {
+  display: none;
+}
+.atlas .new-page-label-short:not(.md-editor):not(.md-editor *) {
+  display: none;
+}
+.atlas .document-header:not(.md-editor):not(.md-editor *) {
+  width: 100%;
+  margin: 0;
+  padding: 26px clamp(20px, 3vw, 48px) 18px;
+}
+.atlas .document-header h1:not(.md-editor):not(.md-editor *) {
+  max-width: 740px;
+  font-size: 34px;
+  line-height: 1.25;
+  letter-spacing: -0.045em;
+  margin: 18px auto 17px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.atlas .document-title-input:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: baseline;
+  width: 100%;
+  max-width: 740px;
+  min-height: 0;
+  background: none;
+  border: 0;
+  font-size: 34px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  /* The heading's .15em less the 1.5 px a textarea adds above and below its line: locking or unlocking moves nothing (3.6-A). */
+  padding: calc(0.15em - 1.5px) 0;
+  margin: 18px auto 17px;
+  border-radius: 0;
+  color: var(--text);
+}
+/* Sized by CSS (DocumentTitle.vue `field-sizing`), the field is its lines alone, without those 1.5 px: the heading's own .15em. */
+@supports (field-sizing: content) {
+  .atlas .document-title-input:not(.md-editor):not(.md-editor *) { padding-block: 0.15em; }
+}
+.atlas .document-meta:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: var(--muted);
+}
+/* Page actions live in the top bar next to "Nová stránka" (user feedback 2026-09-08:
+   the row under the title cost a line of reading space). */
+.atlas .bar-actions .document-actions:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding-right: 10px;
+  margin-right: 3px;
+  border-right: 1px solid var(--line);
+}
+.atlas .document-secondary-actions:not(.md-editor):not(.md-editor *),
+.atlas .document-primary-actions:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+/* One size for the page header row (the shell's --control-h, as Publikovat and the lock): the generated icon buttons are 32 px. */
+.atlas .bar-actions .document-actions .size-8:not(.md-editor):not(.md-editor *),
+.atlas .bar-actions .new-page-button:not(.md-editor):not(.md-editor *) { min-width: var(--control-h); height: var(--control-h); }
+.atlas .bar-actions .document-actions .size-8:not(.md-editor):not(.md-editor *) { width: var(--control-h); }
+/* The last-change timestamp doubles as a quiet entry into page history. */
+.atlas .document-updated:not(.md-editor):not(.md-editor *) {
+  align-self: flex-start;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.atlas .document-updated:not(.md-editor):not(.md-editor *)::before {
+  content: "·";
+  margin-right: 8px;
+}
+.atlas button.history-entry:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--muted);
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas button.history-entry:not(.md-editor):not(.md-editor *):hover time {
+    color: var(--text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+.atlas button.history-entry:not(.md-editor):not(.md-editor *):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.atlas .document-body:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+}
+.atlas .overview:not(.md-editor):not(.md-editor *) {
+  max-width: none;
+  margin: 0;
+  padding: 24px;
+}
+.atlas .overview h1:not(.md-editor):not(.md-editor *) {
+  font-size: 35px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  font-weight: 650;
+  max-width: 620px;
+  margin: 12px 0 16px;
+}
+.atlas .overview .intro:not(.md-editor):not(.md-editor *) {
+  max-width: 570px;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.atlas .large-space-icon:not(.md-editor):not(.md-editor *) {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+.atlas .page-list:not(.md-editor):not(.md-editor *) {
+  margin-top: 30px;
+}
+.atlas .page-list > a:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  color: var(--text);
+  padding: 15px 5px;
+  text-align: left;
+  font-size: 14px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .page-list > a:hover:not(.md-editor):not(.md-editor *) {
+    background: var(--hover);
+  }
+}
+.atlas .page-list > a > span:not(.md-editor):not(.md-editor *) {
+  flex: 1;
+}
+.atlas .page-list small:not(.md-editor):not(.md-editor *) {
+  color: var(--muted);
+  font-size: 11px;
+}
+[data-layout="islands"] .atlas:not(.md-editor):not(.md-editor *) {
+  padding: 12px;
+  gap: 12px;
+}
+[data-layout="islands"] .atlas .sidebar:not(.md-editor):not(.md-editor *) {
+  height: calc(100dvh - 24px);
+  top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+[data-layout="islands"] .atlas .workspace:not(.md-editor):not(.md-editor *) {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: calc(100dvh - 24px);
+  box-shadow: var(--shadow);
+}
+/* One dialog surface. .app-dialog is the target class; the bare dialog selector
+   keeps the existing markup on the same surface. */
+.atlas :is(dialog, .app-dialog):not(.md-editor):not(.md-editor *) {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  --app-dialog-pad: 24px;
+  padding: var(--app-dialog-pad);
+  box-shadow: var(--shadow-modal);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+}
+.atlas :is(dialog, .app-dialog):not(.md-editor):not(.md-editor *)::backdrop {
+  background: var(--backdrop);
+  backdrop-filter: blur(4px);
+}
+.atlas .app-dialog-header:not(.md-editor):not(.md-editor *) {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface);
+  padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.atlas .app-dialog-header > h2:not(.md-editor):not(.md-editor *) {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+/* The dialog scrolls as a whole and its padding scrolls with it: a sticky header or footer stops at the padding, so in a
+   dialog taller than the window the body showed through the band between them and the dialog's edge. Each one's
+   surface reaches that edge instead; the boxes themselves stay where they were. Only upwards and downwards: the body
+   never enters the side padding, and a dialog without padding (the search palette) gets no sideways overflow from it. */
+.atlas .app-dialog-header:not(.md-editor):not(.md-editor *)::before,
+.atlas .app-dialog-footer:not(.md-editor):not(.md-editor *)::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: calc(var(--app-dialog-pad, 0px) * -1) 0 0;
+  background: inherit;
+}
+.atlas .app-dialog-footer:not(.md-editor):not(.md-editor *)::before { inset-block: 0 calc(var(--app-dialog-pad, 0px) * -1); }
+.atlas .app-dialog-footer:not(.md-editor):not(.md-editor *) {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background: var(--surface);
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+/* size="wide" has a width of its own, so a skeleton of a lazy wide dialog already has the size of the result. */
+.atlas .app-dialog[data-size="wide"]:where(:not(.md-editor)) { width: min(720px, calc(100vw - 32px)); }
+/* AppDialog size="side": a full-height panel sliding in from the right (Historie, Čtenost stránky). */
+.atlas .app-dialog[data-size="side"][open]:not(.md-editor) {
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: var(--app-dialog-side-width, min(1120px, calc(100vw - 64px)));
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  --app-dialog-pad: 0px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.atlas .app-dialog[data-size="side"][open]:not(.md-editor)::backdrop { background: var(--backdrop); backdrop-filter: none; }
+.atlas .app-dialog[data-size="side"] > .app-dialog-header:not(.md-editor) {
+  flex-shrink: 0;
+  padding: 16px 22px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--sidebar);
+}
+/* The side panel slides in 3 rise tokens and fades (AppDialog animates it, slow, ease-out); reduced motion keeps the fade only. */
+@media (max-width: 760px) { .atlas .app-dialog[data-size="side"][open]:not(.md-editor) { width: 100vw; } }
+.atlas :where(fieldset):not(:where(.md-editor, .md-editor *)) {
+  border: 0;
+  padding: 0;
+  margin: 24px 0;
+}
+.atlas legend:not(.md-editor):not(.md-editor *) {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 11px;
+}
+.atlas input[type="radio"]:not(.md-editor):not(.md-editor *) {
+  accent-color: var(--accent);
+  margin: 0;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+.atlas .entry-shell:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  width: 100%;
+  padding: 35px 20px;
+  background: radial-gradient(
+    ellipse at 20% 15%,
+    var(--accent-soft),
+    transparent 65%
+  );
+}
+/* While the first session check runs the entry screen is not painted before the defer has passed: a signed-in
+   reader with a quick answer goes straight to the wiki, a slow answer still gets "Připojujeme se…", faded in. */
+.atlas .entry-shell[data-connecting]:not(.md-editor):not(.md-editor *) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both; }
+.atlas .entry-card:not(.md-editor):not(.md-editor *) {
+  /* Never wider than the screen: at 375 px the card takes the width the shell's padding leaves (P17). */
+  width: min(440px, 100%);
+  padding: 36px;
+}
+.atlas .entry-brand:not(.md-editor):not(.md-editor *) {
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+.atlas .entry-brand .brand-mark:not(.md-editor):not(.md-editor *) {
+  width: 48px;
+  height: 48px;
+}
+.atlas .entry-card h1:not(.md-editor):not(.md-editor *) {
+  font-size: 28px;
+  line-height: 1.2;
+  letter-spacing: -0.04em;
+  margin: 18px 0;
+}
+.atlas .entry-card > p:not(.md-editor):not(.md-editor *) {
+  color: var(--muted);
+  font-size: 13px;
+}
+.atlas .entry-card form:not(.md-editor):not(.md-editor *) {
+  margin-top: 23px;
+}
+.atlas .entry-card .entry-version:not(.md-editor):not(.md-editor *) {
+  margin-top: 26px;
+}
+.atlas .entry-version .login-recovery:not(.md-editor):not(.md-editor *) {
+  margin: 8px 0 0;
+  padding: 2px 0;
+  font-size: 11px;
+}
+.atlas .entry-card form > [data-slot="button"]:not(.md-editor):not(.md-editor *) {
+  width: 100%;
+  margin-top: 10px;
+}
+.atlas .notice:not(.md-editor):not(.md-editor *) {
+  padding: 12px 15px;
+  border-radius: 7px;
+  font-size: 13px;
+}
+.atlas .notice.error:not(.md-editor):not(.md-editor *) {
+  background: var(--error-bg);
+  color: var(--error);
+}
+.atlas .notice.success:not(.md-editor):not(.md-editor *) {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.atlas .notice > button:not(.md-editor):not(.md-editor *) {
+  margin-left: 10px;
+}
+.atlas .global-notice:not(.md-editor):not(.md-editor *) {
+  margin: 14px 26px;
+}
+.atlas .skip-link:not(.md-editor):not(.md-editor *) {
+  position: absolute;
+  top: -100px;
+  left: 15px;
+  z-index: 100;
+  background: var(--surface);
+  color: var(--text);
+  padding: 12px;
+  border-radius: 8px;
+}
+.atlas .skip-link:focus:not(.md-editor):not(.md-editor *) {
+  top: 10px;
+}
+/* Search keeps room for independently arriving sources; small screens use the viewport. */
+.atlas .search-dialog:not(.md-editor):not(.md-editor *) {
+  width: min(1040px, calc(100vw - 32px));
+  max-width: 1040px;
+  max-height: calc(100dvh - 32px);
+  height: min(860px, calc(100dvh - 32px));
+  margin: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-modal);
+  overflow: hidden;
+}
+.atlas .search-dialog[open]:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  flex-direction: column;
+}
+.atlas .search-top:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  min-height: 48px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.atlas .search-top > [data-slot="button"]:not(.md-editor):not(.md-editor *) {
+  margin-left: auto;
+}
+.atlas .search-content:not(.md-editor):not(.md-editor *) {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 22px 12px;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.atlas .search-query-controls { flex: none; z-index: 2; background: var(--surface); padding: 14px 20px 12px; border-bottom: 1px solid var(--line); }
+.atlas .search-columns { display: grid; grid-template-columns: minmax(0, 1fr); flex: 1; min-height: 0; }
+.atlas .search-columns.with-answer { grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); }
+.atlas .search-columns .search-content { min-width: 0; scroll-padding-top: 12px; padding-top: 8px; }
+.atlas .search-answer-pane { min-width: 0; overflow: auto; padding: 20px; border-inline-start: 1px solid var(--line); }
+.atlas .search-answer-idle h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.atlas .search-answer-idle p { color: var(--muted); font-size: 13px; line-height: 1.7; margin: 0; }
+.atlas .search-query-controls .search-mode-hint { margin: 9px 0 0; }
+@media (max-width: 760px) {
+  .atlas .search-columns.with-answer { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(120px, 1fr) minmax(120px, .8fr); }
+  .atlas .search-answer-pane { border-inline-start: 0; border-top: 1px solid var(--line); padding: 14px; }
+  .atlas .search-query-controls { padding: 10px 12px; }
+}
+.atlas .search-result { scroll-margin-top: 8px; }
+.atlas .search-filter-toggle { flex-shrink: 0; white-space: nowrap; gap: 6px; }
+.atlas .search-active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 10px 0; }
+.atlas .omnisearch-input:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 6px 8px 6px 12px;
+  color: var(--muted);
+}
+.atlas .omnisearch-input > svg:not(.md-editor):not(.md-editor *) {
+  flex: 0 0 auto;
+}
+.atlas .omnisearch-input:focus-within:not(.md-editor):not(.md-editor *) {
+  border-color: var(--accent);
+}
+.atlas .search-clear:not(.md-editor):not(.md-editor *) {
+  flex: 0 0 auto;
+}
+.atlas .search-result:not(.md-editor):not(.md-editor *) {
+  box-sizing: border-box;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  width: 100%;
+  min-height: 76px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text);
+  padding: 12px;
+}
+.atlas .search-result > span:nth-child(2):not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  min-width: 0;
+}
+.atlas .search-result .space-icon:not(.md-editor):not(.md-editor *) {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.atlas .search-result strong:not(.md-editor):not(.md-editor *) {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.atlas .search-result small:not(.md-editor):not(.md-editor *) {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.atlas .search-result.active:not(.md-editor):not(.md-editor *) {
+  background: var(--accent-soft);
+}
+.atlas .search-result > svg:not(.md-editor):not(.md-editor *) {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.atlas .search-footer:not(.md-editor):not(.md-editor *) {
+  border-top: 1px solid var(--line);
+  padding: 12px 20px;
+  color: var(--muted);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.atlas .sidebar-backdrop:not(.md-editor):not(.md-editor *) {
+  display: none;
+}
+@media (max-width: 900px) {
+  .atlas .sidebar:not(.md-editor):not(.md-editor *) {
+    width: 220px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  .atlas .workspace-bar:not(.md-editor):not(.md-editor *) {
+    padding: 0 20px;
+  }
+  .atlas .document-header:not(.md-editor):not(.md-editor *) {
+    padding: 30px 26px 10px;
+  }
+  .atlas .document-body:not(.md-editor):not(.md-editor *) {
+    padding: 0;
+  }
+  .atlas .overview:not(.md-editor):not(.md-editor *) {
+    padding: 35px 27px;
+  }
+  .atlas .overview h1:not(.md-editor):not(.md-editor *) {
+    font-size: 30px;
+  }
+  .atlas .document-header h1:not(.md-editor):not(.md-editor *),
+  .atlas .document-title-input:not(.md-editor):not(.md-editor *) {
+    font-size: 29px;
+  }
+  .atlas .breadcrumb-title-crumb:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+}
+/* Phones and tablets in portrait (an iPad is 744–1024px wide): the navigation is a drawer
+   over the page instead of a docked column. Docked, it took a third of a tablet's width
+   and the article was left a narrow strip. Keep in step with drawerQuery in App.vue. */
+@media (max-width: 1024px) {
+  .atlas .sidebar:not(.md-editor):not(.md-editor *),
+  [data-layout="islands"] .atlas .sidebar:not(.md-editor):not(.md-editor *) {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100dvh;
+    width: 260px;
+    transform: translateX(-100%);
+    visibility: hidden;
+    border-radius: 0;
+    transition: transform var(--atlas-motion-surface) var(--atlas-ease-out), visibility var(--atlas-motion-surface);
+  }
+  /* Higher than the sticky top bar's z-index: 5 (.workspace-bar), so opening the
+     drawer paints over the bar instead of sliding in underneath it. */
+  .atlas .sidebar.mobile-open:not(.md-editor):not(.md-editor *) {
+    transform: translateX(0);
+    visibility: visible;
+    z-index: 6;
+  }
+  .atlas .sidebar-backdrop:not(.md-editor):not(.md-editor *) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--backdrop);
+    border: 0;
+    z-index: 4;
+  }
+  .atlas .mobile-menu:not(.md-editor):not(.md-editor *) {
+    display: inline-flex;
+  }
+  .atlas .breadcrumbs > .mobile-menu:not(.md-editor):not(.md-editor *) {
+    flex-shrink: 0;
+  }
+}
+@media (max-width: 680px) {
+  .atlas:not(.md-editor):not(.md-editor *),
+  [data-layout="islands"] .atlas:not(.md-editor):not(.md-editor *) {
+    padding: 0;
+    gap: 0;
+  }
+  .atlas .workspace:not(.md-editor):not(.md-editor *),
+  [data-layout="islands"] .atlas .workspace:not(.md-editor):not(.md-editor *) {
+    border: 0;
+    border-radius: 0;
+    min-height: 100dvh;
+  }
+  .atlas .workspace-bar:not(.md-editor):not(.md-editor *) {
+    height: auto;
+    min-height: 57px;
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 7px;
+  }
+  /* The page's bar of a phone (PageMobileBar.vue) belongs to the bottom of the screen, also under a page shorter
+     than the screen: the view takes the workspace's whole height and what is left of it lies between the content and
+     the bar, never less than 24 px. Following the content, the bar hung in the middle of a short page (at 390 × 844
+     with 171 px of nothing under it). */
+  .atlas .workspace-content:has(> .page-mobile-bar) { align-self: stretch; }
+  .atlas .workspace-content:has(> .page-mobile-bar)::after { content: ""; order: 1; flex: 1 0 24px; }
+  /* The article keeps its own height, so that the leftover goes under „Odtud dál“ and not between it and the text. */
+  .atlas .workspace-content:has(> .page-mobile-bar) > .document-body:not(.md-editor):not(.md-editor *) { flex: none; }
+  .atlas .breadcrumbs:not(.md-editor):not(.md-editor *) {
+    flex: 1 1 140px;
+    gap: 6px;
+    overflow: hidden;
+    /* The clip lets long crumbs shrink; the padding keeps the menu button's focus ring
+       inside it and the negative margin keeps the layout where it was. */
+    padding: 4px;
+    margin: -4px;
+  }
+  .atlas .bar-actions:not(.md-editor):not(.md-editor *) {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+  .atlas .breadcrumb-space:not(.md-editor):not(.md-editor *) {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .atlas .document-header:not(.md-editor):not(.md-editor *) {
+    padding: 26px 20px 10px;
+  }
+  .atlas .document-header h1:not(.md-editor):not(.md-editor *),
+  .atlas .document-title-input:not(.md-editor):not(.md-editor *) {
+    font-size: 27px;
+  }
+  .atlas .document-body:not(.md-editor):not(.md-editor *) {
+    padding: 0;
+  }
+  .atlas .document-actions:not(.md-editor):not(.md-editor *) {
+    width: 100%;
+    margin: 4px 0 0;
+  }
+  .atlas .overview:not(.md-editor):not(.md-editor *) {
+    padding: 32px 23px;
+  }
+  .atlas .overview h1:not(.md-editor):not(.md-editor *) {
+    font-size: 29px;
+  }
+  /* Below 640px there is no room for margins around a centred card: the search
+     overlay goes back to a full-screen sheet. */
+  .atlas .search-dialog:not(.md-editor):not(.md-editor *) {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+  }
+  .atlas .search-content:not(.md-editor):not(.md-editor *) {
+    padding: 16px;
+  }
+  .atlas .search-top:not(.md-editor):not(.md-editor *) {
+    padding: 14px 16px;
+  }
+  .atlas .search-footer:not(.md-editor):not(.md-editor *) {
+    padding: 12px 16px;
+  }
+  .atlas dialog:not(.md-editor):not(.md-editor *) {
+    padding: 24px 20px;
+  }
+  .atlas .entry-card:not(.md-editor):not(.md-editor *) {
+    padding: 27px 23px;
+  }
+  .atlas .entry-shell:not(.md-editor):not(.md-editor *) {
+    padding: 18px 12px;
+  }
+  .atlas .global-notice:not(.md-editor):not(.md-editor *) {
+    margin: 12px 16px;
+  }
+  .atlas .page-list small:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+}
+/* Reduced motion: the drawer does not slide, it fades (the same 160 ms, linear, from the tokens). The islands selector
+   is repeated: the drawer's rule above carries it, and alone it would outweigh this one, so the drawer would close at once. */
+@media (max-width: 1024px) {
+  @media (prefers-reduced-motion: reduce) {
+    .atlas .sidebar:not(.md-editor):not(.md-editor *),
+    [data-layout="islands"] .atlas .sidebar:not(.md-editor):not(.md-editor *) { transform: none; opacity: 0; transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out), visibility var(--atlas-motion-surface); }
+    .atlas .sidebar.mobile-open:not(.md-editor):not(.md-editor *) { opacity: 1; }
+  }
+  [data-atlas-reduced-motion] .atlas .sidebar:not(.md-editor):not(.md-editor *), .atlas[data-atlas-reduced-motion] .sidebar:not(.md-editor):not(.md-editor *) { transform: none; opacity: 0; transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out), visibility var(--atlas-motion-surface); }
+  [data-atlas-reduced-motion] .atlas .sidebar.mobile-open:not(.md-editor):not(.md-editor *), .atlas[data-atlas-reduced-motion] .sidebar.mobile-open:not(.md-editor):not(.md-editor *) { opacity: 1; }
+}
+
+/* Chips: real buttons on the accent surface, not a text "×". */
+.atlas .search-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 12px;margin-top:6px}
+.atlas .search-filters .field{flex:1 1 160px;min-width:140px;margin-bottom:0}
+.atlas .search-load-more{display:block;margin-left:auto}
+@media(max-width:760px){.atlas .search-filters{gap:10px}}
+
+.atlas .module-onboarding{flex:1;min-width:0;width:100%}
+
+/* Personal navigation belongs to the shell; editor component styling stays scoped. */
+.atlas .library-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
+.atlas .favorite-button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+/* The star fills with the colour instead of snapping to it while the button's background fades in. */
+.atlas .favorite-button svg { fill: transparent; transition: fill var(--atlas-motion-fast) var(--atlas-ease-out); }
+.atlas .favorite-button[aria-pressed="true"] svg { fill: currentColor; }
+.atlas .personal-error { margin-inline: clamp(20px, 6vw, 84px); }
+
+.atlas .library-overview > .personal-library { padding: 0; max-width: none; }
+
+.atlas .tree-row { position: relative; }
+.atlas .tree-row[draggable="true"] { cursor: grab; }
+.atlas .tree-row.tree-dragging { opacity: .55; }
+.atlas .tree-row.drop-before::before, .atlas .tree-row.drop-after::after { content: ''; position: absolute; left: calc(var(--tree-depth, 0) * var(--tree-step, 14px) + 7px); right: 3px; height: 2px; background: var(--accent); border-radius: 2px; pointer-events: none; }
+/* Inside the row: a row contains its paint (content-visibility, PageTree.vue), which would clip a line on its edge. */
+.atlas .tree-row.drop-before::before { top: 0; }
+.atlas .tree-row.drop-after::after { bottom: 0; }
+.atlas .tree-row.drop-inside { background: var(--accent-soft); outline: 1px solid var(--accent); outline-offset: -1px; border-radius: 7px; }
+.atlas .breadcrumbs { min-width: 0; }
+.atlas .breadcrumb-ancestor:not(.md-editor):not(.md-editor *) { min-width: 0; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.search-alias { overflow-wrap: anywhere; }
+
+.atlas .space-description { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 72ch; }
+/* Space overview header: icon, name and facts on one compact block, so the page list starts high. */
+.atlas .space-hero:not(.md-editor) { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.atlas .space-hero .large-space-icon:not(.md-editor) { width: 44px; height: 44px; margin: 0; flex-shrink: 0; }
+.atlas .space-hero-text:not(.md-editor) { display: grid; gap: 2px; min-width: 0; }
+.atlas .overview .space-hero h1:not(.md-editor):not(.md-editor *) { margin: 0; font-size: 26px; line-height: 1.2; letter-spacing: -0.03em; max-width: none; overflow-wrap: anywhere; }
+.atlas .space-hero-facts:not(.md-editor) { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; color: var(--muted); font-size: 12.5px; }
+.atlas .space-hero-facts > span:not(.md-editor) { display: inline-flex; align-items: center; gap: 5px; }
+.atlas .space-hero-description:not(.md-editor) { margin: 10px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+
+/* Document workspace: a quiet navigation rail and one continuous reading surface. */
+.atlas .breadcrumb-space,
+.atlas .page-list > a, .atlas .tree-page { text-decoration: none; }
+.atlas .page-list > a { min-width: 0; }
+.atlas .page-list > a > span { min-width: 0; overflow-wrap: anywhere; }
+.atlas .sidebar:not(.md-editor):not(.md-editor *) { width: var(--atlas-sidebar-width); }
+.atlas .workspace-bar:not(.md-editor):not(.md-editor *) { min-height: var(--atlas-topbar-height); padding-block: 8px; }
+.atlas .document-header:not(.md-editor):not(.md-editor *) { padding-block: 18px 8px; }
+.atlas .document-header h1:not(.md-editor):not(.md-editor *),
+.atlas .document-title-input:not(.md-editor):not(.md-editor *) {
+  font-size: 32px;
+  letter-spacing: -0.025em;
+  margin-block: 0 10px;
+}
+.atlas .document-meta:not(.md-editor):not(.md-editor *) { gap: 12px; font-size: 12px; }
+/* A writer's row ends as tall as the icon and tag controls that join it a moment after the article (their own chunks,
+   the tags' request). It has that height from the start: growing by 10 px, it pushed the text being read down. */
+.atlas .document-meta[data-writable]:not(.md-editor):not(.md-editor *) { min-height: 38px; }
+/* Connection feedback always occupies two lines; longer errors remain scrollable
+   in the same slot instead of moving the article or hiding the recovery action. */
+.atlas .document-status { height: 3.1em; min-height: 3.1em; flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; overflow-y: auto; scrollbar-width: thin; }
+.atlas .document-status[data-tone="warning"] { color: var(--text); }
+.atlas .document-status[data-tone="error"] { color: var(--error); }
+.atlas .document-header:not(.md-editor):not(.md-editor *) { padding-inline: 0; }
+.atlas .document-header h1:not(.md-editor):not(.md-editor *),
+.atlas .document-title-input:not(.md-editor):not(.md-editor *),
+.atlas .document-meta:not(.md-editor):not(.md-editor *),
+.atlas .document-body > .page-summary,
+.atlas .workspace-content > .page-connections {
+  width: calc(100% - 80px); max-width: 740px; margin-inline: auto;
+}
+.atlas .workspace-content > .page-connections { padding-inline: 0; }
+.atlas .document-title-text:disabled { cursor: not-allowed; }
+/* A view fills the workspace; one that caps its own width (a page frame with --atlas-page-max, a form) sits in the
+   middle. This used to say `margin-inline: 0`, which pinned every capped frame to the rail on a wide screen unless
+   it outranked this selector. */
+.atlas .workspace-content > *:not(.dashboard):not(.page-connections):not(.md-editor):not(.md-editor *) {
+  width: 100%;
+  margin-inline: auto;
+}
+/* Only documents use a reading measure; settings and lists use the workspace. */
+.atlas .workspace-content > :is(.document-header, .document-body):not(.md-editor):not(.md-editor *) {
+  width: min(960px, 100%);
+  margin-inline: auto;
+}
+@media (max-width: 680px) {
+  .atlas .sidebar:not(.md-editor):not(.md-editor *) { width: min(280px, calc(100vw - 32px)); }
+  .atlas .document-header:not(.md-editor):not(.md-editor *) { padding: 24px 0 12px; }
+  .atlas .document-header h1:not(.md-editor):not(.md-editor *),
+  .atlas .document-title-input:not(.md-editor):not(.md-editor *),
+  .atlas .document-meta:not(.md-editor):not(.md-editor *),
+  .atlas .document-body > .page-summary,
+  .atlas .workspace-content > .page-connections { width: calc(100% - 40px); }
+  .atlas .document-header h1:not(.md-editor):not(.md-editor *),
+  .atlas .document-title-input:not(.md-editor):not(.md-editor *) { font-size: 28px; }
+  .atlas .document-meta:not(.md-editor):not(.md-editor *) { align-items: flex-start; }
+  .atlas .document-status { flex-basis: 100%; }
+  /* The page actions share the top bar; on a phone they wrap onto a second row and
+     the divider before "Nová stránka" goes away. */
+  .atlas .bar-actions:not(.md-editor):not(.md-editor *) { flex-wrap: wrap; justify-content: flex-end; }
+  .atlas .bar-actions .document-actions:not(.md-editor):not(.md-editor *) { padding-right: 0; margin-right: 0; border-right: 0; }
+  .atlas [data-slot="button"]:not(.md-editor):not(.md-editor *) { min-height: 44px; min-width: 44px; }
+  .atlas .new-page-label-full:not(.md-editor):not(.md-editor *) { display: none; }
+  .atlas .new-page-label-short:not(.md-editor):not(.md-editor *) { display: inline; }
+}
+/* The 44px touch target above only fired on a narrow viewport, missing touch input on a
+   wide one (a tablet in landscape, a touch-screen laptop). Target the input method
+   directly instead of inferring it from viewport width. */
+@media (pointer: coarse) {
+  .atlas [data-slot="button"]:not(.md-editor):not(.md-editor *) { min-height: 44px; min-width: 44px; }
+}
+/* Too little vertical room for chrome and a footer both: drop the footer and
+   shrink the header so at least one result stays clickable (390x420). Declared
+   after the width breakpoints above so it wins the shared .search-top padding
+   whenever both a narrow and a short viewport apply at once. */
+@media (max-height: 600px) {
+  .atlas .search-top:not(.md-editor):not(.md-editor *) { padding: 8px 16px; min-height: 48px; box-sizing: border-box; }
+  .atlas .search-footer .search-keyboard-hint:not(.md-editor):not(.md-editor *) { display: none; }
+}
+
+/* Screen-reader-only content: visually hidden but still reachable by focus and
+   assistive tech (e.g. the native file input behind a .dropzone label). The one
+   definition for .sr-only, .visually-hidden and the status line of CopyPageLink,
+   which the selection toolbar portals out of .atlas. Only .visually-hidden is
+   kept out of the editor; the other two never were. .st-sr-only in settings.css
+   differs on purpose (margin, padding, border, clip) and loads with the settings. */
+.atlas .sr-only,
+.atlas .visually-hidden:not(.md-editor):not(.md-editor *),
+.page-link-control > .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Task 3.8 — document action row, aligned insert menu, transient status. */
+
+/* Transient save/publish/appearance confirmations get a check mark in the accent
+   colour instead of blending into the persistent revision-state text (finding
+   editor 5.1/5.2, settings 4.3). The icon clears with the text after 2s (App.vue). */
+.atlas .document-status[data-transient]:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+}
+.atlas .document-status[data-transient] > svg:not(.md-editor):not(.md-editor *) {
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+/* A heading reached from the page outline lands below the application toolbar. */
+.atlas .document-body .md-editor .ProseMirror :is(h1, h2, h3, h4, h5, h6) {
+  scroll-margin-top: calc(var(--atlas-topbar-height) + 24px);
+}
+
+@media (min-width: 1025px) {
+  .atlas .desktop-sidebar-toggle:not(.md-editor):not(.md-editor *) {
+    display: inline-flex;
+  }
+
+  .atlas[data-sidebar-collapsed="true"] .sidebar:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+
+  .atlas[data-sidebar-collapsed="true"]
+    .bar-actions
+    > .mobile-menu:not(.md-editor):not(.md-editor *) {
+    display: inline-flex;
+  }
+}
+
+/* The status needs no two-line reservation: a longer warning can still take a second line. */
+.atlas .document-header:not(.md-editor):not(.md-editor *) {
+  padding-block: 18px 4px;
+}
+
+.atlas
+  .document-header
+  .document-status:not(.md-editor):not(.md-editor *) {
+  height: auto;
+  min-height: 1.55em;
+  max-height: 3.1em;
+}
+
+/* Wide mode removes both shell and editor measures with the same 40px inset. */
+.atlas[data-reading-width="wide"]
+  .workspace-content
+  > :is(.document-header, .document-body):not(.md-editor):not(.md-editor *) {
+  width: 100%;
+  max-width: none;
+}
+
+.atlas[data-reading-width="wide"]
+  .document-body
+  .md-editor.paper
+  .paper-inner {
+  max-width: none;
+}
+
+@media (min-width: 900px) {
+  .atlas[data-reading-width="wide"]
+    .document-header
+    :is(h1, .document-title-input, .document-meta):not(.md-editor):not(.md-editor *),
+  .atlas[data-reading-width="wide"] .document-body > .page-summary,
+  .atlas[data-reading-width="wide"] .workspace-content > .page-connections {
+    width: calc(100% - 80px);
+    max-width: none;
+    margin-left: 40px;
+    margin-right: auto;
+  }
+}
+
+.action-disclosure-panel .mobile-page-action {
+  display: none;
+}
+@media (min-width: 900px) {
+  .atlas .board-menu-phone-only { display: none; }
+}
+
+@media (max-width: 899px) {
+  .atlas[data-document-open="true"] .workspace-bar:not(.md-editor):not(.md-editor *) {
+    height: auto;
+    min-height: var(--atlas-topbar-height);
+    flex-wrap: wrap;
+  }
+
+  .atlas[data-document-open="true"] .breadcrumbs:not(.md-editor):not(.md-editor *) {
+    flex: 0 0 44px;
+    min-width: 44px;
+  }
+
+  .atlas[data-document-open="true"]
+    .breadcrumbs
+    > :not(.mobile-menu):not(.desktop-sidebar-toggle):not(.breadcrumb-title-crumb) {
+    display: none;
+  }
+
+  .atlas[data-document-open="true"]
+    .breadcrumb-title-crumb
+    .breadcrumb-separator:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+
+  .atlas[data-document-open="true"] .bar-actions:not(.md-editor):not(.md-editor *),
+  .atlas[data-document-open="true"]
+    .bar-actions
+    .document-actions:not(.md-editor):not(.md-editor *) {
+    width: auto;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+
+  /* "Nová stránka" leaves the bar here (below), so the divider in front of it goes with it. */
+  .atlas[data-document-open="true"]
+    .bar-actions
+    .document-actions:not(.md-editor):not(.md-editor *) {
+    padding-right: 0;
+    margin-right: 0;
+    border-right: 0;
+  }
+
+  .atlas[data-document-open="true"] .bar-actions:not(.md-editor):not(.md-editor *) { flex: 1; min-width: 0; justify-content: space-between; }
+  .atlas[data-document-open="true"] .bar-actions > .mobile-menu:not(.md-editor):not(.md-editor *) { display: none; }
+  .atlas[data-document-open="true"] .document-primary-actions [data-slot="button"] { padding-inline: 10px; }
+  .atlas[data-document-open="true"] .document-actions:not(.md-editor):not(.md-editor *) { flex: 1; justify-content: space-between; }
+  .atlas[data-document-open="true"] .bar-actions .document-secondary-actions button:not(.md-editor):not(.md-editor *) { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+
+  .atlas[data-document-open="true"] .favorite-button:not(.md-editor):not(.md-editor *),
+  .atlas[data-document-open="true"] .new-page-button:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+
+  .action-disclosure-panel .mobile-page-action {
+    display: flex;
+  }
+
+  .atlas[data-document-open="true"] .document-header:not(.md-editor):not(.md-editor *) {
+    padding: 14px 0 4px;
+  }
+
+  .atlas[data-document-open="true"]
+    .document-header
+    :is(h1, .document-title-input):not(.md-editor):not(.md-editor *) {
+    width: calc(100% - 40px);
+    margin: 0 auto 6px;
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .atlas[data-document-open="true"] .document-meta:not(.md-editor):not(.md-editor *) {
+    width: calc(100% - 40px);
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 10px;
+  }
+
+  .atlas[data-document-open="true"] .document-status:not(.md-editor):not(.md-editor *) {
+    height: auto;
+    min-height: 1.55em;
+    max-height: 3.1em;
+    flex: 1 1 auto;
+  }
+
+  .atlas[data-document-open="true"] .document-updated:not(.md-editor):not(.md-editor *) {
+    align-self: center;
+  }
+
+  .atlas .document-body > .page-summary,
+  .atlas .workspace-content > .page-connections {
+    width: calc(100% - 40px);
+    margin-inline: auto;
+  }
+
+  .atlas[data-reading-width="wide"]
+    .document-header
+    :is(h1, .document-title-input, .document-meta):not(.md-editor):not(.md-editor *),
+  .atlas[data-reading-width="wide"] .document-body > .page-summary,
+  .atlas[data-reading-width="wide"] .workspace-content > .page-connections {
+    width: calc(100% - 40px);
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .atlas .desktop-sidebar-toggle:not(.md-editor):not(.md-editor *) {
+    display: none;
+  }
+}
+
+/* Ocean surfaces belong to the shell; generated shadcn controls read the tokens. */
+.atlas .sidebar:not(.md-editor):not(.md-editor *) {
+  --navigation-surface: color-mix(in srgb, var(--surface) 65%, var(--sidebar));
+  background: var(--navigation-surface);
+}
+.atlas .search-launch:not(.md-editor):not(.md-editor *) {
+  background: var(--surface); border: 1px solid var(--input-line); color: var(--text);
+  box-shadow: var(--shadow); gap: 10px;
+}
+.atlas .search-launch > svg:not(.md-editor):not(.md-editor *) { color: var(--accent); }
+@media (hover: hover) and (pointer: fine) { .atlas .search-launch:hover:not(.md-editor):not(.md-editor *) { background: var(--accent-soft); border-color: var(--accent); } }
+.atlas .search-top:not(.md-editor):not(.md-editor *) {
+  background: var(--surface);
+}
+.atlas .search-top h2:not(.md-editor):not(.md-editor *) {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.atlas .search-top > [data-slot="button"]:not(.md-editor):not(.md-editor *) {
+  order: 3;
+  margin-left: 0;
+}
+.atlas .search-top .search-modes:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  order: 2;
+  gap: 4px;
+  margin: 0 0 0 auto;
+}
+.atlas .search-top .search-modes > button:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.atlas .search-top .search-modes > button[aria-pressed="true"]:not(.md-editor):not(.md-editor *) {
+  border-color: var(--line);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.atlas .omnisearch-input:not(.md-editor):not(.md-editor *) {
+  min-height: 48px; padding: 5px 7px 5px 12px; gap: 9px; border-color: var(--line); background: var(--canvas);
+}
+.atlas .omnisearch-input:focus-within:not(.md-editor):not(.md-editor *) {
+  border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.atlas .omnisearch-input input:not(.md-editor):not(.md-editor *) { font-size: 16px; line-height: 1.4; }
+.atlas .search-group:not(.md-editor):not(.md-editor *) { margin-top: 10px; }
+.atlas .search-group-title:not(.md-editor):not(.md-editor *) {
+  display: flex; align-items: center; gap: 7px; margin: 0 0 2px; padding: 0 12px;
+  color: var(--muted); font-size: 10px; font-weight: 650; line-height: 1.8; letter-spacing: .06em; text-transform: uppercase;
+}
+.atlas .search-group-title > span:not(.md-editor):not(.md-editor *) {
+  min-width: 20px; padding: 0 5px; border-radius: var(--radius-sm); background: var(--hover); text-align: center;
+  font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: 0;
+}
+.atlas .search-result:not(.md-editor):not(.md-editor *) {
+  border: 1px solid transparent; margin-block: 2px; padding: 6px 12px; min-height: 60px; gap: 11px;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), border-color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .search-result:hover:not(.md-editor):not(.md-editor *) { background: var(--hover); } }
+.atlas .search-result.active:not(.md-editor):not(.md-editor *) {
+  background: color-mix(in srgb, var(--accent-soft) 65%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 25%, var(--line)); box-shadow: none;
+}
+.atlas .search-result-main:not(.md-editor):not(.md-editor *) { flex: 1; min-width: 0; }
+.atlas .search-result-title:not(.md-editor):not(.md-editor *),
+.atlas .search-result strong:not(.md-editor):not(.md-editor *) { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.atlas .search-result .search-result-meta:not(.md-editor):not(.md-editor *) { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin: 1px 0 0; color: var(--muted); font-size: 11px; }
+.atlas .search-result-context:not(.md-editor):not(.md-editor *),
+.atlas .search-snippet:not(.md-editor):not(.md-editor *) { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 1.35; margin-top: 2px; color: var(--muted); }
+.atlas .search-result-meta .search-result-context:not(.md-editor):not(.md-editor *) { flex: 0 1 42ch; min-width: 0; max-width: 55%; margin-top: 0; }
+.atlas .search-result .space-icon:not(.md-editor):not(.md-editor *) { width: 28px; height: 28px; border-radius: 8px; }
+.atlas .search-footer:not(.md-editor):not(.md-editor *) { min-height: 48px; padding: 7px 16px; gap: 6px 12px; flex-wrap: wrap; background: var(--canvas); font-size: 11px; }
+.atlas .search-summary:not(.md-editor):not(.md-editor *) { min-width: 0; }
+.atlas .search-summary .search-opening { margin-left: 10px; }
+.atlas .search-summary-count:not(.md-editor):not(.md-editor *) { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.atlas .search-keyboard-hint:not(.md-editor):not(.md-editor *) { display: inline-flex; align-items: center; gap: 4px; }
+.atlas .search-load-more:not(.md-editor):not(.md-editor *) { margin: 0 0 0 auto; }
+.atlas .search-result mark { background: var(--surface); color: var(--accent); }
+@media (max-width: 680px) {
+  .atlas .search-content:not(.md-editor):not(.md-editor *) { padding: 0 12px 8px; }
+  .atlas .search-top:not(.md-editor):not(.md-editor *) { padding: 6px 12px; }
+  .atlas .omnisearch-input:not(.md-editor):not(.md-editor *) { padding: 4px 6px 4px 10px; gap: 8px; }
+  .atlas .search-result:not(.md-editor):not(.md-editor *) { gap: 9px; padding: 8px; }
+  .atlas .search-result-context:not(.md-editor):not(.md-editor *), .atlas .search-snippet:not(.md-editor):not(.md-editor *) { -webkit-line-clamp: 2; }
+  .atlas .search-footer:not(.md-editor):not(.md-editor *) { padding: 6px 12px; }
+}
+@media (max-width: 520px) {
+  .atlas .search-top .search-modes > button:not(.md-editor):not(.md-editor *) { min-height: 32px; padding-inline: 6px; }
+  .atlas .search-top .search-modes > button svg, .atlas .search-top .search-modes > button kbd { display: none; }
+  .atlas .search-keyboard-hint:not(.md-editor):not(.md-editor *) { display: none; }
+}
+.atlas .search-source-status { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-height: 28px; margin: 4px 0 6px; font-size: 11px; color: var(--muted); }
+.atlas .search-source-status > span { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 20px; padding: 3px 8px; }
+.atlas .search-source-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.atlas .search-source-status [data-loading=true] i { background: var(--accent); animation: atlas-pulse var(--atlas-motion-pulse) var(--atlas-ease-inout) infinite; }
+.atlas .search-source-status [data-error=true] { color: var(--muted); }
+.atlas .search-source-status small { margin-left: auto; }
+.atlas .search-live-label { color: var(--accent) !important; }
+/* Results of the previous query stay in place while the typed one loads; they dim only after a short delay. */
+.atlas :is(#search-results, .search-content > p[role="status"]) { transition: opacity var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas :is(#search-results, .search-content > p[role="status"])[data-stale] { opacity: .55; transition-delay: var(--atlas-motion-defer); }
+.atlas .search-skeleton > div { display: flex; align-items: center; gap: 11px; padding: 10px 12px; }
+.atlas .search-skeleton i, .atlas .search-skeleton b { display: block; background: linear-gradient(90deg, var(--hover), var(--canvas), var(--hover)); background-size: 200% 100%; animation: atlas-progress var(--atlas-motion-loop) linear infinite; border-radius: 6px; }
+.atlas .search-skeleton i { width: 28px; height: 28px; }
+.atlas .search-skeleton span { flex: 1; }
+.atlas .search-skeleton b { height: 9px; width: 38%; margin: 6px 0; }
+/* `:last-child` of the two lines, not `b + b` (a sibling combinator over every <b> restyles the editor's blocks after each inserted block, J12.5). */
+.atlas .search-skeleton b:last-child { width: 70%; height: 7px; }
+@media (max-width: 680px) { .atlas .search-source-status small { width: 100%; margin: 0; } }
+/* Loops of work stand under reduced motion; the rows and the dialog fade through the tokens and the primitives. */
+@media (prefers-reduced-motion: reduce) {
+  .atlas .search-source-status [data-loading=true] i, .atlas .search-skeleton i, .atlas .search-skeleton b { animation: none; }
+  .atlas .search-result:not(.md-editor):not(.md-editor *) { transition: none; }
+}
+[data-atlas-reduced-motion] .atlas .search-result:not(.md-editor):not(.md-editor *) { transition: none; }
+[data-atlas-reduced-motion] .search-source-status [data-loading=true] i, [data-atlas-reduced-motion] .search-skeleton i, [data-atlas-reduced-motion] .search-skeleton b { animation: none; }
+
+.atlas .search-issue-key { color: var(--accent); margin-right: 8px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.atlas .space-empty:not(.md-editor) { margin-top: 18px; }
+.atlas .page-unavailable:not(.md-editor) { display: grid; place-items: start center; padding-top: 12vh; }
+.atlas .page-unavailable > .st-empty:not(.md-editor) { width: min(560px, 100%); }
+/* Reading comes first: the page's own edit affordances (icon, tags) stay quiet until the header is
+   pointed at or focused, and are always shown on touch screens (no hover). An empty "Přidat tagy"
+   chip does not sit in every page a writer reads. */
+@media (hover: hover) {
+  .atlas .document-header :is(.page-icon-edit, .edit-page-tags):not(.md-editor) {
+    opacity: .0;
+    transition: opacity var(--atlas-motion-base) var(--atlas-ease-out);
+  }
+  .atlas .document-header:is(:hover, :focus-within) :is(.page-icon-edit, .edit-page-tags):not(.md-editor),
+  .atlas .document-header :is(.page-icon-edit, .edit-page-tags):focus-visible:not(.md-editor) {
+    opacity: 1;
+  }
+}
+.search-did-you-mean, .search-relaxed { margin: 10px 4px 0; color: var(--muted); font-size: 13px; }
+.search-did-you-mean button { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-weight: 650; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .search-did-you-mean button:hover { text-decoration: underline; } }
+
+/* A deployment page as its template starts it (U3-3): the empty line after a lone summary says how the requirements come in, as the
+   editor's placeholder does, never as text of the page. Shown only while editing, laid out for readers too (J7.1: a hidden affordance holds
+   its place); it takes no pointer. The summary by its wrapper's attribute, not `:first-child:has([data-requirement-summary-view])`: that
+   :has() re-matched every paragraph of the page on each change (3.6 Přehled budgets). */
+.atlas-document-editor .ProseMirror > [data-overview-kind="requirements"]:first-child + p:last-child:has(> br.ProseMirror-trailingBreak:only-child)::before {
+  content: "Napište / a zvolte „Moduly produktu“"; float: left; height: 0; color: var(--text-dim, var(--muted)); pointer-events: none;
+}
+.atlas-document-editor .ProseMirror:not([contenteditable="true"]) > [data-overview-kind="requirements"]:first-child + p:last-child:has(> br.ProseMirror-trailingBreak:only-child)::before {
+  visibility: hidden;
+}
+/* Unread notifications on the phone's menu button, whose drawer holds the rail's count: a dot on the icon's corner, the button keeps its size. */
+.atlas .mobile-menu:not(.md-editor):not(.md-editor *):has(.mobile-menu-unread) { position: relative; }
+.atlas .mobile-menu-unread:not(.md-editor *) {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+/* The unread count of Oznámení in the rail (inbox spec 2026-10-29): at the row's end, never resizing it. */
+.atlas .sidebar-badge:not(.md-editor *) {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out);
+}
+
+/* A text field under 16 px makes iOS Safari zoom the page when it takes the focus: on a touch screen and on a narrow one it is 16 px at least (the title keeps its larger size). */
+@media (pointer: coarse), (max-width: 680px) {
+  .atlas :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"], [type="button"], [type="submit"], [type="reset"]), textarea, select):not(.document-title-input):not(.md-editor *) { font-size: max(16px, 1em) !important; }
+}

@@ -1,0 +1,5 @@
+{
+  "Vyberte podporovanou ikonu a barvu.": "Choose a supported icon and color.",
+  "Ikona stránky byla změněna. Načtěte ji znovu.": "The page icon was changed. Load it again.",
+  "Počet ikon musí být 1–{maximumLimit}, posun nezáporný a hledaný text nejvýše 64 znaků.": "The number of icons must be 1–{maximumLimit}, the offset non-negative and the search text at most 64 characters."
+}

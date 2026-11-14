@@ -1,0 +1,131 @@
+/* Tailwind, theme + utilities only. Never `preflight`: its `*` reset would strip
+   margin/padding/border from the markdown editor's ProseMirror DOM, and the
+   editor is a separate package this app only hosts. The application already
+   provides `body { margin: 0 }` and its own `box-sizing` rule.
+
+   Not a zero-footprint import even so: Tailwind still emits
+   `@layer properties { *, :before, :after, ::backdrop { --tw-*: initial } }`.
+   That sets only its own custom properties, so it has no visual effect on the
+   editor, but the bare `*` selector is there. */
+/* Layer order has to be declared explicitly: `preflight` is what normally
+   declares it, and it is not imported here. Without this line a `@layer base`
+   block would sort after `utilities` and outrank every utility in it. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./theme.css";
+/* Only the lazily loaded settings UI uses these; components/settings/settings-tailwind.css
+   generates their utilities into its own chunk so the eager stylesheet does not grow. */
+@source not "../components/ui/field";
+@source not "../components/ui/radio-group";
+@source not "../components/ui/checkbox";
+@source not "../components/ui/switch";
+@source not "../components/settings";
+
+
+
+/* shadcn components read a bare `--radius` for their own derived radii. */
+:root {
+  --radius: var(--atlas-radius-md);
+}
+
+/* A native <select> is the one control the generated components do not cover:
+   shadcn's Select is a reka-ui listbox, which drops native form validation and
+   the platform picker on touch. The element stays native and is matched to
+   Input.vue's own utilities instead, so the two line up in every theme.
+   Re-check this block whenever `shadcn-vue add input` changes Input.vue. */
+.atlas select:not(.md-editor):not(.md-editor *) {
+  @apply border-input dark:bg-input/30 h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm;
+  @apply focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3;
+  @apply disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50;
+  /* A deep page location is never cut in markup; the field just clips visually. */
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
+/* Card's surface on the element Card cannot be. The entry card is a <section>
+   with an accessible name; the generated Card is a <div>, and swapping the
+   element would drop the region landmark. So it carries Card.vue's own
+   surface utilities instead, and `card` is not one of the components this
+   app generates. Re-check against Card.vue if it is. Card's
+   `flex flex-col gap-6` is deliberately not here: the surface lays its own
+   contents out. */
+.atlas .entry-card:not(.md-editor):not(.md-editor *) {
+  @apply bg-card text-card-foreground rounded-xl border shadow-sm;
+}
+
+/* The one piece of preflight the generated components cannot do without.
+   Button's `default`, `ghost`, `secondary` and `link` variants set no border
+   and no background of their own, because preflight has already zeroed both
+   on every element -- without it the user agent's own button chrome (a grey
+   fill and a bevelled border) shows through them. Scoped to buttons, in the
+   `base` layer so an `outline` variant's `border` utility still wins, and
+   away from the editor, whose DOM is the reason preflight is not imported. */
+@layer base {
+  /* Reka portals are outside .atlas. Scope their base styles to the three
+     generated overlay surfaces; the hosted editor keeps its own reset. */
+  :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="tooltip-content"]) {
+    font-family: "DM Sans", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  /* Preflight would also clear a paragraph's or heading's margins. Without it the first and the last one of a popover
+     added their 1em to its padding: 16 px at the sides, 30 px above and below the text. */
+  :where([data-slot="popover-content"]) > :first-child { margin-top: 0; }
+  :where([data-slot="popover-content"]) > :last-child { margin-bottom: 0; }
+  :where(.atlas, .atlas *, [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-content"] *, [data-slot="popover-content"], [data-slot="popover-content"] *, [data-slot="tooltip-content"], [data-slot="tooltip-content"] *):not(.md-editor):not(.md-editor *) {
+    box-sizing: border-box;
+    border: 0 solid var(--line);
+  }
+  :where(.atlas, [data-slot="dropdown-menu-content"], [data-slot="popover-content"]) :is(button, input, select, textarea):not(.md-editor):not(.md-editor *) {
+    font: inherit;
+    color: inherit;
+  }
+  :where(.atlas, [data-slot="dropdown-menu-content"], [data-slot="popover-content"]) :is(button, [type="button"], [type="reset"], [type="submit"]):not(.md-editor):not(.md-editor *) {
+    border: 0 solid var(--line);
+    background-color: transparent;
+    background-image: none;
+  }
+  /* A Button rendered as a link (`as-child` on an <a>): the user agent's link blue showed through the `outline`
+     and `ghost` variants, which set no text colour of their own. The variants that do (`default`, `link`) are
+     utilities and still win over this base rule. */
+  a[data-slot="button"]:not(.md-editor):not(.md-editor *) { color: inherit; }
+}
+
+/* Pressed: every Button gives scale(--atlas-press) like the other controls (AGENTS.md „Interaction, motion and
+   layout“), eased over the same fast token as its colours; a disabled one does not react. Reduced motion makes
+   --atlas-press 1. Unlayered, so it outranks the utilities and the motion.css transition list it extends. */
+.atlas [data-slot="button"]:not(.md-editor *) {
+  transition-property: background-color, color, border-color, box-shadow, filter, opacity, scale;
+}
+.atlas [data-slot="button"]:active:not(:disabled, [aria-disabled="true"], .md-editor *) { scale: var(--atlas-press); }
+/* A popover is portalled out of .atlas (unless it belongs to a dialog): the generated controls in it answer the same.
+   They had neither the press nor the outline there and showed shadcn's translucent ring instead (the Hotovo button
+   of „Kopírovat odkaz“). */
+[data-slot="popover-content"] [data-slot="button"] {
+  transition-property: background-color, color, border-color, box-shadow, filter, opacity, scale;
+  transition-duration: var(--atlas-motion-fast);
+  transition-timing-function: var(--atlas-ease-out);
+}
+[data-slot="popover-content"] [data-slot="button"]:active:not(:disabled, [aria-disabled="true"]) { scale: var(--atlas-press); }
+[data-slot="popover-content"] :is([data-slot="button"], [data-slot="switch"], [data-slot="checkbox"], [data-slot="radio-group-item"]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+/* One focus ring: the 2 px accent outline of shell.css (AGENTS.md). The generated button-like controls also carry
+   shadcn's `focus-visible:ring-3`, which drew a second, translucent ring right inside the outline. Fields (Input,
+   Textarea, select) keep their border and ring: they are not covered by the outline rule. */
+.atlas :is([data-slot="button"], [data-slot="badge"], [data-slot="switch"], [data-slot="checkbox"], [data-slot="radio-group-item"], [data-slot="tabs-trigger"], [data-slot$="-trigger"][data-variant]):focus-visible:not(.md-editor *) { --tw-ring-shadow: 0 0 #0000; }
+/* A tab sits 3 px inside its list: the ring is drawn inside the tab, like a row of the sidebar or of a menu. Outside
+   (offset 2 px) it was 4 px wide around a 3 px inset, so it crossed the edge of the list. */
+.atlas [data-slot="tabs-list"] > [data-slot="tabs-trigger"]:focus-visible:not(.md-editor):not(.md-editor *) { outline-offset: -2px; }
+
+/* Hover answers on the form controls too (they had none): a field's border moves towards the accent, a switch,
+   checkbox or radio gets a faint ring, an inactive tab takes the accent colour. Colour and shadow only, nothing
+   moves; a disabled, focused or invalid control does not react. Eased by the transitions of motion.css. */
+@media (hover: hover) and (pointer: fine) {
+  .atlas :is([data-slot="input"], [data-slot="textarea"], select):hover:not(:focus, :disabled, [aria-invalid="true"], .md-editor *) { border-color: color-mix(in srgb, var(--input-line) 50%, var(--accent)); }
+  .atlas :is([data-slot="switch"], [data-slot="checkbox"], [data-slot="radio-group-item"]):hover:not(:disabled, [data-disabled], .md-editor *) { box-shadow: 0 0 0 3px var(--accent-soft); }
+  .atlas [data-slot="tabs-trigger"]:hover:not([data-state="active"], :disabled, [data-disabled], .md-editor *) { color: var(--accent); }
+}

@@ -1,0 +1,44 @@
+/**
+ * Shared dimension tokens (D2/D3). One scale for radius, control height and icon size across
+ * every editor surface — bubble toolbar, context popovers, suggestion list, pickers and module
+ * dialogs. `:where(...)` carries zero specificity so a host can override any of these with a
+ * single un-prefixed rule (e.g. `.atlas { --radius-sm: 4px }`) instead of fighting cascade order.
+ *
+ * `core/overlayTheme.ts` copies `--*` custom properties onto body-level portals, so a token
+ * changed here (or by the host) reaches fullscreen/YouTrack/picker dialogs that live outside
+ * `.md-editor` in the DOM as well.
+ */
+:where(.md-editor, .md-context-popover, .md-suggestion-popup, .md-picker, .md-module-dialog) {
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --control-h: 36px;
+  --control-h-sm: 32px;
+  --icon: 18px;
+  --icon-sm: 16px;
+  --focus-ring: 2px solid var(--accent);
+  --focus-offset: 2px;
+  --shadow-menu: 0 8px 28px rgb(16 32 57 / .14);
+  --shadow-modal: 0 20px 90px rgb(16 32 57 / .2);
+  --backdrop: rgb(16 28 48 / .56);
+}
+
+/* The host's font — not a bundled fallback — is what every control should render with. Without
+   this, a `button`/`input`/`select`/`textarea` that never received an explicit `font-family`
+   inherited the browser's UA stylesheet default (Arial on Chrome, 13.33px) instead of the
+   surrounding DM Sans, which is how the slash menu, table menus, the callout variant menu and the
+   outline rail ended up looking like a different application. Monospace stays opt-in on `code`,
+   `pre` and the Markdown source view — never the default for a control. */
+:where(.md-editor, .md-context-popover, .md-suggestion-popup, .md-picker, .md-module-dialog) :is(button, input, select, textarea) {
+  font: inherit;
+}
+
+/* One focus ring for every interactive control across the editor's surfaces. Deliberately broad —
+   any button, menu item, field or link inside one of these containers gets the same ring, so a
+   keyboard user tabbing from the host shell into the editor never sees the outline change shape,
+   width, offset or colour. Component stylesheets must not declare their own outline/outline-offset. */
+:where(.md-editor, .md-context-popover, .md-suggestion-popup, .md-picker, .md-module-dialog, .md-module, .md-document-history, .md-section-review)
+  :is(button, [role^="menuitem"], input, textarea, select, a, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

@@ -1,0 +1,728 @@
+[
+ {
+  "name": "dependencies come first, a shared one once",
+  "catalog": [
+   {
+    "key": "portal.orders.tested",
+    "title": "Otestováno",
+    "requires": [
+     "portal.orders"
+    ]
+   },
+   {
+    "key": "portal.orders",
+    "title": "Objednávky",
+    "requires": [
+     "portal.requirements",
+     "portal.ssl"
+    ]
+   },
+   {
+    "key": "portal.requirements",
+    "title": "Strukturované požadavky",
+    "requires": []
+   },
+   {
+    "key": "portal.ssl",
+    "title": "SSL certifikát",
+    "requires": []
+   }
+  ],
+  "wanted": [
+   "portal.orders.tested"
+  ],
+  "present": [],
+  "notApplicable": [],
+  "items": [
+   {
+    "key": "portal.requirements",
+    "requiredBy": "portal.orders",
+    "reason": "Potřebuje ho: Objednávky"
+   },
+   {
+    "key": "portal.ssl",
+    "requiredBy": "portal.orders",
+    "reason": "Potřebuje ho: Objednávky"
+   },
+   {
+    "key": "portal.orders",
+    "requiredBy": "portal.orders.tested",
+    "reason": "Potřebuje ho: Otestováno"
+   },
+   {
+    "key": "portal.orders.tested",
+    "requiredBy": null,
+    "reason": "Vybráno"
+   }
+  ],
+  "warnings": []
+ },
+ {
+  "name": "keys on the page are skipped with what they need, a wanted one is reported",
+  "catalog": [
+   {
+    "key": "portal.orders.tested",
+    "title": "Otestováno",
+    "requires": [
+     "portal.orders"
+    ]
+   },
+   {
+    "key": "portal.orders",
+    "title": "Objednávky",
+    "requires": [
+     "portal.requirements",
+     "portal.ssl"
+    ]
+   },
+   {
+    "key": "portal.requirements",
+    "title": "Strukturované požadavky",
+    "requires": []
+   },
+   {
+    "key": "portal.ssl",
+    "title": "SSL certifikát",
+    "requires": []
+   }
+  ],
+  "wanted": [
+   "portal.orders.tested",
+   "portal.ssl",
+   "portal.orders"
+  ],
+  "present": [
+   "portal.orders"
+  ],
+  "notApplicable": [],
+  "items": [
+   {
+    "key": "portal.orders.tested",
+    "requiredBy": null,
+    "reason": "Vybráno"
+   },
+   {
+    "key": "portal.ssl",
+    "requiredBy": null,
+    "reason": "Vybráno"
+   }
+  ],
+  "warnings": [
+   "Požadavek „portal.orders“ už na stránce je; znovu se nevloží."
+  ]
+ },
+ {
+  "name": "a key marked not applicable on the page is reported to what needs it",
+  "catalog": [
+   {
+    "key": "portal.structured",
+    "title": "Portál: Strukturované požadavky",
+    "requires": [
+     "nis",
+     "notifications"
+    ]
+   },
+   {
+    "key": "nis",
+    "title": "Napojení na NIS",
+    "requires": []
+   },
+   {
+    "key": "notifications",
+    "title": "Notifikace",
+    "requires": []
+   }
+  ],
+  "wanted": [
+   "portal.structured"
+  ],
+  "present": [
+   "nis"
+  ],
+  "notApplicable": [
+   "nis"
+  ],
+  "items": [
+   {
+    "key": "notifications",
+    "requiredBy": "portal.structured",
+    "reason": "Potřebuje ho: Portál: Strukturované požadavky"
+   },
+   {
+    "key": "portal.structured",
+    "requiredBy": null,
+    "reason": "Vybráno"
+   }
+  ],
+  "warnings": [
+   "Požadavek „nis“ už na stránce je, ale je označený jako nerelevantní; „Portál: Strukturované požadavky“ na něm závisí."
+  ]
+ },
+ {
+  "name": "an unknown key and a repeated one are warnings",
+  "catalog": [
+   {
+    "key": "a",
+    "title": "A",
+    "requires": [
+     "ghost"
+    ]
+   },
+   {
+    "key": "a",
+    "title": "A podruhé",
+    "requires": []
+   }
+  ],
+  "wanted": [
+   "a"
+  ],
+  "present": [],
+  "notApplicable": [],
+  "items": [
+   {
+    "key": "a",
+    "requiredBy": null,
+    "reason": "Vybráno"
+   }
+  ],
+  "warnings": [
+   "Klíč „a“ je v katalogu víckrát; platí první výskyt („A“).",
+   "Požadavek „ghost“ v katalogu není."
+  ]
+ },
+ {
+  "name": "a cycle refuses the insertion with its path",
+  "catalog": [
+   {
+    "key": "cyc.a",
+    "title": "Cyklus A",
+    "requires": [
+     "cyc.b"
+    ]
+   },
+   {
+    "key": "cyc.b",
+    "title": "Cyklus B",
+    "requires": [
+     "cyc.a"
+    ]
+   }
+  ],
+  "wanted": [
+   "cyc.b"
+  ],
+  "present": [],
+  "notApplicable": [],
+  "error": {
+   "code": "cyclic_dependency",
+   "path": [
+    "cyc.b",
+    "cyc.a",
+    "cyc.b"
+   ]
+  }
+ },
+ {
+  "name": "a chain deeper than the cap refuses the insertion",
+  "catalog": [
+   {
+    "key": "k0",
+    "title": "K0",
+    "requires": [
+     "k1"
+    ]
+   },
+   {
+    "key": "k1",
+    "title": "K1",
+    "requires": [
+     "k2"
+    ]
+   },
+   {
+    "key": "k2",
+    "title": "K2",
+    "requires": [
+     "k3"
+    ]
+   },
+   {
+    "key": "k3",
+    "title": "K3",
+    "requires": [
+     "k4"
+    ]
+   },
+   {
+    "key": "k4",
+    "title": "K4",
+    "requires": [
+     "k5"
+    ]
+   },
+   {
+    "key": "k5",
+    "title": "K5",
+    "requires": [
+     "k6"
+    ]
+   },
+   {
+    "key": "k6",
+    "title": "K6",
+    "requires": [
+     "k7"
+    ]
+   },
+   {
+    "key": "k7",
+    "title": "K7",
+    "requires": [
+     "k8"
+    ]
+   },
+   {
+    "key": "k8",
+    "title": "K8",
+    "requires": [
+     "k9"
+    ]
+   },
+   {
+    "key": "k9",
+    "title": "K9",
+    "requires": [
+     "k10"
+    ]
+   },
+   {
+    "key": "k10",
+    "title": "K10",
+    "requires": [
+     "k11"
+    ]
+   },
+   {
+    "key": "k11",
+    "title": "K11",
+    "requires": [
+     "k12"
+    ]
+   },
+   {
+    "key": "k12",
+    "title": "K12",
+    "requires": [
+     "k13"
+    ]
+   },
+   {
+    "key": "k13",
+    "title": "K13",
+    "requires": [
+     "k14"
+    ]
+   },
+   {
+    "key": "k14",
+    "title": "K14",
+    "requires": [
+     "k15"
+    ]
+   },
+   {
+    "key": "k15",
+    "title": "K15",
+    "requires": [
+     "k16"
+    ]
+   },
+   {
+    "key": "k16",
+    "title": "K16",
+    "requires": [
+     "k17"
+    ]
+   },
+   {
+    "key": "k17",
+    "title": "K17",
+    "requires": [
+     "k18"
+    ]
+   },
+   {
+    "key": "k18",
+    "title": "K18",
+    "requires": [
+     "k19"
+    ]
+   },
+   {
+    "key": "k19",
+    "title": "K19",
+    "requires": [
+     "k20"
+    ]
+   },
+   {
+    "key": "k20",
+    "title": "K20",
+    "requires": [
+     "k21"
+    ]
+   },
+   {
+    "key": "k21",
+    "title": "K21",
+    "requires": [
+     "k22"
+    ]
+   },
+   {
+    "key": "k22",
+    "title": "K22",
+    "requires": [
+     "k23"
+    ]
+   },
+   {
+    "key": "k23",
+    "title": "K23",
+    "requires": [
+     "k24"
+    ]
+   },
+   {
+    "key": "k24",
+    "title": "K24",
+    "requires": [
+     "k25"
+    ]
+   },
+   {
+    "key": "k25",
+    "title": "K25",
+    "requires": [
+     "k26"
+    ]
+   },
+   {
+    "key": "k26",
+    "title": "K26",
+    "requires": [
+     "k27"
+    ]
+   },
+   {
+    "key": "k27",
+    "title": "K27",
+    "requires": [
+     "k28"
+    ]
+   },
+   {
+    "key": "k28",
+    "title": "K28",
+    "requires": [
+     "k29"
+    ]
+   },
+   {
+    "key": "k29",
+    "title": "K29",
+    "requires": [
+     "k30"
+    ]
+   },
+   {
+    "key": "k30",
+    "title": "K30",
+    "requires": [
+     "k31"
+    ]
+   },
+   {
+    "key": "k31",
+    "title": "K31",
+    "requires": [
+     "k32"
+    ]
+   },
+   {
+    "key": "k32",
+    "title": "K32",
+    "requires": [
+     "k33"
+    ]
+   },
+   {
+    "key": "k33",
+    "title": "K33",
+    "requires": [
+     "k34"
+    ]
+   },
+   {
+    "key": "k34",
+    "title": "K34",
+    "requires": [
+     "k35"
+    ]
+   },
+   {
+    "key": "k35",
+    "title": "K35",
+    "requires": [
+     "k36"
+    ]
+   },
+   {
+    "key": "k36",
+    "title": "K36",
+    "requires": [
+     "k37"
+    ]
+   },
+   {
+    "key": "k37",
+    "title": "K37",
+    "requires": [
+     "k38"
+    ]
+   },
+   {
+    "key": "k38",
+    "title": "K38",
+    "requires": [
+     "k39"
+    ]
+   },
+   {
+    "key": "k39",
+    "title": "K39",
+    "requires": [
+     "k40"
+    ]
+   },
+   {
+    "key": "k40",
+    "title": "K40",
+    "requires": [
+     "k41"
+    ]
+   },
+   {
+    "key": "k41",
+    "title": "K41",
+    "requires": [
+     "k42"
+    ]
+   },
+   {
+    "key": "k42",
+    "title": "K42",
+    "requires": [
+     "k43"
+    ]
+   },
+   {
+    "key": "k43",
+    "title": "K43",
+    "requires": [
+     "k44"
+    ]
+   },
+   {
+    "key": "k44",
+    "title": "K44",
+    "requires": [
+     "k45"
+    ]
+   },
+   {
+    "key": "k45",
+    "title": "K45",
+    "requires": [
+     "k46"
+    ]
+   },
+   {
+    "key": "k46",
+    "title": "K46",
+    "requires": [
+     "k47"
+    ]
+   },
+   {
+    "key": "k47",
+    "title": "K47",
+    "requires": [
+     "k48"
+    ]
+   },
+   {
+    "key": "k48",
+    "title": "K48",
+    "requires": [
+     "k49"
+    ]
+   },
+   {
+    "key": "k49",
+    "title": "K49",
+    "requires": [
+     "k50"
+    ]
+   },
+   {
+    "key": "k50",
+    "title": "K50",
+    "requires": [
+     "k51"
+    ]
+   },
+   {
+    "key": "k51",
+    "title": "K51",
+    "requires": [
+     "k52"
+    ]
+   },
+   {
+    "key": "k52",
+    "title": "K52",
+    "requires": [
+     "k53"
+    ]
+   },
+   {
+    "key": "k53",
+    "title": "K53",
+    "requires": [
+     "k54"
+    ]
+   },
+   {
+    "key": "k54",
+    "title": "K54",
+    "requires": [
+     "k55"
+    ]
+   },
+   {
+    "key": "k55",
+    "title": "K55",
+    "requires": [
+     "k56"
+    ]
+   },
+   {
+    "key": "k56",
+    "title": "K56",
+    "requires": [
+     "k57"
+    ]
+   },
+   {
+    "key": "k57",
+    "title": "K57",
+    "requires": [
+     "k58"
+    ]
+   },
+   {
+    "key": "k58",
+    "title": "K58",
+    "requires": [
+     "k59"
+    ]
+   },
+   {
+    "key": "k59",
+    "title": "K59",
+    "requires": [
+     "k60"
+    ]
+   },
+   {
+    "key": "k60",
+    "title": "K60",
+    "requires": [
+     "k61"
+    ]
+   },
+   {
+    "key": "k61",
+    "title": "K61",
+    "requires": [
+     "k62"
+    ]
+   },
+   {
+    "key": "k62",
+    "title": "K62",
+    "requires": [
+     "k63"
+    ]
+   },
+   {
+    "key": "k63",
+    "title": "K63",
+    "requires": [
+     "k64"
+    ]
+   },
+   {
+    "key": "k64",
+    "title": "K64",
+    "requires": []
+   }
+  ],
+  "wanted": [
+   "k0"
+  ],
+  "present": [],
+  "notApplicable": [],
+  "error": {
+   "code": "dependency_too_deep"
+  }
+ },
+ {
+  "name": "a dependency on another page's block (key@pageId) is no definition: kept, not inserted, not reported",
+  "catalog": [
+   {
+    "key": "portal.ssl",
+    "title": "SSL certifikát",
+    "requires": [
+     "vpn@11111111-1111-4111-8111-111111111111",
+     "portal.dns"
+    ]
+   },
+   {
+    "key": "portal.dns",
+    "title": "DNS",
+    "requires": []
+   }
+  ],
+  "wanted": [
+   "portal.ssl"
+  ],
+  "present": [],
+  "notApplicable": [],
+  "items": [
+   {
+    "key": "portal.dns",
+    "requiredBy": "portal.ssl",
+    "reason": "Potřebuje ho: SSL certifikát"
+   },
+   {
+    "key": "portal.ssl",
+    "requiredBy": null,
+    "reason": "Vybráno"
+   }
+  ],
+  "warnings": []
+ }
+]

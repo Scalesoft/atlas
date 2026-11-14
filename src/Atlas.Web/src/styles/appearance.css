@@ -1,0 +1,65 @@
+/* Appearance palette of spaces and page icons (appearance.ts): 12 hues × 5 tones in OKLCH, key
+   "<hue>-<tone>", so every icon on every colour has the same contrast and they read as one set.
+   An element with data-color gets --appearance-bg / --appearance-fg (a tile) and --appearance-ink
+   (an icon on the page background). Legacy values (spaces: blue…coral, page icons: slate…violet)
+   render as tone 2 of their hue. The hue and tone tables mirror appearance.ts; change both together. */
+[data-color^="red-"] { --ah: 27; --ac: 0.17; }
+[data-color^="orange-"] { --ah: 55; --ac: 0.16; }
+[data-color^="amber-"] { --ah: 80; --ac: 0.15; }
+[data-color^="lime-"] { --ah: 128; --ac: 0.16; }
+[data-color^="green-"] { --ah: 152; --ac: 0.15; }
+[data-color^="teal-"] { --ah: 182; --ac: 0.11; }
+[data-color^="cyan-"] { --ah: 218; --ac: 0.12; }
+[data-color^="blue-"] { --ah: 255; --ac: 0.15; }
+[data-color^="indigo-"] { --ah: 278; --ac: 0.16; }
+[data-color^="violet-"] { --ah: 302; --ac: 0.16; }
+[data-color^="pink-"] { --ah: 352; --ac: 0.16; }
+[data-color^="slate-"] { --ah: 255; --ac: 0.025; }
+[data-color="blue"] { --ah: 255; --ac: 0.15; }
+[data-color="green"] { --ah: 152; --ac: 0.15; }
+[data-color="amber"] { --ah: 80; --ac: 0.15; }
+[data-color="coral"] { --ah: 32; --ac: 0.17; }
+[data-color="slate"] { --ah: 255; --ac: 0.025; }
+[data-color="teal"] { --ah: 182; --ac: 0.11; }
+[data-color="orange"] { --ah: 55; --ac: 0.16; }
+[data-color="rose"] { --ah: 352; --ac: 0.16; }
+[data-color="violet"] { --ah: 302; --ac: 0.16; }
+[data-color$="-1"] {
+  --appearance-bg: oklch(96.5% calc(var(--ac) * .25) var(--ah)); --appearance-fg: oklch(53% calc(var(--ac) * .9) var(--ah)); --appearance-ink: oklch(60% calc(var(--ac) * .85) var(--ah));
+}
+[data-color$="-2"], [data-color="blue"], [data-color="green"], [data-color="amber"], [data-color="coral"], [data-color="slate"], [data-color="teal"], [data-color="orange"], [data-color="rose"], [data-color="violet"] {
+  --appearance-bg: oklch(91% calc(var(--ac) * .5) var(--ah)); --appearance-fg: oklch(46% var(--ac) var(--ah)); --appearance-ink: oklch(54% var(--ac) var(--ah));
+}
+[data-color$="-3"] {
+  --appearance-bg: oklch(72% var(--ac) var(--ah)); --appearance-fg: oklch(22% calc(var(--ac) * .5) var(--ah)); --appearance-ink: oklch(66% var(--ac) var(--ah));
+}
+[data-color$="-4"] {
+  --appearance-bg: oklch(52% var(--ac) var(--ah)); --appearance-fg: oklch(98% calc(var(--ac) * .08) var(--ah)); --appearance-ink: oklch(50% var(--ac) var(--ah));
+}
+[data-color$="-5"] {
+  --appearance-bg: oklch(34% calc(var(--ac) * .7) var(--ah)); --appearance-fg: oklch(90% calc(var(--ac) * .45) var(--ah)); --appearance-ink: oklch(38% calc(var(--ac) * .75) var(--ah));
+}
+:root[data-mode="dark"] [data-color$="-1"], .atlas[data-mode="dark"] [data-color$="-1"] {
+  --appearance-bg: oklch(30% calc(var(--ac) * .3) var(--ah)); --appearance-fg: oklch(86% calc(var(--ac) * .55) var(--ah)); --appearance-ink: oklch(82% calc(var(--ac) * .6) var(--ah));
+}
+:root[data-mode="dark"] [data-color$="-2"], .atlas[data-mode="dark"] [data-color$="-2"],
+:root[data-mode="dark"] [data-color="blue"], .atlas[data-mode="dark"] [data-color="blue"],
+:root[data-mode="dark"] [data-color="green"], .atlas[data-mode="dark"] [data-color="green"],
+:root[data-mode="dark"] [data-color="amber"], .atlas[data-mode="dark"] [data-color="amber"],
+:root[data-mode="dark"] [data-color="coral"], .atlas[data-mode="dark"] [data-color="coral"],
+:root[data-mode="dark"] [data-color="slate"], .atlas[data-mode="dark"] [data-color="slate"],
+:root[data-mode="dark"] [data-color="teal"], .atlas[data-mode="dark"] [data-color="teal"],
+:root[data-mode="dark"] [data-color="orange"], .atlas[data-mode="dark"] [data-color="orange"],
+:root[data-mode="dark"] [data-color="rose"], .atlas[data-mode="dark"] [data-color="rose"],
+:root[data-mode="dark"] [data-color="violet"], .atlas[data-mode="dark"] [data-color="violet"] {
+  --appearance-bg: oklch(35% calc(var(--ac) * .55) var(--ah)); --appearance-fg: oklch(87% calc(var(--ac) * .8) var(--ah)); --appearance-ink: oklch(78% calc(var(--ac) * .85) var(--ah));
+}
+:root[data-mode="dark"] [data-color$="-3"], .atlas[data-mode="dark"] [data-color$="-3"] {
+  --appearance-bg: oklch(70% var(--ac) var(--ah)); --appearance-fg: oklch(20% calc(var(--ac) * .5) var(--ah)); --appearance-ink: oklch(74% var(--ac) var(--ah));
+}
+:root[data-mode="dark"] [data-color$="-4"], .atlas[data-mode="dark"] [data-color$="-4"] {
+  --appearance-bg: oklch(55% var(--ac) var(--ah)); --appearance-fg: oklch(98% calc(var(--ac) * .08) var(--ah)); --appearance-ink: oklch(66% var(--ac) var(--ah));
+}
+:root[data-mode="dark"] [data-color$="-5"], .atlas[data-mode="dark"] [data-color$="-5"] {
+  --appearance-bg: oklch(42% calc(var(--ac) * .75) var(--ah)); --appearance-fg: oklch(92% calc(var(--ac) * .4) var(--ah)); --appearance-ink: oklch(58% calc(var(--ac) * .7) var(--ah));
+}

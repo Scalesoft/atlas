@@ -1,0 +1,46 @@
+.md-attachment { display: flex; align-items: center; gap: 16px; padding: 17px 18px; border: 1px solid var(--line, #d8e7eb); border-radius: 12px; background: var(--paper, #fff); color: var(--text, #12333a); box-shadow: 0 1px 3px #113a4408; }
+.md-attachment[data-empty] { border-style: dashed; background: color-mix(in srgb, var(--bg-2, #edf5f6) 40%, var(--paper, #fff)); }
+.md-attachment-icon { display: flex; align-items: center; justify-content: center; position: relative; flex: 0 0 44px; height: 54px; color: var(--accent-ink, #26758a); }
+.md-attachment-icon > svg { width: 28px; height: 28px; }
+.md-attachment-extension { position: absolute; bottom: 2px; left: 4px; right: 1px; padding: 3px 3px 2px; border: 2px solid var(--paper, #fff); border-radius: 5px; background: var(--accent-ink, #26758a); color: var(--bg-2, #fff); text-align: center; font: 700 9px/1.2 var(--font-sans, sans-serif); letter-spacing: .065em; }
+.md-attachment-body { display: grid; gap: 3px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.md-attachment-body strong { font-size: 14px; line-height: 1.45; font-weight: 650; }
+.md-attachment-body small { color: var(--text-dim, #657b80); font-size: 11px; line-height: 1.5; }
+.md-attachment-body .md-attachment-meta { font-variant-numeric: tabular-nums; letter-spacing: .015em; }
+.md-attachment-body small:empty { display: none; }
+.md-attachment-body > span { margin-top: 3px; white-space: pre-line; font-size: 12px; line-height: 1.55; color: var(--text-dim, #657b80); }
+.md-attachment-body .md-attachment-empty { margin-top: 3px; font-style: italic; }
+.md-attachment > a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; flex-shrink: 0; white-space: nowrap; font-size: 12px; font-weight: 550; text-decoration: none !important; color: var(--accent-ink, #26758a); border: 1px solid var(--line, #d8e7eb); border-radius: 8px; padding: 8px 11px; background: var(--paper, #fff); }
+.md-attachment-download > svg { width: 16px; height: 16px; }
+.md-attachment > a:hover { background: var(--accent-soft, #e5f5f8); border-color: var(--accent-line, #9dcbd6); }
+.md-attachment > a:focus-visible { outline: 2px solid var(--accent, #4f9fb1); outline-offset: 3px; }
+.md-attachment-file-picker { display: grid; gap: 12px; padding: 18px; border: 1px dashed var(--accent-line, #9dcbd6); border-radius: 9px; background: var(--accent-soft, #e5f5f8); text-align: center; }
+.md-attachment-file-picker input { width: 100%; min-width: 0; font: inherit; font-size: 12px; }
+.md-attachment-file-picker input::file-selector-button { padding: 7px 10px; border: 1px solid var(--line, #d8e7eb); border-radius: 6px; margin-right: 8px; background: var(--paper, #fff); color: var(--text, #12333a); font: inherit; cursor: pointer; }
+.md-attachment-upload-hint { color: var(--text-dim, #657b80); font-size: 12px; line-height: 1.5; }
+.md-attachment-upload [role=status]:empty { display: none; }
+.md-attachment-upload [role=status] { font-size: 12px; line-height: 1.5; }
+.md-attachment-upload button[hidden] { display: none; }
+/* The body needs a basis to wrap at: with flex-basis 0 the buttons kept the row and squeezed the name to one letter a line. */
+@media (max-width: 480px) { .md-attachment { gap: 12px; padding: 13px; flex-wrap: wrap; } .md-attachment-body { flex-basis: 10rem; } .md-attachment > a { margin-left: auto; } }
+.md-attachment-body [data-editable] { cursor: text; border-radius: 4px; outline-offset: 2px; transition: background var(--md-motion-fast) var(--md-motion-ease); }
+.md-attachment-body [data-editable]:hover { background: var(--accent-soft, #e5f5f8); }
+.md-attachment-body [data-editable]:focus-visible { outline: 2px solid var(--accent, #4f9fb1); }
+.md-attachment-body [data-editing] { display: none; }
+.md-attachment-description:empty::before { content: attr(data-placeholder); color: var(--text-dim, #657b80); font-style: italic; }
+.md-attachment-field { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 5px 7px; border: 1px solid var(--accent-line, #9dcbd6); border-radius: 6px; background: var(--paper, #fff); color: inherit; resize: vertical; }
+.md-attachment-pick { justify-self: start; margin-top: 4px; padding: 7px 12px; border: 1px solid var(--line, #d8e7eb); border-radius: 8px; font: inherit; font-weight: 550; font-size: 12px; line-height: 1.2; cursor: pointer; background: var(--paper, #fff); color: var(--accent-ink, #26758a); transition: background var(--md-motion-fast) var(--md-motion-ease); }
+.md-attachment-pick[data-variant=primary] { background: var(--accent-ink, #26758a); border-color: var(--accent-ink, #26758a); color: #fff; }
+.md-attachment > .md-attachment-pick { margin: 0; flex-shrink: 0; }
+/* The card's two actions read as one: a page's button rules (touch sizes, the shell's controls) reach neither. */
+.md-attachment > :is(a, .md-attachment-pick) { font: inherit; font-size: 12px; font-weight: 550; line-height: 1.2; }
+.md-attachment-pick:focus-visible { outline: 2px solid var(--accent, #4f9fb1); outline-offset: 3px; }
+.md-attachment[data-dropping] { border-color: var(--accent, #4f9fb1); background: var(--accent-soft, #e5f5f8); }
+.md-attachment[data-busy] > .md-attachment-icon { opacity: .6; }
+.md-attachment-error { color: var(--danger, #b3261e); }
+.md-attachment-more { font-size: 11px; color: var(--text-dim, #657b80); }
+.md-attachment-more summary { cursor: pointer; }
+.md-attachment-url { display: block; margin-top: 3px; font-size: 12px; }
+
+/* The placeholder line of an empty description only a writer fills in: a reader keeps its place. */
+.md-attachment-description[data-reserved] { visibility: hidden; }

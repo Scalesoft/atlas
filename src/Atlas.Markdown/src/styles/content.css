@@ -1,0 +1,207 @@
+.md-editor .editor-body { padding: 8px 16px; min-height: var(--min-h, 240px); color: var(--text, #102f36); font-size: 14px; line-height: 1.6; }
+.md-editor.paper .editor-body { padding: 0; font-size: 15px; line-height: 1.7; letter-spacing: 0.005em; }
+
+/* COMPACT MODE — tight inline editor for dialogs (BlockerDialog 80/140px,
+   CatalogPage template-desc 80px). No block handle (hidden via v-if), tighter
+   typography, lower min-height padding. */
+.md-editor.compact .editor-body {
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.md-editor.compact .editor-body p { margin: 2px 0; }
+.md-editor.compact .editor-body h1 { font-size: 17px; margin: 10px 0 4px; }
+.md-editor.compact .editor-body h2 { font-size: 14px; margin: 8px 0 3px; }
+.md-editor.compact .editor-body h3 { font-size: 13px; margin: 6px 0 2px; }
+.md-editor.compact .editor-body :is(h4,h5,h6) { font-size: 12.5px; margin: 6px 0 2px; }
+.md-editor.compact .editor-body h5 { font-size: 12px; }
+.md-editor.compact .editor-body h6 { font-size: 11.5px; }
+.md-editor.compact .editor-body ul,
+.md-editor.compact .editor-body ol { padding-left: 22px; margin: 4px 0; }
+.md-editor .editor-body .ProseMirror { outline: none; min-height: inherit; color: var(--text, #102f36); }
+/* The line breaking an editable root gets from the browser, locked or not: a lock toggle then restyles the text but lays out none of it
+   (4.0: 77 → 31 ms per toggle on a page of 150 requirements), and locked text wraps as it did while written. */
+.md-editor .editor-body .ProseMirror { -webkit-line-break: after-white-space; }
+
+.md-editor .editor-body .ProseMirror p.is-editor-empty:first-child::before,
+.md-editor .editor-body .ProseMirror :is(p, h1, h2, h3, h4, h5, h6).is-empty::before {
+  content: attr(data-placeholder);
+  float: left; color: var(--text-dimmer, #71878c); pointer-events: none; height: 0;
+}
+
+.md-editor .editor-body h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin: 20px 0 8px; color: var(--text, #102f36); }
+.md-editor .editor-body h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 16px 0 6px; color: var(--text, #102f36); }
+.md-editor .editor-body h3 { font-size: 15px; font-weight: 600; margin: 12px 0 4px; color: var(--text, #102f36); }
+.md-editor .editor-body :is(h4,h5,h6) { font-size: 14px; font-weight: 600; margin: 10px 0 2px; color: var(--text, #102f36); }
+.md-editor .editor-body h5 { font-size: 13px; }
+.md-editor .editor-body h6 { font-size: 12.5px; }
+
+.md-editor.paper .editor-body h1 { font-size: 30px; line-height: 1.25; letter-spacing: -0.025em; margin: 26px 0 10px; }
+.md-editor.paper .editor-body h2 { font-size: 22px; line-height: 1.3; letter-spacing: -0.015em; margin: 22px 0 8px; }
+.md-editor.paper .editor-body h3 { font-size: 17px; line-height: 1.35; margin: 18px 0 6px; }
+.md-editor.paper .editor-body :is(h4,h5,h6) { font-size: 15px; line-height: 1.4; margin: 14px 0 4px; }
+.md-editor.paper .editor-body h5 { font-size: 14px; }
+.md-editor.paper .editor-body h6 { font-size: 13px; }
+.md-editor.paper .editor-body .ProseMirror > h1:first-child { margin-top: 0; }
+/* A long page (3.6-G): the browser skips style, layout and paint of blocks away from the screen; a drawn block keeps its size, the
+   rest hold their kind's mean height on real pages (2026-11-05, 60 largest pages), so a jump far down lands close to its target.
+   The paint clip spares 16px for what overhangs a block (a colleague's caret label, an image's resize handle, a heading's fold chevron
+   focus ring). A block that paints further (a requirement's tint, requirementHeading.css) opts out. Not the caret's block (CaretBlock.ts): Chrome left the caret behind
+   text typed into a block it had not drawn yet (a new one after Enter). Paper prints all. */
+@media screen {
+  /* The caret's block keeps its intrinsic size, so Chrome remembers its height for when the caret leaves (else it shrinks to 40px off-screen and the page jumps).
+     It also keeps the containment content-visibility applies even to a drawn block: without it a list item's paragraph margins
+     collapsed through the list only while it held the caret, and everything below jumped 16px at each click (owner, 4.0).
+     Not the gap cursor (an empty in-flow block between two blocks): containment would stop their margins collapsing and the second jumps 16px. */
+  .md-editor.paper .editor-body .ProseMirror > :not(.ProseMirror-gapcursor) { contain: layout style paint; contain-intrinsic-block-size: auto 40px; overflow-clip-margin: 16px; }
+  .md-editor.paper .editor-body .ProseMirror > :not([data-md-caret], .ProseMirror-gapcursor) { content-visibility: auto; }
+  .md-editor.paper .editor-body .ProseMirror > :is(ul, ol) { contain-intrinsic-block-size: auto 160px; }
+  .md-editor.paper .editor-body .ProseMirror > :is(figure, div) { contain-intrinsic-block-size: auto 320px; }
+  .md-editor.paper .editor-body .ProseMirror > .tableWrapper { contain-intrinsic-block-size: auto 800px; }
+}
+
+.md-editor .editor-body p { margin: 4px 0; }
+.md-editor.paper .editor-body p { margin: 8px 0; }
+
+.md-editor .editor-body ul,
+.md-editor .editor-body ol { padding-left: 26px; margin: 6px 0; }
+.md-editor .editor-body ul { list-style-type: disc; }
+.md-editor .editor-body ul ul { list-style-type: circle; }
+.md-editor .editor-body ul ul ul { list-style-type: square; }
+.md-editor .editor-body ol { list-style-type: decimal; }
+.md-editor .editor-body li { margin: 2px 0; }
+.md-editor .editor-body li p { margin: 0; }
+.md-editor .editor-body li::marker { color: var(--text-dim, #49676e); }
+
+.md-editor .editor-body ul.tt-task-list { list-style: none; padding-left: 4px; }
+.md-editor .editor-body ul.tt-task-list ul.tt-task-list { padding-left: 22px; }
+/* A timed item's stamp is its bullet (features/timed): no marker, the stamp stands where the bullet was. */
+.md-editor .editor-body ul.tt-timed-list { list-style: none; padding-left: 4px; }
+.md-editor .editor-body ul.tt-timed-list ul.tt-timed-list { padding-left: 22px; }
+.md-editor .editor-body li.tt-task-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0;
+}
+.md-editor .editor-body li.tt-task-item > label {
+  flex: 0 0 auto;
+  margin-top: 4px;
+  user-select: none;
+  cursor: pointer;
+}
+/* `md-task-check`: a task checkbox outside a task list (a host's checkbox in a heading line), the same look. */
+.md-editor .editor-body li.tt-task-item > label > input[type="checkbox"],
+.md-editor .editor-body input.md-task-check {
+  width: 16px; height: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid var(--line-2, #bdd5da);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--md-motion-fast), border-color var(--md-motion-fast);
+}
+.md-editor .editor-body li.tt-task-item > label > input[type="checkbox"]:hover,
+.md-editor .editor-body li.tt-task-item > label > input[type="checkbox"]:focus-visible,
+.md-editor .editor-body input.md-task-check:not([aria-disabled="true"]):hover,
+.md-editor .editor-body input.md-task-check:focus-visible {
+  border-color: var(--accent-line, #9dcbd6);
+}
+.md-editor .editor-body li.tt-task-item > label > input[type="checkbox"]:checked,
+.md-editor .editor-body input.md-task-check:checked {
+  background: var(--accent, #58a9b9);
+  border-color: var(--accent, #58a9b9);
+}
+.md-editor .editor-body li.tt-task-item > label > input[type="checkbox"]:checked::after,
+.md-editor .editor-body input.md-task-check:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px; top: 1px;
+  width: 4px; height: 8px;
+  border: solid var(--accent-ink, #123f49);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.md-editor .editor-body li.tt-task-item > div { flex: 1; min-width: 0; }
+.md-editor .editor-body li.tt-task-item[data-checked="true"] > div {
+  color: var(--text-dim, #49676e);
+  text-decoration: line-through;
+  text-decoration-color: var(--text-dimmer, #71878c);
+}
+
+.md-editor .editor-body blockquote {
+  padding: 4px 0 4px 16px;
+  border-left: 3px solid var(--accent-line, #9dcbd6);
+  color: var(--text-dim, #49676e);
+  margin: 10px 0;
+}
+.md-editor.paper .editor-body blockquote {
+  padding: 6px 0 6px 18px;
+  border-left-width: 4px;
+  font-style: italic;
+}
+
+.md-editor .editor-body code { font-family: var(--font-mono, "SFMono-Regular", Consolas, "Liberation Mono", monospace); font-size: 12px; padding: 1px 6px; background: var(--bg-3, #e2eef0); border-radius: 4px; }
+.md-editor.paper .editor-body code {
+  font-size: 0.88em;
+  background: var(--paper, #fffefe);
+  background: color-mix(in oklab, var(--paper, #fffefe) 60%, var(--bg-3, #e2eef0));
+  border: 1px solid var(--paper-line, #d9e8eb);
+}
+
+.md-editor .editor-body pre.tt-code-block,
+.md-editor .editor-body pre {
+  background: var(--bg-3, #e2eef0); border: 1px solid var(--line, #d4e4e7); border-radius: 8px;
+  padding: 10px 12px; font-family: var(--font-mono, "SFMono-Regular", Consolas, "Liberation Mono", monospace); font-size: 12px; overflow-x: auto;
+  margin: 8px 0;
+}
+/* The copy button of a code block: for reader and writer alike, shown near the block (always where there is no hover). */
+.md-code-block { position: relative; }
+.md-code-copy {
+  position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 26px; height: 26px; padding: 0;
+  border: 1px solid var(--line, #d4e4e7); border-radius: 6px; background: var(--bg-2, #fff); color: var(--text-dim, #667085); cursor: pointer;
+  opacity: 0; transition: opacity var(--md-motion-fast) var(--md-motion-ease), color var(--md-motion-fast) var(--md-motion-ease);
+}
+.md-code-block:hover .md-code-copy, .md-code-block:focus-within .md-code-copy, .md-code-copy[data-state] { opacity: 1; }
+.md-code-copy:hover { color: var(--text, #233044); }
+.md-code-copy[data-state=copied] { color: var(--accent, #2f7f90); }
+@media (hover: none) { .md-code-copy { opacity: 1; width: 44px; height: 44px; } }
+
+.md-editor.paper .editor-body pre.tt-code-block,
+.md-editor.paper .editor-body pre {
+  background: var(--paper, #fffefe);
+  background: color-mix(in oklab, var(--paper, #fffefe) 70%, var(--bg-3, #e2eef0));
+  border-color: var(--paper-line, #d9e8eb);
+  padding: 14px 16px;
+  margin: 12px 0;
+  border-radius: 10px;
+}
+.md-editor .editor-body pre code,
+.md-editor.paper .editor-body pre code { background: none; padding: 0; border: none; font-size: inherit; }
+
+.md-editor .editor-body hr {
+  border: none; height: 17px; margin: 8px 0;
+  background: linear-gradient(var(--line, #d4e4e7), var(--line, #d4e4e7)) center / 100% 1px no-repeat;
+}
+.md-editor.paper .editor-body hr {
+  background-image: linear-gradient(var(--paper-line, #d9e8eb), var(--paper-line, #d9e8eb));
+  margin: 16px 0;
+}
+
+.md-editor .editor-body a { color: var(--chip-accent-fg, #164f5a); text-decoration: underline; text-underline-offset: 2px; }
+
+.md-editor .editor-body mark.tt-highlight,
+.md-editor .editor-body mark {
+  background: var(--amber, #b66b12);
+  background: color-mix(in oklab, var(--amber, #b66b12) 40%, transparent);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
+.md-editor .editor-body img.tt-image,
+.md-editor .editor-body img { max-width: 100%; height: auto; border-radius: 6px; }
+.md-editor.paper .editor-body img.tt-image,
+.md-editor.paper .editor-body img { border-radius: 10px; box-shadow: var(--shadow-1, 0 1px 2px rgba(21, 43, 38, 0.06)); }

@@ -1,0 +1,72 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2,
+          "headingId": "import-d49b941d3fed162250804af9"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Summary"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Short summary."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2,
+          "headingId": "import-bd4d43b07d02adee974e65b0"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Risks"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "attrs": {
+          "tight": true
+        },
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Scope creep"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "heading-anchors",
+      "version": 1
+    }
+  ]
+}

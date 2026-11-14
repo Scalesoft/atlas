@@ -1,0 +1,92 @@
+/* Shared editor gutter: the block controls (grip with the "+" under it, 24px + 4px to the text) stay inside it.
+   The document paper has 40px; its narrow 20px padding widens to the same 32px, for a reader too: no jump on a change of the
+   right to write (one-editor contract J7.1). */
+.md-editor:not(.readonly):not(.paper):not(.compact) { padding-left: 32px; }
+@media (max-width: 720px) { .md-editor.paper .paper-inner { padding-left: 32px; } }
+.ProseMirror-dropcursor, .prosemirror-dropcursor-block, .prosemirror-dropcursor-inline {
+  background: var(--accent, #58a9b9) !important; border-color: var(--accent, #58a9b9) !important;
+}
+.md-editor .editor-body .ProseMirror > * { position: relative; transition: opacity var(--md-motion-base) var(--md-motion-ease); }
+/* A single passive frame groups the selected siblings without painting stripes. */
+.md-block-selection-frame {
+  position: fixed; pointer-events: none; z-index: 6; border-radius: 8px;
+  background: color-mix(in srgb, var(--accent, #58a9b9) 2.5%, transparent);
+  opacity: 0; transition: opacity var(--md-motion-base) var(--md-motion-ease), background-color var(--md-motion-base) var(--md-motion-ease);
+}
+.md-block-selection-frame[data-visible=true] { opacity: 1; }
+.md-block-selection-frame[data-selected=true] { background: color-mix(in srgb, var(--accent, #58a9b9) 4%, transparent); }
+.md-block-selection-frame svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.md-block-selection-frame path { fill: none; stroke: var(--accent, #58a9b9); stroke-opacity: .42; stroke-width: 1; stroke-dasharray: 1; stroke-linecap: round; }
+.md-block-selection-frame[data-selected=true] path { stroke-opacity: .7; }
+.md-editor .editor-body .ProseMirror > [data-dragging-source] { opacity: .3; }
+.md-editor .editor-body .ProseMirror > [data-dragging-source]::after { opacity: 0 !important; }
+/* The editor root carries the drag (DragPreview.ts), not `:has()`: a :has() over the editor restyled every list and table on each edit. */
+.md-editor[data-block-dragging] .prosemirror-dropcursor-block,
+.md-editor[data-block-dragging] .prosemirror-dropcursor-inline { display: none; }
+/* Placed by `translate` alone (blockDropPreview.ts): following the pointer never lays the page out again. */
+.md-block-drop-guide {
+  position: fixed; left: 0; top: 0; height: 40px; pointer-events: none; z-index: 1200; will-change: translate;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; background: color-mix(in srgb, var(--accent, #58a9b9) 8%, transparent);
+  animation: md-block-drop-enter var(--md-motion-base) var(--md-motion-ease);
+}
+.md-block-drop-guide::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 19px; height: 2px;
+  background: var(--accent, #58a9b9); border-radius: 2px;
+  animation: md-block-drop-line var(--md-motion-target) var(--md-motion-ease);
+}
+.md-block-drop-guide > span {
+  z-index: 1; max-width: calc(100% - 24px); overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  padding: 2px 9px; border: 1px solid var(--accent, #58a9b9); border-radius: 12px;
+  font: 500 11px/18px var(--font-sans, sans-serif); color: var(--text, #102f36); background: var(--bg-2, #edf5f6);
+  animation: md-block-drop-label var(--md-motion-target) var(--md-motion-ease);
+}
+@keyframes md-block-drop-line { from { opacity: 0; transform: scaleX(calc(.925 + var(--md-motion-pop-from) * .075)); } to { opacity: 1; transform: scaleX(1); } }
+@keyframes md-block-drop-label { from { opacity: 0; transform: translateY(calc(var(--md-motion-rise) / 4)); } to { opacity: 1; transform: translateY(0); } }
+@keyframes md-block-drop-enter { from { opacity: 0; } to { opacity: 1; } }
+/* Same accent and quiet line as the block drop guide; no space in document flow. */
+.md-block-inserter {
+  position: absolute; z-index: 5; height: 24px; transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  pointer-events: none;
+  color: color-mix(in srgb, var(--accent, #58a9b9) 45%, var(--text-dim, #64748b));
+}
+.md-block-inserter::before, .md-block-inserter::after {
+  content: ''; flex: 1; height: 1px;
+  background: color-mix(in srgb, var(--accent, #58a9b9) 16%, transparent);
+  transition: background-color var(--md-motion-target) var(--md-motion-ease);
+}
+.md-block-inserter:has(button:hover)::before, .md-block-inserter:has(button:hover)::after,
+.md-block-inserter:focus-within::before, .md-block-inserter:focus-within::after {
+  background: color-mix(in srgb, var(--accent, #58a9b9) 28%, transparent);
+}
+.md-block-inserter button {
+  width: 28px; height: 24px; padding: 4px 6px; border: 0; border-radius: 6px;
+  background: transparent; color: inherit; cursor: pointer; pointer-events: auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color var(--md-motion-target) var(--md-motion-ease), background-color var(--md-motion-target) var(--md-motion-ease);
+}
+.md-block-inserter-fade-enter-active { transition: opacity var(--md-motion-target) var(--md-motion-ease); }
+.md-block-inserter-fade-leave-active { transition: opacity var(--md-motion-fast) var(--md-motion-ease); }
+.md-block-inserter-fade-enter-from, .md-block-inserter-fade-leave-to { opacity: 0; }
+.md-block-inserter[inert] button { pointer-events: none; }
+.md-block-inserter button:hover, .md-block-inserter button:focus-visible {
+  color: var(--accent, #58a9b9); background: color-mix(in srgb, var(--accent, #58a9b9) 8%, transparent);
+}
+.md-block-inserter svg { width: 14px; height: 14px; }
+/* Follows the pointer by `translate` on its own layer (dragCard.ts); the lift keeps animating `transform`. */
+.md-drag-preview-clone {
+  box-sizing: border-box; position: fixed; left: 0; top: 0; pointer-events: none; z-index: 1300; will-change: translate;
+  background: var(--bg-2, #edf5f6); padding: 10px 12px 12px;
+  border: 1px solid var(--line, #d4e4e7); border-radius: 9px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text, #102f36) 16%, transparent);
+  font-family: var(--font-sans, sans-serif); color: var(--text, #102f36);
+  animation: md-drag-lift var(--md-motion-base) var(--md-motion-ease);
+}
+@keyframes md-drag-lift { from { opacity: .6; transform: translateY(calc(var(--md-motion-rise) * .75)) scale(calc(.95 + var(--md-motion-pop-from) * .05)); } to { opacity: 1; transform: none; } }
+.md-drag-card-label { font-size: 11px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; }
+.md-drag-card-crop { overflow: hidden; position: relative; }
+.md-drag-card-crop[data-fade="true"] { mask-image: linear-gradient(#000 60%, transparent); }
+.md-drag-card-content { transform-origin: top left; display: flow-root; }
+.md-drag-card-content img { max-width: 100%; }
+.md-drag-card-content > *::after { display: none !important; }

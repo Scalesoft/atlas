@@ -1,0 +1,4675 @@
+[
+ {
+  "scenario": "node-paragraph",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-paragraph/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 1,
+  "label": "insert paragraph",
+  "kind": "update",
+  "file": "node-paragraph/001-insert_paragraph.update.bin",
+  "bytes": 27,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 2,
+  "label": "attr paragraph.textAlign",
+  "kind": "update",
+  "file": "node-paragraph/002-attr_paragraph_textAlign.update.bin",
+  "bytes": 38,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "paragraph.textAlign"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 3,
+  "label": "type into paragraph#0",
+  "kind": "update",
+  "file": "node-paragraph/003-type_into_paragraph_0.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 4,
+  "label": "type into paragraph#1",
+  "kind": "update",
+  "file": "node-paragraph/004-type_into_paragraph_1.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 5,
+  "label": "type into paragraph#2",
+  "kind": "update",
+  "file": "node-paragraph/005-type_into_paragraph_2.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 6,
+  "label": "delete paragraph",
+  "kind": "update",
+  "file": "node-paragraph/006-delete_paragraph.update.bin",
+  "bytes": 10,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "paragraph.textAlign"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-paragraph",
+  "seq": 7,
+  "label": "final",
+  "kind": "state",
+  "file": "node-paragraph/007-final.state.bin",
+  "bytes": 165,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-blockquote/000-baseline.state.bin",
+  "bytes": 56,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 1,
+  "label": "insert blockquote",
+  "kind": "update",
+  "file": "node-blockquote/001-insert_blockquote.update.bin",
+  "bytes": 61,
+  "facts": {
+   "elements": [
+    "blockquote",
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 2,
+  "label": "type into blockquote#0",
+  "kind": "update",
+  "file": "node-blockquote/002-type_into_blockquote_0.update.bin",
+  "bytes": 25,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 3,
+  "label": "type into blockquote#1",
+  "kind": "update",
+  "file": "node-blockquote/003-type_into_blockquote_1.update.bin",
+  "bytes": 16,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 4,
+  "label": "type into blockquote#2",
+  "kind": "update",
+  "file": "node-blockquote/004-type_into_blockquote_2.update.bin",
+  "bytes": 16,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 5,
+  "label": "delete blockquote",
+  "kind": "update",
+  "file": "node-blockquote/005-delete_blockquote.update.bin",
+  "bytes": 11,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-blockquote",
+  "seq": 6,
+  "label": "final",
+  "kind": "state",
+  "file": "node-blockquote/006-final.state.bin",
+  "bytes": 204,
+  "facts": {
+   "elements": [
+    "blockquote",
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-bulletList",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-bulletList/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-bulletList",
+  "seq": 1,
+  "label": "insert bulletList",
+  "kind": "update",
+  "file": "node-bulletList/001-insert_bulletList.update.bin",
+  "bytes": 99,
+  "facts": {
+   "elements": [
+    "bulletList",
+    "listItem",
+    "paragraph"
+   ],
+   "attrs": [
+    "bulletList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-bulletList",
+  "seq": 2,
+  "label": "attr bulletList.tight",
+  "kind": "update",
+  "file": "node-bulletList/002-attr_bulletList_tight.update.bin",
+  "bytes": 26,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "bulletList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-bulletList",
+  "seq": 3,
+  "label": "delete bulletList",
+  "kind": "update",
+  "file": "node-bulletList/003-delete_bulletList.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-bulletList",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-bulletList/004-final.state.bin",
+  "bytes": 258,
+  "facts": {
+   "elements": [
+    "bulletList",
+    "listItem",
+    "paragraph"
+   ],
+   "attrs": [
+    "bulletList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-codeBlock/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 1,
+  "label": "insert codeBlock",
+  "kind": "update",
+  "file": "node-codeBlock/001-insert_codeBlock.update.bin",
+  "bytes": 75,
+  "facts": {
+   "elements": [
+    "codeBlock",
+    "paragraph"
+   ],
+   "attrs": [
+    "codeBlock.language"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 2,
+  "label": "attr codeBlock.language",
+  "kind": "update",
+  "file": "node-codeBlock/002-attr_codeBlock_language.update.bin",
+  "bytes": 44,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "codeBlock.language"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 3,
+  "label": "type into codeBlock#0",
+  "kind": "update",
+  "file": "node-codeBlock/003-type_into_codeBlock_0.update.bin",
+  "bytes": 28,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 4,
+  "label": "type into codeBlock#1",
+  "kind": "update",
+  "file": "node-codeBlock/004-type_into_codeBlock_1.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 5,
+  "label": "type into codeBlock#2",
+  "kind": "update",
+  "file": "node-codeBlock/005-type_into_codeBlock_2.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 6,
+  "label": "delete codeBlock",
+  "kind": "update",
+  "file": "node-codeBlock/006-delete_codeBlock.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-codeBlock",
+  "seq": 7,
+  "label": "final",
+  "kind": "state",
+  "file": "node-codeBlock/007-final.state.bin",
+  "bytes": 265,
+  "facts": {
+   "elements": [
+    "codeBlock",
+    "paragraph"
+   ],
+   "attrs": [
+    "codeBlock.language"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-hardBreak",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-hardBreak/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-hardBreak",
+  "seq": 1,
+  "label": "insert hardBreak",
+  "kind": "update",
+  "file": "node-hardBreak/001-insert_hardBreak.update.bin",
+  "bytes": 27,
+  "facts": {
+   "elements": [
+    "hardBreak"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-hardBreak",
+  "seq": 2,
+  "label": "delete hardBreak",
+  "kind": "update",
+  "file": "node-hardBreak/002-delete_hardBreak.update.bin",
+  "bytes": 10,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-hardBreak",
+  "seq": 3,
+  "label": "final",
+  "kind": "state",
+  "file": "node-hardBreak/003-final.state.bin",
+  "bytes": 109,
+  "facts": {
+   "elements": [
+    "hardBreak",
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-heading/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 1,
+  "label": "insert heading",
+  "kind": "update",
+  "file": "node-heading/001-insert_heading.update.bin",
+  "bytes": 60,
+  "facts": {
+   "elements": [
+    "heading",
+    "paragraph"
+   ],
+   "attrs": [
+    "heading.level"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 2,
+  "label": "attr heading.level",
+  "kind": "update",
+  "file": "node-heading/002-attr_heading_level.update.bin",
+  "bytes": 27,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "heading.level"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 3,
+  "label": "type into heading#0",
+  "kind": "update",
+  "file": "node-heading/003-type_into_heading_0.update.bin",
+  "bytes": 28,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 4,
+  "label": "type into heading#1",
+  "kind": "update",
+  "file": "node-heading/004-type_into_heading_1.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 5,
+  "label": "type into heading#2",
+  "kind": "update",
+  "file": "node-heading/005-type_into_heading_2.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 6,
+  "label": "delete heading",
+  "kind": "update",
+  "file": "node-heading/006-delete_heading.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-heading",
+  "seq": 7,
+  "label": "final",
+  "kind": "state",
+  "file": "node-heading/007-final.state.bin",
+  "bytes": 218,
+  "facts": {
+   "elements": [
+    "heading",
+    "paragraph"
+   ],
+   "attrs": [
+    "heading.level"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-horizontalRule",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-horizontalRule/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-horizontalRule",
+  "seq": 1,
+  "label": "insert horizontalRule",
+  "kind": "update",
+  "file": "node-horizontalRule/001-insert_horizontalRule.update.bin",
+  "bytes": 50,
+  "facts": {
+   "elements": [
+    "horizontalRule",
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-horizontalRule",
+  "seq": 2,
+  "label": "delete horizontalRule",
+  "kind": "update",
+  "file": "node-horizontalRule/002-delete_horizontalRule.update.bin",
+  "bytes": 10,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-horizontalRule",
+  "seq": 3,
+  "label": "final",
+  "kind": "state",
+  "file": "node-horizontalRule/003-final.state.bin",
+  "bytes": 149,
+  "facts": {
+   "elements": [
+    "horizontalRule",
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-orderedList",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-orderedList/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-orderedList",
+  "seq": 1,
+  "label": "insert orderedList",
+  "kind": "update",
+  "file": "node-orderedList/001-insert_orderedList.update.bin",
+  "bytes": 117,
+  "facts": {
+   "elements": [
+    "listItem",
+    "orderedList",
+    "paragraph"
+   ],
+   "attrs": [
+    "orderedList.start",
+    "orderedList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-orderedList",
+  "seq": 2,
+  "label": "attr orderedList.tight",
+  "kind": "update",
+  "file": "node-orderedList/002-attr_orderedList_tight.update.bin",
+  "bytes": 26,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "orderedList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-orderedList",
+  "seq": 3,
+  "label": "delete orderedList",
+  "kind": "update",
+  "file": "node-orderedList/003-delete_orderedList.update.bin",
+  "bytes": 14,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-orderedList",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-orderedList/004-final.state.bin",
+  "bytes": 294,
+  "facts": {
+   "elements": [
+    "listItem",
+    "orderedList",
+    "paragraph"
+   ],
+   "attrs": [
+    "orderedList.start",
+    "orderedList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-image",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-image/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-image",
+  "seq": 1,
+  "label": "insert image",
+  "kind": "update",
+  "file": "node-image/001-insert_image.update.bin",
+  "bytes": 101,
+  "facts": {
+   "elements": [
+    "image",
+    "paragraph"
+   ],
+   "attrs": [
+    "image.alt",
+    "image.src"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-image",
+  "seq": 2,
+  "label": "attr image.src",
+  "kind": "update",
+  "file": "node-image/002-attr_image_src.update.bin",
+  "bytes": 61,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "image.src"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-image",
+  "seq": 3,
+  "label": "delete image",
+  "kind": "update",
+  "file": "node-image/003-delete_image.update.bin",
+  "bytes": 14,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-image",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-image/004-final.state.bin",
+  "bytes": 297,
+  "facts": {
+   "elements": [
+    "image",
+    "paragraph"
+   ],
+   "attrs": [
+    "image.alt",
+    "image.src"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-table",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-table/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-table",
+  "seq": 1,
+  "label": "insert table",
+  "kind": "update",
+  "file": "node-table/001-insert_table.update.bin",
+  "bytes": 816,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "table",
+    "tableCell",
+    "tableHeader",
+    "tableRow"
+   ],
+   "attrs": [
+    "table.chartRef",
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableHeader.chartRef",
+    "tableHeader.colspan",
+    "tableHeader.rowspan",
+    "tableRow.chartRef"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-table",
+  "seq": 2,
+  "label": "attr table.chartRef",
+  "kind": "update",
+  "file": "node-table/002-attr_table_chartRef.update.bin",
+  "bytes": 76,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "table.chartRef"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-table",
+  "seq": 3,
+  "label": "delete table",
+  "kind": "update",
+  "file": "node-table/003-delete_table.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-table",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-table/004-final.state.bin",
+  "bytes": 1730,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "table",
+    "tableCell",
+    "tableHeader",
+    "tableRow"
+   ],
+   "attrs": [
+    "table.chartRef",
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableHeader.chartRef",
+    "tableHeader.colspan",
+    "tableHeader.rowspan",
+    "tableRow.chartRef"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-taskList",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-taskList/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-taskList",
+  "seq": 1,
+  "label": "insert taskList",
+  "kind": "update",
+  "file": "node-taskList/001-insert_taskList.update.bin",
+  "bytes": 99,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "taskItem",
+    "taskList"
+   ],
+   "attrs": [
+    "taskItem.checked"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-taskList",
+  "seq": 2,
+  "label": "delete taskList",
+  "kind": "update",
+  "file": "node-taskList/002-delete_taskList.update.bin",
+  "bytes": 10,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-taskList",
+  "seq": 3,
+  "label": "final",
+  "kind": "state",
+  "file": "node-taskList/003-final.state.bin",
+  "bytes": 247,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "taskItem",
+    "taskList"
+   ],
+   "attrs": [
+    "taskItem.checked"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-callout/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 1,
+  "label": "insert callout",
+  "kind": "update",
+  "file": "node-callout/001-insert_callout.update.bin",
+  "bytes": 88,
+  "facts": {
+   "elements": [
+    "callout",
+    "paragraph"
+   ],
+   "attrs": [
+    "callout.variant"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 2,
+  "label": "attr callout.variant",
+  "kind": "update",
+  "file": "node-callout/002-attr_callout_variant.update.bin",
+  "bytes": 41,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "callout.variant"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 3,
+  "label": "type into callout#0",
+  "kind": "update",
+  "file": "node-callout/003-type_into_callout_0.update.bin",
+  "bytes": 28,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 4,
+  "label": "type into callout#1",
+  "kind": "update",
+  "file": "node-callout/004-type_into_callout_1.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 5,
+  "label": "type into callout#2",
+  "kind": "update",
+  "file": "node-callout/005-type_into_callout_2.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 6,
+  "label": "delete callout",
+  "kind": "update",
+  "file": "node-callout/006-delete_callout.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-callout",
+  "seq": 7,
+  "label": "final",
+  "kind": "state",
+  "file": "node-callout/007-final.state.bin",
+  "bytes": 288,
+  "facts": {
+   "elements": [
+    "callout",
+    "paragraph"
+   ],
+   "attrs": [
+    "callout.variant"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-disclosure/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 1,
+  "label": "insert disclosure",
+  "kind": "update",
+  "file": "node-disclosure/001-insert_disclosure.update.bin",
+  "bytes": 89,
+  "facts": {
+   "elements": [
+    "disclosure",
+    "paragraph"
+   ],
+   "attrs": [
+    "disclosure.title"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 2,
+  "label": "attr disclosure.title",
+  "kind": "update",
+  "file": "node-disclosure/002-attr_disclosure_title.update.bin",
+  "bytes": 41,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "disclosure.title"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 3,
+  "label": "type into disclosure#0",
+  "kind": "update",
+  "file": "node-disclosure/003-type_into_disclosure_0.update.bin",
+  "bytes": 28,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 4,
+  "label": "type into disclosure#1",
+  "kind": "update",
+  "file": "node-disclosure/004-type_into_disclosure_1.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 5,
+  "label": "type into disclosure#2",
+  "kind": "update",
+  "file": "node-disclosure/005-type_into_disclosure_2.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 6,
+  "label": "delete disclosure",
+  "kind": "update",
+  "file": "node-disclosure/006-delete_disclosure.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-disclosure",
+  "seq": 7,
+  "label": "final",
+  "kind": "state",
+  "file": "node-disclosure/007-final.state.bin",
+  "bytes": 290,
+  "facts": {
+   "elements": [
+    "disclosure",
+    "paragraph"
+   ],
+   "attrs": [
+    "disclosure.title"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-youtrackIssue",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-youtrackIssue/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-youtrackIssue",
+  "seq": 1,
+  "label": "insert youtrackIssue",
+  "kind": "update",
+  "file": "node-youtrackIssue/001-insert_youtrackIssue.update.bin",
+  "bytes": 173,
+  "facts": {
+   "elements": [
+    "youtrackIssue"
+   ],
+   "attrs": [
+    "youtrackIssue.id",
+    "youtrackIssue.key",
+    "youtrackIssue.state",
+    "youtrackIssue.title",
+    "youtrackIssue.url"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-youtrackIssue",
+  "seq": 2,
+  "label": "attr youtrackIssue.key",
+  "kind": "update",
+  "file": "node-youtrackIssue/002-attr_youtrackIssue_key.update.bin",
+  "bytes": 40,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "youtrackIssue.key"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-youtrackIssue",
+  "seq": 3,
+  "label": "delete youtrackIssue",
+  "kind": "update",
+  "file": "node-youtrackIssue/003-delete_youtrackIssue.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-youtrackIssue",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-youtrackIssue/004-final.state.bin",
+  "bytes": 424,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "youtrackIssue"
+   ],
+   "attrs": [
+    "youtrackIssue.id",
+    "youtrackIssue.key",
+    "youtrackIssue.state",
+    "youtrackIssue.title",
+    "youtrackIssue.url"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactCard",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-contactCard/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactCard",
+  "seq": 1,
+  "label": "insert contactCard",
+  "kind": "update",
+  "file": "node-contactCard/001-insert_contactCard.update.bin",
+  "bytes": 106,
+  "facts": {
+   "elements": [
+    "contactCard",
+    "paragraph"
+   ],
+   "attrs": [
+    "contactCard.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactCard",
+  "seq": 2,
+  "label": "attr contactCard.data",
+  "kind": "update",
+  "file": "node-contactCard/002-attr_contactCard_data.update.bin",
+  "bytes": 77,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "contactCard.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactCard",
+  "seq": 3,
+  "label": "delete contactCard",
+  "kind": "update",
+  "file": "node-contactCard/003-delete_contactCard.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactCard",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-contactCard/004-final.state.bin",
+  "bytes": 323,
+  "facts": {
+   "elements": [
+    "contactCard",
+    "paragraph"
+   ],
+   "attrs": [
+    "contactCard.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactInline",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-contactInline/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactInline",
+  "seq": 1,
+  "label": "insert contactInline",
+  "kind": "update",
+  "file": "node-contactInline/001-insert_contactInline.update.bin",
+  "bytes": 90,
+  "facts": {
+   "elements": [
+    "contactInline"
+   ],
+   "attrs": [
+    "contactInline.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactInline",
+  "seq": 2,
+  "label": "attr contactInline.data",
+  "kind": "update",
+  "file": "node-contactInline/002-attr_contactInline_data.update.bin",
+  "bytes": 77,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "contactInline.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactInline",
+  "seq": 3,
+  "label": "delete contactInline",
+  "kind": "update",
+  "file": "node-contactInline/003-delete_contactInline.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-contactInline",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-contactInline/004-final.state.bin",
+  "bytes": 287,
+  "facts": {
+   "elements": [
+    "contactInline",
+    "paragraph"
+   ],
+   "attrs": [
+    "contactInline.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-attachment",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-attachment/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-attachment",
+  "seq": 1,
+  "label": "insert attachment",
+  "kind": "update",
+  "file": "node-attachment/001-insert_attachment.update.bin",
+  "bytes": 100,
+  "facts": {
+   "elements": [
+    "attachment",
+    "paragraph"
+   ],
+   "attrs": [
+    "attachment.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-attachment",
+  "seq": 2,
+  "label": "attr attachment.data",
+  "kind": "update",
+  "file": "node-attachment/002-attr_attachment_data.update.bin",
+  "bytes": 72,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "attachment.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-attachment",
+  "seq": 3,
+  "label": "delete attachment",
+  "kind": "update",
+  "file": "node-attachment/003-delete_attachment.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-attachment",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-attachment/004-final.state.bin",
+  "bytes": 306,
+  "facts": {
+   "elements": [
+    "attachment",
+    "paragraph"
+   ],
+   "attrs": [
+    "attachment.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-chart",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-chart/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-chart",
+  "seq": 1,
+  "label": "insert chart",
+  "kind": "update",
+  "file": "node-chart/001-insert_chart.update.bin",
+  "bytes": 170,
+  "facts": {
+   "elements": [
+    "chart",
+    "paragraph"
+   ],
+   "attrs": [
+    "chart.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-chart",
+  "seq": 2,
+  "label": "attr chart.data",
+  "kind": "update",
+  "file": "node-chart/002-attr_chart_data.update.bin",
+  "bytes": 147,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "chart.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-chart",
+  "seq": 3,
+  "label": "delete chart",
+  "kind": "update",
+  "file": "node-chart/003-delete_chart.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-chart",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-chart/004-final.state.bin",
+  "bytes": 521,
+  "facts": {
+   "elements": [
+    "chart",
+    "paragraph"
+   ],
+   "attrs": [
+    "chart.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-openapi",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-openapi/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-openapi",
+  "seq": 1,
+  "label": "insert openapi",
+  "kind": "update",
+  "file": "node-openapi/001-insert_openapi.update.bin",
+  "bytes": 166,
+  "facts": {
+   "elements": [
+    "openapi",
+    "paragraph"
+   ],
+   "attrs": [
+    "openapi.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-openapi",
+  "seq": 2,
+  "label": "attr openapi.data",
+  "kind": "update",
+  "file": "node-openapi/002-attr_openapi_data.update.bin",
+  "bytes": 143,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "openapi.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-openapi",
+  "seq": 3,
+  "label": "delete openapi",
+  "kind": "update",
+  "file": "node-openapi/003-delete_openapi.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-openapi",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-openapi/004-final.state.bin",
+  "bytes": 509,
+  "facts": {
+   "elements": [
+    "openapi",
+    "paragraph"
+   ],
+   "attrs": [
+    "openapi.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-diagram",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-diagram/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-diagram",
+  "seq": 1,
+  "label": "insert diagram",
+  "kind": "update",
+  "file": "node-diagram/001-insert_diagram.update.bin",
+  "bytes": 128,
+  "facts": {
+   "elements": [
+    "diagram",
+    "paragraph"
+   ],
+   "attrs": [
+    "diagram.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-diagram",
+  "seq": 2,
+  "label": "attr diagram.data",
+  "kind": "update",
+  "file": "node-diagram/002-attr_diagram_data.update.bin",
+  "bytes": 97,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "diagram.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-diagram",
+  "seq": 3,
+  "label": "delete diagram",
+  "kind": "update",
+  "file": "node-diagram/003-delete_diagram.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-diagram",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-diagram/004-final.state.bin",
+  "bytes": 387,
+  "facts": {
+   "elements": [
+    "diagram",
+    "paragraph"
+   ],
+   "attrs": [
+    "diagram.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathBlock",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-mathBlock/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathBlock",
+  "seq": 1,
+  "label": "insert mathBlock",
+  "kind": "update",
+  "file": "node-mathBlock/001-insert_mathBlock.update.bin",
+  "bytes": 92,
+  "facts": {
+   "elements": [
+    "mathBlock",
+    "paragraph"
+   ],
+   "attrs": [
+    "mathBlock.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathBlock",
+  "seq": 2,
+  "label": "attr mathBlock.data",
+  "kind": "update",
+  "file": "node-mathBlock/002-attr_mathBlock_data.update.bin",
+  "bytes": 65,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "mathBlock.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathBlock",
+  "seq": 3,
+  "label": "delete mathBlock",
+  "kind": "update",
+  "file": "node-mathBlock/003-delete_mathBlock.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathBlock",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-mathBlock/004-final.state.bin",
+  "bytes": 283,
+  "facts": {
+   "elements": [
+    "mathBlock",
+    "paragraph"
+   ],
+   "attrs": [
+    "mathBlock.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathInline",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-mathInline/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathInline",
+  "seq": 1,
+  "label": "insert mathInline",
+  "kind": "update",
+  "file": "node-mathInline/001-insert_mathInline.update.bin",
+  "bytes": 75,
+  "facts": {
+   "elements": [
+    "mathInline"
+   ],
+   "attrs": [
+    "mathInline.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathInline",
+  "seq": 2,
+  "label": "attr mathInline.data",
+  "kind": "update",
+  "file": "node-mathInline/002-attr_mathInline_data.update.bin",
+  "bytes": 65,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "mathInline.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathInline",
+  "seq": 3,
+  "label": "delete mathInline",
+  "kind": "update",
+  "file": "node-mathInline/003-delete_mathInline.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-mathInline",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-mathInline/004-final.state.bin",
+  "bytes": 245,
+  "facts": {
+   "elements": [
+    "mathInline",
+    "paragraph"
+   ],
+   "attrs": [
+    "mathInline.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-tableOfContents",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-tableOfContents/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-tableOfContents",
+  "seq": 1,
+  "label": "insert tableOfContents",
+  "kind": "update",
+  "file": "node-tableOfContents/001-insert_tableOfContents.update.bin",
+  "bytes": 122,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "tableOfContents"
+   ],
+   "attrs": [
+    "tableOfContents.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-tableOfContents",
+  "seq": 2,
+  "label": "attr tableOfContents.data",
+  "kind": "update",
+  "file": "node-tableOfContents/002-attr_tableOfContents_data.update.bin",
+  "bytes": 89,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "tableOfContents.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-tableOfContents",
+  "seq": 3,
+  "label": "delete tableOfContents",
+  "kind": "update",
+  "file": "node-tableOfContents/003-delete_tableOfContents.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-tableOfContents",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-tableOfContents/004-final.state.bin",
+  "bytes": 367,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "tableOfContents"
+   ],
+   "attrs": [
+    "tableOfContents.data"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-emoji",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-emoji/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-emoji",
+  "seq": 1,
+  "label": "insert emoji",
+  "kind": "update",
+  "file": "node-emoji/001-insert_emoji.update.bin",
+  "bytes": 45,
+  "facts": {
+   "elements": [
+    "emoji"
+   ],
+   "attrs": [
+    "emoji.name"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-emoji",
+  "seq": 2,
+  "label": "attr emoji.name",
+  "kind": "update",
+  "file": "node-emoji/002-attr_emoji_name.update.bin",
+  "bytes": 40,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "emoji.name"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-emoji",
+  "seq": 3,
+  "label": "delete emoji",
+  "kind": "update",
+  "file": "node-emoji/003-delete_emoji.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-emoji",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-emoji/004-final.state.bin",
+  "bytes": 160,
+  "facts": {
+   "elements": [
+    "emoji",
+    "paragraph"
+   ],
+   "attrs": [
+    "emoji.name"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-pageReference",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-pageReference/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-pageReference",
+  "seq": 1,
+  "label": "insert pageReference",
+  "kind": "update",
+  "file": "node-pageReference/001-insert_pageReference.update.bin",
+  "bytes": 134,
+  "facts": {
+   "elements": [
+    "pageReference"
+   ],
+   "attrs": [
+    "pageReference.id",
+    "pageReference.title",
+    "pageReference.url"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-pageReference",
+  "seq": 2,
+  "label": "attr pageReference.title",
+  "kind": "update",
+  "file": "node-pageReference/002-attr_pageReference_title.update.bin",
+  "bytes": 41,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "pageReference.title"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-pageReference",
+  "seq": 3,
+  "label": "delete pageReference",
+  "kind": "update",
+  "file": "node-pageReference/003-delete_pageReference.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-pageReference",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-pageReference/004-final.state.bin",
+  "bytes": 347,
+  "facts": {
+   "elements": [
+    "pageReference",
+    "paragraph"
+   ],
+   "attrs": [
+    "pageReference.id",
+    "pageReference.title",
+    "pageReference.url"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-concealedContent/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 1,
+  "label": "insert concealedContent",
+  "kind": "update",
+  "file": "node-concealedContent/001-insert_concealedContent.update.bin",
+  "bytes": 96,
+  "facts": {
+   "elements": [
+    "concealedContent",
+    "paragraph"
+   ],
+   "attrs": [
+    "concealedContent.reveal"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 2,
+  "label": "attr concealedContent.reveal",
+  "kind": "update",
+  "file": "node-concealedContent/002-attr_concealedContent_reveal.update.bin",
+  "bytes": 41,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "concealedContent.reveal"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 3,
+  "label": "type into concealedContent#0",
+  "kind": "update",
+  "file": "node-concealedContent/003-type_into_concealedContent_0.update.bin",
+  "bytes": 28,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 4,
+  "label": "type into concealedContent#1",
+  "kind": "update",
+  "file": "node-concealedContent/004-type_into_concealedContent_1.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 5,
+  "label": "type into concealedContent#2",
+  "kind": "update",
+  "file": "node-concealedContent/005-type_into_concealedContent_2.update.bin",
+  "bytes": 18,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 6,
+  "label": "delete concealedContent",
+  "kind": "update",
+  "file": "node-concealedContent/006-delete_concealedContent.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-concealedContent",
+  "seq": 7,
+  "label": "final",
+  "kind": "state",
+  "file": "node-concealedContent/007-final.state.bin",
+  "bytes": 304,
+  "facts": {
+   "elements": [
+    "concealedContent",
+    "paragraph"
+   ],
+   "attrs": [
+    "concealedContent.reveal"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-secretReference",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-secretReference/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-secretReference",
+  "seq": 1,
+  "label": "insert secretReference",
+  "kind": "update",
+  "file": "node-secretReference/001-insert_secretReference.update.bin",
+  "bytes": 243,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "secretReference"
+   ],
+   "attrs": [
+    "secretReference.autoHideSeconds",
+    "secretReference.field",
+    "secretReference.fields",
+    "secretReference.secretId",
+    "secretReference.showCopy",
+    "secretReference.showDetails"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretReference"
+ },
+ {
+  "scenario": "node-secretReference",
+  "seq": 2,
+  "label": "attr secretReference.showCopy",
+  "kind": "update",
+  "file": "node-secretReference/002-attr_secretReference_showCopy.update.bin",
+  "bytes": 26,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "secretReference.showCopy"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved-attr:secretReference.showCopy"
+ },
+ {
+  "scenario": "node-secretReference",
+  "seq": 3,
+  "label": "delete secretReference",
+  "kind": "update",
+  "file": "node-secretReference/003-delete_secretReference.update.bin",
+  "bytes": 14,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-secretReference",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-secretReference/004-final.state.bin",
+  "bytes": 546,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "secretReference"
+   ],
+   "attrs": [
+    "secretReference.autoHideSeconds",
+    "secretReference.field",
+    "secretReference.fields",
+    "secretReference.secretId",
+    "secretReference.showCopy",
+    "secretReference.showDetails"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretReference"
+ },
+ {
+  "scenario": "node-secretInlineReference",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "node-secretInlineReference/000-baseline.state.bin",
+  "bytes": 59,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-secretInlineReference",
+  "seq": 1,
+  "label": "insert secretInlineReference",
+  "kind": "update",
+  "file": "node-secretInlineReference/001-insert_secretInlineReference.update.bin",
+  "bytes": 188,
+  "facts": {
+   "elements": [
+    "secretInlineReference"
+   ],
+   "attrs": [
+    "secretInlineReference.autoHideSeconds",
+    "secretInlineReference.field",
+    "secretInlineReference.secretId",
+    "secretInlineReference.showCopy",
+    "secretInlineReference.showDetails"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretInlineReference"
+ },
+ {
+  "scenario": "node-secretInlineReference",
+  "seq": 2,
+  "label": "attr secretInlineReference.showCopy",
+  "kind": "update",
+  "file": "node-secretInlineReference/002-attr_secretInlineReference_showCopy.update.bin",
+  "bytes": 26,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "secretInlineReference.showCopy"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved-attr:secretInlineReference.showCopy"
+ },
+ {
+  "scenario": "node-secretInlineReference",
+  "seq": 3,
+  "label": "delete secretInlineReference",
+  "kind": "update",
+  "file": "node-secretInlineReference/003-delete_secretInlineReference.update.bin",
+  "bytes": 12,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "node-secretInlineReference",
+  "seq": 4,
+  "label": "final",
+  "kind": "state",
+  "file": "node-secretInlineReference/004-final.state.bin",
+  "bytes": 440,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "secretInlineReference"
+   ],
+   "attrs": [
+    "secretInlineReference.autoHideSeconds",
+    "secretInlineReference.field",
+    "secretInlineReference.secretId",
+    "secretInlineReference.showCopy",
+    "secretInlineReference.showDetails"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretInlineReference"
+ },
+ {
+  "scenario": "editing",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "editing/000-baseline.state.bin",
+  "bytes": 145,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 1,
+  "label": "type 5 chars#0",
+  "kind": "update",
+  "file": "editing/001-type_5_chars_0.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 2,
+  "label": "type 5 chars#1",
+  "kind": "update",
+  "file": "editing/002-type_5_chars_1.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 3,
+  "label": "type 5 chars#2",
+  "kind": "update",
+  "file": "editing/003-type_5_chars_2.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 4,
+  "label": "type 5 chars#3",
+  "kind": "update",
+  "file": "editing/004-type_5_chars_3.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 5,
+  "label": "type 5 chars#4",
+  "kind": "update",
+  "file": "editing/005-type_5_chars_4.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 6,
+  "label": "bold",
+  "kind": "update",
+  "file": "editing/006-bold.update.bin",
+  "bytes": 53,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "bold"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 7,
+  "label": "italic",
+  "kind": "update",
+  "file": "editing/007-italic.update.bin",
+  "bytes": 105,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "italic"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 8,
+  "label": "underline",
+  "kind": "update",
+  "file": "editing/008-underline.update.bin",
+  "bytes": 96,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "bold",
+    "italic",
+    "underline"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 9,
+  "label": "strike",
+  "kind": "update",
+  "file": "editing/009-strike.update.bin",
+  "bytes": 57,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "strike"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 10,
+  "label": "highlight",
+  "kind": "update",
+  "file": "editing/010-highlight.update.bin",
+  "bytes": 63,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "highlight"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 11,
+  "label": "code",
+  "kind": "update",
+  "file": "editing/011-code.update.bin",
+  "bytes": 53,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "code"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 12,
+  "label": "link",
+  "kind": "update",
+  "file": "editing/012-link.update.bin",
+  "bytes": 153,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "link"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 13,
+  "label": "change link href",
+  "kind": "update",
+  "file": "editing/013-change_link_href.update.bin",
+  "bytes": 261,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "link"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 14,
+  "label": "unbold",
+  "kind": "update",
+  "file": "editing/014-unbold.update.bin",
+  "bytes": 90,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "bold",
+    "link"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 15,
+  "label": "type inside marked text#0",
+  "kind": "update",
+  "file": "editing/015-type_inside_marked_text_0.update.bin",
+  "bytes": 57,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "bold",
+    "italic"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 16,
+  "label": "type inside marked text#1",
+  "kind": "update",
+  "file": "editing/016-type_inside_marked_text_1.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "italic"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 17,
+  "label": "enter (split)",
+  "kind": "update",
+  "file": "editing/017-enter_split_.update.bin",
+  "bytes": 521,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [
+    "code",
+    "highlight",
+    "italic",
+    "link",
+    "strike",
+    "underline"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 18,
+  "label": "heading",
+  "kind": "update",
+  "file": "editing/018-heading.update.bin",
+  "bytes": 136,
+  "facts": {
+   "elements": [
+    "heading"
+   ],
+   "attrs": [
+    "heading.level"
+   ],
+   "marks": [
+    "italic"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 19,
+  "label": "heading level",
+  "kind": "update",
+  "file": "editing/019-heading_level.update.bin",
+  "bytes": 30,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "heading.level"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 20,
+  "label": "text align",
+  "kind": "update",
+  "file": "editing/020-text_align.update.bin",
+  "bytes": 38,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "heading.textAlign"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 21,
+  "label": "bullet list",
+  "kind": "update",
+  "file": "editing/021-bullet_list.update.bin",
+  "bytes": 136,
+  "facts": {
+   "elements": [
+    "bulletList",
+    "listItem",
+    "paragraph"
+   ],
+   "attrs": [
+    "bulletList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 22,
+  "label": "ordered list",
+  "kind": "update",
+  "file": "editing/022-ordered_list.update.bin",
+  "bytes": 210,
+  "facts": {
+   "elements": [
+    "listItem",
+    "orderedList",
+    "paragraph"
+   ],
+   "attrs": [
+    "orderedList.start",
+    "orderedList.tight"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 23,
+  "label": "task list",
+  "kind": "update",
+  "file": "editing/023-task_list.update.bin",
+  "bytes": 129,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "taskItem",
+    "taskList"
+   ],
+   "attrs": [
+    "taskItem.checked"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 24,
+  "label": "check task",
+  "kind": "update",
+  "file": "editing/024-check_task.update.bin",
+  "bytes": 29,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "taskItem.checked"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 25,
+  "label": "blockquote",
+  "kind": "update",
+  "file": "editing/025-blockquote.update.bin",
+  "bytes": 184,
+  "facts": {
+   "elements": [
+    "blockquote",
+    "heading"
+   ],
+   "attrs": [
+    "heading.level",
+    "heading.textAlign"
+   ],
+   "marks": [
+    "italic"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 26,
+  "label": "code block",
+  "kind": "update",
+  "file": "editing/026-code_block.update.bin",
+  "bytes": 102,
+  "facts": {
+   "elements": [
+    "codeBlock",
+    "paragraph"
+   ],
+   "attrs": [
+    "codeBlock.language"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 27,
+  "label": "table insert",
+  "kind": "update",
+  "file": "editing/027-table_insert.update.bin",
+  "bytes": 1118,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "table",
+    "tableCell",
+    "tableHeader",
+    "tableRow"
+   ],
+   "attrs": [
+    "table.chartRef",
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableHeader.chartRef",
+    "tableHeader.colspan",
+    "tableHeader.rowspan",
+    "tableRow.chartRef"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 28,
+  "label": "table type in cell#0",
+  "kind": "update",
+  "file": "editing/028-table_type_in_cell_0.update.bin",
+  "bytes": 31,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 29,
+  "label": "table type in cell#1",
+  "kind": "update",
+  "file": "editing/029-table_type_in_cell_1.update.bin",
+  "bytes": 20,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 30,
+  "label": "table type in cell#2",
+  "kind": "update",
+  "file": "editing/030-table_type_in_cell_2.update.bin",
+  "bytes": 20,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 31,
+  "label": "table type in cell#3",
+  "kind": "update",
+  "file": "editing/031-table_type_in_cell_3.update.bin",
+  "bytes": 27,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 32,
+  "label": "table add row",
+  "kind": "update",
+  "file": "editing/032-table_add_row.update.bin",
+  "bytes": 518,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "tableCell",
+    "tableRow"
+   ],
+   "attrs": [
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableRow.chartRef"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 33,
+  "label": "table add column",
+  "kind": "update",
+  "file": "editing/033-table_add_column.update.bin",
+  "bytes": 459,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "tableCell",
+    "tableHeader"
+   ],
+   "attrs": [
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableHeader.chartRef",
+    "tableHeader.colspan",
+    "tableHeader.rowspan"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 34,
+  "label": "cell background",
+  "kind": "update",
+  "file": "editing/034-cell_background.update.bin",
+  "bytes": 45,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "tableCell.backgroundColor"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 35,
+  "label": "paste rich html",
+  "kind": "update",
+  "file": "editing/035-paste_rich_html.update.bin",
+  "bytes": 425,
+  "facts": {
+   "elements": [
+    "bulletList",
+    "heading",
+    "listItem",
+    "paragraph"
+   ],
+   "attrs": [
+    "bulletList.tight",
+    "heading.level"
+   ],
+   "marks": [
+    "bold",
+    "italic",
+    "link"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 36,
+  "label": "delete range",
+  "kind": "update",
+  "file": "editing/036-delete_range.update.bin",
+  "bytes": 14,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 37,
+  "label": "delete all",
+  "kind": "update",
+  "file": "editing/037-delete_all.update.bin",
+  "bytes": 24,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "editing",
+  "seq": 38,
+  "label": "final",
+  "kind": "state",
+  "file": "editing/038-final.state.bin",
+  "bytes": 5081,
+  "facts": {
+   "elements": [
+    "paragraph"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "all-nodes",
+  "seq": 0,
+  "label": "all-allowed-nodes",
+  "kind": "state",
+  "file": "all-nodes/000-all-allowed-nodes.state.bin",
+  "bytes": 3897,
+  "facts": {
+   "elements": [
+    "attachment",
+    "blockquote",
+    "bulletList",
+    "callout",
+    "chart",
+    "codeBlock",
+    "concealedContent",
+    "contactCard",
+    "contactInline",
+    "diagram",
+    "disclosure",
+    "emoji",
+    "hardBreak",
+    "heading",
+    "horizontalRule",
+    "image",
+    "listItem",
+    "mathBlock",
+    "mathInline",
+    "openapi",
+    "orderedList",
+    "pageReference",
+    "paragraph",
+    "table",
+    "tableCell",
+    "tableHeader",
+    "tableOfContents",
+    "tableRow",
+    "taskItem",
+    "taskList",
+    "youtrackIssue"
+   ],
+   "attrs": [
+    "attachment.data",
+    "bulletList.tight",
+    "callout.variant",
+    "chart.data",
+    "codeBlock.language",
+    "concealedContent.reveal",
+    "contactCard.data",
+    "contactInline.data",
+    "diagram.data",
+    "disclosure.title",
+    "emoji.name",
+    "heading.level",
+    "image.alt",
+    "image.src",
+    "mathBlock.data",
+    "mathInline.data",
+    "openapi.data",
+    "orderedList.start",
+    "orderedList.tight",
+    "pageReference.id",
+    "pageReference.title",
+    "pageReference.url",
+    "table.chartRef",
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableHeader.chartRef",
+    "tableHeader.colspan",
+    "tableHeader.rowspan",
+    "tableOfContents.data",
+    "tableRow.chartRef",
+    "taskItem.checked",
+    "youtrackIssue.id",
+    "youtrackIssue.key",
+    "youtrackIssue.state",
+    "youtrackIssue.title",
+    "youtrackIssue.url"
+   ],
+   "marks": [
+    "bold",
+    "code",
+    "highlight",
+    "italic",
+    "link",
+    "strike",
+    "underline"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "all-nodes",
+  "seq": 1,
+  "label": "with-secrets",
+  "kind": "state",
+  "file": "all-nodes/001-with-secrets.state.bin",
+  "bytes": 4325,
+  "facts": {
+   "elements": [
+    "attachment",
+    "blockquote",
+    "bulletList",
+    "callout",
+    "chart",
+    "codeBlock",
+    "concealedContent",
+    "contactCard",
+    "contactInline",
+    "diagram",
+    "disclosure",
+    "emoji",
+    "hardBreak",
+    "heading",
+    "horizontalRule",
+    "image",
+    "listItem",
+    "mathBlock",
+    "mathInline",
+    "openapi",
+    "orderedList",
+    "pageReference",
+    "paragraph",
+    "secretInlineReference",
+    "secretReference",
+    "table",
+    "tableCell",
+    "tableHeader",
+    "tableOfContents",
+    "tableRow",
+    "taskItem",
+    "taskList",
+    "youtrackIssue"
+   ],
+   "attrs": [
+    "attachment.data",
+    "bulletList.tight",
+    "callout.variant",
+    "chart.data",
+    "codeBlock.language",
+    "concealedContent.reveal",
+    "contactCard.data",
+    "contactInline.data",
+    "diagram.data",
+    "disclosure.title",
+    "emoji.name",
+    "heading.level",
+    "image.alt",
+    "image.src",
+    "mathBlock.data",
+    "mathInline.data",
+    "openapi.data",
+    "orderedList.start",
+    "orderedList.tight",
+    "pageReference.id",
+    "pageReference.title",
+    "pageReference.url",
+    "secretInlineReference.autoHideSeconds",
+    "secretInlineReference.field",
+    "secretInlineReference.secretId",
+    "secretInlineReference.showCopy",
+    "secretInlineReference.showDetails",
+    "secretReference.autoHideSeconds",
+    "secretReference.field",
+    "secretReference.fields",
+    "secretReference.secretId",
+    "secretReference.showCopy",
+    "secretReference.showDetails",
+    "table.chartRef",
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableHeader.chartRef",
+    "tableHeader.colspan",
+    "tableHeader.rowspan",
+    "tableOfContents.data",
+    "tableRow.chartRef",
+    "taskItem.checked",
+    "youtrackIssue.id",
+    "youtrackIssue.key",
+    "youtrackIssue.state",
+    "youtrackIssue.title",
+    "youtrackIssue.url"
+   ],
+   "marks": [
+    "bold",
+    "code",
+    "highlight",
+    "italic",
+    "link",
+    "strike",
+    "underline"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretInlineReference"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 0,
+  "label": "baseline",
+  "kind": "state",
+  "file": "hostile/000-baseline.state.bin",
+  "bytes": 862,
+  "facts": {
+   "elements": [
+    "paragraph",
+    "table",
+    "tableCell",
+    "tableRow"
+   ],
+   "attrs": [
+    "table.chartRef",
+    "tableCell.chartRef",
+    "tableCell.colspan",
+    "tableCell.rowspan",
+    "tableRow.chartRef"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 1,
+  "label": "unknown top-level node",
+  "kind": "update",
+  "file": "hostile/001-unknown_top-level_node.update.bin",
+  "bytes": 32,
+  "facts": {
+   "elements": [
+    "evilNode"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "unknown-node:evilNode"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 2,
+  "label": "script node",
+  "kind": "update",
+  "file": "hostile/002-script_node.update.bin",
+  "bytes": 30,
+  "facts": {
+   "elements": [
+    "script"
+   ],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "unknown-node:script"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 3,
+  "label": "raw secretReference block",
+  "kind": "update",
+  "file": "hostile/003-raw_secretReference_block.update.bin",
+  "bytes": 231,
+  "facts": {
+   "elements": [
+    "secretReference"
+   ],
+   "attrs": [
+    "secretReference.autoHideSeconds",
+    "secretReference.field",
+    "secretReference.fields",
+    "secretReference.secretId",
+    "secretReference.showCopy",
+    "secretReference.showDetails"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretReference"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 4,
+  "label": "secretInlineReference deep in table cell",
+  "kind": "update",
+  "file": "hostile/004-secretInlineReference_deep_in_table_cell.update.bin",
+  "bytes": 61,
+  "facts": {
+   "elements": [
+    "secretInlineReference"
+   ],
+   "attrs": [
+    "secretInlineReference.secretId"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretInlineReference"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 5,
+  "label": "secret nested inside new blockquote subtree",
+  "kind": "update",
+  "file": "hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin",
+  "bytes": 80,
+  "facts": {
+   "elements": [
+    "blockquote",
+    "secretReference"
+   ],
+   "attrs": [
+    "secretReference.secretId"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "reserved:secretReference"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 6,
+  "label": "unknown attribute on existing paragraph",
+  "kind": "update",
+  "file": "hostile/006-unknown_attribute_on_existing_paragraph.update.bin",
+  "bytes": 35,
+  "facts": {
+   "elements": [],
+   "attrs": [
+    "paragraph.hiddenPayload"
+   ],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "unknown-attr:paragraph.hiddenPayload"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 7,
+  "label": "unknown mark on existing text",
+  "kind": "update",
+  "file": "hostile/007-unknown_mark_on_existing_text.update.bin",
+  "bytes": 55,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "evilMark"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "unknown-mark:evilMark"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 8,
+  "label": "mark named secretInlineReference",
+  "kind": "update",
+  "file": "hostile/008-mark_named_secretInlineReference.update.bin",
+  "bytes": 110,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [
+    "secretInlineReference"
+   ],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "unknown-mark:secretInlineReference"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 9,
+  "label": "text embed",
+  "kind": "update",
+  "file": "hostile/009-text_embed.update.bin",
+  "bytes": 31,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 1,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "embed"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 10,
+  "label": "other root map",
+  "kind": "update",
+  "file": "hostile/010-other_root_map.update.bin",
+  "bytes": 28,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [
+    "hidden"
+   ],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "other-root"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 11,
+  "label": "other root text",
+  "kind": "update",
+  "file": "hostile/011-other_root_text.update.bin",
+  "bytes": 25,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [
+    "shadow"
+   ],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "other-root"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 12,
+  "label": "secret inserted and deleted in the same update (smuggle)",
+  "kind": "update",
+  "file": "hostile/012-secret_inserted_and_deleted_in_the_same_update_smuggle_.update.bin",
+  "bytes": 239,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 13,
+  "label": "unknown node inserted and deleted in the same update (smuggle)",
+  "kind": "update",
+  "file": "hostile/013-unknown_node_inserted_and_deleted_in_the_same_update_smuggle_.update.bin",
+  "bytes": 40,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 14,
+  "label": "legit type (control)",
+  "kind": "update",
+  "file": "hostile/014-legit_type_control_.update.bin",
+  "bytes": 29,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 15,
+  "label": "legit delete-only (control)",
+  "kind": "update",
+  "file": "hostile/015-legit_delete-only_control_.update.bin",
+  "bytes": 10,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": false
+  },
+  "expect": "accept"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 16,
+  "label": "pending structs (missing parent)",
+  "kind": "update",
+  "file": "hostile/016-pending_structs.update.bin",
+  "bytes": 33,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": true,
+   "pendingDs": false
+  },
+  "expect": "reject",
+  "reason": "pending"
+ },
+ {
+  "scenario": "hostile",
+  "seq": 17,
+  "label": "pending delete set (deletes unseen items)",
+  "kind": "update",
+  "file": "hostile/017-pending_ds.update.bin",
+  "bytes": 10,
+  "facts": {
+   "elements": [],
+   "attrs": [],
+   "marks": [],
+   "embeds": 0,
+   "otherRoots": [],
+   "pendingStructs": false,
+   "pendingDs": true
+  },
+  "expect": "reject",
+  "reason": "pending"
+ }
+]

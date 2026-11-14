@@ -1,0 +1,3 @@
+50k: state=57335B topLevelNodes=168 updates=200 (avg 157B) elapsed=519ms
+256k: state=270407B topLevelNodes=554 updates=200 (avg 123B) elapsed=6873ms
+1m: state=1061851B topLevelNodes=2012 updates=200 (avg 140B) elapsed=205127ms

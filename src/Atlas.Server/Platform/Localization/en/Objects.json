@@ -1,0 +1,12 @@
+{
+  "Sloučený kontakt ještě uvádějí stránky nebo tabule a přesměrovává je na cílový kontakt. Smazat ho půjde, až je uloží s cílovým kontaktem.": "The merged contact is still referenced by pages or boards and redirects them to the target contact. It can be deleted once they are saved with the target contact.",
+  "Objekt nebo změna je příliš velká.": "The object or change is too large.",
+  "Objekt v koši nebyl nalezen.": "Object in the trash not found.",
+  "K úpravě objektu nemáte oprávnění.": "You do not have permission to edit the object.",
+  "Tento typ objektu není k dispozici.": "This object type is not available.",
+  "Rozsah objektu není platný.": "The object scope is not valid.",
+  "Tento typ objektu se mění vlastní cestou.": "This object type is changed by its own route.",
+  "Změna objektu není platná.": "The object change is not valid.",
+  "Objekt mezitím změnil někdo jiný; načtěte ho znovu.": "Someone else has changed the object in the meantime; load it again.",
+  "Změna s tímto identifikátorem už proběhla s jiným obsahem.": "A change with this identifier has already been made with different content."
+}

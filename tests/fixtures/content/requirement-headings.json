@@ -1,0 +1,329 @@
+{
+  "description": "The reading of requirement headings (schema atlas-requirements version 4): RequirementHeadings.cs, RequirementTree.Read, the index (ProjectorIndex) and the web's readers answer each case's content with its rows. A top-level heading whose attrs.state is a string is a requirement; its section runs to the next heading. Fixed places: the dependency line is the node directly under the heading when it is a paragraph with attrs.dependencies true; a dependencies paragraph anywhere else is a note. Its pageReference atoms whose id is a page id (D form) and whose url has a valid ?heading= are the dependencies, the headingId for this page (pageId; without one, a requirement heading id of the document), pageId#headingId for another, each once. The party is the heading's attrs.party trimmed of spaces and no-break spaces, its contact attrs.partyContactId when the party is not empty. The facts line is the next node (after the dependency line, or directly under the heading) when it is a paragraph whose whole text, trimmed of spaces and no-break spaces, is 'do d. M. yyyy' (a space or a no-break space between the parts, a day in the calendar); its deadline as yyyy-MM-dd; else there is none and an od/pro line is a note. The text of a line (marks do not matter): text, a hard break as a space, a contactInline as its contacts[0].name, a youtrackIssue as its key trimmed of spaces, a pageReference as its title. A title: text, a hard break as a space, a youtrackIssue as its key, trimmed of spaces. Rows of requirement blocks (the old shape) are as before; positions count both in document order. A case with 'legacy' is also the move of a version-3 page (§6): its legacy content moved gives exactly its content. The version-3 facts line is at the same place, a paragraph whose first ' · ' segment (trimmed) starts with 'od ' or 'pro ' or is 'do d. M. yyyy'; its party is the rest of the first od/pro segment, its contact the objectId of a contactInline only when the party segment is exactly that chip (its name is the party), its deadline the first valid do segment. A line that is already a deadline line stays. Otherwise the heading gets party (and partyContactId when there is a contact) when the party is not empty and at most 200 characters (a longer one leaves the heading without a party and the line kept), and the line is replaced by the deadline line 'do d. M. yyyy' (none without a deadline), followed by the line itself unless the line is clean: only text and at most one contactInline, each segment an od/pro party or a valid deadline, at most one of each. Nothing else in the document changes.",
+  "cases": [
+    {
+      "name": "a requirement heading with its dependency line, a contact and a deadline",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "portal"}, "content": [{"type": "text", "text": "Portál pacienta"}]},
+        {"type": "heading", "attrs": {"level": 3, "headingId": "portal.ssl", "state": "waiting_for_input", "direction": "inbound", "system": "NIA"}, "content": [{"type": "text", "text": "SSL certifikát"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "DNS záznam", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=portal.dns"}}, {"type": "text", "text": ", "}, {"type": "pageReference", "attrs": {"id": "0B5F3C1E-0000-4000-8000-0000000000B2", "title": "VPN", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=Infra_VPN"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Jan Novák", "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}]}}}, {"type": "text", "text": " · do 15. 11. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Certifikát pošle správce sítě."}]},
+        {"type": "heading", "attrs": {"level": 3, "headingId": "portal.dns", "state": "planned", "direction": "outbound"}, "content": [{"type": "text", "text": "DNS záznam"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "pro IT oddělení"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "portal"}, "content": [{"type": "text", "text": "Portál pacienta"}]},
+        {"type": "heading", "attrs": {"level": 3, "headingId": "portal.ssl", "state": "waiting_for_input", "direction": "inbound", "system": "NIA", "party": "Jan Novák", "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}, "content": [{"type": "text", "text": "SSL certifikát"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "DNS záznam", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=portal.dns"}}, {"type": "text", "text": ", "}, {"type": "pageReference", "attrs": {"id": "0B5F3C1E-0000-4000-8000-0000000000B2", "title": "VPN", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=Infra_VPN"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Certifikát pošle správce sítě."}]},
+        {"type": "heading", "attrs": {"level": 3, "headingId": "portal.dns", "state": "planned", "direction": "outbound", "party": "IT oddělení"}, "content": [{"type": "text", "text": "DNS záznam"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "portal.ssl", "key": "portal.ssl", "title": "SSL certifikát", "direction": "inbound", "state": "waiting_for_input", "date": "2026-11-15", "party": "Jan Novák", "where": "", "requires": "portal.dns,0b5f3c1e-0000-4000-8000-0000000000b2#Infra_VPN", "parent": null, "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"},
+        {"position": 2, "blockId": "portal.dns", "key": "portal.dns", "title": "DNS záznam", "direction": "outbound", "state": "planned", "date": "", "party": "IT oddělení", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the facts line is only at its place: a line that is no facts line there makes every later one a note",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "objednavky", "state": "in_progress"}, "content": [{"type": "text", "text": "Objednávky"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 31. 2. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 3. 2026 · od Eva Malá"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "poznamka", "state": "planned"}, "content": [{"type": "text", "text": "Poznámka"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka od Evy · do 1. 3. 2026"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "seznam", "state": "planned"}, "content": [{"type": "text", "text": "Seznam"}]},
+        {"type": "bulletList", "content": [{"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]}]}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "objednavky", "state": "in_progress"}, "content": [{"type": "text", "text": "Objednávky"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 31. 2. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 3. 2026 · od Eva Malá"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "poznamka", "state": "planned"}, "content": [{"type": "text", "text": "Poznámka"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka od Evy · do 1. 3. 2026"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "seznam", "state": "planned"}, "content": [{"type": "text", "text": "Seznam"}]},
+        {"type": "bulletList", "content": [{"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]}]}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "objednavky", "key": "objednavky", "title": "Objednávky", "direction": "internal", "state": "in_progress", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "poznamka", "key": "poznamka", "title": "Poznámka", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 3, "blockId": "seznam", "key": "seznam", "title": "Seznam", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the move reads the old facts grammar: segments in any order, the first party and the first deadline; a line with anything else stays as a note",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 3. 2026 · od Eva Malá · do 2. 3. 2026 · telefonicky · pro Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026 · od X"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "c", "state": "planned"}, "content": [{"type": "text", "text": "C"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026 cokoli · od X"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "d", "state": "planned"}, "content": [{"type": "text", "text": "D"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Eva · do 15. 11. 2026 cokoli"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned", "party": "Eva Malá"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 3. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 3. 2026 · od Eva Malá · do 2. 3. 2026 · telefonicky · pro Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned", "party": "X"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "c", "state": "planned"}, "content": [{"type": "text", "text": "C"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026 cokoli · od X"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "d", "state": "planned", "party": "Eva"}, "content": [{"type": "text", "text": "D"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Eva · do 15. 11. 2026 cokoli"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "2026-03-01", "party": "Eva Malá", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "internal", "state": "planned", "date": "2026-11-15", "party": "X", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 3, "blockId": "c", "key": "c", "title": "C", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 4, "blockId": "d", "key": "d", "title": "D", "direction": "internal", "state": "planned", "date": "", "party": "Eva", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the deadline line: marks do not matter, spaces and no-break spaces are trimmed",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned", "party": "Jan"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do", "marks": [{"type": "bold"}]}, {"type": "text", "text": " 2. 1. 2027", "marks": [{"type": "italic"}]}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned", "party": "Eva Malá"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "  do 15. 11. 2026  "}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "2027-01-02", "party": "Jan", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "internal", "state": "planned", "date": "2026-11-15", "party": "Eva Malá", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the move: marks and blanks of a moved line do not matter, the deadline is written as d. M. yyyy",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od", "marks": [{"type": "bold"}]}, {"type": "text", "text": " Jan · "}, {"type": "text", "text": "do 2. 1. 2027", "marks": [{"type": "italic"}]}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "  od  Eva Malá  ·  do 15. 11. 2026  "}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned", "party": "Jan"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 2. 1. 2027"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned", "party": "Eva Malá"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "2027-01-02", "party": "Jan", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "internal", "state": "planned", "date": "2026-11-15", "party": "Eva Malá", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the move reads contacts, YouTrack issues and page links as their display text; a line with a link or an issue stays as a note",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od "}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "Oddělení IT", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2"}}, {"type": "text", "text": " · do 1. 12. 2026"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned", "direction": "outbound"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "pro "}, {"type": "youtrackIssue", "attrs": {"key": " PX2-7 "}}, {"type": "text", "text": " a "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Jan Novák", "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}]}}}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned", "party": "Oddělení IT"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 12. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od "}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "Oddělení IT", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2"}}, {"type": "text", "text": " · do 1. 12. 2026"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned", "direction": "outbound", "party": "PX2-7 a Jan Novák"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "pro "}, {"type": "youtrackIssue", "attrs": {"key": " PX2-7 "}}, {"type": "text", "text": " a "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Jan Novák", "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}]}}}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "2026-12-01", "party": "Oddělení IT", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "outbound", "state": "planned", "date": "", "party": "PX2-7 a Jan Novák", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "a dependency paragraph not directly under the heading is a note",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "x", "state": "planned"}, "content": [{"type": "text", "text": "X"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Y", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=y"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "y", "state": "planned"}, "content": [{"type": "text", "text": "Y"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Jan · do 1. 12. 2026"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "X", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=x"}}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "x", "state": "planned"}, "content": [{"type": "text", "text": "X"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Y", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=y"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "y", "state": "planned", "party": "Jan"}, "content": [{"type": "text", "text": "Y"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 12. 2026"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "X", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=x"}}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "x", "key": "x", "title": "X", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "y", "key": "y", "title": "Y", "direction": "internal", "state": "planned", "date": "2026-12-01", "party": "Jan", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "a join: the lines of a removed heading's requirement are notes of the requirement above, not its lines",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "prvni", "state": "in_progress"}, "content": [{"type": "text", "text": "První"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Z", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=z"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Eva"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka prvního"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "Cíl druhého", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=cil"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "pro Petr · do 1. 1. 2027"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "treti", "state": "planned"}, "content": [{"type": "text", "text": "Třetí"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka třetího"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "Cíl čtvrtého", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=cil4"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr · do 2. 1. 2027"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "z", "state": "done"}, "content": [{"type": "text", "text": "Z"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "prvni", "state": "in_progress", "party": "Eva"}, "content": [{"type": "text", "text": "První"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Z", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=z"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka prvního"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "Cíl druhého", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=cil"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "pro Petr · do 1. 1. 2027"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "treti", "state": "planned"}, "content": [{"type": "text", "text": "Třetí"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "Poznámka třetího"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "Cíl čtvrtého", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=cil4"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr · do 2. 1. 2027"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "z", "state": "done"}, "content": [{"type": "text", "text": "Z"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "prvni", "key": "prvni", "title": "První", "direction": "internal", "state": "in_progress", "date": "", "party": "Eva", "where": "", "requires": "z", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "treti", "key": "treti", "title": "Třetí", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 3, "blockId": "z", "key": "z", "title": "Z", "direction": "internal", "state": "done", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "a plain heading, a heading with state null, and a section ended by any heading",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 1, "headingId": "mpi"}, "content": [{"type": "text", "text": "MPI"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "server", "state": null}, "content": [{"type": "text", "text": "Server"}]},
+        {"type": "heading", "attrs": {"level": 3, "headingId": "server.disk", "state": "done"}, "content": [{"type": "text", "text": " Disk "}, {"type": "hardBreak"}, {"type": "text", "text": "100 GB"}]},
+        {"type": "heading", "attrs": {"level": 4, "headingId": "poznamky"}, "content": [{"type": "text", "text": "Poznámky"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr · do 5. 11. 2026"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 1, "headingId": "mpi"}, "content": [{"type": "text", "text": "MPI"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "server", "state": null}, "content": [{"type": "text", "text": "Server"}]},
+        {"type": "heading", "attrs": {"level": 3, "headingId": "server.disk", "state": "done"}, "content": [{"type": "text", "text": " Disk "}, {"type": "hardBreak"}, {"type": "text", "text": "100 GB"}]},
+        {"type": "heading", "attrs": {"level": 4, "headingId": "poznamky"}, "content": [{"type": "text", "text": "Poznámky"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr · do 5. 11. 2026"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "server.disk", "key": "server.disk", "title": "Disk  100 GB", "direction": "internal", "state": "done", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "old blocks and requirement headings in one document are read in document order",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "content": [
+        {"type": "requirement", "attrs": {"id": "b1", "key": "portal.vpn", "direction": "inbound", "state": "done", "date": "2026-10-01", "party": "IT KBN", "where": "Keepass", "requires": ""}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "VPN"}]}, {"type": "requirement", "attrs": {"id": "b2", "key": "portal.vpn.ucet", "requires": "portal.vpn"}, "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Účet"}]}]}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "portal.web", "state": "blocked"}, "content": [{"type": "text", "text": "Web"}, {"type": "youtrackIssue", "attrs": {"key": " PX2-42 "}}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Bez nadpisu", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1"}}, {"type": "pageReference", "attrs": {"id": "not-a-page", "title": "Chybné", "url": "#/pages/not-a-page?heading=x"}}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Chybné ID", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=-x"}}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Účet", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=portal.vpn.ucet&x=1"}}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "Účet", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=portal.vpn.ucet"}}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "text", "text": "do 5. 11. 2026"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "b1", "key": "portal.vpn", "title": "VPN", "direction": "inbound", "state": "done", "date": "2026-10-01", "party": "IT KBN", "where": "Keepass", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b2", "key": "portal.vpn.ucet", "title": "Účet", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "portal.vpn", "parent": "b1", "partyContactId": ""},
+        {"position": 3, "blockId": "portal.web", "key": "portal.web", "title": "WebPX2-42", "direction": "internal", "state": "blocked", "date": "2026-11-05", "party": "", "where": "", "requires": "portal.vpn.ucet", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "without the page id a link is local when the document has that requirement heading",
+      "pageId": null,
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "B", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=b"}}, {"type": "text", "text": ", "}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "C", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=c"}}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "done"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "pro  Eva · do 5. 11. 2026"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "attrs": {"dependencies": true}, "content": [{"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000a1", "title": "B", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000a1?heading=b"}}, {"type": "text", "text": ", "}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "C", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2?heading=c"}}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "done", "party": "Eva"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 5. 11. 2026"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "b,0b5f3c1e-0000-4000-8000-0000000000b2#c", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "internal", "state": "done", "date": "2026-11-05", "party": "Eva", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the move: a contact without an objectId is a party without a contact, a heading without an id",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "state": "not_applicable", "direction": null}, "content": []},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Helpdesk"}]}}}, {"type": "text", "text": " · do 5. 11. 2026"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "state": "not_applicable", "direction": null, "party": "Helpdesk"}, "content": []},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 5. 11. 2026"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "", "key": "", "title": "", "direction": "internal", "state": "not_applicable", "date": "2026-11-05", "party": "Helpdesk", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "a title reads text, line breaks and YouTrack keys, never a contact or a page link; a year before 100 is the year as written",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "t", "state": "planned"}, "content": [{"type": "text", "text": "Napojení "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Jan Novák", "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}]}}}, {"type": "text", "text": " na "}, {"type": "pageReference", "attrs": {"id": "0b5f3c1e-0000-4000-8000-0000000000b2", "title": "VPN", "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2"}}, {"type": "text", "text": " "}, {"type": "youtrackIssue", "attrs": {"key": "PX2-9"}}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 2. 0099"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "t", "key": "t", "title": "Napojení  na  PX2-9", "direction": "internal", "state": "planned", "date": "0099-02-01", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the party is the heading's attributes only: an od/pro line is a note, a contact needs a party, a plain heading has none",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned", "party": "Eva Malá", "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od Petr · do 1. 1. 2027"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned", "party": "", "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 1. 2027 · od Petr"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "c", "party": "Plain"}, "content": [{"type": "text", "text": "C"}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "d", "state": "done", "direction": "outbound", "party": "  IT  "}, "content": [{"type": "text", "text": "D"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 2. 1. 2027"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "", "party": "Eva Malá", "where": "", "requires": "", "parent": null, "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "internal", "state": "planned", "date": "", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 3, "blockId": "d", "key": "d", "title": "D", "direction": "outbound", "state": "done", "date": "2027-01-02", "party": "IT", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    },
+    {
+      "name": "the move: a contact is the party's only when the party segment is that chip; a party over 200 characters stays in its kept line",
+      "pageId": "0b5f3c1e-0000-4000-8000-0000000000a1",
+      "legacy": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od DODAVATEL · do 15. 11. 2026 · kontakt "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Petr", "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6c"}]}}}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA · do 1. 2. 2027"}]}
+      ],
+      "content": [
+        {"type": "heading", "attrs": {"level": 2, "headingId": "a", "state": "planned", "party": "DODAVATEL"}, "content": [{"type": "text", "text": "A"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 15. 11. 2026"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od DODAVATEL · do 15. 11. 2026 · kontakt "}, {"type": "contactInline", "attrs": {"data": {"version": 1, "contacts": [{"name": "Petr", "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6c"}]}}}]},
+        {"type": "heading", "attrs": {"level": 2, "headingId": "b", "state": "planned"}, "content": [{"type": "text", "text": "B"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "do 1. 2. 2027"}]},
+        {"type": "paragraph", "content": [{"type": "text", "text": "od AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA · do 1. 2. 2027"}]}
+      ],
+      "rows": [
+        {"position": 1, "blockId": "a", "key": "a", "title": "A", "direction": "internal", "state": "planned", "date": "2026-11-15", "party": "DODAVATEL", "where": "", "requires": "", "parent": null, "partyContactId": ""},
+        {"position": 2, "blockId": "b", "key": "b", "title": "B", "direction": "internal", "state": "planned", "date": "2027-02-01", "party": "", "where": "", "requires": "", "parent": null, "partyContactId": ""}
+      ]
+    }
+  ]
+}

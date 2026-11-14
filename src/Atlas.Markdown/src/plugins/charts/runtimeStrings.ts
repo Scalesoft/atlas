@@ -1,0 +1,45 @@
+import { registerMarkdownStrings, type MarkdownStrings } from '../../core'
+import type { ChartsEntryKey } from './strings'
+import type { ChartsDialectKey } from './markdown'
+import './strings'
+
+/** Default (Czech) text of the `charts` section that only the lazy runtime renders. */
+export const chartsStrings: MarkdownStrings['charts'] = registerMarkdownStrings('charts', {
+  hintBar: 'Porovnání hodnot',
+  hintLine: 'Vývoj a trendy',
+  hintPie: 'Podíly na celku',
+  hintDoughnut: 'Podíly s volným středem',
+  typeLabel: 'Typ grafu',
+  kindGroupAriaLabel: 'Druh grafu',
+  visualAriaLabel: (kindLabel, title) => `${kindLabel} graf: ${title}. Hodnoty jsou v tabulce dat níže.`,
+  renderFailed: 'Graf se nepodařilo vykreslit. Data zůstávají dostupná v tabulce.',
+  sourceMissing: 'Zdrojová tabulka byla odstraněna. Zobrazují se poslední platná data.',
+  sourceInvalid: 'Vybrané buňky chybí, jsou sloučené nebo obsahují neplatné hodnoty. Zobrazují se poslední platná data.',
+  retryRender: 'Znovu načíst graf',
+  editTitle: 'Upravit graf',
+  titleFieldLabel: 'Název grafu',
+  linkedHelp: 'Hodnoty se aktualizují ze zdrojové tabulky.',
+  manualHelp: 'Popisky vlevo, datové řady v dalších sloupcích. Desetinnou čárku můžete použít.',
+  addRowButton: '+ Řádek',
+  addColumnButton: '+ Datová řada',
+  detachButton: 'Odpojit od tabulky',
+  useSelectionButton: 'Použít vybranou oblast tabulky',
+  addRowAriaLabel: 'Přidat řádek',
+  addColumnAriaLabel: 'Přidat řadu',
+  useSelectionReadyTitle: 'Použít aktuální výběr buněk',
+  useSelectionEmptyTitle: 'Nejprve označte oblast tabulky v editoru.',
+  linkedDataCaption: 'Propojená data (jen pro čtení)',
+  editSourceButton: 'Upravit data',
+  titleEditLabel: 'Upravit název grafu',
+  typeChipLabel: kindLabel => `Typ grafu: ${kindLabel}. Změnit`,
+  dataTableEditTitle: 'Upravit data grafu',
+  changedMeanwhile: 'Graf mezitím někdo změnil. Zkontrolujte data a potvrďte znovu, jinak se jeho změny přepíšou.',
+  editDataCaption: 'Upravit data grafu',
+  categoryNameAriaLabel: 'Název kategorií',
+  seriesNameAriaLabel: index => `Název řady ${index}`,
+  rowLabelAriaLabel: row => `Popisek ${row}`,
+  cellAriaLabel: (row, series) => `Řádek ${row}, řada ${series}`,
+  removeSeriesLabel: index => `Odebrat řadu ${index}`,
+  removeRowLabel: row => `Odebrat řádek ${row}`,
+  newSeriesName: index => `Řada ${index}`,
+} satisfies Omit<MarkdownStrings['charts'], ChartsEntryKey | ChartsDialectKey>)

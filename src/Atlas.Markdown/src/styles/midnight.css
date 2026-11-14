@@ -1,0 +1,52 @@
+/* Optional dark Midnight theme. Import it and add md-theme-midnight to the editor.
+   A calm grey scale (canvas < paper < hover) with a whisper of blue, as the host's dark mode. */
+.md-editor.md-theme-midnight {
+  --bg-1: oklch(22% 0.004 250);
+  --bg-2: oklch(26.5% 0.005 250);
+  --bg-3: oklch(34% 0.008 250);
+  --paper: oklch(26.5% 0.005 250);
+  --paper-line: oklch(36% 0.007 250);
+  --paper-shadow: 0 22px 64px rgba(0, 0, 0, 0.34), 0 2px 10px rgba(0, 0, 0, 0.28);
+  --text: oklch(94% 0.005 250);
+  --text-dim: oklch(80% 0.01 250);
+  --text-dimmer: oklch(70% 0.012 250);
+  --line: oklch(36% 0.007 250);
+  --line-2: oklch(55% 0.01 250);
+  --accent: #69c2d2;
+  --accent-ink: #d7f8ff;
+  --accent-line: #477f91;
+  --accent-soft: oklch(36% 0.045 215);
+  --green: #62c39c;
+  --amber: #e3aa5d;
+  --red: #f17f87;
+  --danger: #f17f87;
+  --error: #f17f87;
+  --text-muted: oklch(70% 0.012 250);
+  --border: oklch(36% 0.007 250);
+  --chip-accent-fg: #c9f5fd;
+  --chip-green-fg: #a8e8ce;
+  --chip-amber-fg: #f4d19e;
+  --chip-red-fg: #ffb9bd;
+  --font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 14px 36px rgba(0, 0, 0, 0.4);
+  --shadow-menu: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 20px 90px rgba(0, 0, 0, 0.55);
+  --backdrop: oklch(14% 0.004 250 / .6);
+  --z-sticky: 100;
+  --z-modal: 1000;
+  color-scheme: dark;
+  /* Table header/selected-cell tints. The default rules in tables.css `color-mix()` toward a
+     literal white/light background, which read as almost illegible pale grey on this theme —
+     these tokens replace that literal with a dark-safe tint instead. */
+  --tt-th-bg: oklch(31% 0.006 250);
+  --tt-cell-bg: oklch(26.5% 0.005 250);
+  --tt-selected-bg: color-mix(in oklab, var(--accent, #69c2d2) 22%, oklch(26.5% 0.005 250));
+}
+
+/* Read-only wiki pages are normally transparent; the explicit dark theme must
+   still provide a safe dark canvas when the host does not supply one. */
+.md-editor.md-renderer.md-theme-midnight {
+  background: var(--paper);
+}

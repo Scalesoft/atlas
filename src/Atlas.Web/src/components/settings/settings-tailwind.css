@@ -1,0 +1,13 @@
+/* Utilities of the settings UI and of the shadcn primitives only it uses (field, radio-group,
+   checkbox, switch), generated into the lazy settings chunk instead of the eager stylesheet.
+   styles/tailwind.css excludes the same folders from its own scan (`@source not`). Each of those primitives imports this file in its
+   index.ts, so a screen that uses one (a board's Switch) has its utilities without any other settings module; when an eagerly
+   loaded screen starts using one of these primitives, move its folder back there. */
+@reference "tailwindcss/theme.css";
+@reference "../../styles/theme.css";
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../ui/field";
+@source "../ui/radio-group";
+@source "../ui/checkbox";
+@source "../ui/switch";
+@source "./";

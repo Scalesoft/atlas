@@ -1,0 +1,10 @@
+{
+  "Neplatné stránkování odkazů.": "Invalid link pagination.",
+  "Sdílet lze pouze publikovanou stránku mimo koš.": "Only a published page outside the trash can be shared.",
+  "Externí sdílení je v tomto prostoru vypnuté.": "External sharing is turned off in this space.",
+  "Stránka může mít nejvýše 20 aktivních odkazů. Nejprve některý zrušte.": "A page can have at most 20 active links. Revoke one first.",
+  "Odkaz nelze sdílet na dobu delší, než je platnost vašeho oprávnění správce.": "A link cannot be shared for longer than your admin permission is valid.",
+  "Platnost odkazu musí být v budoucnosti, nejvýše za {maxValidityDays} dní.": "The link's expiry must be in the future, at most {maxValidityDays} days from now.",
+  "Sdílená stránka není dostupná.": "The shared page is not available.",
+  "Název odkazu": "Link name"
+}

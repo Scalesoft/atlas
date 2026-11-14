@@ -1,0 +1,102 @@
+import { translate } from ".";
+
+/** The answer card and what goes with it: citations, feedback, provenance, quota, summary, the selection bar of a read page, the reports' labels (components/ai, ai/reports.ts). The Czech source. */
+const cs = {
+  answer: {
+    title: "Odpověď z wiki",
+    ready: "Odpověď je připravena",
+    truncated: "Shrnutí nepokrývá všechny části stránky. Pro úplný kontext si přečtěte celý dokument.",
+    stepsUsed: "Použité kroky",
+    stepsToggle: (count: number) => `Použité kroky ▸ ${count}`,
+    stepNoResult: " (bez výsledku)",
+    sourcesToggle: (count: number) => `Zdroje ▸ ${count}`,
+    sourcesLabel: "Zdroje",
+    notice: "Odpověď vytvořila AI z uvedených zdrojů. Ověřte důležité údaje.",
+    noSources: "V dostupných stránkách odpověď není.",
+    tryOther: "Zkusit jiný dotaz",
+    failed: "Odpověď se nepodařilo připravit.",
+    withheld: "Tato odpověď už není dostupná.",
+  },
+  citation: {
+    source: (number: number, title: string) => `Zdroj ${number}: ${title}`,
+    changed: "Zdroj se od té doby změnil.",
+    askAgain: "Zeptat se znovu",
+    open: "Otevřít stránku",
+    usedNotCited: " · použito, necitováno",
+  },
+  feedback: {
+    group: "Zpětná vazba k odpovědi",
+    up: "Užitečné",
+    down: "Neužitečné",
+    sent: "Odesláno",
+    menu: "Co bylo špatně",
+    reason: "Důvod",
+    note: "Poznámka (nepovinné)",
+    send: "Odeslat",
+    reasons: {
+      inaccurate: "Nepřesné",
+      missing_info: "Chybí informace",
+      wrong_sources: "Špatné zdroje",
+      unsuitable: "Nevhodný návrh",
+      other: "Jiné",
+    } as Record<string, string>,
+  },
+  provenance: {
+    now: "právě teď",
+    cloud: "Cloudový model",
+    company: "Firemní model",
+    page: "Tato stránka",
+    space: (name?: string | null) => name ? `Prostor ${name}` : "Prostor",
+    wiki: "Celá dostupná wiki",
+    basis: "Podklady odpovědi",
+    scope: "Rozsah",
+    model: "Model",
+    publishedOnly: "Odpověď používá jen publikované stránky; filtry změny a řazení se nepoužily.",
+    used: (count: number) => `Použité podklady (${count})`,
+  },
+  summary: {
+    start: "Shrnout stránku",
+    title: "Shrnutí stránky",
+    continue: "Pokračovat v asistentovi",
+    close: "Zavřít shrnutí",
+  },
+  reports: {
+    noReason: "Bez důvodu",
+    tasks: {
+      "admin.eval": "Ladicí ověření", "page.tag-suggest": "Návrh štítků",
+      "search.answer": "Odpověď v hledání", "chat.answer": "Asistent", "page.summary": "Shrnutí stránky",
+      "editor.transform": "Úprava výběru", "editor.intent": "Návrhy při psaní", "editor.outline": "Osnova stránky",
+      "search.embed-query": "Významové hledání", "index.embed": "Indexování", "editor.link": "Odkazy při psaní",
+      "page.create-suggest": "Zakládání stránek", "publish.check": "Kontrola publikace", "publish.change-summary": "Popis změny",
+    } as Record<string, string>,
+    outcomes: { shown: "Zobrazeno", applied: "Přijato", dismissed: "Zahozeno", up: "Užitečné", down: "Neužitečné" } as Record<string, string>,
+    kinds: {
+      proofread: "Pravopis", shorten: "Zkrátit", simplify: "Zjednodušit", formal: "Formálnější", informal: "Méně formální",
+      "translate-en": "Přeložit do angličtiny", "translate-cs": "Přeložit do češtiny", bullets: "Odrážky", steps: "Kroky", table: "Tabulka", custom: "Vlastní pokyn",
+      outline: "Osnova", "contact.inline": "Kontakt v textu", "contact.card": "Karta kontaktu", "secret.reference": "Odkaz na heslo",
+      "callout.wrap": "Informační box", "diagram.fromText": "Diagram", "link.mention": "Odkaz", duplicate: "Duplicita", location: "Umístění",
+      template: "Šablona", "change-summary": "Popis změny", tags: "Štítky",
+    } as Record<string, string>,
+  },
+  effort: {
+    quick: "Rychle",
+    balanced: "Vyváženě",
+    thorough: "Důkladně",
+    deep: "Do hloubky",
+    max: "Naplno",
+    upTo: (count: number) => `až ${count} úryvků`,
+    faster: "Rychleji",
+    deeper: "Důkladněji",
+    label: "Náročnost odpovědi",
+    value: (label: string, count: number) => `${label}, až ${count} úryvků`,
+    named: (label: string) => `Náročnost odpovědi: ${label}`,
+    namedFull: (label: string, count: number) => `Náročnost odpovědi: ${label}, až ${count} úryvků`,
+  },
+  status: {
+    note: "Odpovídá jen ze zdrojů, které smíte číst",
+    noResult: "bez výsledku",
+  },
+};
+
+export type AiAnswerMessages = typeof cs;
+export default translate(cs, { en: () => import("./ai-answer.en") });

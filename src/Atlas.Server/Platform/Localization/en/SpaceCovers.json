@@ -1,0 +1,10 @@
+{
+  "Prostor nemá úvodní obrázek.": "The space has no cover image.",
+  "Zvolte, zda se má obrázek sladit do barev prostoru.": "Choose whether the image should be matched to the space colors.",
+  "Název smí mít nejvýše 200 znaků, popis 2000 a ikona 40.": "The name can have at most 200 characters, the description 2000 and the icon 40.",
+  "Vyberte automatický obrázek, obrázek z katalogu, nebo prostor bez obrázku.": "Choose an automatic image, an image from the catalog, or a space without an image.",
+  "Tento obrázek v katalogu není. Vyberte jiný.": "This image is not in the catalog. Choose another one.",
+  "Klíč obrázku patří jen k volbě z katalogu.": "The image key belongs only to a choice from the catalog.",
+  "Obrázek prostoru musí být PNG, JPEG nebo WebP. Obsah souboru žádnému z nich neodpovídá.": "A space image must be PNG, JPEG or WebP. The file content matches none of them.",
+  "Obrázek prostoru smí mít nejvýše 5 MB.": "A space image can be at most 5 MB."
+}

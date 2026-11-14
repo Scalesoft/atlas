@@ -1,0 +1,6 @@
+/* The reader's level of the page's contact cards (contactOverview.ts `contactLevels`), always set on a page's editor or read view root (also at the default, full = today's card, which needs no rule). */
+[data-overview-contacts="cards"] .md-contact-list .md-contact-details { display: none; }
+[data-overview-contacts="names"] .md-contact-list { display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+[data-overview-contacts="names"] .md-contact-list .md-contact-card { padding: 0; gap: .375rem; border: 0; background: transparent; box-shadow: none; }
+[data-overview-contacts="names"] .md-contact-list .md-contact-avatar { flex-basis: 1.5rem; width: 1.5rem; height: 1.5rem; font-size: .625rem; }
+[data-overview-contacts="names"] .md-contact-list :is(.md-contact-subtitle, .md-contact-details, .md-contact-role, .md-contact-download) { display: none; }

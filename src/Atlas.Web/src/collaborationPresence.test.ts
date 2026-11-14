@@ -1,0 +1,354 @@
+import { Extension, Editor } from "@tiptap/core";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
+import Text from "@tiptap/extension-text";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { Plugin } from "@tiptap/pm/state";
+import { yCursorPluginKey } from "@tiptap/y-tiptap";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { MarkdownEditorState } from "@atlas/markdown/core";
+import { createCollaborationPresence } from "./collaborationPresence";
+
+type Peer = MarkdownEditorState["peers"][number];
+
+const peer = (clientId: number, name = "Ada"): Peer => ({
+  clientId,
+  id: `user-${clientId}`,
+  name,
+  color: clientId === 1 ? "#d946ef" : "#0284c7",
+});
+
+function editorWithCursors(initial: Record<number, number>) {
+  const cursorState = Extension.create({
+    name: "test-cursors",
+    addProseMirrorPlugins() {
+      return [new Plugin({
+        key: yCursorPluginKey,
+        state: {
+          init: (_, state) => decorations(state.doc, initial),
+          apply: (transaction, current) => {
+            const next = transaction.getMeta(yCursorPluginKey) as Record<number, number> | undefined;
+            return next ? decorations(transaction.doc, next) : current.map(transaction.mapping, transaction.doc);
+          },
+        },
+        props: { decorations: state => yCursorPluginKey.getState(state) },
+      })];
+    },
+  });
+  const host = document.createElement("div");
+  document.body.append(host);
+  const editor = new Editor({
+    element: host,
+    extensions: [Document, Paragraph, Text, cursorState],
+    content: "abcdef",
+  });
+  vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({
+    left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80,
+  }));
+  return { editor, host, move: (positions: Record<number, number>) => editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, positions)) };
+}
+
+function decorations(doc: Parameters<typeof DecorationSet.create>[0], positions: Record<number, number>) {
+  return DecorationSet.create(doc, Object.entries(positions).map(([id, pos]) =>
+    Decoration.widget(pos, () => document.createElement("span"), { key: id }),
+  ));
+}
+
+// Cursors are drawn in animation frames; the tests run each frame by hand.
+let frames = new Map<number, FrameRequestCallback>();
+let frameIds = 0;
+const frame = () => {
+  const due = [...frames.values()];
+  frames = new Map();
+  due.forEach(callback => callback(performance.now()));
+};
+beforeEach(() => {
+  vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(callback => { frames.set(++frameIds, callback); return frameIds; });
+  vi.spyOn(globalThis, "cancelAnimationFrame").mockImplementation(id => { frames.delete(id); });
+});
+
+const attached: Array<() => void> = [];
+afterEach(() => {
+  frames.clear();
+  Reflect.deleteProperty(Element.prototype, "animate");
+  attached.splice(0).reverse().forEach(cleanup => cleanup());
+  document.body.replaceChildren();
+  vi.restoreAllMocks();
+});
+
+function attach(initial: Record<number, number>, peers: readonly Peer[]) {
+  const source = editorWithCursors(initial);
+  const changes: unknown[] = [];
+  const presence = createCollaborationPresence({ onChange: value => changes.push(value) });
+  const abort = new AbortController();
+  const removeAbortListener = vi.spyOn(abort.signal, "removeEventListener");
+  const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({
+    editor: source.editor,
+    controller: {} as never,
+    signal: abort.signal,
+  }) as () => void;
+  attached.push(() => { cleanup(); source.editor.destroy(); source.host.remove(); });
+  presence.update(peers);
+  frame();
+  return { ...source, presence, changes, cleanup, removeAbortListener };
+}
+
+describe("collaboration cursor presentation", () => {
+  it("publishes peers before a view exists and resolves keyed cursor decorations after attachment", () => {
+    const changes: Array<readonly { clientId: number; cursorAvailable: boolean }[]> = [];
+    const presence = createCollaborationPresence({ onChange: value => changes.push(value) });
+    presence.update([peer(1)]);
+    expect(changes.at(-1)).toEqual([expect.objectContaining({ clientId: 1, cursorAvailable: false })]);
+
+    const source = editorWithCursors({ 1: 3 });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor: source.editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); source.editor.destroy(); source.host.remove(); });
+
+    expect(changes.at(-1)).toEqual([expect.objectContaining({ clientId: 1, cursorAvailable: true })]);
+    frame();
+    expect(source.host.parentElement!.querySelector('[data-client-id="1"]')).not.toBeNull();
+  });
+
+  it("publishes nothing when the editor republishes the same peers (perf guard)", () => {
+    const changes: unknown[] = [];
+    const presence = createCollaborationPresence({ onChange: value => changes.push(value) });
+    const peers = [peer(1)];
+    presence.update(peers);
+    presence.update(peers);
+    presence.update([]);
+    presence.update([]);
+    expect(changes).toHaveLength(2);
+  });
+
+  it("keeps equal names distinct by client id and removes peers that leave", () => {
+    const { host, presence } = attach({ 1: 2, 2: 4 }, [peer(1, "Sam"), peer(2, "Sam")]);
+    expect(host.parentElement!.querySelectorAll(".collaboration-presence__cursor")).toHaveLength(2);
+    presence.update([peer(2, "Sam")]);
+    frame();
+    expect(host.parentElement!.querySelector('[data-client-id="1"]')).toBeNull();
+    expect(host.parentElement!.querySelector('[data-client-id="2"]')!.textContent).toBe("Sam");
+  });
+
+  it("moves overlays without mutating the editor selection and navigation halos the known cursor", () => {
+    const halo = Object.assign(new EventTarget(), { cancel: vi.fn(), finished: Promise.resolve() }) as unknown as Animation;
+    const animate = vi.fn((_frames: Keyframe[], _options?: KeyframeAnimationOptions) => halo);
+    Object.defineProperty(Element.prototype, "animate", { configurable: true, writable: true, value: animate });
+    const { editor, move, presence, host } = attach({ 1: 2 }, [peer(1)]);
+    const selection = editor.state.selection;
+    move({ 1: 5 });
+    expect(editor.state.selection.eq(selection)).toBe(true);
+    expect(presence.navigateToPeer(1)).toBe(true);
+    expect(editor.state.selection.eq(selection)).toBe(true);
+    const cursor = host.parentElement!.querySelector('[data-client-id="1"]')!;
+    expect(cursor.classList).toContain("is-highlighted");
+    // The halo is one animation of the cursor, and the highlight ends with it, not with a timer.
+    expect(animate).toHaveBeenCalledTimes(1);
+    expect(animate.mock.calls[0]![0]).toEqual([
+      expect.objectContaining({ boxShadow: expect.stringContaining("0 0 0 0") }),
+      expect.objectContaining({ boxShadow: "0 0 0 14px transparent" }),
+    ]);
+    halo.dispatchEvent(new Event("finish"));
+    expect(cursor.classList).not.toContain("is-highlighted");
+    expect(presence.navigateToPeer(99)).toBe(false);
+  });
+
+  it("scrolls the exact caret within a long block and measures its real box", () => {
+    let reducedListener: ((event: MediaQueryListEvent) => void) | undefined;
+    vi.mocked(window.matchMedia).mockReturnValue({
+      matches: false,
+      addEventListener: (_: string, next: EventListenerOrEventListenerObject) => {
+        reducedListener = next as (event: MediaQueryListEvent) => void;
+      },
+      removeEventListener: vi.fn(),
+    } as unknown as MediaQueryList);
+    const { editor, host, presence } = attach({ 1: 4 }, [peer(1)]);
+    const scroller = document.createElement("div");
+    scroller.style.overflowY = "auto";
+    document.body.append(scroller);
+    scroller.append(host);
+    Object.defineProperties(scroller, {
+      clientHeight: { value: 400 },
+      scrollHeight: { value: 1600 },
+    });
+    vi.spyOn(scroller, "getBoundingClientRect").mockReturnValue({
+      left: 0, right: 700, top: 100, bottom: 500, width: 700, height: 400,
+      x: 0, y: 100, toJSON: () => ({}),
+    });
+    const scrollBy = vi.fn();
+    scroller.scrollBy = scrollBy;
+    vi.mocked(editor.view.coordsAtPos).mockReturnValue({ left: 200, right: 202, top: 900, bottom: 944 });
+    Object.defineProperties(host, {
+      clientLeft: { value: 2 }, clientTop: { value: 3 },
+      scrollLeft: { value: 5 }, scrollTop: { value: 7 },
+    });
+    vi.spyOn(host, "getBoundingClientRect").mockReturnValue({
+      left: 20, right: 720, top: 30, bottom: 1030, width: 700, height: 1000,
+      x: 20, y: 30, toJSON: () => ({}),
+    });
+    editor.view.dispatch(editor.state.tr.setMeta("remeasure", true));
+    const selection = editor.state.selection;
+    const focus = document.activeElement;
+
+    expect(presence.navigateToPeer(1)).toBe(true);
+    expect(scrollBy).toHaveBeenCalledWith({ top: 468, behavior: "smooth" });
+    expect(editor.state.selection.eq(selection)).toBe(true);
+    expect(document.activeElement).toBe(focus);
+    const cursor = host.querySelector<HTMLElement>('[data-client-id="1"]')!;
+    expect(cursor.style.transform).toBe("translate3d(183px, 874px, 0px)");
+    expect(cursor.style.height).toBe("44px");
+
+    scrollBy.mockClear();
+    reducedListener!({ matches: true } as MediaQueryListEvent);
+    presence.navigateToPeer(1);
+    expect(scrollBy).toHaveBeenCalledWith({ top: 468, behavior: "auto" });
+  });
+
+  it("scrolls the viewport when the caret is outside the visible root", () => {
+    const { editor, presence } = attach({ 1: 4 }, [peer(1)]);
+    vi.mocked(editor.view.coordsAtPos).mockReturnValue({ left: 200, right: 202, top: 1200, bottom: 1220 });
+    Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });
+    const scrollBy = vi.spyOn(window, "scrollBy").mockImplementation(() => {});
+
+    expect(presence.navigateToPeer(1)).toBe(true);
+    expect(scrollBy).toHaveBeenCalledWith({ top: 444, behavior: "smooth" });
+  });
+
+  it("keeps an upward caret below its workspace's sticky header", () => {
+    const { editor, host, presence } = attach({ 1: 4 }, [peer(1)]);
+    const unrelated = document.createElement("header");
+    unrelated.className = "workspace-bar";
+    vi.spyOn(unrelated, "getBoundingClientRect").mockReturnValue({
+      left: 0, right: 100, top: 0, bottom: 300, width: 100, height: 300, x: 0, y: 0, toJSON: () => ({}),
+    });
+    const workspace = document.createElement("main");
+    workspace.className = "workspace";
+    const header = document.createElement("header");
+    header.className = "workspace-bar";
+    vi.spyOn(header, "getBoundingClientRect").mockReturnValue({
+      left: 0, right: 800, top: 0, bottom: 56, width: 800, height: 56, x: 0, y: 0, toJSON: () => ({}),
+    });
+    document.body.append(unrelated, workspace);
+    workspace.append(header, host);
+    vi.mocked(editor.view.coordsAtPos).mockReturnValue({ left: 200, right: 202, top: -100, bottom: -80 });
+    const scrollBy = vi.spyOn(window, "scrollBy").mockImplementation(() => {});
+
+    presence.navigateToPeer(1);
+
+    expect(scrollBy).toHaveBeenCalledWith({ top: -180, behavior: "smooth" });
+  });
+
+  it("suppresses transitions for layout movement and responds to reduced-motion changes", () => {
+    let reduced = false;
+    let listener: ((event: MediaQueryListEvent) => void) | undefined;
+    vi.mocked(window.matchMedia).mockReturnValue({
+      matches: reduced,
+      addEventListener: (_: string, next: EventListenerOrEventListenerObject) => {
+        listener = next as (event: MediaQueryListEvent) => void;
+      },
+      removeEventListener: vi.fn(),
+    } as unknown as MediaQueryList);
+    const { host } = attach({ 1: 2 }, [peer(1)]);
+    const overlay = host.parentElement!.querySelector(".collaboration-presence")!;
+    window.dispatchEvent(new Event("scroll"));
+    frame();
+    expect(overlay.classList).toContain("is-layout-moving");
+    frame();
+    frame();
+    expect(overlay.classList).not.toContain("is-layout-moving");
+    reduced = true;
+    listener!({ matches: reduced } as MediaQueryListEvent);
+    expect(overlay.classList).toContain("is-reduced-motion");
+  });
+
+  it("measures, observes and republishes nothing while no peer is present", () => {
+    const computedStyle = vi.spyOn(window, "getComputedStyle");
+    const addListener = vi.spyOn(window, "addEventListener");
+    const { editor, host, changes } = attach({}, []);
+    const geometry = vi.spyOn(host, "getBoundingClientRect");
+    const published = changes.length;
+
+    editor.view.dispatch(editor.state.tr.insertText("x", 1));
+    editor.view.dispatch(editor.state.tr.setMeta("remeasure", true));
+
+    expect(computedStyle).not.toHaveBeenCalled();
+    expect(geometry).not.toHaveBeenCalled();
+    expect(addListener).not.toHaveBeenCalledWith("scroll", expect.any(Function), true);
+    expect(changes).toHaveLength(published);
+    expect(host.querySelector(".collaboration-presence")!.childElementCount).toBe(0);
+  });
+
+  it("draws at most once per frame for a burst of transactions and awareness changes (perf guard)", () => {
+    const { editor, host, move, presence } = attach({ 1: 2, 2: 4 }, [peer(1), peer(2)]);
+    const geometry = vi.spyOn(host, "getBoundingClientRect");
+    const coords = vi.mocked(editor.view.coordsAtPos);
+    coords.mockClear();
+
+    for (let i = 0; i < 20; i++) editor.view.dispatch(editor.state.tr.insertText("x", 1));
+    move({ 1: 3, 2: 5 });
+    presence.update([peer(1), peer(2, "Bob")]);
+    window.dispatchEvent(new Event("scroll"));
+
+    // Nothing is measured while the burst runs, and one frame is waiting.
+    expect(geometry).not.toHaveBeenCalled();
+    expect(coords).not.toHaveBeenCalled();
+    expect(frames.size).toBe(1);
+    frame();
+    expect(geometry).toHaveBeenCalledTimes(1);
+    expect(coords).toHaveBeenCalledTimes(2);
+    expect(host.querySelector('[data-client-id="2"]')!.textContent).toBe("Bob");
+  });
+
+  it("draws a cursor where the latest document puts it, mapped through edits before it", () => {
+    const { editor, host, move } = attach({ 1: 2 }, [peer(1)]);
+    const coords = vi.mocked(editor.view.coordsAtPos);
+    move({ 1: 5 });
+    editor.view.dispatch(editor.state.tr.insertText("abc", 1));
+    coords.mockClear();
+    frame();
+    expect(coords.mock.calls.map(([position]) => position)).toEqual([8]);
+    expect(host.querySelector<HTMLElement>('[data-client-id="1"]')!.style.transform).toBe(`translate3d(${100 + 8 * 8}px, 60px, 0px)`);
+  });
+
+  it("publishes a cursor's availability at once, without waiting for its frame", () => {
+    const { changes, move } = attach({}, [peer(1)]);
+    expect(changes.at(-1)).toEqual([expect.objectContaining({ clientId: 1, cursorAvailable: false })]);
+    move({ 1: 3 });
+    expect(changes.at(-1)).toEqual([expect.objectContaining({ clientId: 1, cursorAvailable: true })]);
+  });
+
+  it("cancels a waiting frame on detach", () => {
+    const { editor, cleanup } = attach({ 1: 2 }, [peer(1)]);
+    editor.view.dispatch(editor.state.tr.insertText("x", 1));
+    expect(frames.size).toBe(1);
+    cleanup();
+    expect(frames.size).toBe(0);
+    attached.splice(0);
+    editor.destroy();
+  });
+
+  it("measures nothing in a frame that was already running when it detached", () => {
+    const { editor, host, cleanup } = attach({ 1: 2 }, [peer(1)]);
+    editor.view.dispatch(editor.state.tr.insertText("x", 1));
+    const running = [...frames.values()];
+    const coords = vi.mocked(editor.view.coordsAtPos);
+    coords.mockClear();
+    cleanup();
+    running.forEach(callback => callback(performance.now()));
+    expect(coords).not.toHaveBeenCalled();
+    expect(host.classList).not.toContain("collaboration-presence-active");
+    attached.splice(0);
+    editor.destroy();
+  });
+
+  it("restores native carets and removes the overlay on detach", () => {
+    const { host, cleanup, removeAbortListener } = attach({ 1: 2 }, [peer(1)]);
+    const container = host;
+    expect(container.classList).toContain("collaboration-presence-active");
+    cleanup();
+    expect(container.classList).not.toContain("collaboration-presence-active");
+    expect(container.querySelector(".collaboration-presence")).toBeNull();
+    expect(removeAbortListener).toHaveBeenCalledWith("abort", expect.any(Function));
+    attached.splice(0);
+  });
+});

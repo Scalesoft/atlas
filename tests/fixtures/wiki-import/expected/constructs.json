@@ -1,0 +1,1454 @@
+[
+  {
+    "path": "Editor-Constructs.md",
+    "title": "Editor constructs",
+    "tags": [
+      "golden",
+      "Projection"
+    ],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Constructs whose Markdown projection depends on the editor's serializer: escaping, marks, lists and blocks."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-f8f5523caf7e66445203f3a7"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Escaping and marks"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Plain "
+              },
+              {
+                "type": "text",
+                "text": "stars",
+                "marks": [
+                  {
+                    "type": "italic"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "under_scores",
+                "marks": [
+                  {
+                    "type": "italic"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", snake_case_name, [brackets], "
+              },
+              {
+                "type": "text",
+                "text": "code with ",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " backtick`` and a \\ backslash. Angle  & ampersand, #hash, 1. not a list, + plus and - minus."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Bold with ",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "italic inside",
+                "marks": [
+                  {
+                    "type": "bold"
+                  },
+                  {
+                    "type": "italic"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and more",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " then "
+              },
+              {
+                "type": "text",
+                "text": "both",
+                "marks": [
+                  {
+                    "type": "bold"
+                  },
+                  {
+                    "type": "italic"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "strike ",
+                "marks": [
+                  {
+                    "type": "strike"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "bold",
+                "marks": [
+                  {
+                    "type": "bold"
+                  },
+                  {
+                    "type": "strike"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " plus "
+              },
+              {
+                "type": "text",
+                "text": "highlight",
+                "marks": [
+                  {
+                    "type": "highlight"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "underline",
+                "marks": [
+                  {
+                    "type": "underline"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "**\"Quoted bold\"**word and a **bold ** with trailing space."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Links: "
+              },
+              {
+                "type": "text",
+                "text": "titled",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com/a_(b)",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer",
+                      "title": "A \"title\""
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", bare "
+              },
+              {
+                "type": "text",
+                "text": "https://example.com/path_x",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com/path_x",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", "
+              },
+              {
+                "type": "text",
+                "text": "https://example.org",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.org",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", mailto:someone@example.com, image-like !"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "link after bang",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Code link "
+              },
+              {
+                "type": "text",
+                "text": "code",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com/code",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  },
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "bold link",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com/bold",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  },
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Line with hard break"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "continued"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "and again."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "mathInline",
+                "attrs": {
+                  "data": {
+                    "version": 1,
+                    "expression": "E = mc^2"
+                  }
+                }
+              },
+              {
+                "type": "text",
+                "text": " opens this paragraph and "
+              },
+              {
+                "type": "text",
+                "text": "**literal**",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " stays."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-2a7a14a712b5195c88cb428b"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Lists"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "attrs": {
+              "tight": true
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Item one"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Item with "
+                      },
+                      {
+                        "type": "text",
+                        "text": "bold",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "hardBreak"
+                      },
+                      {
+                        "type": "text",
+                        "text": "and a hard break"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "bulletList",
+                    "attrs": {
+                      "tight": true
+                    },
+                    "content": [
+                      {
+                        "type": "listItem",
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Nested "
+                              },
+                              {
+                                "type": "text",
+                                "text": "italic",
+                                "marks": [
+                                  {
+                                    "type": "italic"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "orderedList",
+                            "attrs": {
+                              "tight": true,
+                              "start": 1
+                            },
+                            "content": [
+                              {
+                                "type": "listItem",
+                                "content": [
+                                  {
+                                    "type": "paragraph",
+                                    "content": [
+                                      {
+                                        "type": "text",
+                                        "text": "Deep ordered"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "attrs": {
+              "tight": true
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Second bullet list"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Right after the first"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "tight": false,
+              "start": 0
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Zero start"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Next"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Seven"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Eight"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Nine"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Ten"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "tight": true,
+              "start": 1
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Paren list"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Second"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "attrs": {
+              "tight": false
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Loose item"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Another loose item"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "With a second paragraph."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "taskList",
+            "content": [
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Task with continuation"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": true
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Done task"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "taskList",
+                    "content": [
+                      {
+                        "type": "taskItem",
+                        "attrs": {
+                          "checked": false
+                        },
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Nested task"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-4198a8244210929872d76653"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Blocks"
+              }
+            ]
+          },
+          {
+            "type": "blockquote",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Quote first paragraph."
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Bold",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " starts the second paragraph."
+                  }
+                ]
+              },
+              {
+                "type": "blockquote",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Nested quote."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "callout",
+            "attrs": {
+              "variant": "tip"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Tip text with "
+                  },
+                  {
+                    "type": "text",
+                    "text": "code",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Second tip paragraph."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "callout",
+            "attrs": {
+              "variant": "important"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Heading-like title",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Important text."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "callout",
+            "attrs": {
+              "variant": "caution"
+            },
+            "content": [
+              {
+                "type": "bulletList",
+                "attrs": {
+                  "tight": true
+                },
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "List inside a callout"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "headingId": "import-cc499f7df8dd543dd931979a"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Disclosure *title* with [brackets]"
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "attrs": {
+              "tight": true
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Inside disclosure"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Paragraph inside."
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "content": [
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "textAlign": "left",
+                      "align": "left"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Left"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "textAlign": "center",
+                      "align": "center"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Pipe | cell"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "textAlign": "right",
+                      "align": "right"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "code",
+                            "marks": [
+                              {
+                                "type": "code"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "left",
+                      "align": "left"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "b",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "center",
+                      "align": "center"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "a | b"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "right",
+                      "align": "right"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "x"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "left",
+                      "align": "left"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "l",
+                            "marks": [
+                              {
+                                "type": "link",
+                                "attrs": {
+                                  "href": "https://example.com",
+                                  "target": "_blank",
+                                  "rel": "noopener noreferrer"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "center",
+                      "align": "center"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "right",
+                      "align": "right"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "last"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Term one",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "First definition"
+              }
+            ]
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "language": "js"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "const a = `template ${b}`;"
+              }
+            ]
+          },
+          {
+            "type": "codeBlock",
+            "content": [
+              {
+                "type": "text",
+                "text": "indented code"
+              }
+            ]
+          },
+          {
+            "type": "horizontalRule"
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-bb51066a40b7f05dde86c707"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Heading with trailing hashes"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "headingId": "import-36a39c0acc790bea5cda63e2"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Heading "
+              },
+              {
+                "type": "text",
+                "text": "with",
+                "marks": [
+                  {
+                    "type": "italic"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "text",
+                "text": "code",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableOfContents",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "title": "Obsah dokumentu",
+                "minLevel": 1,
+                "maxLevel": 3
+              }
+            }
+          },
+          {
+            "type": "diagram",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "source": "graph TD\n  A[Start] --> B{Choice}\n  B -->|yes| C[Done_1]",
+                "caption": ""
+              }
+            }
+          },
+          {
+            "type": "mathBlock",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "expression": "f(x) = \\left[ x^2 \\right]_{0}^{1} * 2"
+              }
+            }
+          },
+          {
+            "type": "image",
+            "attrs": {
+              "src": "/api/attachments/9340fde8-d75c-9a49-57ad-c679bd4e159b/content",
+              "alt": "Alt text [x]",
+              "title": "Pic title"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Text right after the image."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Last paragraph with a footnote"
+              },
+              {
+                "type": "text",
+                "text": "[1]",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/ae991c1b-8ea7-c28f-6d00-f43479f6cd7d?heading=import-49ef476c3a893e73d3db0817",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-49ef476c3a893e73d3db0817"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Poznámky pod čarou"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "tight": true,
+              "start": 1
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Footnote with "
+                      },
+                      {
+                        "type": "text",
+                        "text": "bold",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": ". "
+                      },
+                      {
+                        "type": "text",
+                        "text": "↩",
+                        "marks": [
+                          {
+                            "type": "link",
+                            "attrs": {
+                              "href": "/#/pages/ae991c1b-8ea7-c28f-6d00-f43479f6cd7d?heading=import-36a39c0acc790bea5cda63e2",
+                              "target": "_blank",
+                              "rel": "noopener noreferrer"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "diagrams",
+          "version": 2
+        },
+        {
+          "id": "heading-anchors",
+          "version": 2
+        },
+        {
+          "id": "math",
+          "version": 1
+        },
+        {
+          "id": "toc",
+          "version": 1
+        }
+      ]
+    },
+    "markdown": "Constructs whose Markdown projection depends on the editor's serializer: escaping, marks, lists and blocks.\n\n## Escaping and marks\n\nPlain *stars*, *under_scores*, snake_case_name, \\[brackets\\], `code with ` backtick\\`\\` and a \\\\ backslash. Angle  & ampersand, #hash, 1. not a list, + plus and - minus.\n\n**Bold with *italic inside* and more** then ***both*** and ~~strike~~ **~~bold~~** plus ==highlight== and underline.\n\n\\*\\*\"Quoted bold\"\\*\\*word and a \\*\\*bold \\*\\* with trailing space.\n\nLinks: [titled](https://example.com/a_\\(b\\) \"A \\\"title\\\"\"), bare <https://example.com/path_x>, <https://example.org>, mailto:someone@example.com, image-like !\n\n[link after bang](https://example.com). Code link [`code`](https://example.com/code) and [**bold link**](https://example.com/bold).\n\nLine with hard break\\\ncontinued\\\nand again.\n\n$E = mc^2$ opens this paragraph and `**literal**` stays.\n\n## Lists\n\n- Item one\n- Item with **bold**\\\n  and a hard break\n  - Nested *italic*\n    1. Deep ordered\n\n\n- Second bullet list\n- Right after the first\n\n1. Zero start\n\n2. Next\n\n3. Seven\n\n4. Eight\n\n5. Nine\n\n6. Ten\n\n\n1) Paren list\n2) Second\n\n- Loose item\n\n- Another loose item\n\n  With a second paragraph.\n\n- [ ] Task with continuation\n\n- [x] Done task\n\n  - [ ] Nested task\n\n## Blocks\n\n> Quote first paragraph.\n>\n> **Bold** starts the second paragraph.\n>\n> > Nested quote.\n\n> [!TIP]\n> Tip text with `code`.\n>\n> Second tip paragraph.\n\n> [!IMPORTANT]\n> **Heading-like title**\n>\n> Important text.\n\n> [!CAUTION]\n>\n> - List inside a callout\n\n### Disclosure \\*title\\* with \\[brackets\\]\n\n- Inside disclosure\n\nParagraph inside.\n\n| Left | Pipe \\| cell | `code` |\n| :--- | :---: | ---: |\n| **b** | a \\| b | x |\n| [l](https://example.com) |  | last |\n\n**Term one**\n\nFirst definition\n\n```js\nconst a = `template ${b}`;\n```\n\n```\nindented code\n```\n\n---\n\n## Heading with trailing hashes\n\n### Heading *with* `code`\n\nObsah dokumentu (automaticky podle nadpisů 1–3)\n\n```mermaid\ngraph TD\n  A[Start] --> B{Choice}\n  B -->|yes| C[Done_1]\n```\n\n$$\nf(x) = \\left[ x^2 \\right]_{0}^{1} * 2\n$$\n\n![Alt text \\[x\\]](/api/attachments/9340fde8-d75c-9a49-57ad-c679bd4e159b/content \"Pic title\")\n\nText right after the image.\n\nLast paragraph with a footnote[\\[1\\]](/#/pages/ae991c1b-8ea7-c28f-6d00-f43479f6cd7d?heading=import-49ef476c3a893e73d3db0817).\n\n## Poznámky pod čarou\n\n1. Footnote with **bold**. [↩](/#/pages/ae991c1b-8ea7-c28f-6d00-f43479f6cd7d?heading=import-36a39c0acc790bea5cda63e2)",
+    "findings": [
+      {
+        "construct": "html:brackets",
+        "impact": "degraded",
+        "count": 1,
+        "line": 11,
+        "excerpt": "<brackets>"
+      },
+      {
+        "construct": "definition-list",
+        "impact": "degraded",
+        "count": 1,
+        "line": 93,
+        "excerpt": "Term one"
+      },
+      {
+        "construct": "footnote",
+        "impact": "degraded",
+        "count": 1,
+        "line": 125,
+        "excerpt": "[^note]: Footnote with **bold**."
+      }
+    ]
+  }
+]

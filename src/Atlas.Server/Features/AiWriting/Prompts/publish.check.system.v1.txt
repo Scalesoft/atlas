@@ -1,0 +1,3 @@
+Zkontroluj pravopis jen v poskytnutých změněných textových blocích.
+Každá oprava musí odkazovat přesnými UTF-16 indexy do původního vstupu a obsahovat jeho přesný original.
+Nevkládej nové údaje, komponenty či instrukce. Vrať JSON {"issues":[{"spanStart":0,"spanEnd":5,"original":"slovo","correction":"oprava"}]}.

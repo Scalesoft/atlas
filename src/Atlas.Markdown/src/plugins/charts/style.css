@@ -1,0 +1,56 @@
+.md-chart-visual { position: relative; height: 300px; min-width: 0; }
+.md-chart-data { width: 100%; border-collapse: collapse; font-size: .9em; }
+.md-chart-data th, .md-chart-data td { padding: .5rem; border: 1px solid color-mix(in srgb, currentColor 18%, transparent); text-align: start; }
+.md-chart-data caption { text-align: start; padding-block: .6rem; font-weight: 600; }
+.md-chart-dialog { width: min(900px, 94vw); }
+.md-chart-grid-scroll { overflow-x: auto; }
+.md-chart-data input { min-width: 100px; width: 100%; box-sizing: border-box; }
+.md-chart-data button { font-size: .75em; margin-block-start: .3rem; }
+.md-chart-head { position: relative; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.md-chart-title { font-size: 15px; font-weight: 650; letter-spacing: -.015em; margin: 0; flex: 1 1 auto; min-width: 0; }
+.md-chart-title[tabindex] { cursor: text; border-radius: 4px; transition: background-color var(--md-motion-fast); }
+.md-chart-title[tabindex]:hover, .md-chart-title[tabindex]:focus-visible { background: var(--accent-soft, #e3f4f7); }
+.md-chart-title-input { width: 100%; box-sizing: border-box; font: inherit; }
+/* Laid over the end of the header: the type chip adds no height or width to it (3.6-0, same geometry for a reader and an editor). */
+.md-chart-kind-chip { position: absolute; inset-inline-end: 0; inset-block-start: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; font-size: 11px; border-radius: 999px; border: 1px solid var(--line, #d4e4e7); background: var(--bg, #fff); cursor: pointer; transition: background-color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease); }
+.md-chart-kind-chip:hover { border-color: var(--accent, #58a9b9); background: var(--accent-soft, #e3f4f7); }
+.md-chart-kind-chip svg { width: 14px; height: 14px; }
+[data-editable] .md-chart-data { cursor: pointer; }
+.md-chart-status { color: var(--text-dim, #49676e); font-size: 11px; margin: .4rem 0; }
+.md-chart-status:empty { display: none; }
+.md-chart-inspector { width: min(560px, calc(100vw - 24px)) !important; }
+.md-chart-inspector form { display: grid; gap: 12px; }
+.md-chart-inspector label { display: grid; gap: 6px; font-size: 12px; font-weight: 550; }
+.md-chart-help { color: var(--text-dim, #49676e); font-size: 11px; line-height: 1.5; margin: 0; }
+.md-chart-inspector .md-chart-grid-scroll { border: 1px solid var(--line, #d4e4e7); border-radius: 8px; max-height: 240px; }
+.md-chart-inspector .md-chart-data { font-size: 12px; }
+.md-chart-inspector .md-chart-data caption { padding: 8px 10px; font-size: 11px; background: var(--bg-3, #e2eef0); font-weight: 500; }
+.md-chart-inspector .md-chart-data td, .md-chart-inspector .md-chart-data th { padding: 0; position: relative; }
+.md-chart-inspector .md-chart-data input { border: 0; border-radius: 0; min-width: 80px; min-height: 34px; padding: 7px 10px; background: transparent; }
+.md-chart-inspector .md-chart-data th input { font-weight: 600; padding-right: 26px; }
+.md-chart-inspector .md-chart-data .md-chart-remove { padding: 0; width: 22px; height: 24px; border: 0; background: transparent; font-size: 16px; opacity: .45; margin: 0; }
+.md-chart-inspector .md-chart-data th .md-chart-remove { position: absolute; right: 2px; top: 5px; }
+.md-chart-inspector .md-chart-data .md-chart-remove:hover { opacity: 1; color: var(--red, #b54b67); }
+.md-chart-inspector .md-module-actions { flex-wrap: wrap; }
+.md-chart-type-popover { width: min(348px, calc(100vw - 24px)); }
+.md-chart-types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.md-chart-types .md-chart-type-card {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  min-width: 0; padding: 12px; border-radius: 9px; text-align: start;
+  border: 1px solid var(--line, #d4e4e7); background: var(--bg, #fff);
+  transition: background-color var(--md-motion-fast), border-color var(--md-motion-fast), box-shadow var(--md-motion-fast);
+}
+.md-chart-types .md-chart-type-card:hover { border-color: var(--accent-line, #b8d8de); }
+.md-chart-type-preview { display: flex; align-items: center; height: 38px; margin-bottom: 5px; color: var(--accent-ink, #246979); }
+.md-chart-type-preview svg { width: 34px; height: 34px; }
+.md-chart-type-label { font-size: 12px; font-weight: 600; line-height: 1.4; color: var(--text, #102f36); }
+.md-chart-type-hint { font-size: 10px; line-height: 1.45; color: var(--text-dim, #49676e); }
+.md-chart-type-check { position: absolute; top: 9px; right: 9px; width: 17px; height: 17px; border-radius: 50%; background: var(--accent-ink, #246979); color: var(--bg-2, #fff); visibility: hidden; }
+.md-chart-types .md-chart-type-card[aria-checked=true] { background: var(--accent-soft, #e3f4f7); border-color: var(--accent, #58a9b9); box-shadow: inset 0 0 0 1px var(--accent, #58a9b9); }
+.md-chart-type-card[aria-checked=true] .md-chart-type-check { visibility: visible; }
+.md-chart-type-error { margin: 12px 0 0; line-height: 1.5; }
+@media (prefers-reduced-motion: reduce) { .md-chart-types .md-chart-type-card, .md-chart-title[tabindex], .md-chart-kind-chip { transition: none; } }
+
+/* The read actions sit at the end of the data disclosure line. */
+.md-chart-foot { position: relative; min-height: 26px; }
+.md-chart-foot > .md-read-actions { top: -3px; }

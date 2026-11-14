@@ -1,0 +1,463 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "tableOfContents",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "title": "Obsah dokumentu",
+            "minLevel": 1,
+            "maxLevel": 3
+          }
+        }
+      },
+      {
+        "type": "callout",
+        "attrs": {
+          "variant": "warning"
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Severity 1 incidents page the on-call engineer."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Contact the "
+          },
+          {
+            "type": "text",
+            "text": "on-call team",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/3391a98a-3d2b-4e4d-afc7-264823f16ca9",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " or read the "
+          },
+          {
+            "type": "text",
+            "text": "escalation matrix",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/33becade-1cac-4a60-b718-da2a84a8e1ff?heading=import-f60d51b3f39b5ec540e4b914",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ". Old Confluence link: "
+          },
+          {
+            "type": "text",
+            "text": "SLA",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://confluence.example.com/display/OPS/SLA",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ". Same-wiki absolute: "
+          },
+          {
+            "type": "text",
+            "text": "Home",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://wiki.example.com/en/home",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ". Reference link: "
+          },
+          {
+            "type": "text",
+            "text": "policy",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://example.com/policy",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer",
+                  "title": "Policy"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 1,
+          "headingId": "import-fc264f308cdc40f98056bf8b"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Severity levels"
+          }
+        ]
+      },
+      {
+        "type": "orderedList",
+        "attrs": {
+          "tight": true,
+          "start": 3
+        },
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Starts at three"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Continues"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Term"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "text": ": Definition list item"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "H"
+          },
+          {
+            "type": "text",
+            "text": "~"
+          },
+          {
+            "type": "text",
+            "text": "2"
+          },
+          {
+            "type": "text",
+            "text": "~"
+          },
+          {
+            "type": "text",
+            "text": "O and E=mc"
+          },
+          {
+            "type": "text",
+            "text": "^"
+          },
+          {
+            "type": "text",
+            "text": "2"
+          },
+          {
+            "type": "text",
+            "text": "^"
+          },
+          {
+            "type": "text",
+            "text": " and "
+          },
+          {
+            "type": "text",
+            "text": "Ctrl",
+            "marks": [
+              {
+                "type": "code"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "+"
+          },
+          {
+            "type": "text",
+            "text": "C",
+            "marks": [
+              {
+                "type": "code"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ", a "
+          },
+          {
+            "type": "text",
+            "text": "red warning"
+          },
+          {
+            "type": "text",
+            "text": ", "
+          },
+          {
+            "type": "text",
+            "text": "marked",
+            "marks": [
+              {
+                "type": "highlight"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "content": [
+          {
+            "type": "tableRow",
+            "content": [
+              {
+                "type": "tableHeader",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Merged header"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableHeader",
+                "content": [
+                  {
+                    "type": "paragraph"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableRow",
+            "content": [
+              {
+                "type": "tableCell",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "a"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "b"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "image",
+        "attrs": {
+          "src": "/api/attachments/a6260ed1-6b7c-7dc4-88b5-7fb926f3fbd0/content",
+          "alt": "Escalation",
+          "title": null
+        }
+      },
+      {
+        "type": "image",
+        "attrs": {
+          "src": "/api/attachments/d4bc06f6-7b39-9e35-ca2d-fed722410ef6/content",
+          "alt": "Timeline",
+          "title": "Incident timeline"
+        }
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Download the checklist",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/api/attachments/82a74743-e7ef-010e-1519-00b0c9f9ac04/download",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "codeBlock",
+        "content": [
+          {
+            "type": "text",
+            "text": "indented code block\nsecond line"
+          }
+        ]
+      },
+      {
+        "type": "codeBlock",
+        "attrs": {
+          "language": "plantuml"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "@startuml\nAlice -> Bob: page\n@enduml"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Escaped "
+          },
+          {
+            "type": "text",
+            "text": "*not italic"
+          },
+          {
+            "type": "text",
+            "text": "* and a backslash hard break"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "next line."
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 3,
+          "headingId": "import-391e061d4e8523d3405b2fcd"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Level five heading"
+          }
+        ]
+      },
+      {
+        "type": "horizontalRule"
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "heading-anchors",
+      "version": 1
+    },
+    {
+      "id": "toc",
+      "version": 1
+    }
+  ]
+}

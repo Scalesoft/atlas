@@ -1,0 +1,52 @@
+{
+  "status": 200,
+  "body": {
+    "type": "user",
+    "id": "10000000-0000-4000-8000-000000000020",
+    "transitiveProjectRoles": [
+      {
+        "type": "projectRole",
+        "role": {
+          "id": "10000000-0000-4000-8000-000000000021",
+          "permissions": [
+            {
+              "key": "jetbrains.jetpass.user-read-basic"
+            },
+            {
+              "key": "jetbrains.jetpass.profile-updateSelf"
+            }
+          ]
+        },
+        "project": {
+          "id": "0",
+          "name": "Global",
+          "global": true
+        }
+      },
+      {
+        "type": "projectRole",
+        "role": {
+          "id": "10000000-0000-4000-8000-000000000022",
+          "permissions": [
+            {
+              "key": "jetbrains.jetpass.role-read"
+            },
+            {
+              "key": "jetbrains.jetpass.user-read-basic"
+            },
+            {
+              "key": "jetbrains.jetpass.group-read"
+            }
+          ]
+        },
+        "project": {
+          "id": "0",
+          "name": "Global",
+          "global": true
+        }
+      }
+    ],
+    "banned": false,
+    "guest": false
+  }
+}

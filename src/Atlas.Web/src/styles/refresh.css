@@ -1,0 +1,438 @@
+/* Atlas 2.5 UI refresh „Ohnisko“.
+   Loaded last (main.ts), so a rule here wins over the same selector in shell.css. It restyles the
+   existing markup and keeps every class the tests and the editor rely on. Colours come from the
+   palette tokens (palettes.css), movement only from the motion.css tokens. Sections follow the plan. */
+
+/* ---------- 1. Tokens ---------- */
+/* The sidebar's width is written on the sidebar itself (App.vue) and is not inherited: the navigation tree
+   below it is most of the document, and as an inherited variable every step of a resize restyled all of it
+   (a drag of 40 steps: 1023 → 73 ms of style). The quota popover, the one descendant sized by it, asks for it (§2). */
+@property --atlas-sidebar-width { syntax: "<length>"; inherits: false; initial-value: 272px; }
+.atlas {
+  --atlas-sidebar-width: 272px;
+  --atlas-topbar-height: 52px;
+  --atlas-page-max: 1600px;
+  --atlas-page-gutter: clamp(16px, 3cqi, 48px);
+  --refresh-row-h: 32px;
+  --refresh-soft-line: color-mix(in srgb, var(--line) 55%, transparent);
+  --refresh-card-shadow: 0 1px 2px rgb(20 47 59 / 0.04), 0 8px 24px rgb(20 47 59 / 0.05);
+  --refresh-card-shadow-hover: 0 2px 4px rgb(20 47 59 / 0.05), 0 12px 32px rgb(20 47 59 / 0.10);
+  --refresh-glass: color-mix(in srgb, var(--surface) 62%, transparent);
+  line-height: 1.45;
+}
+[data-mode="dark"] .atlas, .atlas[data-mode="dark"] {
+  --refresh-card-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+  --refresh-card-shadow-hover: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.28);
+  --refresh-glass: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+/* ---------- 2. Sidebar ---------- */
+.atlas .sidebar:not(.md-editor):not(.md-editor *) {
+  gap: 10px;
+  padding: 12px 10px 10px;
+  background: var(--sidebar-fill, var(--sidebar));
+  border-right: 1px solid var(--line);
+}
+[data-mode="dark"] .atlas .sidebar:not(.md-editor):not(.md-editor *) { background: var(--sidebar-fill, var(--sidebar)); }
+.atlas .sidebar-top:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+}
+/* The wiki navigation takes the rail back from the settings and the profile the way they took it from the wiki: its
+   parts fade in together on the base token, as the settings rail does (§8). They stood there at full strength in the
+   frame the settings left, while only the trees inside faded. The account row, which the profile takes away, returns
+   with them. Nothing moves: each part is in its place from the first frame. */
+.atlas .sidebar > :is(.sidebar-top:not(.settings-sidebar-top), .sidebar-search-row, .assistant-launch, .sidebar-primary, .sidebar-spaces, .sidebar-quota, .account):not(.md-editor):not(.md-editor *) {
+  animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out);
+}
+.atlas .sidebar .brand:not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  gap: 9px;
+  margin: 0;
+  padding: 4px 6px;
+  border-radius: var(--radius-md);
+}
+/* The brand is the way home: it answers like the rows under it (the base rule's `background: none` outranked the old hover). */
+@media (hover: hover) and (pointer: fine) {
+  .atlas .sidebar .brand:hover:not(.md-editor):not(.md-editor *) { background: var(--refresh-glass); }
+}
+.atlas .sidebar .brand .brand-mark:not(.md-editor):not(.md-editor *) { width: 26px; height: 26px; }
+.atlas .sidebar .brand-name:not(.md-editor):not(.md-editor *) {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  -webkit-line-clamp: 1;
+}
+/* The controls at the rail's right edge stand in one column, centred on the 36 px tile of „+“ under the brand row:
+   the 32 px buttons (fold the rail, new space) keep 2 px from the edge, the 36 px ones (new page, Správa wiki) touch
+   it. Their icons used to stand at 245, 243, 241 and 241 px. */
+.atlas .sidebar .sidebar-collapse:not(.md-editor):not(.md-editor *) { flex: none; margin-right: 2px; }
+.atlas .sidebar-search-row:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  gap: 6px;
+}
+.atlas .sidebar .search-launch:not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 10px;
+  gap: 8px;
+  border: 1px solid var(--input-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  box-shadow: none;
+  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.atlas .sidebar .search-launch > svg:not(.md-editor):not(.md-editor *) { color: var(--muted); }
+.atlas .sidebar .search-launch kbd:not(.md-editor):not(.md-editor *) {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar .search-launch:hover:not(.md-editor):not(.md-editor *) { border-color: var(--accent); background: var(--surface); } }
+.atlas .sidebar-new-page:not(.md-editor):not(.md-editor *) {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  flex: none;
+}
+.atlas .sidebar-primary:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* The primary links only. The button of Správa wiki used to share this rule through :is(), which gave both selectors
+   the weight of the longer one: it outweighed the button's own size and colour below (36 × 32 instead of 36 × 36, the
+   text colour instead of the muted one) and the 40 px rows of the drawer (refresh-theme.css §5; the links stayed 32). */
+.atlas .sidebar .sidebar-primary .nav-link:not(.md-editor):not(.md-editor *) {
+  min-height: var(--refresh-row-h);
+  padding: 0 8px;
+  gap: 10px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.atlas .sidebar .sidebar-primary .nav-link > svg:not(.md-editor):not(.md-editor *) { width: 16px; height: 16px; color: var(--muted); }
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar .sidebar-primary .nav-link:hover:not(.md-editor):not(.md-editor *) { background: var(--refresh-glass); color: var(--text); } }
+.atlas .sidebar .sidebar-primary .nav-link:is(.active, [aria-current="page"]):not(.md-editor):not(.md-editor *) {
+  background: var(--navigation-selected-bg);
+  color: var(--text);
+  font-weight: 650;
+}
+.atlas .sidebar .sidebar-primary .nav-link:is(.active, [aria-current="page"]) > svg:not(.md-editor):not(.md-editor *) { color: var(--accent); }
+
+/* Pinned spaces: a quiet heading; an expanded space becomes a soft card that holds its tree.
+   Every space keeps the card's room around its row all the time: the gutter beside it and, above it, the 4 px between
+   the row and the card's edge and 2 px to whatever comes before. So the row a reader presses does not move when the
+   card appears around it or goes, neither sideways nor down from under the pointer (it used to sink 6 px while its
+   tree unfolded and rise again with the fold). The card's frame is the item's ::before, which only fades; only its
+   room under the tree comes and goes, with the tree's height. SidebarSpace.vue animates both with the tree, between
+   exactly the two states written here, so nothing jumps in the frame the tree is inserted or removed. */
+.atlas .sidebar-spaces:not(.md-editor):not(.md-editor *) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.atlas .sidebar-spaces-heading:not(.md-editor):not(.md-editor *) {
+  min-height: 28px;
+  margin: 0;
+  padding: 0 2px 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.atlas .sidebar-space-list:not(.md-editor):not(.md-editor *) { gap: 0; padding-bottom: 2px; }
+.atlas .sidebar-space:not(.md-editor):not(.md-editor *) { position: relative; isolation: isolate; padding: 6px 4px 0; }
+.atlas .sidebar-space:not(.md-editor):not(.md-editor *)::before {
+  content: "";
+  position: absolute;
+  inset: 2px 0 0;
+  z-index: -1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--refresh-glass);
+  opacity: 0;
+  pointer-events: none;
+}
+/* „Otevřený prostor“ starts where „Připnuté prostory“ does (8 px into the list), folded or not; with the item's own
+   room above it, it keeps its 10 px inside the card. */
+.atlas .sidebar-space-caption:not(.md-editor):not(.md-editor *) { margin-left: 4px; }
+.atlas .sidebar-space:not(:first-child) > .sidebar-space-caption:not(.md-editor):not(.md-editor *) { margin-top: 6px; }
+/* Under the tree: 4 px to the card's edge and 2 px more to the next space, 4 px between two cards. */
+.atlas .sidebar-space:has(> .sidebar-space-tree):not(.md-editor):not(.md-editor *) { padding-bottom: 4px; margin-bottom: 2px; }
+.atlas .sidebar-space:has(> .sidebar-space-tree):not(.md-editor):not(.md-editor *)::before { opacity: 1; }
+/* The row is concentric with the card: the card's radius less the 4 px between them. It answers the pointer in the
+   colour that shows on what lies under it: glass on the rail, the hover tint on the card's glass. The selection and
+   a drop target keep their own colour under the pointer. */
+.atlas .sidebar-space-row:not(.md-editor):not(.md-editor *) { --sidebar-space-row-hover: var(--refresh-glass); min-height: 32px; border-radius: var(--radius-md); }
+.atlas .sidebar-space[data-expanded] > .sidebar-space-row:not(.md-editor):not(.md-editor *) { --sidebar-space-row-hover: var(--hover); }
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar-space-row:hover:not(.active, .drop-inside):not(.md-editor):not(.md-editor *) { background: var(--sidebar-space-row-hover); } }
+.atlas .sidebar-space-link:not(.md-editor):not(.md-editor *) { gap: 9px; min-height: 32px; padding-block: 4px; font-size: 13.5px; font-weight: 600; }
+.atlas .sidebar-space-row .sidebar-space-link > .space-icon:not(.md-editor):not(.md-editor *) { width: 24px; height: 24px; border-radius: 7px; }
+.atlas .sidebar-space-tree:not(.md-editor):not(.md-editor *) { margin: 2px 0; }
+.atlas .sidebar .tree-row:not(.md-editor):not(.md-editor *) { --tree-row-h: 30px; min-height: 30px; border-radius: 8px; }
+/* A page's icon stands under the space's icon and its title under the space's name: the slot is as wide as that icon
+   (24 px, and 9 px to the text where the row's own gap gives 8). */
+.atlas .sidebar .tree-icon-slot:not(.md-editor):not(.md-editor *) { flex-basis: 24px; width: 24px; margin-right: 1px; }
+/* 20 px of line and 5 + 5 of padding make the row exactly its 30 px: the inherited 1.55 made it 30.92, and a row
+   that is taller than its declared height shifts the tree as rows scroll into view (--tree-row-h above). */
+.atlas .sidebar .tree-page:not(.md-editor):not(.md-editor *) { min-height: 30px; padding-block: 5px; font-size: 13.5px; line-height: 20px; }
+.atlas .sidebar .page-tree:not(.md-editor):not(.md-editor *) { --tree-guide: var(--refresh-soft-line); }
+/* A touch screen (F6): a row and a space's link 40 px tall (5 px more padding each side), the arrow's and the space menu's areas 40 px
+   wide (their columns are 28 and 32); what they look like stays. */
+@media (pointer: coarse) {
+  .atlas .tree-row:not(.md-editor):not(.md-editor *) { --tree-row-h: 40px; min-height: 40px; }
+  .atlas .tree-page:not(.md-editor):not(.md-editor *) { min-height: 40px; }
+  .atlas .sidebar .tree-page:not(.md-editor):not(.md-editor *) { padding-block: 10px; }
+  .atlas .sidebar-space-row:not(.md-editor):not(.md-editor *), .atlas .sidebar-space-link:not(.md-editor):not(.md-editor *) { min-height: 40px; }
+  .atlas .tree-toggle:not(.md-editor):not(.md-editor *)::after { inset: 0 -6px; }
+  /* A page row clips its start (content-visibility contains its paint) and its link stands over the column: the area grows into the link. */
+  .atlas .tree-row > .tree-toggle-col > .tree-toggle:not(.md-editor):not(.md-editor *)::after { inset: 0 -12px 0 0; z-index: 1; }
+  .atlas .sidebar-space-actions > button:not(.md-editor):not(.md-editor *)::after { inset: 0 -4px; }
+}
+
+/* The quota line and the account row close the rail. */
+.atlas .sidebar .sidebar-quota:not(.md-editor):not(.md-editor *) { margin: 0 4px; }
+/* Its popover is as wide as the sidebar allows. The width is not inherited (§1), so the quota takes it from the
+   sidebar by name and hands it on under a name that does inherit, through the <details> to the popover. */
+.atlas .sidebar .sidebar-quota:not(.md-editor):not(.md-editor *) { --atlas-sidebar-width: inherit; --sidebar-quota-room: var(--atlas-sidebar-width); }
+.atlas .sidebar .sidebar-quota .quota-detail:not(.md-editor):not(.md-editor *) { --atlas-sidebar-width: var(--sidebar-quota-room); }
+.atlas .sidebar .account:not(.md-editor):not(.md-editor *) {
+  gap: 6px;
+  min-height: 48px;
+  padding: 8px 0 0 2px;
+  border-top: 1px solid var(--line);
+}
+.atlas .sidebar .profile-launch:not(.md-editor):not(.md-editor *) {
+  gap: 9px;
+  padding: 4px 6px;
+  border-radius: var(--radius-md);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.atlas .sidebar .profile-launch small:not(.md-editor):not(.md-editor *) { font-size: 12px; font-weight: 400; }
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar .profile-launch:hover:not(.md-editor):not(.md-editor *) { background: var(--refresh-glass); } }
+.atlas .sidebar .avatar:not(.md-editor):not(.md-editor *) { width: 30px; height: 30px; font-size: 11px; }
+.atlas .sidebar .account .settings-nav:not(.md-editor):not(.md-editor *) {
+  position: relative;
+  width: 36px;
+  min-height: 36px;
+  justify-content: center;
+  padding: 0;
+  flex: none;
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--refresh-glass);
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .sidebar .account .settings-nav:hover:not(.md-editor):not(.md-editor *) { color: var(--text); background: var(--surface); } }
+.atlas .sidebar .account .settings-nav[aria-current="page"]:not(.md-editor):not(.md-editor *) { color: var(--accent); background: var(--navigation-selected-bg); }
+.atlas .sidebar .account .settings-nav .nav-attention:not(.md-editor):not(.md-editor *) {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--warning-bg);
+  color: var(--warning);
+  box-shadow: 0 0 0 2px var(--sidebar);
+}
+
+/* ---------- 3. Top bar and breadcrumbs ---------- */
+.atlas .workspace-bar:not(.md-editor):not(.md-editor *) {
+  min-height: var(--atlas-topbar-height);
+  padding: 8px 20px;
+  gap: 12px;
+  border-bottom-color: color-mix(in srgb, var(--line) 70%, transparent);
+}
+.atlas .breadcrumbs:not(.md-editor):not(.md-editor *) { gap: 8px; font-size: 13px; }
+.atlas .breadcrumb-trail > ol:not(.md-editor):not(.md-editor *),
+.atlas .breadcrumb-trail li:not(.md-editor):not(.md-editor *) { gap: 6px; }
+.atlas .breadcrumb-space:not(.md-editor):not(.md-editor *) {
+  max-width: 200px;
+  padding: 3px 4px;
+  margin: 0 -4px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas a.breadcrumb-space:hover:not(.md-editor):not(.md-editor *) { background: var(--hover); color: var(--text); } }
+.atlas .breadcrumb-title:not(.md-editor):not(.md-editor *) { font-size: 13px; font-weight: 650; }
+.atlas .breadcrumb-separator:not(.md-editor):not(.md-editor *) { color: color-mix(in srgb, var(--muted) 70%, transparent); }
+/* The trail gives way in order (2.6). Separators, icons and menu buttons keep their size; the space crumb yields
+   first (the rail already names the space), then the parent and the title together. A crumb's cap grows with the
+   bar, so a wide screen shows whole names. The floors keep a squeezed crumb from sliding under its neighbour. */
+.atlas .breadcrumb-separator:not(.md-editor):not(.md-editor *),
+.atlas .breadcrumb-space > svg:not(.md-editor):not(.md-editor *),
+.atlas .breadcrumb-trail li.breadcrumb-folded:not(.md-editor):not(.md-editor *) { flex: none; }
+.atlas .breadcrumb-space:not(.md-editor):not(.md-editor *) { max-width: clamp(200px, 24cqi, 420px); }
+.atlas .breadcrumb-ancestor:not(.md-editor):not(.md-editor *) { max-width: clamp(160px, 20cqi, 360px); }
+/* The space crumb keeps its icon and a few letters of its name (F25: at 1024 px it was cut to one letter); its tooltip has the rest. */
+.atlas .breadcrumb-trail li:has(> .breadcrumb-space > svg):not(.md-editor):not(.md-editor *) { flex-shrink: 3; min-width: 72px; }
+.atlas .breadcrumb-trail li:has(> .breadcrumb-space > svg):has(> button):not(.md-editor):not(.md-editor *) { min-width: 110px; }
+.atlas .breadcrumb-trail li:has(> a.breadcrumb-ancestor):not(.md-editor):not(.md-editor *) { min-width: 39px; }
+/* „Přístup“ says where the reader is: it never gives way to the page's name in front of it (on a phone it was left
+   3 px of its 44, on a tablet it ellipsised to „Přís…“ beside a page name of 185 px). */
+.atlas .breadcrumb-trail li.breadcrumb-crumb:not(.breadcrumb-title-crumb):has(> .breadcrumb-title):not(.md-editor):not(.md-editor *) { flex: none; }
+/* A page with one or two parents shows them as crumbs; the „…“ menu of all parents takes over where they fold. */
+.atlas .breadcrumb-trail li.breadcrumb-folded:not([data-folded]):not(.md-editor):not(.md-editor *) { display: none; }
+/* The trigger is the menu's own button (`data-slot="dropdown-menu-trigger"`), so the chip is matched by element. */
+.atlas .breadcrumb-folded button:not(.md-editor):not(.md-editor *) {
+  width: auto;
+  height: 22px;
+  min-width: 26px;
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--hover);
+  color: var(--text);
+  font-weight: 700;
+}
+.atlas .bar-actions:not(.md-editor):not(.md-editor *) { gap: 6px; }
+.atlas .bar-actions .document-actions:not(.md-editor):not(.md-editor *) { gap: 6px; padding-right: 8px; margin-right: 2px; border-right-color: var(--refresh-soft-line); }
+.atlas .document-secondary-actions:not(.md-editor):not(.md-editor *),
+.atlas .document-primary-actions:not(.md-editor):not(.md-editor *) { gap: 4px; }
+
+/* ---------- 5. Page: title, one metadata row, reading measure ---------- */
+/* The page header, the 720 px reading column, the body blocks and the page dock are in refresh-article.css. */
+/* Text crumbs ellipsise (a flex crumb cannot), the space crumb through its label. */
+.atlas :is(.breadcrumb-root, .breadcrumb-ancestor, [data-breadcrumb-page]):not(.md-editor):not(.md-editor *) { display: inline-block; }
+.atlas .breadcrumb-label:not(.md-editor):not(.md-editor *) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Inside a space the trail starts with the space; the wiki name stays reachable from the brand. */
+.atlas .breadcrumb-trail li:first-child:has(+ li .breadcrumb-space:not(.breadcrumb-root)):not(.md-editor):not(.md-editor *) { display: none; }
+.atlas .breadcrumb-trail li:first-child:has(+ li .breadcrumb-space:not(.breadcrumb-root)) + li > .breadcrumb-separator:first-child:not(.md-editor):not(.md-editor *) { display: none; }
+
+/* ---------- 8. Settings take the rail: back, place, search, sections ---------- */
+.atlas .settings-back:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 8px 0 4px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .settings-back:hover:not(.md-editor):not(.md-editor *) { background: var(--refresh-glass); color: var(--text); } }
+.atlas .settings-back > svg:not(.md-editor):not(.md-editor *) { transition: translate var(--atlas-motion-fast) var(--atlas-ease-out); }
+@media (hover: hover) and (pointer: fine) { .atlas .settings-back:hover > svg:not(.md-editor):not(.md-editor *) { translate: calc(var(--atlas-lift) * -1.5) 0; } }
+.atlas .settings-sidebar-scope:not(.md-editor):not(.md-editor *) { display: grid; gap: 8px; padding: 0 4px; }
+.atlas .settings-sidebar-title:not(.md-editor):not(.md-editor *) { font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
+/* The space switcher of space settings loads as its own chunk: its row is reserved, so the sections below never jump when it arrives. */
+.atlas .settings-switcher-slot:not(.md-editor):not(.md-editor *) { min-height: 40px; margin: 0; }
+/* The rail takes the place of the wiki navigation in one piece: the way back, the place and the space switcher fade in
+   together with the sections (.settings-rail-outside below) instead of standing there at once while the rail is still empty. */
+.atlas :is(.settings-sidebar-top, .settings-sidebar-scope, .settings-switcher-slot):not(.md-editor):not(.md-editor *) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.atlas .settings-sidebar-rail:not(.md-editor):not(.md-editor *) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0 -4px;
+  padding: 0 4px 8px;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+  /* The containing block of the visually hidden counts inside: left to the rail, they did not scroll with the list
+     and made the rail (and the page) taller than the window. */
+  position: relative;
+}
+/* A list of the rail that is cut by its heading or by the account row fades at that edge while more of it waits
+   there, so a short window does not read as the end of the list (the scrollbar is thin, and hidden on some systems).
+   lib/scrollEdges.ts marks the edges; the fade eases in and out (the lengths are registered in motion.css). */
+.atlas .sidebar :is(.spaces-scroll, .settings-sidebar-rail):not(.md-editor):not(.md-editor *) {
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--atlas-scroll-fade-top), #000 calc(100% - var(--atlas-scroll-fade-bottom)), transparent);
+  transition: --atlas-scroll-fade-top var(--atlas-motion-fast) var(--atlas-ease-out), --atlas-scroll-fade-bottom var(--atlas-motion-fast) var(--atlas-ease-out);
+  /* A row brought into view by the keyboard or by navigation stops clear of the fade. */
+  scroll-padding-block: 28px;
+}
+.atlas .sidebar :is(.spaces-scroll, .settings-sidebar-rail)[data-more-above]:not(.md-editor):not(.md-editor *) { --atlas-scroll-fade-top: 20px; }
+.atlas .sidebar :is(.spaces-scroll, .settings-sidebar-rail)[data-more-below]:not(.md-editor):not(.md-editor *) { --atlas-scroll-fade-bottom: 20px; }
+.atlas .settings-rail-outside:not(.md-editor):not(.md-editor *) { display: grid; gap: 10px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas .settings-rail-search:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 0 0 2px;
+  padding: 0 10px;
+  border: 1px solid var(--input-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), box-shadow var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.atlas .settings-rail-search:focus-within:not(.md-editor):not(.md-editor *) { outline: var(--state-focus-ring); outline-offset: var(--state-focus-offset); }
+.atlas .settings-rail-search input:not(.md-editor):not(.md-editor *) { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 13px; }
+.atlas .settings-rail-empty:not(.md-editor):not(.md-editor *) { margin: 4px 12px; color: var(--muted); font-size: 13px; }
+.atlas .settings-sidebar-rail .settings-nav:not(.md-editor):not(.md-editor *) { gap: 10px; }
+.atlas .settings-sidebar-rail .settings-nav-heading:not(.md-editor):not(.md-editor *) { margin: 0 0 2px; padding: 6px 8px 0; font-size: 11px; letter-spacing: 0.06em; }
+.atlas .settings-sidebar-rail .settings-nav-group ul:not(.md-editor):not(.md-editor *) { gap: 1px; }
+.atlas .settings-sidebar-rail .settings-nav-link:not(.md-editor):not(.md-editor *) {
+  min-height: 30px;
+  padding: 0 8px;
+  gap: 10px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+@media (hover: hover) and (pointer: fine) { .atlas .settings-sidebar-rail .settings-nav-link:hover:not(.md-editor):not(.md-editor *) { background: var(--refresh-glass); } }
+.atlas .settings-sidebar-rail .settings-nav-link[aria-current="page"]:not(.md-editor):not(.md-editor *) { background: var(--navigation-selected-bg); color: var(--text); font-weight: 650; }
+.atlas .settings-sidebar-rail .settings-nav-link[aria-current="page"] .settings-nav-icon:not(.md-editor):not(.md-editor *) { color: var(--accent); }
+/* The icon column of the rail is 18 px wide, as in the wiki navigation (the icon at the row's 8 px inset), so the labels
+   start on the same line (46 px) after the switch and the icons stand under the headings above them. */
+.atlas .settings-sidebar-rail .settings-nav-icon:not(.md-editor):not(.md-editor *) { width: 18px; color: var(--muted); }
+.atlas .settings-sidebar-rail .profile-rail-action:not(.md-editor):not(.md-editor *) { justify-content: flex-start; width: 100%; margin-top: 4px; color: var(--muted); }
+/* The profile's rail ends with Odhlásit se at its foot, under a quiet rule (board 12). */
+.atlas .settings-sidebar-rail:not(.md-editor):not(.md-editor *) { display: flex; flex-direction: column; }
+.atlas .settings-sidebar-rail > .settings-rail-outside:has([data-profile-logout]):not(.md-editor):not(.md-editor *) { flex: 1 0 auto; display: flex; flex-direction: column; }
+.atlas .settings-sidebar-rail .settings-rail-outside > .profile-rail-action:not(.md-editor):not(.md-editor *) {
+  min-height: 36px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--refresh-soft-line);
+  border-radius: 0;
+}
+
+/* The "Sekce" sheet of a phone answers the navigation drawer (refresh-theme.css §5): the same backdrop, a
+   grab handle, rounded corners towards the page, and it slides in from its edge (motion.css 2.5 theme).
+   `body` outranks the sheet's own rules, which load later with the lazy settings chunk. */
+body .settings-sheet[data-state="open"] { animation: atlas-sheet-in var(--atlas-motion-slow) var(--atlas-ease-out); }
+body .settings-sheet[data-state="closed"] { animation: atlas-sheet-out var(--atlas-motion-base) var(--atlas-ease-out); }
+body .settings-sheet { padding-top: 18px; border-top: 1px solid var(--line); }
+body .settings-sheet::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+  translate: -50% 0;
+}
+[data-mode="dark"] body .settings-sheet { background: var(--atlas-glow) no-repeat, var(--surface); box-shadow: var(--shadow-modal), var(--atlas-glow-ring); }
+@media (prefers-reduced-motion: reduce) {
+  body .settings-sheet[data-state="open"] { animation-name: st-fade-in; }
+  body .settings-sheet[data-state="closed"] { animation-name: st-fade-out; }
+}
+[data-atlas-reduced-motion] body .settings-sheet[data-state="open"] { animation-name: st-fade-in; }
+[data-atlas-reduced-motion] body .settings-sheet[data-state="closed"] { animation-name: st-fade-out; }

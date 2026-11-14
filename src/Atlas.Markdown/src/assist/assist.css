@@ -1,0 +1,167 @@
+/*
+ * @atlas/markdown/assist/style.css — only for hosts that register createAssistPlugin.
+ * Never part of the global style.css (tests/package/bundle-budget.test.mjs).
+ *
+ * Motion tokens default to the editor's core tokens (styles/motion.css, the owner's motion prototype): a host maps
+ * `--md-motion-*` once and the module follows; the assist names still override (docs/assist.md). The aliases are
+ * declared on the editor too, so they resolve where a host remaps the core. The module copies them onto its
+ * body-level overlays and reads the durations for its Web Animations from the editor element.
+ */
+:where(:root, .md-editor) {
+  --md-assist-fast: var(--md-motion-fast);
+  --md-assist-base: var(--md-motion-base);
+  --md-assist-slow: var(--md-motion-slow);
+  --md-assist-menu: var(--md-motion-target);
+  --md-assist-glow: var(--md-motion-glow);
+  --md-assist-ease: var(--md-motion-ease);
+  --md-assist-ease-io: var(--md-motion-ease-io);
+  /* Multiplies only the module's fixed prototype literals (ripple, icon, conceal steps), never the tokens. */
+  --md-assist-time-scale: var(--md-motion-time-scale);
+}
+:where(:root) {
+  /* Gap between a marker and its block; the marker never leaves the editor's box (docs/assist.md „Okraj“). */
+  --md-assist-marker-offset: 32px;
+  --md-assist-morph: 380ms;
+  --md-assist-solidify: 360ms;
+  --md-assist-glow-color: color-mix(in srgb, var(--accent, #285ad3) 18%, transparent);
+  /* Prototype colours on editor tokens: --line-strong is --line-2, --surface/--raised --paper, --muted --text-dim,
+     --warning --chip-amber-fg/--amber, --hover --bg-3. No new colour: suggestions are neutral, risk is amber. */
+  --md-assist-warning-bg: color-mix(in srgb, var(--amber, #b66b12) 16%, var(--paper, #fffefe));
+  --md-assist-success-bg: color-mix(in srgb, var(--green, #137b70) 14%, var(--paper, #fffefe));
+}
+
+/* The body-level layer: markers and, without a status panel, the status note. */
+.md-assist-layer { position: absolute; top: 0; left: 0; width: 0; height: 0; }
+
+/* Marker (moment 2): a 26 px dashed ring with the component's icon, left of the block handle, inside the editor. */
+.md-assist-marker {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  box-sizing: border-box; width: 26px; height: 26px; padding: 0; margin: 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: transparent; color: var(--text-dim, #49676e); cursor: pointer;
+}
+.md-assist-marker[hidden] { display: none; }
+.md-assist-marker:focus-visible { outline: var(--focus-ring, 2px solid var(--accent, #58a9b9)); outline-offset: var(--focus-offset, 2px); }
+.md-assist-ring { position: absolute; inset: 0; width: 26px; height: 26px; overflow: visible; }
+.md-assist-ring circle {
+  fill: var(--paper, #fffefe); stroke: var(--line-2, #bdd5da); stroke-width: 1.2; stroke-dasharray: 3 2.4;
+  transition: stroke var(--md-assist-fast) var(--md-assist-ease);
+}
+.md-assist-marker:hover .md-assist-ring circle, .md-assist-marker[aria-expanded=true] .md-assist-ring circle { stroke: var(--accent, #58a9b9); }
+.md-assist-marker-icon { position: relative; display: grid; place-items: center; }
+/* Warning (moment 7): a filled amber ring and one ripple. */
+.md-assist-marker[data-tone=warning] { color: var(--chip-amber-fg, #955109); }
+.md-assist-marker[data-tone=warning] .md-assist-ring circle { stroke: var(--amber, #b66b12); stroke-dasharray: none; fill: var(--md-assist-warning-bg); }
+.md-assist-ripple { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--amber, #b66b12); opacity: 0; pointer-events: none; }
+
+/* The list (moment 3) reuses the shared suggestion rows; it grows from the marker. */
+.md-assist-menu {
+  box-sizing: border-box; width: min(360px, calc(100vw - 16px)); padding: 4px; overflow-y: auto; overscroll-behavior: contain;
+  transform-origin: 14px 0;
+  background: var(--paper, #fffefe); color: var(--text, #102f36);
+  border: 1px solid var(--line, #d4e4e7); border-radius: 10px; box-shadow: var(--shadow-menu, 0 8px 28px rgb(16 32 57 / .14));
+  font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif); font-size: 13px;
+}
+.md-assist-menu .md-suggestion-list { width: auto; max-height: none; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; animation: none; }
+.md-assist-menu .md-suggestion-list .row { gap: 8px; padding: 7px 8px; border-radius: 7px; }
+.md-assist-menu .md-suggestion-list .ic {
+  flex: 0 0 28px; width: 28px; height: 28px; border-radius: 8px; background: var(--bg-3, #e2eef0); color: var(--text-dim, #49676e);
+}
+.md-assist-menu .md-suggestion-list .ic.md-assist-avatar { overflow: hidden; border-radius: 50%; font-size: 10px; font-weight: 700; }
+.md-assist-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.md-assist-menu .md-suggestion-list .t { font-size: 13px; font-weight: 600; }
+.md-assist-menu .md-suggestion-list .d { font-size: 12px; color: var(--text-dim, #49676e); }
+.md-assist-menu-footer {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px;
+  margin-top: 4px; padding: 7px 8px 4px; border-top: 1px solid var(--line, #d4e4e7);
+}
+.md-assist-menu-footer button {
+  padding: 0; border: 0; background: none; color: var(--text-dim, #49676e); font: inherit; font-size: 12px; cursor: pointer;
+  text-decoration: underline dotted; text-underline-offset: 3px;
+}
+.md-assist-menu-footer button:hover:not(:disabled) { color: var(--text, #102f36); }
+.md-assist-menu-footer button:disabled { opacity: .5; cursor: default; }
+.md-assist-reason { margin: 4px 8px 2px; color: var(--text-dim, #49676e); font-size: 12px; }
+.md-assist-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Model output only (phase 4); rule-based suggestions never carry it. */
+.md-assist-ai-tag {
+  display: inline-block; margin-left: 4px; padding: 3px 5px; vertical-align: 1px;
+  border: 1px solid var(--line, #d4e4e7); border-radius: 4px; color: var(--text-dim, #49676e);
+  font: 600 10px/1 var(--font-mono, ui-monospace, monospace); letter-spacing: .06em;
+}
+
+/* Decorations in the document: presentation only, never serialized. */
+.md-assist-hit {
+  border-radius: 3px;
+  background-image: linear-gradient(var(--accent, #58a9b9), var(--accent, #58a9b9));
+  background-repeat: no-repeat; background-position: 0 100%; background-size: 100% 1.5px;
+}
+.md-assist-tone-warning {
+  padding: 0 3px; border-radius: 4px; background: var(--md-assist-warning-bg); color: var(--chip-amber-fg, #955109);
+  font-family: var(--font-mono, ui-monospace, monospace); font-size: .93em;
+}
+.md-assist-glow { border-radius: 3px; }
+.md-assist-concealed { color: transparent; }
+.md-assist-conceal { position: relative; display: inline-block; width: 0; height: 1lh; vertical-align: top; }
+.md-assist-conceal-glyphs {
+  position: absolute; top: 0; left: 0; white-space: pre; pointer-events: none;
+  color: var(--chip-amber-fg, #955109); font-family: var(--font-mono, ui-monospace, monospace); font-size: .93em;
+}
+
+/* The warning bar under a block (moment 7): role="status", buttons from controls.css. */
+.md-assist-warning {
+  box-sizing: border-box; display: grid; gap: 8px; max-width: 62ch; margin: 4px 0 12px; padding: 10px 12px; overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--amber, #b66b12) 45%, transparent); border-radius: 10px;
+  background: var(--md-assist-warning-bg); color: var(--text, #102f36);
+  font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif); font-size: 13px; line-height: 1.5; white-space: normal; user-select: none;
+}
+.md-assist-warning-text { display: flex; gap: 8px; align-items: flex-start; }
+.md-assist-warning-text svg { flex: none; margin-top: 2px; color: var(--chip-amber-fg, #955109); }
+.md-assist-warning-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Status note when the host mounts no status panel. */
+.md-assist-layer > .md-assist-status {
+  position: fixed; top: 0; left: 0; z-index: 40; max-width: min(420px, calc(100vw - 16px)); padding: 6px 10px;
+  border: 1px solid var(--line, #d4e4e7); border-radius: 8px; background: var(--paper, #fffefe); box-shadow: var(--shadow-menu, 0 8px 28px rgb(16 32 57 / .14));
+  color: var(--text, #102f36); font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif); font-size: 12px;
+}
+.md-assist-status:empty { display: none; }
+
+/* The proposal panel (scene „Odkazy a úpravy textu“, moments 5–7): a dashed SVG outline instead of a border. */
+.md-context-popover.md-assist-proposal-popover { width: min(560px, calc(100vw - 24px)); border-color: transparent; border-radius: 12px; }
+.md-assist-proposal-popover > .md-context-popover-body { padding: 12px 14px; }
+.md-assist-proposal { position: relative; }
+.md-assist-dash { position: absolute; inset: -12px -14px; width: calc(100% + 28px); height: calc(100% + 24px); pointer-events: none; overflow: visible; }
+.md-assist-dash rect { fill: none; stroke: var(--line-2, #bdd5da); width: calc(100% - 1px); height: calc(100% - 1px); }
+.md-assist-proposal-header { display: flex; align-items: center; gap: 8px; color: var(--text-dim, #49676e); font-size: 12.5px; }
+.md-assist-proposal-header b { color: var(--text, #102f36); font-weight: 650; }
+.md-assist-diff { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px 10px; margin-top: 10px; font-size: 13px; line-height: 1.6; }
+.md-assist-diff-label { color: var(--text-dim, #49676e); font: 500 11px/22px var(--font-mono, ui-monospace, monospace); letter-spacing: .06em; text-transform: uppercase; }
+.md-assist-before, .md-assist-after { min-width: 0; overflow-wrap: anywhere; }
+/* Never by colour alone: deletions are struck through, insertions underlined. */
+.md-assist-diff del {
+  color: var(--text-dim, #49676e); text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor); background-repeat: no-repeat; background-position: 0 55%; background-size: 100% 1.5px;
+}
+.md-assist-diff ins {
+  padding: 0 1px; border-radius: 3px; color: var(--text, #102f36); text-decoration: none;
+  background: var(--md-assist-success-bg); box-shadow: inset 0 -1.5px 0 var(--green, #137b70);
+}
+.md-assist-diff :is(del, ins).md-assist-block { display: block; padding: 4px 6px; }
+.md-assist-diff del.md-assist-block { background-image: none; text-decoration: line-through; }
+.md-assist-diff .md-assist-block :is(table, p, ul, ol, pre) { margin: 0; }
+.md-assist-diff .md-assist-block table { border-collapse: collapse; }
+.md-assist-diff .md-assist-block :is(td, th) { padding: 2px 8px; border: 1px solid var(--line, #d4e4e7); }
+.md-assist-summary { margin: 8px 0 0; color: var(--text-dim, #49676e); font-size: 12px; }
+.md-assist-proposal-stale { margin: 8px 0 0; color: var(--chip-amber-fg, #955109); font-size: 12px; }
+.md-assist-proposal-stale:empty { display: none; }
+.md-assist-proposal-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+.md-assist-anchor { position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+
+@media (forced-colors: active) {
+  .md-assist-diff del { text-decoration: line-through; }
+  .md-assist-diff ins { text-decoration: underline; }
+  .md-assist-ring circle { stroke: CanvasText; }
+}
+
+.md-assist-empty { border:0; background:transparent; color:var(--accent); font:inherit; cursor:pointer; padding:0 6px; }

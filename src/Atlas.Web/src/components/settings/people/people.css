@@ -1,0 +1,6 @@
+/* Shared by the Lidé pages (accounts, groups) and the access history. */
+.settings-ui .people-warning > svg { flex-shrink: 0; color: var(--warning); }
+.settings-ui .people-warning { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; line-height: 1.5; }
+.settings-ui .people-warning > svg { margin-top: 2px; }
+/* The search above the list of groups: the page's own 18 px gap separates it from the card, like the search of Prostory and Trezory. */
+.settings-ui .people-filters { display: grid; gap: 10px; }

@@ -1,0 +1,4 @@
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"},{"type":"secretInlineReference","attrs":{"secretId":"d847b3af-4a87-4e97-aab8-a74a4cf48c89","field":"password","fields":null,"showCopy":true,"showDetails":false,"autoHideSeconds":5}}]}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"},{"type":"secretInlineReference","attrs":{"secretId":"d847b3af-4a87-4e97-aab8-a74a4cf48c89","field":"password","fields":null,"showCopy":false,"showDetails":false,"autoHideSeconds":5}}]}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]}]}

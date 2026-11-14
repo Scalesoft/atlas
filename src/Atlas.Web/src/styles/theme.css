@@ -1,0 +1,78 @@
+/* Theme of the Tailwind utilities: the dark variant and the shadcn token map. Imported by
+   tailwind.css for the eager stylesheet and referenced (without output) by the lazily loaded
+   components/settings/settings-tailwind.css. src/styles/tailwind.test.ts pins the map. */
+
+/* The app resolves system/light/dark in JS and writes the result to `data-mode`
+   on the document element, alongside `data-layout` and `data-accent`. Binding
+   Tailwind's `dark:` to that keeps one dark-mode mechanism rather than adding a
+   second `.dark` class convention on top of the appearance setting the product
+   already ships. */
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
+/* shadcn's token names mapped onto the application's own, which are declared on
+   `:root` in palettes.css (shell.css keeps the unthemed fallback) and are also what the markdown editor reads. `inline`
+   makes the generated utilities reference the app variables directly
+   (`.bg-background { background-color: var(--canvas) }`), so there is one set of
+   values behind both vocabularies: restyle a token and the wiki, the generated
+   components and the editor all move together.
+
+   Every name a generated component actually references is defined here -- a
+   Tailwind utility whose token is missing compiles to nothing at all, with no
+   error and no warning, so a gap shows up as an invisible surface rather than a
+   build failure. `src/Atlas.Web/src/styles/tailwind.test.ts` pins the list. */
+@theme inline {
+  --color-background: var(--canvas);
+  --color-foreground: var(--text);
+
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  /* `--sidebar` is all but white; a secondary badge or button on the page
+     surface has to be visible, so `secondary` takes the hover fill. */
+  --color-secondary: var(--hover);
+  --color-secondary-foreground: var(--text);
+
+  /* Careful: the two `accent`s mean opposite things. The app's `--accent` is the
+     brand colour and belongs on `primary` above; shadcn's `accent` is the subtle
+     hover fill, which here is `--hover`. Mapping the brand colour here would
+     paint every menu hover in full brand. */
+  --color-accent: var(--hover);
+  --color-accent-foreground: var(--text);
+
+  --color-muted: var(--sidebar);
+  --color-muted-foreground: var(--muted);
+
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--on-accent);
+
+  /* Semantic status colours the product has and shadcn's four badge variants do
+     not. Extending the theme is the supported way to add them: the generated
+     components stay untouched and a caller reaches these through ordinary
+     utilities (`bg-success-soft text-success`). */
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-bg);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-bg);
+
+  --color-border: var(--line);
+  --color-input: var(--input-line);
+  --color-ring: var(--accent);
+
+  --radius-sm: var(--atlas-radius-sm);
+  --radius-md: var(--atlas-radius-md);
+  --radius-lg: var(--atlas-radius-lg);
+
+  /* Motion (plan 2026-10-05 motion unification §2.7): the generated components' `transition-*` and
+     `animate-spin` utilities run on the Atlas motion tokens (src/motion.css, declared on :root), so they
+     follow reduced motion and the gallery's slow-down instead of Tailwind's 150 ms and 1 s defaults. */
+  --default-transition-duration: var(--atlas-motion-fast);
+  --default-transition-timing-function: var(--atlas-ease-out);
+  --animate-spin: atlas-spin var(--atlas-motion-spin) linear infinite;
+}

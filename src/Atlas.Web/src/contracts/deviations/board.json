@@ -1,0 +1,3 @@
+[
+  { "element": "page-card", "check": "P1.start", "reason": "Karta stránky (zobrazení Karta, jen úryvek) nemá text, kam psát: dvojklik, Enter i F2 otevřou úpravu stránky v okně nad tabulí (BoardPageEditor). Náhled stránky se upravuje na místě (3.6)", "ref": "B#13" }
+]

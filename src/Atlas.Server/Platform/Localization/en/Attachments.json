@@ -1,0 +1,20 @@
+{
+  "Upload vyžaduje multipart/form-data.": "Upload requires multipart/form-data.",
+  "Vyberte právě jeden soubor v poli file.": "Choose exactly one file in the file field.",
+  "Neplatný typ přílohy.": "Invalid attachment type.",
+  "Příloha překračuje povolenou velikost.": "The attachment exceeds the allowed size.",
+  "Příloha není dostupná.": "The attachment is not available.",
+  "Obrázek musí být PNG, JPEG, GIF nebo WebP. Obsah souboru neodpovídá podporovanému formátu.": "The image must be PNG, JPEG, GIF or WebP. The file content does not match a supported format.",
+  "expectedVersion je povinné: verze z posledního čtení stránky.": "expectedVersion is required: the version from the last read of the page.",
+  "Stránka nemá obsah editoru; otevřete ji v editoru Atlasu a upravte, uloží se sama.": "The page has no editor content; open it in the Atlas editor and edit it there, it saves itself.",
+  "Zadejte, co se má změnit: alternativní text, šířku, zarovnání nebo jinou přílohu.": "Specify what to change: alternative text, width, alignment or another attachment.",
+  "occurrence je pořadí vložení přílohy na stránce od 1.": "occurrence is the order of the attachment's insertion on the page, starting from 1.",
+  "Příloha u této stránky není nebo už není dostupná. Nahrajte ji ke stránce.": "The attachment is not, or is no longer, available on this page. Upload it to the page.",
+  "attachmentId je povinné (UUID přílohy stránky).": "attachmentId is required (the UUID of the page attachment).",
+  "Příloha kopírované stránky už není dostupná.": "The attachment of the copied page is no longer available.",
+  "Stránka byla přesunuta. Načtěte ji znovu.": "The page was moved. Load it again.",
+  "Příloha má neplatný interní odkaz.": "The attachment has an invalid internal link.",
+  "Stránka může odkazovat nejvýše na 500 příloh.": "A page can reference at most 500 attachments.",
+  "Příloha nepatří k této stránce nebo už není dostupná.": "The attachment does not belong to this page or is no longer available.",
+  "Příloha {id} u této stránky není nebo už není dostupná. Nahrajte ji ke stránce.": "Attachment {id} is not, or is no longer, available on this page. Upload it to the page."
+}

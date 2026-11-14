@@ -1,0 +1,303 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "headingId": "2e6a0c73-a2b1-4750-bd3e-449d1e320f57",
+          "textAlign": null,
+          "level": 1
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Meeting Notes"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "textAlign": null
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Linked to [[Project Alpha]], a heading [[Project Alpha#Risks]], an alias [[Project Alpha|the project]] and a missing [[Nonexistent Page]]."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "textAlign": null
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Embedded image: ![[whiteboard.png]] Standard image:"
+          }
+        ]
+      },
+      {
+        "type": "image",
+        "attrs": {
+          "src": "images/whiteboard.png",
+          "alt": "Whiteboard",
+          "title": null,
+          "width": null,
+          "height": null,
+          "presentation": {
+            "width": 100,
+            "align": "center",
+            "caption": "",
+            "rotate": 0,
+            "flip": false,
+            "brightness": 100,
+            "contrast": 100,
+            "saturation": 100,
+            "filter": "none",
+            "cropLeft": 0,
+            "cropRight": 0,
+            "cropTop": 0,
+            "cropBottom": 0,
+            "naturalWidth": 0,
+            "naturalHeight": 0
+          }
+        }
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "textAlign": null
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Transclusion: ![[Project Alpha#Summary]]"
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "attrs": {
+          "variant": "warning"
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "Budget risk"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "The budget is "
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ],
+                "text": "over"
+              },
+              {
+                "type": "text",
+                "text": " by 10 %."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "headingId": "7c1f2a9e-3b4d-4e5f-8a6b-9c0d1e2f3a4b",
+          "textAlign": null,
+          "level": 3
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Collapsed tip"
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "attrs": {
+          "variant": "tip"
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "attrs": {
+              "textAlign": null
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Hidden until expanded."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "textAlign": null
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "This is "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "highlight"
+              }
+            ],
+            "text": "highlighted"
+          },
+          {
+            "type": "text",
+            "text": " text with an inline #tag and a %%hidden comment%%."
+          }
+        ]
+      },
+      {
+        "type": "taskList",
+        "content": [
+          {
+            "type": "taskItem",
+            "attrs": {
+              "checked": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "textAlign": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Follow up with QA #todo"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "taskItem",
+            "attrs": {
+              "checked": true
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "attrs": {
+                  "textAlign": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Send minutes ^block-ref-1"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "mathBlock",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "expression": "\\int_0^1 x^2 \\, dx"
+          }
+        }
+      },
+      {
+        "type": "codeBlock",
+        "attrs": {
+          "language": "dataview"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "TABLE file.mtime FROM #meetings"
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "headingId": "1ad353b6-950f-44a5-83cf-1da2d02fb4df",
+          "textAlign": null,
+          "level": 2
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Setext heading"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "textAlign": null
+        }
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "attachments",
+      "version": 1
+    },
+    {
+      "id": "diagrams",
+      "version": 2
+    },
+    {
+      "id": "heading-anchors",
+      "version": 1
+    },
+    {
+      "id": "math",
+      "version": 1
+    },
+    {
+      "id": "toc",
+      "version": 1
+    }
+  ]
+}

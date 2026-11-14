@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Used by every plain `dotnet test` of this project (RunSettingsFilePath in the csproj). -->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <!-- A test that runs longer than 5 minutes is treated as hung: VSTest ends the run and prints the tests that
+           were still running. No dump is written. tests/smoke.ps1 overrides the timeout with 2 minutes. -->
+      <DataCollector friendlyName="blame" enabled="True">
+        <Configuration>
+          <CollectDumpOnTestSessionHang TestTimeout="5m" HangDumpType="None" />
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+  <LoggerRunSettings>
+    <Loggers>
+      <!-- Prints the test(s) that were running when the run was aborted. -->
+      <Logger friendlyName="blame" enabled="True" />
+    </Loggers>
+  </LoggerRunSettings>
+</RunSettings>

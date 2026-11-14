@@ -1,0 +1,665 @@
+[
+  {
+    "path": "ops.md",
+    "title": "ops",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "",
+    "findings": []
+  },
+  {
+    "path": "ops/escalation.md",
+    "title": "Escalation",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-ea0d36033dba0ce9db6b415c"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Matrix"
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "content": [
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Sev"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Who"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "1"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CTO"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "## Matrix\n\n| Sev | Who |\n| --- | --- |\n| 1 | CTO |\n",
+    "findings": []
+  },
+  {
+    "path": "ops/incident-policy.md",
+    "title": "Incident Policy",
+    "tags": [
+      "incidents",
+      "ops"
+    ],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "tableOfContents",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "title": "Obsah dokumentu",
+                "minLevel": 1,
+                "maxLevel": 3
+              }
+            }
+          },
+          {
+            "type": "callout",
+            "attrs": {
+              "variant": "warning"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Severity 1 incidents page the on-call engineer."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Contact the "
+              },
+              {
+                "type": "text",
+                "text": "on-call team",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/5e940f4d-55c2-a527-addd-10f1d68d742c",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " or read the "
+              },
+              {
+                "type": "text",
+                "text": "escalation matrix",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/f680cde8-6cc8-b81a-f653-52bc36cd0b75?heading=import-ea0d36033dba0ce9db6b415c",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Old Confluence link: "
+              },
+              {
+                "type": "text",
+                "text": "SLA",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://confluence.example.com/display/OPS/SLA",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Same-wiki absolute: "
+              },
+              {
+                "type": "text",
+                "text": "Home",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://wiki.example.com/en/home",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Reference link: "
+              },
+              {
+                "type": "text",
+                "text": "policy",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com/policy",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer",
+                      "title": "Policy"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 1,
+              "headingId": "import-86f1d5221c483a8135513216"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Severity levels"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "tight": true,
+              "start": 3
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Starts at three"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Continues"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Term",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Definition list item"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "H~2~O and E=mc^2^ and "
+              },
+              {
+                "type": "text",
+                "text": "Ctrl",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "+"
+              },
+              {
+                "type": "text",
+                "text": "C",
+                "marks": [
+                  {
+                    "type": "code"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", a red warning, "
+              },
+              {
+                "type": "text",
+                "text": "marked",
+                "marks": [
+                  {
+                    "type": "highlight"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "content": [
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Merged header"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "content": [
+                      {
+                        "type": "paragraph"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "a"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "b"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "image",
+            "attrs": {
+              "src": "/api/attachments/97bb14e4-6652-4101-1e89-f12a9003b5a1/content",
+              "alt": "Escalation",
+              "title": null
+            }
+          },
+          {
+            "type": "image",
+            "attrs": {
+              "src": "/api/attachments/bb006fef-b644-6caa-939c-38a45f6f0ad4/content",
+              "alt": "Timeline",
+              "title": "Incident timeline"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Download the checklist",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/api/attachments/2b4575cc-6874-0ffb-252c-5eed21103aca/download",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "codeBlock",
+            "content": [
+              {
+                "type": "text",
+                "text": "indented code block\nsecond line"
+              }
+            ]
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "language": "plantuml"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "@startuml\nAlice -> Bob: page\n@enduml"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Escaped *not italic* and a backslash hard break"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "next line."
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 5,
+              "headingId": "import-1f01789f202663d6dc71fb85"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Level five heading"
+              }
+            ]
+          },
+          {
+            "type": "horizontalRule"
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        },
+        {
+          "id": "toc",
+          "version": 1
+        }
+      ]
+    },
+    "markdown": "Obsah dokumentu (automaticky podle nadpisů 1–3)\n\n> [!WARNING]\n> Severity 1 incidents page the on-call engineer.\n\nContact the [on-call team](/#/pages/5e940f4d-55c2-a527-addd-10f1d68d742c) or read the [escalation matrix](/#/pages/f680cde8-6cc8-b81a-f653-52bc36cd0b75?heading=import-ea0d36033dba0ce9db6b415c). Old Confluence link: [SLA](https://confluence.example.com/display/OPS/SLA). Same-wiki absolute: [Home](https://wiki.example.com/en/home). Reference link: [policy](https://example.com/policy \"Policy\").\n\n# Severity levels\n\n3. Starts at three\n4. Continues\n\n**Term**\n\nDefinition list item\n\nH\\~2\\~O and E=mc^2^ and `Ctrl`+`C`, a red warning, ==marked==.\n\n| Merged header |  |\n| --- | --- |\n| a | b |\n\n![Escalation](/api/attachments/97bb14e4-6652-4101-1e89-f12a9003b5a1/content)\n\n![Timeline](/api/attachments/bb006fef-b644-6caa-939c-38a45f6f0ad4/content \"Incident timeline\")\n\n[Download the checklist](/api/attachments/2b4575cc-6874-0ffb-252c-5eed21103aca/download)\n\n```\nindented code block\nsecond line\n```\n\n```plantuml\n@startuml\nAlice -> Bob: page\n@enduml\n```\n\nEscaped \\*not italic\\* and a backslash hard break\\\nnext line.\n\n##### Level five heading\n\n---",
+    "findings": [
+      {
+        "construct": "source-link-unresolved",
+        "impact": "unresolved",
+        "count": 1,
+        "line": 17,
+        "excerpt": "https://wiki.example.com/en/home"
+      },
+      {
+        "construct": "definition-list",
+        "impact": "degraded",
+        "count": 1,
+        "line": 25,
+        "excerpt": "Term"
+      },
+      {
+        "construct": "subscript",
+        "impact": "degraded",
+        "count": 1,
+        "line": 28,
+        "excerpt": "H~2~O and E=mc^2^ and <kbd>Ctrl</kbd>+<kbd>C</kbd>, a <span style=\"color:red\">red warning</span>, <mark>marked</mark>."
+      },
+      {
+        "construct": "superscript",
+        "impact": "degraded",
+        "count": 1,
+        "line": 28,
+        "excerpt": "H~2~O and E=mc^2^ and <kbd>Ctrl</kbd>+<kbd>C</kbd>, a <span style=\"color:red\">red warning</span>, <mark>marked</mark>."
+      },
+      {
+        "construct": "kbd",
+        "impact": "degraded",
+        "count": 2,
+        "line": 28,
+        "excerpt": "<kbd>"
+      },
+      {
+        "construct": "html:span",
+        "impact": "degraded",
+        "count": 1,
+        "line": 28,
+        "excerpt": "<span style=\"color:red\">"
+      },
+      {
+        "construct": "html-table-merged",
+        "impact": "degraded",
+        "count": 1,
+        "line": 30,
+        "excerpt": "<table>"
+      },
+      {
+        "construct": "comment",
+        "impact": "lost",
+        "count": 1,
+        "line": 41,
+        "excerpt": "<!-- internal note: review yearly -->"
+      },
+      {
+        "construct": "diagram-unsupported",
+        "impact": "degraded",
+        "count": 1,
+        "line": 46,
+        "excerpt": "```plantuml"
+      }
+    ]
+  },
+  {
+    "path": "ops/on-call.md",
+    "title": "On-call",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Rotation details."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "Rotation details.",
+    "findings": []
+  }
+]

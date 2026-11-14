@@ -1,0 +1,43 @@
+/*
+ * A board text, at rest (BoardMarkdown) and while edited (BoardTextEditor): the editor's document layout without its paper, at the
+ * font size of the item that holds it, so the two never differ by a pixel. The class is doubled to win over the paper's own
+ * padding rules (`.md-editor.paper:not(.readonly) .paper-inner`) without !important.
+ */
+.board-text.board-text.md-editor.paper {
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+.board-text.board-text.md-editor.paper:focus-within:not(.readonly) { border-color: transparent; box-shadow: none; }
+.board-text.board-text.md-editor.paper .paper-inner { max-width: none; margin: 0; padding: 0; }
+.board-text.board-text.md-editor.paper .editor-body { min-height: 0; font-size: inherit; line-height: 1.35; overflow-wrap: anywhere; }
+.board-text.board-text.md-editor.paper .editor-body .ProseMirror { min-height: 0; }
+/* The item's ink, not the page's text colour (which the editor sets on its body): readable on every note colour in both themes, and
+ * the caret is that ink too, never a colour that vanishes on the item (J1). */
+.board-text.board-text.md-editor.paper :is(.editor-body, .ProseMirror) { color: inherit; caret-color: currentColor; }
+.board-text.board-text.md-editor.paper .editor-body h1 { margin: 0 0 0.3em; font-size: 1.6em; line-height: 1.2; }
+.board-text.board-text.md-editor.paper .editor-body h2 { margin: 0 0 0.3em; font-size: 1.35em; line-height: 1.25; }
+.board-text.board-text.md-editor.paper .editor-body h3 { margin: 0 0 0.25em; font-size: 1.15em; line-height: 1.3; }
+.board-text.board-text.md-editor.paper .editor-body :is(h4, h5, h6) { margin: 0 0 0.2em; font-size: 1em; }
+.board-text.board-text.md-editor.paper .editor-body :is(p, ul, ol) { margin: 0 0 0.4em; }
+.board-text.board-text.md-editor.paper .editor-body .ProseMirror > :last-child { margin-bottom: 0; }
+/* A label or a frame title: one line of inline text. */
+.board-text.board-text.is-inline.md-editor.paper .editor-body p { margin: 0; }
+/* One line of inline text (name, function, organization of a contact card, a label) has no blocks to move: no grip or "+". */
+.board-text.is-inline .dh-wrap { display: none !important; }
+/* The page's footer (keyboard hint, fullscreen) belongs to a page, not to an item on a board. */
+.board-text.board-text.md-editor .paper-footer { display: none; }
+/* The renderer's own rule for its text, for the plain paragraph that skips the renderer (BoardMarkdown). */
+.board-text.is-plain .ProseMirror { cursor: default; }
+/* A reader's selected text at rest: its words are selected and copied as on a page (contract J2.5), as in its editor. */
+.board-text.is-readable .ProseMirror.tiptap { cursor: text; user-select: text; -webkit-user-select: text; }
+
+/* Editing a card (not a one-line name): the block handle's gutter (grip + "+", 28 px) hangs out of the card to the left, where the node lets
+   it overflow while editing (BoardNode), so the controls never lie over the first letters; the text itself does not move. */
+.board-text.board-text.md-editor.paper:not(.readonly):not(.is-inline) { margin-left: -28px; width: calc(100% + 28px); }
+.board-text.board-text.md-editor.paper:not(.readonly):not(.is-inline) .paper-inner { padding-left: 28px; }

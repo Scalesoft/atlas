@@ -1,0 +1,34 @@
+# Disposable SSH git server for tests/browser/e2e-podman.ps1. In the pod, the git backup pushes to
+# ssh://git@localhost:2222/srv/git/atlas.git; git-backup.spec.ts writes the deploy key Atlas generated to
+# /git-keys/authorized_keys, a volume shared with the Playwright container.
+FROM docker.io/library/alpine:3.22
+
+# A locked account ("!" from adduser -D) refuses public keys as well; "*" only rules out passwords. The repository is
+# empty with main as its default branch, like a new repository on a git host. PerSourcePenalties is off because a refused
+# connection (the spec tests before the key exists, for example) must not block the next attempt from localhost.
+RUN apk add --no-cache git openssh-server openssh-keygen \
+    && adduser -D -h /home/git -s /usr/bin/git-shell git \
+    && echo 'git:*' | chpasswd -e \
+    && mkdir -p /srv/git /git-keys \
+    && git init --quiet --bare --initial-branch=main /srv/git/atlas.git \
+    && chown -R git:git /srv/git \
+    && printf '%s\n' \
+        'Port 2222' \
+        'HostKey /etc/ssh/ssh_host_ed25519_key' \
+        'AuthorizedKeysFile /git-keys/authorized_keys' \
+        'StrictModes no' \
+        'PasswordAuthentication no' \
+        'KbdInteractiveAuthentication no' \
+        'PermitRootLogin no' \
+        'AllowUsers git' \
+        'AllowTcpForwarding no' \
+        'X11Forwarding no' \
+        'PerSourcePenalties no' \
+        'LogLevel VERBOSE' \
+        'PidFile /run/sshd.pid' \
+        > /etc/ssh/sshd_config
+
+EXPOSE 2222
+
+# A new host key per container: Atlas stores it on the first access test (trust on first use).
+CMD ["sh", "-c", "ssh-keygen -q -t ed25519 -N '' -f /etc/ssh/ssh_host_ed25519_key && exec /usr/sbin/sshd -D -e"]

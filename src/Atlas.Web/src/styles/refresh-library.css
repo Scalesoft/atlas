@@ -1,0 +1,228 @@
+/* Atlas 2.5 UI refresh – library
+   Knihovna, prostor (hlavička, záložky, tabulka stránek), karty prostorů s úvodním obrázkem, vzhled prostoru v nastavení.
+   Pohyb jen přes tokeny z motion.css; žádné doslovné délky ani křivky (motionLiterals.guard.test.ts).
+   The components keep their own scoped rules; this file restyles what the shell (shell.css, App.vue) draws around
+   them, so its selectors carry .atlas and the shell's :not(.md-editor) guards to outrank those rules. */
+
+/* ---------- Page frame of Knihovna and of a space (boards 01, 02) ---------- */
+.atlas :is(.library-overview, .space-overview).overview:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: var(--atlas-page-max, 1600px);
+  margin: 0 auto;
+  padding: 28px var(--atlas-page-gutter, 40px) 40px;
+  box-sizing: border-box;
+  /* Content rises 8 px and fades in (board 16); the parts inside stagger on their own. */
+  animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) backwards;
+}
+
+/* Outrank the old generic workspace child rule: wide displays keep a balanced frame. */
+.atlas .workspace-content > :is(.library-overview, .space-overview).overview:not(.md-editor):not(.md-editor *) { margin-inline: auto; }
+
+/* Nový prostor: a form frame in the middle of the workspace; without this the shell's generic workspace-child rule
+   (margin-inline: 0) pins it to the sidebar on a wide display. */
+.atlas .workspace-content > .space-creation.settings-ui:not(.md-editor):not(.md-editor *) { margin-inline: auto; }
+
+/* ---------- Knihovna: title, Nový prostor, tabs ---------- */
+.atlas .library-page-header:not(.md-editor):not(.md-editor *) { display: flex; align-items: flex-start; gap: 16px; }
+.atlas .library-page-title:not(.md-editor):not(.md-editor *) { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.atlas .library-overview .library-page-title h1:not(.md-editor):not(.md-editor *) {
+  max-width: none;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.atlas .library-page-title p:not(.md-editor):not(.md-editor *) { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.atlas .library-create:not(.md-editor):not(.md-editor *) { flex: none; height: 36px; padding: 0 14px; border-radius: 10px; font-weight: 600; }
+
+.atlas .library-overview .library-tabs:not(.md-editor):not(.md-editor *) {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, var(--surface));
+}
+/* Nine tabs outgrow a phone: the row scrolls and fades the edge that has more behind it (lib/scrollEdges.ts). */
+.atlas .library-overview .library-tabs:not(.md-editor):not(.md-editor *) {
+  mask-image: linear-gradient(to right, transparent, #000 var(--atlas-scroll-fade-start), #000 calc(100% - var(--atlas-scroll-fade-end)), transparent);
+  transition: --atlas-scroll-fade-start var(--atlas-motion-fast) var(--atlas-ease-out), --atlas-scroll-fade-end var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.atlas .library-overview .library-tabs[data-more-before]:not(.md-editor):not(.md-editor *) { --atlas-scroll-fade-start: 24px; }
+.atlas .library-overview .library-tabs[data-more-after]:not(.md-editor):not(.md-editor *) { --atlas-scroll-fade-end: 24px; }
+.atlas .library-tabs > a:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  margin-bottom: -1px;
+  /* Nine tabs fit beside the sidebar at 1280 px with room for a three-digit count (UX2-1); a narrower row scrolls and fades. */
+  padding: 0 10px;
+  border-radius: 8px 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .library-tabs > a:hover:not(.md-editor):not(.md-editor *) { color: var(--text); background: color-mix(in srgb, var(--hover) 45%, transparent); }
+}
+.atlas .library-tabs > a[aria-current="page"]:not(.md-editor):not(.md-editor *) { color: var(--accent); font-weight: 600; }
+.atlas .library-tabs > a:focus-visible:not(.md-editor):not(.md-editor *) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.atlas .library-tab-short:not(.md-editor):not(.md-editor *) { display: none; }
+.atlas .library-tab-count:not(.md-editor):not(.md-editor *) {
+  padding: 0 6px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--line) 50%, var(--surface));
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* Knihovna's Oznámení tab carries the unread count, so a phone without the rail sees it too (UX1-9). */
+.atlas .library-tab-count[data-library-unread]:not(.md-editor):not(.md-editor *) { background: var(--accent); color: var(--on-accent); }
+/* One underline glides to the new tab (board 16: 200 ms, the move curve); it is placed without motion first. */
+.atlas .library-tabs-indicator:not(.md-editor):not(.md-editor *) {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+  pointer-events: none;
+}
+.atlas .library-tabs-indicator.is-ready:not(.md-editor):not(.md-editor *) {
+  transition: transform var(--atlas-motion-base) var(--atlas-ease-inout), width var(--atlas-motion-base) var(--atlas-ease-inout);
+}
+/* A part only fades when the tab changes (board 16: the content is only blended, no shift); it does not move, and
+   neither do its cards and rows. Old and new part share one grid cell, so the old one fades out under the new one
+   instead of vanishing in a frame (LibraryPage.vue). */
+.atlas .library-stage:not(.md-editor):not(.md-editor *) { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }
+.atlas .library-part:not(.md-editor):not(.md-editor *) { grid-area: 1 / 1; align-self: start; min-width: 0; }
+.atlas .library-part-enter-active:not(.md-editor):not(.md-editor *) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.atlas .library-part-leave-active:not(.md-editor):not(.md-editor *) { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; pointer-events: none; }
+.atlas .library-part[data-switched] :is(.space-card, .space-directory-row, .library-items li):not(.md-editor):not(.md-editor *) { animation-name: st-fade-in; }
+/* Reduced motion: the underline does not travel; the current tab's own line fades in instead. */
+@media (prefers-reduced-motion: reduce) {
+  .atlas .library-tabs-indicator:not(.md-editor):not(.md-editor *) { display: none; }
+  .atlas .library-tabs > a:not(.md-editor):not(.md-editor *) { transition-property: color, background-color, box-shadow; }
+  .atlas .library-tabs > a[aria-current="page"]:not(.md-editor):not(.md-editor *) { box-shadow: inset 0 -2px 0 var(--accent); }
+}
+[data-atlas-reduced-motion] .library-tabs-indicator { display: none; }
+[data-atlas-reduced-motion] .library-tabs > a[aria-current="page"] { box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* ---------- Space: head with actions, tabs (board 02) ---------- */
+.atlas .space-overview .space-hero:not(.md-editor):not(.md-editor *) { display: flex; align-items: flex-start; gap: 16px; min-width: 0; }
+/* The image of the space (SpaceCoverImage) is a band over the head, only when the space has one. Its height reserves
+   the box, so nothing shifts when the image arrives. */
+.atlas .space-overview .space-hero.has-cover:not(.md-editor):not(.md-editor *) { flex-wrap: wrap; }
+.atlas .space-overview .space-hero-cover:not(.md-editor):not(.md-editor *) { flex: 0 0 100%; height: 120px; border-radius: 16px; }
+.atlas .space-overview .space-hero .large-space-icon:not(.md-editor):not(.md-editor *) { width: 48px; height: 48px; margin: 0; border-radius: 12px; flex-shrink: 0; }
+.atlas .space-overview .space-hero-text:not(.md-editor):not(.md-editor *) { display: flex; flex: 1; flex-direction: column; gap: 6px; min-width: 0; }
+.atlas .space-overview .space-hero h1:not(.md-editor):not(.md-editor *) {
+  max-width: none;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.atlas .space-overview .space-hero-description:not(.md-editor):not(.md-editor *) { max-width: 760px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.atlas .space-overview .space-hero-facts:not(.md-editor):not(.md-editor *) { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; padding-top: 2px; color: var(--muted); font-size: 13px; }
+.atlas .space-fact:not(.md-editor):not(.md-editor *) { padding: 2px 8px; border-radius: 6px; background: color-mix(in srgb, var(--line) 50%, var(--surface)); color: var(--text); font-weight: 600; }
+.atlas .space-fact[data-tone="warning"]:not(.md-editor):not(.md-editor *) { background: var(--warning-bg); color: var(--warning); }
+.atlas .space-fact[data-tone="accent"]:not(.md-editor):not(.md-editor *) { background: var(--accent-soft); color: var(--accent); }
+.atlas .space-hero-actions:not(.md-editor):not(.md-editor *) { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; flex: none; }
+.atlas .space-hero-actions > button:not(.md-editor):not(.md-editor *) { height: 36px; padding: 0 14px; border-radius: 10px; font-weight: 600; }
+.atlas .space-hero-actions > button[data-space-settings-open]:not(.md-editor):not(.md-editor *) { font-weight: 500; }
+/* The head carries Nová stránka (or the menu Nový with the module Boards) on the overview; the bar's copy would repeat it. */
+.atlas .workspace[data-space-hero-new] .bar-actions .new-page-button:not(.md-editor):not(.md-editor *) { display: none; }
+
+.atlas .space-overview .space-tabs:not(.md-editor):not(.md-editor *) { position: relative; gap: 4px; margin: 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, var(--surface)); }
+.atlas .space-overview .space-tabs > button:not(.md-editor):not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  margin-bottom: -1px;
+  padding: 0 12px;
+  border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color var(--atlas-motion-fast) var(--atlas-ease-out), border-color var(--atlas-motion-base) var(--atlas-ease-inout), background-color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .atlas .space-overview .space-tabs > button:hover:not(.md-editor):not(.md-editor *) { color: var(--text); background: color-mix(in srgb, var(--hover) 45%, transparent); }
+}
+.atlas .space-overview .space-tabs > button.active:not(.md-editor):not(.md-editor *) { color: var(--accent); font-weight: 600; }
+/* The underline is the one that slides, as in Knihovna (.library-tabs-indicator, tabIndicator.ts). Where it is not
+   drawn (reduced motion, a phone) the current tab shows its own line, which fades in. */
+@media (prefers-reduced-motion: reduce) {
+  .atlas .space-overview .space-tabs > button.active:not(.md-editor):not(.md-editor *) { border-bottom-color: var(--accent); }
+}
+[data-atlas-reduced-motion] .space-overview .space-tabs > button.active:not(.md-editor):not(.md-editor *) { border-bottom-color: var(--accent); }
+@media (max-width: 680px) {
+  .atlas .space-overview .space-tabs > button.active:not(.md-editor):not(.md-editor *) { border-bottom-color: var(--accent); }
+}
+.atlas .space-tab-count:not(.md-editor):not(.md-editor *) { padding: 0 6px; border-radius: 9px; background: color-mix(in srgb, var(--line) 50%, var(--surface)); color: var(--muted); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.atlas .space-overview .space-empty:not(.md-editor):not(.md-editor *) { margin-top: 0; }
+
+/* ---------- Narrow widths and phones (board 14) ---------- */
+@container workspace-content (max-width: 900px) {
+  .atlas :is(.library-overview, .space-overview).overview:not(.md-editor):not(.md-editor *) { padding-block: 24px 36px; }
+  .atlas .space-overview .space-hero:not(.md-editor):not(.md-editor *) { flex-wrap: wrap; }
+  .atlas .space-hero-actions:not(.md-editor):not(.md-editor *) { flex: 1 1 100%; justify-content: flex-start; }
+}
+/* Phone: the shell's own breakpoint (680 px, shell.css), not a number of this screen. */
+@media (max-width: 680px) {
+  .atlas :is(.library-overview, .space-overview).overview:not(.md-editor):not(.md-editor *) { gap: 14px; padding: 16px 16px 28px; }
+  .atlas .library-overview .library-page-title h1:not(.md-editor):not(.md-editor *) { font-size: 22px; }
+  .atlas .library-page-title p:not(.md-editor):not(.md-editor *) { display: none; }
+  /* With the description hidden the title is the header's only line: it sits on the plus button's centre line
+     instead of hanging 9 px above it. */
+  .atlas .library-page-header:not(.md-editor):not(.md-editor *) { align-items: center; }
+  /* Nový prostor keeps its place as a 44 px plus; its name stays as the accessible label. */
+  .atlas .library-create:not(.md-editor):not(.md-editor *) { width: 44px; height: 44px; padding: 0; border-radius: 12px; }
+  .atlas .library-create-label:not(.md-editor):not(.md-editor *) { display: none; }
+  /* The parts as a scrolling row of pills. */
+  .atlas .library-overview .library-tabs:not(.md-editor):not(.md-editor *) {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin: 0 -16px;
+    padding: 0 16px 2px;
+    overflow-x: auto;
+    border-bottom: 0;
+    scrollbar-width: none;
+  }
+  .atlas .library-tabs > a:not(.md-editor):not(.md-editor *) {
+    flex: none;
+    height: 36px;
+    margin: 0;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: var(--surface);
+    color: var(--text);
+  }
+  .atlas .library-tabs > a[aria-current="page"]:not(.md-editor):not(.md-editor *) { border-color: var(--accent); background: var(--accent); color: var(--on-accent); box-shadow: none; }
+  .atlas .library-tabs > a[aria-current="page"] .library-tab-count:not(.md-editor):not(.md-editor *) { background: color-mix(in srgb, var(--on-accent) 22%, transparent); color: var(--on-accent); }
+  .atlas .library-tabs-indicator:not(.md-editor):not(.md-editor *) { display: none; }
+  .atlas .library-tab-short:not(.md-editor):not(.md-editor *) { display: inline; }
+  .atlas .library-tab-long:not(.md-editor):not(.md-editor *) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .atlas .space-overview .space-hero h1:not(.md-editor):not(.md-editor *) { font-size: 22px; }
+  .atlas .space-overview .space-hero-cover:not(.md-editor):not(.md-editor *) { height: 88px; border-radius: 12px; }
+  .atlas .space-overview .space-hero .large-space-icon:not(.md-editor):not(.md-editor *) { width: 40px; height: 40px; border-radius: 11px; }
+  .atlas .space-hero-actions > button:not(.md-editor):not(.md-editor *) { height: 40px; }
+}

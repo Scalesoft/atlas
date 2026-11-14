@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.6578810">
+  <PropertyGroup>
+    <!-- Library sources belong in the solution; the gallery hosts the running editor. -->
+    <ShouldRunNpmInstall>false</ShouldRunNpmInstall>
+    <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <BuildOutputFolder>$(MSBuildProjectDirectory)/dist</BuildOutputFolder>
+  </PropertyGroup>
+</Project>

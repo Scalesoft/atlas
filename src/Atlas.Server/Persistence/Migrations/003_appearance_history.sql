@@ -1,0 +1,12 @@
+ALTER TABLE "UserAppearancePreference" ADD COLUMN "Id" uuid NOT NULL DEFAULT gen_random_uuid();
+ALTER TABLE "UserAppearancePreference" ADD COLUMN "ActiveFrom" timestamptz NOT NULL DEFAULT now();
+ALTER TABLE "UserAppearancePreference" ADD COLUMN "ActiveTo" timestamptz NULL;
+ALTER TABLE "UserAppearancePreference" DROP CONSTRAINT "UserAppearancePreference_pkey";
+ALTER TABLE "UserAppearancePreference" ADD CONSTRAINT "PK_UserAppearancePreference" PRIMARY KEY ("Id");
+ALTER TABLE "UserAppearancePreference" ADD CONSTRAINT "CK_UserAppearancePreference_Interval" CHECK ("ActiveTo" IS NULL OR "ActiveTo" > "ActiveFrom");
+ALTER TABLE "UserAppearancePreference" ADD CONSTRAINT "CK_UserAppearancePreference_Layout" CHECK ("Layout" IN ('connected','islands'));
+ALTER TABLE "UserAppearancePreference" ADD CONSTRAINT "CK_UserAppearancePreference_Accent" CHECK ("Accent" IN ('blue','green'));
+ALTER TABLE "UserAppearancePreference" ADD CONSTRAINT "CK_UserAppearancePreference_Mode" CHECK ("Mode" IN ('system','light','dark'));
+CREATE UNIQUE INDEX "UX_UserAppearancePreference_Current" ON "UserAppearancePreference"("UserId") WHERE "ActiveTo" IS NULL;
+CREATE INDEX "IX_UserAppearancePreference_History" ON "UserAppearancePreference"("UserId","ActiveFrom" DESC);
+ALTER TABLE "UserAppearancePreference" ADD CONSTRAINT "EX_UserAppearancePreference_NoOverlap" EXCLUDE USING gist ("UserId" WITH =, tstzrange("ActiveFrom", "ActiveTo", '[)') WITH &&);

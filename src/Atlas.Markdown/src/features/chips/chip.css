@@ -1,0 +1,69 @@
+/* The inline chip (chip.ts), loaded with the editor styles (styles/editor.css). Tokens: a host or a chip's tone sets `--md-chip-*`;
+   the rules below only read them. The defaults sit in :where() (no specificity), so any class of a host or a tone wins whatever
+   order the stylesheets load in. The tag's values are the YouTrack issue's, the mention's the internal contact mention's. */
+:where(.md-chip) {
+  --md-chip-gap: 4px;
+  --md-chip-padding: 1px 6px;
+  --md-chip-radius: var(--radius-sm, 6px);
+  --md-chip-border-width: 1px;
+  --md-chip-border-style: solid;
+  --md-chip-border: var(--line, #d4e4e7);
+  --md-chip-bg: var(--accent-soft, #e3f4f7);
+  --md-chip-ink: var(--text, #102f36);
+  --md-chip-hover-bg: var(--md-chip-bg);
+  --md-chip-hover-border: var(--accent-line, #9dcbd6);
+  --md-chip-font-size: .92em;
+  --md-chip-line-height: 1.5;
+  --md-chip-weight: inherit;
+  --md-chip-align: baseline;
+  --md-chip-detail-ink: var(--text-dim, #49676e);
+  --md-chip-ring: var(--accent, #58a9b9);
+}
+.md-chip {
+  display: inline-flex; align-items: var(--md-chip-align); gap: var(--md-chip-gap); vertical-align: baseline;
+  box-sizing: border-box; max-width: 100%; margin: 0; padding: var(--md-chip-padding);
+  border: var(--md-chip-border-width) var(--md-chip-border-style) var(--md-chip-border); border-radius: var(--md-chip-radius);
+  background: var(--md-chip-bg); font-family: inherit; font-size: var(--md-chip-font-size); font-weight: var(--md-chip-weight); line-height: var(--md-chip-line-height);
+  text-align: left; cursor: pointer;
+  transition: background-color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease),
+    box-shadow var(--md-motion-fast) var(--md-motion-ease);
+}
+/* Over the editor's link colour and underline. */
+.md-chip, .md-editor .editor-body .md-chip { color: var(--md-chip-ink); text-decoration: none; }
+:where(.md-chip--mention) {
+  --md-chip-padding: 1px 3px;
+  --md-chip-radius: 5px;
+  --md-chip-border-width: 0px;
+  --md-chip-bg: transparent;
+  --md-chip-ink: var(--accent-ink, #246979);
+  --md-chip-hover-bg: var(--accent-soft, #e3f4f7);
+  --md-chip-font-size: 13px;
+  --md-chip-line-height: 1.4;
+  --md-chip-weight: 600;
+  --md-chip-align: center;
+}
+.md-chip > :is(.md-chip-label, .md-chip-detail) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Short of room the details give way first, so the name or title stays readable („Jana Nováková nejspíš Mo… · nebo …“);
+   a person's name gives way only when it alone is wider than the chip. Whole factors: shrink factors summing under 1 (a label
+   alone at .1) absorb only that fraction of the overflow, and the chip ran past the line at 375 px. */
+.md-chip > .md-chip-label { flex-shrink: 1; }
+.md-chip--mention > .md-chip-label { flex-shrink: 0; max-width: 100%; }
+.md-chip-detail { flex: 0 80 auto; max-width: 40%; color: var(--md-chip-detail-ink); font-size: .9em; font-weight: 400; }
+.md-chip-media { flex: none; }
+/* A person's avatar in the media slot (the contact mention's initials or photo on the user's colour). */
+.md-chip--mention > .md-chip-media { width: 18px; height: 18px; flex-basis: 18px; }
+.md-chip-mark { flex: none; color: var(--md-chip-detail-ink); font-weight: 600; }
+.md-chip:hover { background: var(--md-chip-hover-bg); border-color: var(--md-chip-hover-border); }
+.md-chip:focus-visible { outline: 2px solid var(--md-chip-ring); outline-offset: 2px; }
+/* Selected: the node (ProseMirror) or a chip a first Backspace armed (requirement facts). */
+.md-chip:is(.ProseMirror-selectednode, [data-chip-selected]) { background: color-mix(in srgb, var(--md-chip-ring) 16%, transparent); box-shadow: 0 0 0 2px var(--md-chip-ring); outline: none; }
+.md-chip[data-chip-state="unresolved"] {
+  --md-chip-border-width: 1px; --md-chip-border-style: dashed; --md-chip-border: var(--state-unresolved, var(--muted, var(--text-dim, #657b80)));
+  --md-chip-ink: var(--state-unresolved, var(--muted, var(--text-dim, #657b80))); --md-chip-bg: transparent; --md-chip-hover-border: var(--accent-line, #9dcbd6);
+}
+.md-chip--mention[data-chip-state="unresolved"] { --md-chip-padding: 0 2px; }
+.md-chip[data-chip-state="muted"] { --md-chip-bg: transparent; --md-chip-ink: var(--muted, var(--text-dim, #657b80)); }
+@media (prefers-reduced-motion: reduce) { .md-chip { transition: none; } }
+/* The hover preview (chipPreview.ts) enters and leaves like every popover; reduced motion is in the tokens (no travel, linear). */
+.md-chip-preview { animation: md-popover-enter var(--md-motion-menu) var(--md-motion-ease) both; }
+.md-chip-preview[data-leaving] { animation: md-popover-leave var(--md-motion-fast) var(--md-motion-ease) both; }

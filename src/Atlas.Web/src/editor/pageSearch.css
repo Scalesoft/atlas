@@ -1,0 +1,5 @@
+/* The pulse of a jump in Hledat ve stránce (pageSearch.ts pulseMatch): a ring over the match, outside the page's DOM. */
+.page-search-pulse {
+  position: fixed; z-index: 60; border: 2px solid var(--warning); border-radius: 6px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--warning) 25%, transparent);
+  pointer-events: none; opacity: 0;
+}

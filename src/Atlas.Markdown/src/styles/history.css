@@ -1,0 +1,35 @@
+.md-document-history { --history-ink: var(--text, #24434b); --history-muted: var(--text-dim, #667e85); --history-line: var(--line, #dce7eb); --history-blue: var(--accent, #3784a5); --history-orange: #b17b36; --history-green: #278373; color: var(--history-ink); font: inherit; min-width: 0; }
+.md-document-history * { box-sizing: border-box; }
+:is(.md-document-history,.md-section-review) .md-renderer .ProseMirror { font-size:15px; line-height:1.7; letter-spacing:.005em; }
+:is(.md-document-history,.md-section-review) .md-renderer h1 { font-size:30px; font-weight:600; line-height:1.25; letter-spacing:-.025em; margin:26px 0 10px; }
+:is(.md-document-history,.md-section-review) .md-renderer h2 { font-size:22px; font-weight:600; line-height:1.3; letter-spacing:-.015em; margin:22px 0 8px; }
+:is(.md-document-history,.md-section-review) .md-renderer h3 { font-size:17px; font-weight:600; line-height:1.35; margin:18px 0 6px; }
+:is(.md-document-history,.md-section-review) .md-renderer :is(h4,h5,h6) { font-size:15px; font-weight:600; line-height:1.4; margin:14px 0 4px; }
+:is(.md-document-history,.md-section-review) .md-renderer h5 { font-size:14px; }
+:is(.md-document-history,.md-section-review) .md-renderer h6 { font-size:13px; }
+:is(.md-document-history,.md-section-review) .md-renderer .ProseMirror > :first-child { margin-top:0; }
+.md-history-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:2px 16px 0; }
+.md-history-navigation { display:flex; align-items:center; gap:5px; font-size:12px; font-variant-numeric:tabular-nums; }
+.md-history-controls button { display:grid; place-items:center; min-width:25px; height:25px; padding:0 4px; border:0; border-radius:6px; background:transparent; color:inherit; font:inherit; font-size:17px; cursor:pointer; }
+.md-history-controls button:disabled { opacity:.5; cursor:default; }
+.md-history-controls button:hover:not(:disabled) { background:var(--bg-2, #f0f6f7); }
+.md-history-zoom { display:flex; align-items:center; gap:4px; margin-left:auto; }
+.md-history-zoom input { width:76px; height:24px; margin:0; accent-color:var(--history-blue); }
+.md-history-track { height:56px; position:relative; margin:0 18px; }
+.md-history-track svg { display:block; width:100%; height:56px; overflow:hidden; }
+.md-history-track-fill { fill:var(--bg-2, #f3f7f8); }.md-history-grid { stroke:var(--history-line); }
+.md-history-track text { fill:var(--history-muted); font:11px system-ui,sans-serif; }
+.md-history-mark { fill:var(--history-orange); }.md-history-mark[data-kind=approve] { fill:var(--history-green); }.md-history-mark[data-kind=structure] { fill:var(--history-blue); }
+.md-history-playhead { stroke:var(--history-orange); fill:var(--history-orange); }
+.md-history-scrub { position:absolute; inset:0; width:100%; height:56px; margin:0; opacity:0; cursor:ew-resize; touch-action:none; }
+.md-history-track:focus-within { outline:2px solid var(--history-blue); outline-offset:var(--focus-offset, 2px); border-radius:5px; }
+.md-history-context { display:flex; flex-wrap:wrap; align-items:center; gap:5px 12px; padding:5px 19px 10px; border-bottom:1px solid var(--history-line); font-size:11px; color:var(--history-muted); }
+.md-history-context label { display:flex; align-items:center; gap:6px; margin-left:auto; cursor:pointer; }.md-history-context input { accent-color:var(--history-orange); }
+.md-history-preview { padding:20px 27px 18px; }.md-history-preview .ProseMirror { padding:0; }
+.md-history-caption,.md-history-loading { font-size:11px; color:var(--history-muted); margin:0 0 16px; }
+.md-history-error { padding:12px 20px; color:var(--error, #a4523a); font-size:12px; }
+.md-history-error button,.md-history-older button { border:0; background:transparent; color:inherit; font:inherit; text-decoration:underline; cursor:pointer; }
+.md-history-older { padding:4px 19px; font-size:11px; color:var(--history-muted); }
+@container (max-width:640px) { .md-history-controls { padding-top:22px; } }
+@container (max-width:480px) { .md-history-controls { padding-inline:10px; gap:3px; }.md-history-track { margin-inline:12px; }.md-history-zoom button { display:none; }.md-history-zoom input { width:64px; }.md-history-context { padding:5px 14px 8px; }.md-history-context label { margin-left:0; }.md-history-preview { padding:18px; } }
+@media (pointer:coarse) { .md-history-controls button,.md-history-zoom input,.md-history-context label { min-height:44px; }.md-history-controls button { min-width:44px; } }

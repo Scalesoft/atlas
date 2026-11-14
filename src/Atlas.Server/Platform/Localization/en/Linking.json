@@ -1,0 +1,13 @@
+{
+  "Zmínka na tomto místě má jiný text; načtěte nepropojené zmínky znovu.": "The mention at this place has a different text; load the unlinked mentions again.",
+  "Zmínka je už propojená.": "The mention is already linked.",
+  "choice je {\"targetId\": \"…\"}, nebo \"text\".": "choice is {\"targetId\": \"…\"} or \"text\".",
+  "Zmínka je už propojená s někým jiným.": "The mention is already linked to someone else.",
+  "Cíl nebyl nalezen: kontakt, účet nebo stránka tohoto prostoru, které smíte číst.": "The target was not found: a contact, account or page of this space that you may read.",
+  "Zmínka je rozdělená formátováním; propojte ji v editoru.": "The mention is split by formatting; link it in the editor.",
+  "Neplatný cursor. Použijte hodnotu nextCursor z předchozího výsledku beze změny.": "Invalid cursor. Use the nextCursor value from the previous result unchanged.",
+  "Zadejte pageId, nebo spaceId s textem.": "Enter pageId, or spaceId with text.",
+  "Zmínka je druhu {kind}, cíl druhu {kind1}.": "The mention is of kind {kind}, the target of kind {kind1}.",
+  "limit je 1 až {maxLimit}.": "limit is 1 to {maxLimit}.",
+  "text je povinný, nejvýše {maxText} znaků.": "text is required, at most {maxText} characters."
+}

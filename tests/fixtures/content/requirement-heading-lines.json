@@ -1,0 +1,805 @@
+[
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "portal"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Portál pacienta"
+        }
+      ]
+    },
+    "markdown": "## Portál pacienta"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 3,
+        "headingId": "portal.ssl",
+        "state": "waiting_for_input",
+        "direction": "inbound",
+        "system": "NIA",
+        "party": "Jan Novák",
+        "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "SSL certifikát"
+        }
+      ]
+    },
+    "markdown": "### SSL certifikát {#portal.ssl state=waiting_for_input kind=inbound party=\"Jan Novák\" partyContact=0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b system=NIA}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 3,
+        "headingId": "portal.dns",
+        "state": "planned",
+        "direction": "outbound",
+        "party": "IT oddělení"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "DNS záznam"
+        }
+      ]
+    },
+    "markdown": "### DNS záznam {#portal.dns state=planned kind=outbound party=\"IT oddělení\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "objednavky",
+        "state": "in_progress"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Objednávky"
+        }
+      ]
+    },
+    "markdown": "## Objednávky {#objednavky state=in_progress}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "poznamka",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Poznámka"
+        }
+      ]
+    },
+    "markdown": "## Poznámka {#poznamka state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "seznam",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Seznam"
+        }
+      ]
+    },
+    "markdown": "## Seznam {#seznam state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned",
+        "party": "Eva Malá"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned party=\"Eva Malá\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "planned",
+        "party": "X"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=planned party=X}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "c",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "C"
+        }
+      ]
+    },
+    "markdown": "## C {#c state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "d",
+        "state": "planned",
+        "party": "Eva"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "D"
+        }
+      ]
+    },
+    "markdown": "## D {#d state=planned party=Eva}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned",
+        "party": "Jan"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned party=Jan}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "planned",
+        "party": "Eva Malá"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=planned party=\"Eva Malá\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned",
+        "party": "Jan"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned party=Jan}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "planned",
+        "party": "Eva Malá"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=planned party=\"Eva Malá\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned",
+        "party": "Oddělení IT"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned party=\"Oddělení IT\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "planned",
+        "direction": "outbound",
+        "party": "PX2-7 a Jan Novák"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=planned kind=outbound party=\"PX2-7 a Jan Novák\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "x",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "X"
+        }
+      ]
+    },
+    "markdown": "## X {#x state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "y",
+        "state": "planned",
+        "party": "Jan"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Y"
+        }
+      ]
+    },
+    "markdown": "## Y {#y state=planned party=Jan}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "prvni",
+        "state": "in_progress",
+        "party": "Eva"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "První"
+        }
+      ]
+    },
+    "markdown": "## První {#prvni state=in_progress party=Eva}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "treti",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Třetí"
+        }
+      ]
+    },
+    "markdown": "## Třetí {#treti state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "z",
+        "state": "done"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Z"
+        }
+      ]
+    },
+    "markdown": "## Z {#z state=done}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 1,
+        "headingId": "mpi"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "MPI"
+        }
+      ]
+    },
+    "markdown": "# MPI"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "server",
+        "state": null
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Server"
+        }
+      ]
+    },
+    "markdown": "## Server"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 3,
+        "headingId": "server.disk",
+        "state": "done"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": " Disk "
+        },
+        {
+          "type": "hardBreak"
+        },
+        {
+          "type": "text",
+          "text": "100 GB"
+        }
+      ]
+    },
+    "markdown": "###  Disk \\\n100 GB {#server.disk state=done}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 4,
+        "headingId": "poznamky"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Poznámky"
+        }
+      ]
+    },
+    "markdown": "#### Poznámky"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "portal.web",
+        "state": "blocked"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Web"
+        },
+        {
+          "type": "youtrackIssue",
+          "attrs": {
+            "key": " PX2-42 "
+          }
+        }
+      ]
+    },
+    "markdown": "## Web[PX2-42: ]() {#portal.web state=blocked}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "done",
+        "party": "Eva"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=done party=Eva}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "state": "not_applicable",
+        "direction": null,
+        "party": "Helpdesk"
+      },
+      "content": []
+    },
+    "markdown": "## {state=not_applicable party=Helpdesk}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "t",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Napojení "
+        },
+        {
+          "type": "contactInline",
+          "attrs": {
+            "data": {
+              "version": 1,
+              "contacts": [
+                {
+                  "name": "Jan Novák",
+                  "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": " na "
+        },
+        {
+          "type": "pageReference",
+          "attrs": {
+            "id": "0b5f3c1e-0000-4000-8000-0000000000b2",
+            "title": "VPN",
+            "url": "#/pages/0b5f3c1e-0000-4000-8000-0000000000b2"
+          }
+        },
+        {
+          "type": "text",
+          "text": " "
+        },
+        {
+          "type": "youtrackIssue",
+          "attrs": {
+            "key": "PX2-9"
+          }
+        }
+      ]
+    },
+    "markdown": "## Napojení [Jan Novák](a-contact:?name=Jan%20Novák&objectId=0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b) na [VPN](#/pages/0b5f3c1e-0000-4000-8000-0000000000b2) [PX2-9: ]() {#t state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned",
+        "party": "Eva Malá",
+        "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned party=\"Eva Malá\" partyContact=0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "planned",
+        "party": "",
+        "partyContactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "c",
+        "party": "Plain"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "C"
+        }
+      ]
+    },
+    "markdown": "## C"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "d",
+        "state": "done",
+        "direction": "outbound",
+        "party": "  IT\u00A0 "
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "D"
+        }
+      ]
+    },
+    "markdown": "## D {#d state=done kind=outbound party=\"  IT\u00A0 \"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "a",
+        "state": "planned",
+        "party": "DODAVATEL"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "A"
+        }
+      ]
+    },
+    "markdown": "## A {#a state=planned party=DODAVATEL}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "level": 2,
+        "headingId": "b",
+        "state": "planned"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "B"
+        }
+      ]
+    },
+    "markdown": "## B {#b state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "q.1",
+        "state": "blocked",
+        "direction": "outbound",
+        "party": "Jan \"Honza\" Novák",
+        "system": "A {B} \\ C",
+        "stateLabel": "čeká na IT",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Uvozovky a mezery"
+        }
+      ]
+    },
+    "markdown": "## Uvozovky a mezery {#q.1 state=blocked kind=outbound party=\"Jan \\\"Honza\\\" Novák\" system=\"A \\{B\\} \\\\ C\" stateLabel=\"čeká na IT\"}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "plain.1",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Text jako blok {#x state=done}"
+        }
+      ]
+    },
+    "markdown": "## Text jako blok \\{#x state=done}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "q.2",
+        "state": "planned",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Požadavek s textem jako blok {a=b}"
+        }
+      ]
+    },
+    "markdown": "## Požadavek s textem jako blok \\{a=b} {#q.2 state=planned}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "v3-h2",
+        "state": "done",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Dočasné ID"
+        }
+      ]
+    },
+    "markdown": "## Dočasné ID {state=done}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "hash.1",
+        "state": "done",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Issue #"
+        }
+      ]
+    },
+    "markdown": "## Issue \\# {#hash.1 state=done}"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "hash.2",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "C# a F ##"
+        }
+      ]
+    },
+    "markdown": "## C# a F \\##"
+  },
+  {
+    "heading": {
+      "type": "heading",
+      "attrs": {
+        "headingId": "brace.1",
+        "state": "planned",
+        "party": "Firma {CZ}",
+        "stateLabel": "čeká {na} IT",
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Složená závorka"
+        }
+      ]
+    },
+    "markdown": "## Složená závorka {#brace.1 state=planned party=\"Firma \\{CZ\\}\" stateLabel=\"čeká \\{na\\} IT\"}"
+  }
+]

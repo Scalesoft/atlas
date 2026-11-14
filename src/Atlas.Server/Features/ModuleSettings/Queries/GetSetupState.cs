@@ -1,0 +1,3 @@
+namespace Atlas.Server.Features.ModuleSettings.Queries;
+
+public sealed record GetSetupState;

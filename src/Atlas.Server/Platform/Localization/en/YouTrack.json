@@ -1,0 +1,15 @@
+{
+  "Integraci spravuje správce wiki.": "The integration is managed by a wiki admin.",
+  "Nastavení YouTrack se mezitím změnilo. Zkuste požadavek znovu.": "The YouTrack settings have changed in the meantime. Try the request again.",
+  "Adresa YouTrack musí být HTTPS bez přihlašovacích údajů, parametrů a fragmentu.": "The YouTrack address must be HTTPS without credentials, parameters or a fragment.",
+  "Token nelze současně změnit a odstranit.": "The token cannot be changed and removed at the same time.",
+  "Každý prostor může mít právě jednu sadu povolených projektů.": "Each space can have exactly one set of allowed projects.",
+  "Použijte stabilní ID projektů YouTrack, například 0-7; nejvýše 100 na prostor.": "Use stable YouTrack project IDs, for example 0-7; at most 100 per space.",
+  "Některý prostor již neexistuje.": "A space no longer exists.",
+  "Pro zapnutí integrace vyplňte adresu a nový přístupový token.": "To turn on the integration, fill in the address and a new access token.",
+  "Úkol nebyl nalezen v povolených projektech.": "The issue was not found in the allowed projects.",
+  "Najednou lze ověřit 1 až 100 úkolů.": "You can verify 1 to 100 issues at once.",
+  "YouTrack není dostupný. Zkontrolujte uložené spojení, oprávnění servisního účtu a povolené projekty, nebo zkuste požadavek později.": "YouTrack is not available. Check the saved connection, the service account's permissions and the allowed projects, or try the request later.",
+  "Použijte výraz do 256 znaků, ID úkolu nebo odkaz z nakonfigurovaného YouTrack.": "Use an expression of up to 256 characters, an issue ID or a link from the configured YouTrack.",
+  "Spojení funguje. Vyberte projekty povolené pro jednotlivé prostory.": "The connection works. Choose the projects allowed for individual spaces."
+}

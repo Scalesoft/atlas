@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "body": {
+    "type": "UsergroupsPage",
+    "next": "https://hub.example.test/hub/api/rest/usergroups?%24skip=2&%24top=2",
+    "skip": 0,
+    "top": 2,
+    "usergroups": [
+      {
+        "type": "userGroup",
+        "id": "10000000-0000-4000-8000-000000000005",
+        "name": "Atlas Contract Parent"
+      },
+      {
+        "type": "userGroup",
+        "id": "10000000-0000-4000-8000-000000000006",
+        "name": "Atlas Contract Child"
+      }
+    ]
+  }
+}

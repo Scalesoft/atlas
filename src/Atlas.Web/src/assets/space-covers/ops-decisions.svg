@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220">
+<rect width="640" height="220" fill="#ffffff"/>
+<rect x="98" y="40" width="54" height="64" rx="4" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M112 72l8 8 16-18" fill="none" stroke="#3a3a3a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="70" y="90" width="110" height="80" rx="6" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/>
+<rect x="96" y="90" width="58" height="6" rx="2" fill="#3a3a3a"/>
+<rect x="100" y="130" width="50" height="8" rx="4" fill="#9a9a9a"/>
+<rect x="414" y="24" width="12" height="180" rx="3" fill="#5a5a5a"/>
+<path d="M430 44h110l20 22-20 22H430z" fill="#ffffff" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="444" y="60" width="70" height="8" rx="4" fill="#5a5a5a"/>
+<path d="M410 104H300l-20 22 20 22h110z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="312" y="120" width="76" height="8" rx="4" fill="#9a9a9a"/>
+<path d="M430 160h90l16 16-16 16h-90z" fill="#ffffff" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="444" y="172" width="50" height="7" rx="3.5" fill="#bdbdbd"/>
+</svg>

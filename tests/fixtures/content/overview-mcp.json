@@ -1,0 +1,20 @@
+{
+  "_comment": "AI parity of the overview (plan 3.4 R6): every kind and every action of an overview (overviewKinds.ts) names its MCP tool. overview.test.ts fails for a kind or action registered on the web without an entry; ModuleCommandCoverageTests fails for an entry whose tool the server does not register.",
+  "kinds": {
+    "requirements": "atlas_get_overview",
+    "contacts": "atlas_get_overview",
+    "issues": "atlas_get_overview"
+  },
+  "actions": {
+    "requirements.compose-board": "projector_compose_board",
+    "requirements.fill-prerequisites": "projector_insert_requirements",
+    "contacts.vcf": "atlas_get_overview",
+    "contacts.emails": "atlas_get_overview",
+    "issues.copy-keys": "atlas_get_overview",
+    "issues.csv": "atlas_get_overview"
+  },
+  "insert": {
+    "page": "atlas_insert_section",
+    "board": "atlas_edit_board"
+  }
+}

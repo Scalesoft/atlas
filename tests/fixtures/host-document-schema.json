@@ -1,0 +1,20 @@
+{
+  "version": 7,
+  "profile": "rich",
+  "plugins": [
+    { "id": "atlas-requirements", "version": 4 },
+    { "id": "attachments", "version": 1 },
+    { "id": "charts", "version": 1 },
+    { "id": "concealed", "version": 2 },
+    { "id": "contacts", "version": 2 },
+    { "id": "diagrams", "version": 2 },
+    { "id": "emoji", "version": 1 },
+    { "id": "heading-anchors", "version": 2 },
+    { "id": "math", "version": 1 },
+    { "id": "openapi", "version": 1 },
+    { "id": "pages", "version": 1 },
+    { "id": "secrets", "version": 4 },
+    { "id": "toc", "version": 1 },
+    { "id": "youtrack", "version": 1 }
+  ]
+}

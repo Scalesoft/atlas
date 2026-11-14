@@ -1,0 +1,939 @@
+[
+  {
+    "path": "Deployment-Guide.md",
+    "title": "Deployment Guide",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "See also "
+              },
+              {
+                "type": "text",
+                "text": "Home",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/df9ddfd9-4481-2ee7-d372-27a094ad4728",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "Release process",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/1e23f551-b228-b2f5-7e40-8e889d58ee1f",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Relative link: "
+              },
+              {
+                "type": "text",
+                "text": "Runbook",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/5faceeac-909d-06c7-382b-75c5249948ff",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and "
+              },
+              {
+                "type": "text",
+                "text": "Runbook section",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/5faceeac-909d-06c7-382b-75c5249948ff?heading=import-09a77bb588b2bd1103613b38",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ", same-page "
+              },
+              {
+                "type": "text",
+                "text": "jump",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/c17a4799-8071-6e1c-cf56-437239a3d223?heading=import-74ecb1016891273e3f4959ca",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "callout",
+            "attrs": {
+              "variant": "note"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Deployments are frozen on Fridays."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "callout",
+            "attrs": {
+              "variant": "warning"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Never deploy without a backup."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-0eafe884c097d37162d28eea"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Prerequisites"
+              }
+            ]
+          },
+          {
+            "type": "taskList",
+            "content": [
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": true
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Access to the cluster"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "taskItem",
+                "attrs": {
+                  "checked": false
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "VPN configured"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "taskList",
+                    "content": [
+                      {
+                        "type": "taskItem",
+                        "attrs": {
+                          "checked": false
+                        },
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "nested task"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "attrs": {
+              "tight": true
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Plain bullet with "
+                      },
+                      {
+                        "type": "text",
+                        "text": "strikethrough",
+                        "marks": [
+                          {
+                            "type": "strike"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " and "
+                      },
+                      {
+                        "type": "text",
+                        "text": "bold ",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "nested italic",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          },
+                          {
+                            "type": "italic"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": " and "
+                      },
+                      {
+                        "type": "text",
+                        "text": "inline code",
+                        "marks": [
+                          {
+                            "type": "code"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "tight": true,
+              "start": 1
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "First"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Second"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "orderedList",
+                    "attrs": {
+                      "tight": true,
+                      "start": 1
+                    },
+                    "content": [
+                      {
+                        "type": "listItem",
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Nested ordered"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Third"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "content": [
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "textAlign": "left",
+                      "align": "left"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Service"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "textAlign": "right",
+                      "align": "right"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Port"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "textAlign": "center",
+                      "align": "center"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Owner"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "left",
+                      "align": "left"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "api"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "right",
+                      "align": "right"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "8080"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "center",
+                      "align": "center"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "@team"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "left",
+                      "align": "left"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "worker"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "right",
+                      "align": "right"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "—"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "textAlign": "center",
+                      "align": "center"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ops"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 3,
+              "headingId": "import-f3f6eae789fdf79e93d14a0f"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Architecture"
+              }
+            ]
+          },
+          {
+            "type": "diagram",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "source": "flowchart LR\n  A[Client] --> B[API]",
+                "caption": ""
+              }
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Inline math "
+              },
+              {
+                "type": "mathInline",
+                "attrs": {
+                  "data": {
+                    "version": 1,
+                    "expression": "E = mc^2"
+                  }
+                }
+              },
+              {
+                "type": "text",
+                "text": " and block math:"
+              }
+            ]
+          },
+          {
+            "type": "mathBlock",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "expression": "\\sum_{i=1}^n i = \\frac{n(n+1)}{2}"
+              }
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 4,
+              "headingId": "import-74ecb1016891273e3f4959ca"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Rollback"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Bare URL "
+              },
+              {
+                "type": "text",
+                "text": "https://example.com/docs",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.com/docs",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " and autolink "
+              },
+              {
+                "type": "text",
+                "text": "https://example.org",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://example.org",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Footnote reference"
+              },
+              {
+                "type": "text",
+                "text": "[1]",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "/#/pages/c17a4799-8071-6e1c-cf56-437239a3d223?heading=import-1a72b432d5014021b38b386e",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": ". Emoji \uD83D\uDE80."
+              }
+            ]
+          },
+          {
+            "type": "image",
+            "attrs": {
+              "src": "/api/attachments/bcb3c293-ad2f-36bb-bb0d-b4a3b5b3b571/content",
+              "alt": "Architecture diagram",
+              "title": null
+            }
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 5,
+              "headingId": "import-c074853e6a64b3021f859db2"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Advanced options"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Hidden "
+              },
+              {
+                "type": "text",
+                "text": "content",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " here."
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Line one"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "line two"
+              },
+              {
+                "type": "hardBreak"
+              },
+              {
+                "type": "text",
+                "text": "hard break above."
+              }
+            ]
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "language": "bash"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "kubectl rollout undo deployment/api"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-1a72b432d5014021b38b386e"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Poznámky pod čarou"
+              }
+            ]
+          },
+          {
+            "type": "orderedList",
+            "attrs": {
+              "tight": true,
+              "start": 1
+            },
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "The footnote text. "
+                      },
+                      {
+                        "type": "text",
+                        "text": "↩",
+                        "marks": [
+                          {
+                            "type": "link",
+                            "attrs": {
+                              "href": "/#/pages/c17a4799-8071-6e1c-cf56-437239a3d223?heading=import-74ecb1016891273e3f4959ca",
+                              "target": "_blank",
+                              "rel": "noopener noreferrer"
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "diagrams",
+          "version": 2
+        },
+        {
+          "id": "heading-anchors",
+          "version": 2
+        },
+        {
+          "id": "math",
+          "version": 1
+        }
+      ]
+    },
+    "markdown": "See also [Home](/#/pages/df9ddfd9-4481-2ee7-d372-27a094ad4728) and [Release process](/#/pages/1e23f551-b228-b2f5-7e40-8e889d58ee1f). Relative link: [Runbook](/#/pages/5faceeac-909d-06c7-382b-75c5249948ff) and [Runbook section](/#/pages/5faceeac-909d-06c7-382b-75c5249948ff?heading=import-09a77bb588b2bd1103613b38), same-page [jump](/#/pages/c17a4799-8071-6e1c-cf56-437239a3d223?heading=import-74ecb1016891273e3f4959ca).\n\n> [!NOTE]\n> Deployments are frozen on Fridays.\n\n> [!WARNING]\n> Never deploy without a backup.\n\n## Prerequisites\n\n- [x] Access to the cluster\n\n- [ ] VPN configured\n\n  - [ ] nested task\n\n- Plain bullet with ~~strikethrough~~ and **bold *nested italic*** and `inline code`\n\n1. First\n2. Second\n   1. Nested ordered\n3. Third\n\n| Service | Port | Owner |\n| :--- | ---: | :---: |\n| api | 8080 | @team |\n| worker | — | ops |\n\n### Architecture\n\n```mermaid\nflowchart LR\n  A[Client] --> B[API]\n```\n\nInline math $E = mc^2$ and block math:\n\n$$\n\\sum_{i=1}^n i = \\frac{n(n+1)}{2}\n$$\n\n#### Rollback\n\nBare URL <https://example.com/docs> and autolink <https://example.org>. Footnote reference[\\[1\\]](/#/pages/c17a4799-8071-6e1c-cf56-437239a3d223?heading=import-1a72b432d5014021b38b386e). Emoji \uD83D\uDE80.\n\n![Architecture diagram](/api/attachments/bcb3c293-ad2f-36bb-bb0d-b4a3b5b3b571/content)\n\n##### Advanced options\n\nHidden **content** here.\n\nLine one\\\nline two\\\nhard break above.\n\n```bash\nkubectl rollout undo deployment/api\n```\n\n## Poznámky pod čarou\n\n1. The footnote text. [↩](/#/pages/c17a4799-8071-6e1c-cf56-437239a3d223?heading=import-74ecb1016891273e3f4959ca)",
+    "findings": [
+      {
+        "construct": "footnote",
+        "impact": "degraded",
+        "count": 1,
+        "line": 61,
+        "excerpt": "[^1]: The footnote text."
+      }
+    ]
+  },
+  {
+    "path": "Home.md",
+    "title": "Home",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Welcome."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "Welcome.",
+    "findings": []
+  },
+  {
+    "path": "Release-Process.md",
+    "title": "Release Process",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Steps."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "Steps.",
+    "findings": []
+  },
+  {
+    "path": "Runbook.md",
+    "title": "Runbook",
+    "tags": [],
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2,
+              "headingId": "import-09a77bb588b2bd1103613b38"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Rollback"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Undo."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "heading-anchors",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "## Rollback\n\nUndo.",
+    "findings": []
+  }
+]

@@ -1,0 +1,106 @@
+{
+  "version": "answer-diagnostic@1",
+  "cases": [
+    {
+      "id": "vpn",
+      "question": "Jak se připojím k VPN?",
+      "answerable": true,
+      "sources": [
+        {
+          "pageTitle": "Připojení k VPN – syntetická ukázka",
+          "heading": "Připojení",
+          "text": "Otevřete klienta Atlas VPN, vyberte profil Práce a potvrďte přihlášení druhým faktorem. Chyba 7200 znamená neplatný certifikát zařízení."
+        }
+      ],
+      "expectedCitations": [
+        1
+      ]
+    },
+    {
+      "id": "certificate",
+      "question": "Jak opravím chybu 7200?",
+      "answerable": true,
+      "sources": [
+        {
+          "pageTitle": "Připojení k VPN – syntetická ukázka",
+          "heading": "Připojení",
+          "text": "Otevřete klienta Atlas VPN, vyberte profil Práce a potvrďte přihlášení druhým faktorem. Chyba 7200 znamená neplatný certifikát zařízení."
+        },
+        {
+          "pageTitle": "Certifikát – syntetická ukázka",
+          "heading": "Obnova",
+          "text": "Při chybě 7200 obnovte certifikát v portálu Zařízení a znovu připojte VPN."
+        }
+      ],
+      "expectedCitations": [
+        2
+      ]
+    },
+    {
+      "id": "restore",
+      "question": "Co udělám před obnovou databáze?",
+      "answerable": true,
+      "sources": [
+        {
+          "pageTitle": "Obnova – syntetická ukázka",
+          "heading": "Postup",
+          "text": "Před obnovou databáze zastavte aplikaci. Zálohu obnovte příkazem pg_restore a následně zkontrolujte počet záznamů."
+        }
+      ],
+      "expectedCitations": [
+        1
+      ]
+    },
+    {
+      "id": "verification",
+      "question": "Co mám zkontrolovat po obnově databáze?",
+      "answerable": true,
+      "sources": [
+        {
+          "pageTitle": "Připojení k VPN – syntetická ukázka",
+          "heading": "Připojení",
+          "text": "Otevřete klienta Atlas VPN, vyberte profil Práce a potvrďte přihlášení druhým faktorem. Chyba 7200 znamená neplatný certifikát zařízení."
+        },
+        {
+          "pageTitle": "Obnova – syntetická ukázka",
+          "heading": "Postup",
+          "text": "Před obnovou databáze zastavte aplikaci. Zálohu obnovte příkazem pg_restore a následně zkontrolujte počet záznamů."
+        }
+      ],
+      "expectedCitations": [
+        2
+      ]
+    },
+    {
+      "id": "holiday",
+      "question": "Kolik dní dovolené mám za rok?",
+      "answerable": false,
+      "sources": [
+        {
+          "pageTitle": "Připojení k VPN – syntetická ukázka",
+          "heading": "Připojení",
+          "text": "Otevřete klienta Atlas VPN, vyberte profil Práce a potvrďte přihlášení druhým faktorem. Chyba 7200 znamená neplatný certifikát zařízení."
+        },
+        {
+          "pageTitle": "Certifikát – syntetická ukázka",
+          "heading": "Obnova",
+          "text": "Při chybě 7200 obnovte certifikát v portálu Zařízení a znovu připojte VPN."
+        }
+      ],
+      "expectedCitations": []
+    },
+    {
+      "id": "password",
+      "question": "Jaké je heslo k nouzovému účtu?",
+      "answerable": false,
+      "sources": [
+        {
+          "pageTitle": "Obnova – syntetická ukázka",
+          "heading": "Postup",
+          "text": "Před obnovou databáze zastavte aplikaci. Zálohu obnovte příkazem pg_restore a následně zkontrolujte počet záznamů."
+        }
+      ],
+      "expectedCitations": []
+    }
+  ]
+}

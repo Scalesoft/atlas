@@ -1,0 +1,70 @@
+/*
+ * Motion tokens: the one source of the editor's motion defaults, the values of the owner's motion prototype
+ * (Atlas 2.0). Zero specificity, so a host remaps them in any load order; README „Motion tokens“ has the contract.
+ * Durations: fast (hover, colours) · base (content entering) · slow (unfolding) · menu · target (a surface or a
+ * drop target appearing) · pop (a success state) · glow (an accepted change) · loop / spin / pulse (work in
+ * progress only). `--md-motion-time-scale` multiplies only fixed literals in JavaScript (core/motion.ts).
+ */
+:where(:root) {
+  --md-motion-fast: 120ms; --md-motion-base: 200ms; --md-motion-slow: 280ms;
+  --md-motion-menu: 140ms; --md-motion-target: 160ms; --md-motion-pop: 320ms;
+  --md-motion-glow: 1600ms; --md-motion-loop: 1600ms; --md-motion-spin: 800ms; --md-motion-pulse: 1000ms;
+  --md-motion-ease: cubic-bezier(.22, 1, .36, 1); --md-motion-ease-io: cubic-bezier(.65, 0, .35, 1);
+  --md-motion-rise: 4px; --md-motion-pop-from: .8;
+  --md-motion-time-scale: 1;
+  /* The invisible ink and the secrets vault (O6): their own long signature timing, never the quick editor one. */
+  --md-conceal-fast: 200ms; --md-conceal-enter: 520ms; --md-conceal-unfold: 900ms; --md-conceal-roll: 2800ms;
+  --md-conceal-aurora: 42s; --md-conceal-stagger: 70ms;
+  --md-conceal-ease: cubic-bezier(.22, 1, .36, 1); --md-conceal-ease-rail: cubic-bezier(.2, 1.2, .4, 1); --md-conceal-ease-roll: cubic-bezier(.45, .05, .3, 1);
+}
+/* An alias resolves where a host may remap the token it points to. */
+:where(:root, .md-editor) { --md-motion-surface: var(--md-motion-target); }
+/*
+ * Reduced motion never switches feedback off (prototype): durations at most 160 ms, linear, no travel, a pop
+ * without scale, loops stand still (0 s). The afterglow keeps its length, as a background fade only; the `--md-conceal-*`
+ * group follows (entries at most 160 ms). Transitions keep only opacity and colour, so drag positions, chevrons and panels arrive without an in-between frame, in the
+ * editor and in the outline layout around an editor or renderer; the invisible ink has its own reduced path.
+ * `data-md-motion="reduced"` forces the same for a subtree (previews).
+ */
+@media (prefers-reduced-motion: reduce) {
+  :where(:root) {
+    --md-motion-base: 160ms; --md-motion-slow: 160ms; --md-motion-pop: 160ms;
+    --md-motion-loop: 0s; --md-motion-spin: 0s; --md-motion-pulse: 0s;
+    --md-motion-ease: linear; --md-motion-ease-io: linear; --md-motion-rise: 0px; --md-motion-pop-from: 1;
+    --md-conceal-fast: 160ms; --md-conceal-enter: 160ms; --md-conceal-unfold: 160ms; --md-conceal-roll: 160ms;
+    --md-conceal-aurora: 0s; --md-conceal-stagger: 0s; --md-conceal-ease: linear; --md-conceal-ease-rail: linear; --md-conceal-ease-roll: linear;
+  }
+  :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) :not(.md-concealed *),
+  :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) :not(.md-concealed *)::before,
+  :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) :not(.md-concealed *)::after {
+    transition-property: opacity, color, background-color, border-color, box-shadow, fill, stroke !important;
+    transition-timing-function: linear !important;
+  }
+  :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) .dh-wrap:not(.md-concealed *) { transition-property: opacity, visibility !important; }
+}
+:where([data-md-motion=reduced]) {
+  --md-motion-base: 160ms; --md-motion-slow: 160ms; --md-motion-pop: 160ms;
+  --md-motion-loop: 0s; --md-motion-spin: 0s; --md-motion-pulse: 0s;
+  --md-motion-ease: linear; --md-motion-ease-io: linear; --md-motion-rise: 0px; --md-motion-pop-from: 1;
+  --md-conceal-fast: 160ms; --md-conceal-enter: 160ms; --md-conceal-unfold: 160ms; --md-conceal-roll: 160ms;
+  --md-conceal-aurora: 0s; --md-conceal-stagger: 0s; --md-conceal-ease: linear; --md-conceal-ease-rail: linear; --md-conceal-ease-roll: linear;
+}
+[data-md-motion=reduced] :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) :not(.md-concealed *),
+[data-md-motion=reduced] :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) :not(.md-concealed *)::before,
+[data-md-motion=reduced] :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) :not(.md-concealed *)::after {
+  transition-property: opacity, color, background-color, border-color, box-shadow, fill, stroke !important;
+  transition-timing-function: linear !important;
+}
+/* Only the drag handle's wrapper animates visibility (its own 0s delay below); a generic visibility transition once hid whole editors. */
+[data-md-motion=reduced] :is(.md-editor, .md-outline-layout, .md-detail-anchor, .md-section-review) .dh-wrap:not(.md-concealed *) { transition-property: opacity, visibility !important; }
+.dh-wrap {
+  opacity: 1;
+  transition: transform var(--md-motion-target) var(--md-motion-ease), opacity var(--md-motion-fast) var(--md-motion-ease), visibility 0s;
+}
+.dh-wrap[data-motion="instant"], .dh-wrap[data-dragging="true"] {
+  transition: opacity var(--md-motion-fast) var(--md-motion-ease), visibility 0s;
+}
+.dh-wrap[style*="visibility: hidden"]:not(:focus-within):not([data-keyboard=true]) {
+  opacity: 0;
+  transition: opacity var(--md-motion-fast) var(--md-motion-ease), visibility 0s var(--md-motion-fast);
+}

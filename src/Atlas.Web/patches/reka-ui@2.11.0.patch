@@ -1,0 +1,230 @@
+diff --git a/dist/Tooltip/TooltipContentImpl.cjs b/dist/Tooltip/TooltipContentImpl.cjs
+index c76d4c159fc68f160e315f049faa78e2b27ce5de..97d7254d7ec2a83a9611572c3011f6426fbddf3d 100644
+--- a/dist/Tooltip/TooltipContentImpl.cjs
++++ b/dist/Tooltip/TooltipContentImpl.cjs
+@@ -105,7 +105,7 @@ var TooltipContentImpl_vue_vue_type_script_setup_true_lang_default = /* @__PURE_
+ 				const target = event.target;
+ 				if (target?.contains(rootContext.trigger.value)) rootContext.onClose();
+ 			}, { capture: true });
+-			(0, __vueuse_core.useEventListener)(document, require_Tooltip_utils.TOOLTIP_OPEN, rootContext.onClose);
++			(0, __vueuse_core.useEventListener)(document, require_Tooltip_utils.TOOLTIP_OPEN, (event) => { if (event.detail?.owner !== rootContext.open) rootContext.onClose(); });
+ 		});
+ 		return (_ctx, _cache) => {
+ 			return (0, vue.openBlock)(), (0, vue.createBlock)((0, vue.unref)(require_DismissableLayer_DismissableLayer.DismissableLayer_default), {
+diff --git a/dist/Tooltip/TooltipContentImpl.js b/dist/Tooltip/TooltipContentImpl.js
+index 23c910a05689ebb114fb623edcddfd3c13a909ec..dcc13606893134057ff5ed0017858e29f634d6d3 100644
+--- a/dist/Tooltip/TooltipContentImpl.js
++++ b/dist/Tooltip/TooltipContentImpl.js
+@@ -104,7 +104,7 @@ var TooltipContentImpl_vue_vue_type_script_setup_true_lang_default = /* @__PURE_
+ 				const target = event.target;
+ 				if (target?.contains(rootContext.trigger.value)) rootContext.onClose();
+ 			}, { capture: true });
+-			useEventListener(document, TOOLTIP_OPEN, rootContext.onClose);
++			useEventListener(document, TOOLTIP_OPEN, (event) => { if (event.detail?.owner !== rootContext.open) rootContext.onClose(); });
+ 		});
+ 		return (_ctx, _cache) => {
+ 			return openBlock(), createBlock(unref(DismissableLayer_default), {
+diff --git a/dist/Tooltip/TooltipRoot.cjs b/dist/Tooltip/TooltipRoot.cjs
+index dd36a9868e992e195ad94caedf2741073b1ba05b..49a1a86b12154172121463bda53533bfeeaed97c 100644
+--- a/dist/Tooltip/TooltipRoot.cjs
++++ b/dist/Tooltip/TooltipRoot.cjs
+@@ -67,7 +67,7 @@ var TooltipRoot_vue_vue_type_script_setup_true_lang_default = /* @__PURE__ */ (0
+ 			if (!providerContext.onClose) return;
+ 			if (isOpen) {
+ 				providerContext.onOpen();
+-				document.dispatchEvent(new CustomEvent(require_Tooltip_utils.TOOLTIP_OPEN));
++				document.dispatchEvent(new CustomEvent(require_Tooltip_utils.TOOLTIP_OPEN, { detail: { owner: open } }));
+ 			} else providerContext.onClose();
+ 		});
+ 		const wasOpenDelayedRef = (0, vue.ref)(false);
+diff --git a/dist/Tooltip/TooltipRoot.js b/dist/Tooltip/TooltipRoot.js
+index e773fb5ea0a71a2132b200f8baacdc95c39546e0..6cfac00868e4fc24fe2565a797548723b4ca2e56 100644
+--- a/dist/Tooltip/TooltipRoot.js
++++ b/dist/Tooltip/TooltipRoot.js
+@@ -66,7 +66,7 @@ var TooltipRoot_vue_vue_type_script_setup_true_lang_default = /* @__PURE__ */ de
+ 			if (!providerContext.onClose) return;
+ 			if (isOpen) {
+ 				providerContext.onOpen();
+-				document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN));
++				document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN, { detail: { owner: open } }));
+ 			} else providerContext.onClose();
+ 		});
+ 		const wasOpenDelayedRef = ref(false);
+diff --git a/dist/shared/useIsUsingKeyboard.cjs b/dist/shared/useIsUsingKeyboard.cjs
+index 282b58bbd17a2105e35dbafa5f9ed263d3a0d381..d98dc80b73509aa2cda8f06a614306e582f57047 100644
+--- a/dist/shared/useIsUsingKeyboard.cjs
++++ b/dist/shared/useIsUsingKeyboard.cjs
+@@ -5,19 +5,18 @@ const __vueuse_core = require_rolldown_runtime.__toESM(require("@vueuse/core"));
+ //#region src/shared/useIsUsingKeyboard.ts
+ function useIsUsingKeyboardImpl() {
+ 	const isUsingKeyboard = (0, vue.ref)(false);
+-	(0, vue.onMounted)(() => {
+-		(0, __vueuse_core.useEventListener)("keydown", () => {
+-			isUsingKeyboard.value = true;
+-		}, {
+-			capture: true,
+-			passive: true
+-		});
+-		(0, __vueuse_core.useEventListener)(["pointerdown", "pointermove"], () => {
+-			isUsingKeyboard.value = false;
+-		}, {
+-			capture: true,
+-			passive: true
+-		});
++	// Atlas patch: the listeners belong to this shared scope (see dist/shared/useIsUsingKeyboard.js).
++	(0, __vueuse_core.useEventListener)("keydown", () => {
++		isUsingKeyboard.value = true;
++	}, {
++		capture: true,
++		passive: true
++	});
++	(0, __vueuse_core.useEventListener)(["pointerdown", "pointermove"], () => {
++		isUsingKeyboard.value = false;
++	}, {
++		capture: true,
++		passive: true
+ 	});
+ 	return isUsingKeyboard;
+ }
+diff --git a/dist/shared/useIsUsingKeyboard.js b/dist/shared/useIsUsingKeyboard.js
+index d030eec08c9f70dfe1d7e97674db2ba6dfe54347..273cbf3a6ab777ca3ab2bbfeade317f7b94a32c1 100644
+--- a/dist/shared/useIsUsingKeyboard.js
++++ b/dist/shared/useIsUsingKeyboard.js
+@@ -1,22 +1,22 @@
+-import { onMounted, ref } from "vue";
++import { ref } from "vue";
+ import { createSharedComposable, useEventListener } from "@vueuse/core";
+ 
+ //#region src/shared/useIsUsingKeyboard.ts
+ function useIsUsingKeyboardImpl() {
+ 	const isUsingKeyboard = ref(false);
+-	onMounted(() => {
+-		useEventListener("keydown", () => {
+-			isUsingKeyboard.value = true;
+-		}, {
+-			capture: true,
+-			passive: true
+-		});
+-		useEventListener(["pointerdown", "pointermove"], () => {
+-			isUsingKeyboard.value = false;
+-		}, {
+-			capture: true,
+-			passive: true
+-		});
++	// Atlas patch: the listeners belong to this shared scope. Registered in onMounted they were disposed with the first
++	// subscriber, and while other menus kept the shared state alive it never left its last value again.
++	useEventListener("keydown", () => {
++		isUsingKeyboard.value = true;
++	}, {
++		capture: true,
++		passive: true
++	});
++	useEventListener(["pointerdown", "pointermove"], () => {
++		isUsingKeyboard.value = false;
++	}, {
++		capture: true,
++		passive: true
+ 	});
+ 	return isUsingKeyboard;
+ }
+diff --git a/dist/shared/useSize.cjs b/dist/shared/useSize.cjs
+index fba209f..9447d3a 100644
+--- a/dist/shared/useSize.cjs
++++ b/dist/shared/useSize.cjs
+@@ -11,10 +11,8 @@ function useSize(element) {
+ 	(0, vue.onMounted)(() => {
+ 		const el = (0, __vueuse_core.unrefElement)(element);
+ 		if (el) {
+-			size.value = {
+-				width: el.offsetWidth,
+-				height: el.offsetHeight
+-			};
++			// Atlas patch: the observer's first report (after layout, before the first paint) gives the size; reading it here on mount forced
++			// a layout of the whole page while a document with a slider was being built (3.6-G open trace).
+ 			resizeObserver = new ResizeObserver((entries) => {
+ 				if (!Array.isArray(entries)) return;
+ 				if (!entries.length) return;
+diff --git a/dist/shared/useSize.js b/dist/shared/useSize.js
+index e8dac84..5d95088 100644
+--- a/dist/shared/useSize.js
++++ b/dist/shared/useSize.js
+@@ -10,10 +10,8 @@ function useSize(element) {
+ 	onMounted(() => {
+ 		const el = unrefElement(element);
+ 		if (el) {
+-			size.value = {
+-				width: el.offsetWidth,
+-				height: el.offsetHeight
+-			};
++			// Atlas patch: the observer's first report (after layout, before the first paint) gives the size; reading it here on mount forced
++			// a layout of the whole page while a document with a slider was being built (3.6-G open trace).
+ 			resizeObserver = new ResizeObserver((entries) => {
+ 				if (!Array.isArray(entries)) return;
+ 				if (!entries.length) return;
+diff --git a/src/Tooltip/TooltipContentImpl.vue b/src/Tooltip/TooltipContentImpl.vue
+index d6a1bff613dfd9d8b815424fc2f0997ef5bbc3c3..e2e846efdbc96e20274a57cdb574e83876d6bc6d 100644
+--- a/src/Tooltip/TooltipContentImpl.vue
++++ b/src/Tooltip/TooltipContentImpl.vue
+@@ -87,7 +87,12 @@ onMounted(() => {
+       rootContext.onClose()
+   }, { capture: true })
+   // Close this tooltip if another one opens
+-  useEventListener(document, TOOLTIP_OPEN, rootContext.onClose)
++  useEventListener(document, TOOLTIP_OPEN, (event) => {
++    // Closing content stays mounted for its exit animation. Ignore its own reopen.
++    // Retire this patch when upstream Reka identifies the owner of tooltip.open.
++    if ((event as CustomEvent<{ owner?: unknown }>).detail?.owner !== rootContext.open)
++      rootContext.onClose()
++  })
+ })
+ </script>
+ 
+diff --git a/src/Tooltip/TooltipRoot.vue b/src/Tooltip/TooltipRoot.vue
+index 05f9add829ff794d6da84bf288f70af6984d9d26..343a20e5235e4440a405ecf60c998d40425fbf1d 100644
+--- a/src/Tooltip/TooltipRoot.vue
++++ b/src/Tooltip/TooltipRoot.vue
+@@ -118,7 +118,7 @@ watch(open, (isOpen) => {
+     providerContext.onOpen()
+     // as `onChange` is called within a lifecycle method we
+     // avoid dispatching via `dispatchDiscreteCustomEvent`.
+-    document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN))
++    document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN, { detail: { owner: open } }))
+   }
+   else {
+     providerContext.onClose()
+diff --git a/src/shared/useIsUsingKeyboard.ts b/src/shared/useIsUsingKeyboard.ts
+index 3e4cced2a044f0cb5edc2929bb329d683c173d3a..fd7d63cb002108dfbd7008e46b72227e93048d65 100644
+--- a/src/shared/useIsUsingKeyboard.ts
++++ b/src/shared/useIsUsingKeyboard.ts
+@@ -1,20 +1,20 @@
+ import { createSharedComposable, useEventListener } from '@vueuse/core'
+-import { onMounted, ref } from 'vue'
++import { ref } from 'vue'
+ 
+ function useIsUsingKeyboardImpl() {
+   const isUsingKeyboard = ref(false)
+ 
+-  onMounted(() => {
+-    // Capture phase ensures we set the boolean before any side effects execute
+-    // in response to the key or pointer event as they might depend on this value.
+-    useEventListener('keydown', () => {
+-      isUsingKeyboard.value = true
+-    }, { capture: true, passive: true })
++  // Atlas patch: the listeners belong to this shared scope. Registered in onMounted they were disposed with the
++  // first subscriber, and while other menus kept the shared state alive it never left its last value again.
++  // Capture phase ensures we set the boolean before any side effects execute
++  // in response to the key or pointer event as they might depend on this value.
++  useEventListener('keydown', () => {
++    isUsingKeyboard.value = true
++  }, { capture: true, passive: true })
+ 
+-    useEventListener(['pointerdown', 'pointermove'], () => {
+-      isUsingKeyboard.value = false
+-    }, { capture: true, passive: true })
+-  })
++  useEventListener(['pointerdown', 'pointermove'], () => {
++    isUsingKeyboard.value = false
++  }, { capture: true, passive: true })
+ 
+   return isUsingKeyboard
+ }

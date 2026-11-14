@@ -1,0 +1,106 @@
+# ---------------------------------------------------------------------------
+# Build output
+# ---------------------------------------------------------------------------
+**/[Bb]in/
+**/[Oo]bj/
+**/node_modules/
+src/*.Web/dist/
+src/Atlas.Markdown/dist/
+src/Atlas.Markdown/dist-authority/
+src/*.Web/.vite/
+src/*.Server/wwwroot/
+artifacts/
+.artifacts/
+*.tsbuildinfo
+.eslintcache
+.pnpm-store/
+.vite/
+web/dist/
+
+# ---------------------------------------------------------------------------
+# Test, benchmark and profiling output
+# ---------------------------------------------------------------------------
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.cache/
+**/TestResults/
+**/coverage/
+*.trx
+*.coverage
+*.coverage.xml
+coverage.*.xml
+coverage.*.json
+**/BenchmarkDotNet.Artifacts/
+*.dmp
+*.dtp
+*.dtt
+*.dotTrace.*
+*.dotMemory.*
+
+# Playwright MCP page snapshots (written by the MCP browser tooling)
+.playwright-mcp/
+
+# ---------------------------------------------------------------------------
+# IDE / tooling
+# ---------------------------------------------------------------------------
+.idea/
+.vs/
+.vscode/
+_ReSharper*/
+*.DotSettings.user
+*.user
+*.suo
+*.binlog
+msbuild*.log
+*.log
+
+# Local Claude Code state (shared config stays tracked)
+.claude/settings.local.json
+
+# ---------------------------------------------------------------------------
+# Local configuration, diagnostics and scratch data
+# ---------------------------------------------------------------------------
+.local/
+**/.tmp/
+**/.data/
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+**/appsettings.Production.json
+**/appsettings.Staging.json
+**/.mcp.json
+**/.npmrc
+**/NuGet.Config
+
+# ---------------------------------------------------------------------------
+# Credentials and database snapshots — never commit
+# ---------------------------------------------------------------------------
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+*.pfx
+*.p12
+*.key
+*.pem
+*.dump
+*.backup
+
+# ---------------------------------------------------------------------------
+# OS / shell junk
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+# Windows reserved device name; tools that redirect to NUL under Git Bash /
+# an SSH client (podman machine ssh -o UserKnownHostsFile=NUL) create it as a file.
+NUL
+.claude/unattended.json
+
+src/Atlas.Web/obj/
+src/Atlas.Web/obj\\*/
+packages.lock.json
+
+# Wolverine handler code generated at build time for production (Dockerfile: codegen write)
+src/*.Server/Internal/Generated/

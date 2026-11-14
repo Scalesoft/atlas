@@ -1,0 +1,12 @@
+{
+  "Prostory vytváří správce wiki.": "Spaces are created by a wiki admin.",
+  "Při založení lze přiřadit nejvýše 100 skupin.": "At most 100 groups can be assigned on creation.",
+  "Vyberte existující skupinu.": "Choose an existing group.",
+  "Vyberte roli Reader, Writer nebo Admin.": "Choose the role Reader, Writer or Admin.",
+  "Každou skupinu lze přiřadit pouze jednou.": "Each group can be assigned only once.",
+  "Některá vybraná skupina již neexistuje. Obnovte seznam skupin.": "A selected group no longer exists. Refresh the list of groups.",
+  "Nastavení prostoru mezitím změnil jiný správce. Načtěte aktuální nastavení; vaše úpravy zůstávají ve formuláři.": "Another admin changed the space settings in the meantime. Load the current settings; your edits stay in the form.",
+  "Vyberte, zda je prostor nepřipnutý, připnutý všem, nebo povinně připnutý.": "Choose whether the space is unpinned, pinned for everyone, or required.",
+  "Vyberte podporovanou ikonu a barvu prostoru.": "Choose a supported space icon and color.",
+  "Nastavení prostoru není dostupné.": "The space settings are not available."
+}

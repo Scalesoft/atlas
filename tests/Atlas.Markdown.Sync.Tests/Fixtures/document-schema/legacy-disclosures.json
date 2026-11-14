@@ -1,0 +1,100 @@
+[
+  {
+    "name": "an attribute title (revision 5 and before), no heading before it",
+    "before": { "type": "doc", "content": [
+      { "type": "paragraph", "content": [{ "type": "text", "text": "Úvod" }] },
+      { "type": "disclosure", "attrs": { "title": "Starý" }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "tělo" }] }] }
+    ] },
+    "after": { "type": "doc", "content": [
+      { "type": "paragraph", "content": [{ "type": "text", "text": "Úvod" }] },
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "Starý" }] },
+      { "type": "paragraph", "content": [{ "type": "text", "text": "tělo" }] }
+    ] }
+  },
+  {
+    "name": "a title node (revision 6) with marks, one level below the heading before it",
+    "before": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Sekce" }] },
+      { "type": "disclosure", "attrs": { "title": null }, "content": [
+        { "type": "disclosureTitle", "content": [{ "type": "text", "text": "Nový", "marks": [{ "type": "bold" }] }, { "type": "text", "text": " název" }] },
+        { "type": "paragraph", "content": [{ "type": "text", "text": "obsah" }] }
+      ] }
+    ] },
+    "after": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Sekce" }] },
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "Nový", "marks": [{ "type": "bold" }] }, { "type": "text", "text": " název" }] },
+      { "type": "paragraph", "content": [{ "type": "text", "text": "obsah" }] }
+    ] }
+  },
+  {
+    "name": "empty titles (an empty title node, an empty attribute) read Podrobnosti, the level clamped to 6",
+    "before": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 6 }, "content": [{ "type": "text", "text": "Hluboko" }] },
+      { "type": "disclosure", "content": [{ "type": "disclosureTitle" }, { "type": "paragraph" }] },
+      { "type": "disclosure", "attrs": { "title": "" }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "x" }] }] }
+    ] },
+    "after": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 6 }, "content": [{ "type": "text", "text": "Hluboko" }] },
+      { "type": "heading", "attrs": { "level": 6 }, "content": [{ "type": "text", "text": "Podrobnosti" }] },
+      { "type": "paragraph" },
+      { "type": "heading", "attrs": { "level": 6 }, "content": [{ "type": "text", "text": "Podrobnosti" }] },
+      { "type": "paragraph", "content": [{ "type": "text", "text": "x" }] }
+    ] }
+  },
+  {
+    "name": "nested disclosures, the inner one level below the outer; one in a callout after them at its sibling level",
+    "before": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 1 }, "content": [{ "type": "text", "text": "Stránka" }] },
+      { "type": "disclosure", "attrs": { "title": "Vnější" }, "content": [
+        { "type": "paragraph", "content": [{ "type": "text", "text": "a" }] },
+        { "type": "disclosure", "content": [{ "type": "disclosureTitle", "content": [{ "type": "text", "text": "Vnitřní" }] }, { "type": "paragraph", "content": [{ "type": "text", "text": "b" }] }] }
+      ] },
+      { "type": "callout", "attrs": { "variant": "note" }, "content": [
+        { "type": "disclosure", "attrs": { "title": "V boxu" }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "c" }] }] }
+      ] }
+    ] },
+    "after": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 1 }, "content": [{ "type": "text", "text": "Stránka" }] },
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Vnější" }] },
+      { "type": "paragraph", "content": [{ "type": "text", "text": "a" }] },
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "Vnitřní" }] },
+      { "type": "paragraph", "content": [{ "type": "text", "text": "b" }] },
+      { "type": "callout", "attrs": { "variant": "note" }, "content": [
+        { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "V boxu" }] },
+        { "type": "paragraph", "content": [{ "type": "text", "text": "c" }] }
+      ] }
+    ] }
+  },
+  {
+    "name": "a disclosure at the document start",
+    "before": { "type": "doc", "content": [
+      { "type": "disclosure", "attrs": { "title": "Start" }, "content": [{ "type": "paragraph", "content": [{ "type": "text", "text": "x" }] }] },
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Po" }] }
+    ] },
+    "after": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "Start" }] },
+      { "type": "paragraph", "content": [{ "type": "text", "text": "x" }] },
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Po" }] }
+    ] }
+  },
+  {
+    "name": "consecutive disclosures stay siblings; a heading inside a callout sets no level",
+    "before": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Sekce" }] },
+      { "type": "disclosure", "attrs": { "title": "A" }, "content": [{ "type": "paragraph" }] },
+      { "type": "disclosure", "attrs": { "title": "B" }, "content": [{ "type": "paragraph" }] },
+      { "type": "callout", "attrs": { "variant": "note" }, "content": [{ "type": "heading", "attrs": { "level": 5 }, "content": [{ "type": "text", "text": "V boxu" }] }] },
+      { "type": "disclosure", "attrs": { "title": "C" }, "content": [{ "type": "paragraph" }] }
+    ] },
+    "after": { "type": "doc", "content": [
+      { "type": "heading", "attrs": { "level": 2 }, "content": [{ "type": "text", "text": "Sekce" }] },
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "A" }] },
+      { "type": "paragraph" },
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "B" }] },
+      { "type": "paragraph" },
+      { "type": "callout", "attrs": { "variant": "note" }, "content": [{ "type": "heading", "attrs": { "level": 5 }, "content": [{ "type": "text", "text": "V boxu" }] }] },
+      { "type": "heading", "attrs": { "level": 3 }, "content": [{ "type": "text", "text": "C" }] },
+      { "type": "paragraph" }
+    ] }
+  }
+]

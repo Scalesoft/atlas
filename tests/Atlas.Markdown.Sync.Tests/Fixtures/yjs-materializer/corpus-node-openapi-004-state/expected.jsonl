@@ -1,0 +1,1 @@
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"paragraph","attrs":{"textAlign":null}},{"type":"openapi","attrs":{"data":{"version":1,"filename":"openapi.yaml","source":"openapi: 3.1.0\ninfo:\n  title: New API\n  version: '1.0'\npaths: {}\n"}}},{"type":"paragraph","attrs":{"textAlign":null}}]}

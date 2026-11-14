@@ -1,0 +1,22 @@
+{
+  "Režim je report, apply nebo cancel.": "The mode is report, apply or cancel.",
+  "Nahrání vyžaduje multipart/form-data.": "Upload requires multipart/form-data.",
+  "Účty s kontakty propojuje jen správce wiki.": "Only a wiki admin links accounts with contacts.",
+  "Kontakt účtu se nepodařilo založit; zkuste to znovu.": "The account's contact could not be created; try again.",
+  "Rozhodnutí je link, dismiss nebo restore.": "The decision is link, dismiss or restore.",
+  "Kontakt už patří jinému účtu.": "The contact already belongs to another account.",
+  "Uveďte 1 až 200 id kontaktů.": "Specify 1 to 200 contact ids.",
+  "Kontakt nelze sloučit sám se sebou.": "A contact cannot be merged with itself.",
+  "Kontakt nebyl nalezen.": "Contact not found.",
+  "Sloučit smí jen ten, kdo smí měnit oba kontakty.": "Only someone who may change both contacts can merge them.",
+  "Kontakt nemá logo ani fotku.": "The contact has no logo or photo.",
+  "Logo nebo fotka kontaktu musí být PNG, JPEG nebo WebP. Obsah souboru žádnému z nich neodpovídá.": "A contact logo or photo must be PNG, JPEG or WebP. The file content matches none of them.",
+  "Logo nebo fotka kontaktu smí mít nejvýše 64 KB. Zmenšete obrázek, v čipu stačí 64 × 64 px.": "A contact logo or photo can be at most 64 KB. Make the image smaller; 64 × 64 px is enough in a chip.",
+  "Návrh propojení nebyl nalezen.": "Link suggestion not found.",
+  "Tato osoba už v adresáři je (stejný e-mail nebo účet).": "This person is already in the directory (same email or account).",
+  "Kontakt nejde obnovit: jeho e-mail nebo účet už má jiný kontakt v adresáři (třeba ten, do kterého byl sloučen). Odeberte je nejdřív z toho kontaktu.": "The contact cannot be restored: its email or account already belongs to another contact in the directory (perhaps the one it was merged into). Remove them from that contact first.",
+  "Změna kontaktu nenastavuje žádné pole.": "The contact change sets no field.",
+  "Neznámé pole kontaktu.": "Unknown contact field.",
+  "Jméno kontaktu je povinné.": "The contact name is required.",
+  "Chybí kontakt (contact s polem name).": "The contact is missing (contact with a name field)."
+}

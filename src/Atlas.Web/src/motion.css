@@ -1,0 +1,612 @@
+/* The one motion system of Atlas,
+   taken from the owner's motion prototype.
+   Components use only these tokens and the primitives of src/motion/aiMotion.ts; they write no durations,
+   easings or @keyframes of their own (src/motionLiterals.guard.test.ts guards it). The editor and the rendered
+   document own their animation rules and are excluded from the shared rules below.
+
+   - Durations fast 120 / base 200 / slow 280 ms, `--atlas-ease-out` for everything (exits too, as in the
+     prototype), `--atlas-ease-inout` for moves, joins and flights; distances rise 8 / lift 2 px, press .98.
+   - Reduced motion does not switch animation off. It rewrites the tokens (min(d, 160 ms), linear, zero
+     distance, no pop), so every movement becomes a short opacity or colour fade; loops stand still and the
+     glow keeps its length as a background-only fade. Nothing ever snaps.
+   - A preview can slow everything down 3× with `--atlas-motion-scale` and force reduced motion with
+     `[data-atlas-reduced-motion]`, like the prototype's two switches (the gallery does both on the root;
+     the application sets only the second, on <html>, when the account chose „Omezit animace“ in its profile). The slow-down is carried by the tokens themselves: every duration token
+     is `calc(<prototype ms> * var(--atlas-motion-scale, 1))`, registered as a <time>, so CSS transitions,
+     CSS animations and aiMotion.ts (which reads the resolved tokens) all slow down once. aiMotion.ts scales
+     only the fixed prototype durations it holds itself (`literalMs`).
+
+   The tokens are declared on :root, so body-level surfaces (the full-screen editor, the editor's overlays,
+   Reka portals) see them, and again on .atlas, the Reka portals and `[data-atlas-motion]`, so a preview that
+   sets `--atlas-motion-scale` on one of them recomputes the tokens for everything inside it. */
+
+@property --atlas-motion-fast { syntax: "<time>"; inherits: true; initial-value: 120ms; }
+@property --atlas-motion-base { syntax: "<time>"; inherits: true; initial-value: 200ms; }
+@property --atlas-motion-slow { syntax: "<time>"; inherits: true; initial-value: 280ms; }
+@property --atlas-motion-menu { syntax: "<time>"; inherits: true; initial-value: 140ms; }
+@property --atlas-motion-surface { syntax: "<time>"; inherits: true; initial-value: 160ms; }
+@property --atlas-motion-pop { syntax: "<time>"; inherits: true; initial-value: 320ms; }
+@property --atlas-motion-glow { syntax: "<time>"; inherits: true; initial-value: 1600ms; }
+@property --atlas-motion-loop { syntax: "<time>"; inherits: true; initial-value: 1600ms; }
+@property --atlas-motion-spin { syntax: "<time>"; inherits: true; initial-value: 800ms; }
+@property --atlas-motion-pulse { syntax: "<time>"; inherits: true; initial-value: 1000ms; }
+@property --atlas-motion-defer { syntax: "<time>"; inherits: true; initial-value: 150ms; }
+@property --atlas-brand-hero { syntax: "<time>"; inherits: true; initial-value: 2600ms; }
+@property --atlas-brand-ink { syntax: "<time>"; inherits: true; initial-value: 2200ms; }
+@property --atlas-brand-living { syntax: "<time>"; inherits: true; initial-value: 3000ms; }
+@property --atlas-brand-drift { syntax: "<time>"; inherits: true; initial-value: 9000ms; }
+@property --atlas-brand-wave { syntax: "<time>"; inherits: true; initial-value: 9000ms; }
+@property --atlas-brand-wave-delay { syntax: "<time>"; inherits: true; initial-value: 3600ms; }
+@property --atlas-brand-drift-delay { syntax: "<time>"; inherits: true; initial-value: 3200ms; }
+@property --atlas-brand-page-stagger { syntax: "<time>"; inherits: true; initial-value: 120ms; }
+@property --atlas-brand-drift-stagger { syntax: "<time>"; inherits: true; initial-value: 180ms; }
+@property --atlas-brand-login-reveal { syntax: "<time>"; inherits: true; initial-value: 1400ms; }
+@property --atlas-brand-login-orbit-reveal { syntax: "<time>"; inherits: true; initial-value: 2000ms; }
+@property --atlas-brand-login-orbit-delay { syntax: "<time>"; inherits: true; initial-value: 1500ms; }
+@property --atlas-brand-login-orbit { syntax: "<time>"; inherits: true; initial-value: 36000ms; }
+@property --atlas-brand-login-echo { syntax: "<time>"; inherits: true; initial-value: 3200ms; }
+@property --atlas-brand-login-echo-stagger { syntax: "<time>"; inherits: true; initial-value: 180ms; }
+@property --atlas-brand-login-aura { syntax: "<time>"; inherits: true; initial-value: 7000ms; }
+@property --atlas-brand-login-star { syntax: "<time>"; inherits: true; initial-value: 5000ms; }
+@property --atlas-brand-login-star-2 { syntax: "<time>"; inherits: true; initial-value: 6200ms; }
+@property --atlas-brand-login-star-3 { syntax: "<time>"; inherits: true; initial-value: 5600ms; }
+@property --atlas-brand-login-star-delay { syntax: "<time>"; inherits: true; initial-value: 1400ms; }
+@property --atlas-brand-login-star-delay-2 { syntax: "<time>"; inherits: true; initial-value: 2300ms; }
+@property --atlas-brand-login-star-delay-3 { syntax: "<time>"; inherits: true; initial-value: 3200ms; }
+@property --atlas-brand-mark-knowledge { syntax: "<time>"; inherits: true; initial-value: 4800ms; }
+@property --atlas-brand-mark-source { syntax: "<time>"; inherits: true; initial-value: 4800ms; }
+@property --atlas-brand-mark-flip { syntax: "<time>"; inherits: true; initial-value: 2700ms; }
+@property --atlas-brand-mark-scan { syntax: "<time>"; inherits: true; initial-value: 3000ms; }
+@property --atlas-brand-mark-gather { syntax: "<time>"; inherits: true; initial-value: 3600ms; }
+@property --atlas-brand-mark-ribbon { syntax: "<time>"; inherits: true; initial-value: 1200ms; }
+@property --atlas-brand-mark-saved { syntax: "<time>"; inherits: true; initial-value: 500ms; }
+@property --atlas-brand-mark-saved-delay { syntax: "<time>"; inherits: true; initial-value: 650ms; }
+@property --atlas-brand-mark-adjust { syntax: "<time>"; inherits: true; initial-value: 1500ms; }
+@property --atlas-brand-mark-volume { syntax: "<time>"; inherits: true; initial-value: 1300ms; }
+@property --atlas-brand-mark-stagger-knowledge { syntax: "<time>"; inherits: true; initial-value: 1200ms; }
+@property --atlas-brand-mark-stagger-flip { syntax: "<time>"; inherits: true; initial-value: 350ms; }
+@property --atlas-brand-mark-stagger-gather { syntax: "<time>"; inherits: true; initial-value: 300ms; }
+@property --atlas-brand-mark-stagger-adjust { syntax: "<time>"; inherits: true; initial-value: 150ms; }
+@property --atlas-brand-mark-stagger-volume { syntax: "<time>"; inherits: true; initial-value: 100ms; }
+@property --atlas-ai-reveal { syntax: "<time>"; inherits: true; initial-value: 420ms; }
+@property --atlas-ai-stagger { syntax: "<time>"; inherits: true; initial-value: 130ms; }
+@property --atlas-ai-gather { syntax: "<time>"; inherits: true; initial-value: 520ms; }
+@property --atlas-ai-morph { syntax: "<time>"; inherits: true; initial-value: 380ms; }
+@property --atlas-ai-glow { syntax: "<time>"; inherits: true; initial-value: 1600ms; }
+@property --atlas-ai-solidify { syntax: "<time>"; inherits: true; initial-value: 360ms; }
+@property --atlas-ai-flight { syntax: "<time>"; inherits: true; initial-value: 1800ms; }
+
+:root,
+.atlas,
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="tooltip-content"], [data-atlas-motion]) {
+  /* fast: hover, colours, small states · base: content enters, a panel from its button, rows, a dialog and
+     the search open · slow: unfolding, expanding. */
+  --atlas-motion-fast: calc(120ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-base: calc(200ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-slow: calc(280ms * var(--atlas-motion-scale, 1));
+  /* menu: the prototype's "Nabídka AI · 140 ms" · surface: a list grows from its marker, a bar pops up,
+     a dismissal (160 ms) · pop: a new status, .8 → 1.06 → 1 ("Publikováno", 320 ms). */
+  --atlas-motion-menu: calc(140ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-surface: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-pop: calc(320ms * var(--atlas-motion-scale, 1));
+  /* Loops only while something works: the model, a load, a connection. They stand under reduced motion. */
+  --atlas-motion-loop: calc(1600ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-spin: calc(800ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-pulse: calc(1000ms * var(--atlas-motion-scale, 1));
+  /* A progress indicator waits this long, so a fast answer never flashes it. */
+  --atlas-motion-defer: calc(150ms * var(--atlas-motion-scale, 1));
+  --atlas-ease-out: cubic-bezier(.22, 1, .36, 1);
+  --atlas-ease-inout: cubic-bezier(.65, 0, .35, 1);
+  /* The prototype has no ease-in: exits use the same curve and are only shorter (plan O4). */
+  --atlas-ease-in: var(--atlas-ease-out);
+  /* travel: what moves far (a tree unfolding by hundreds of pixels and the rows it pushes). ease-out covers a quarter
+     of the way in its first frame, 100 px of a 400 px tree, which reads as a jump; this one leaves from rest, is at
+     speed within four frames and settles as long. Used through travelTiming() (motion/aiMotion.ts). */
+  --atlas-ease-travel: cubic-bezier(.3, .2, .1, 1);
+  /* Entering content rises from below, a hovered card lifts, a pressed one shrinks, a pop starts at .8,
+     a glow rings 3 px around what changed. */
+  --atlas-rise: 8px;
+  --atlas-lift: 2px;
+  --atlas-press: .98;
+  --st-pop-from: .8;
+  --atlas-glow-spread: 3px;
+  /* Older name on the same scale. */
+  --atlas-motion-ease: var(--atlas-ease-out);
+  /* AI and suggestion motion (plan 2026-10-04 phase 1 §0a.5). Only src/motion/aiMotion.ts and
+     styles/ai.css use them; components call those. */
+  --atlas-ai-reveal: calc(420ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-stagger: calc(130ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-gather: calc(520ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-morph: calc(380ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-glow: calc(1600ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-solidify: calc(360ms * var(--atlas-motion-scale, 1));
+  /* The paper plane that carries a sent question away (aiMotion paperPlaneFlight): long enough for one unhurried loop
+     while the answer is being prepared. */
+  --atlas-ai-flight: calc(1800ms * var(--atlas-motion-scale, 1));
+  /* Every accepted or new thing glows once where it happened (AI or not). */
+  --atlas-motion-glow: var(--atlas-ai-glow);
+  /* The approved brand choreography (logo, login scene, activity illustrations; plan O2): its own timing as a
+     signature of the brand, not UI motion, scaled by the same switch. Under reduced motion the components fade
+     in 160 ms (--atlas-motion-surface, linear) and every loop stands still; nothing here is shortened. */
+  --atlas-brand-hero: calc(2600ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-ink: calc(2200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-living: calc(3000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-drift: calc(9000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-wave: calc(9000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-wave-delay: calc(3600ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-drift-delay: calc(3200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-page-stagger: calc(120ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-drift-stagger: calc(180ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-reveal: calc(1400ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-orbit-reveal: calc(2000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-orbit-delay: calc(1500ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-orbit: calc(36000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-echo: calc(3200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-echo-stagger: calc(180ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-aura: calc(7000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-star: calc(5000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-star-2: calc(6200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-star-3: calc(5600ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-star-delay: calc(1400ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-star-delay-2: calc(2300ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-login-star-delay-3: calc(3200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-knowledge: calc(4800ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-source: calc(4800ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-flip: calc(2700ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-scan: calc(3000ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-gather: calc(3600ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-ribbon: calc(1200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-saved: calc(500ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-saved-delay: calc(650ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-adjust: calc(1500ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-volume: calc(1300ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-stagger-knowledge: calc(1200ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-stagger-flip: calc(350ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-stagger-gather: calc(300ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-stagger-adjust: calc(150ms * var(--atlas-motion-scale, 1));
+  --atlas-brand-mark-stagger-volume: calc(100ms * var(--atlas-motion-scale, 1));
+  /* The splash of a new release (WhatsNewPage): its texts rise once the release's mark has unfolded (assets/brand/<mark>.svg). */
+  --atlas-brand-release-intro: calc(1700ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-glow-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  --atlas-ai-shine: rgb(255 255 255 / .9);
+}
+
+/* The glow and the shimmer's shine are a little stronger and softer in dark mode.
+   The mode is set on the root; a gallery or preview .atlas may set its own. */
+:root[data-mode="dark"],
+:where(:root[data-mode="dark"]) .atlas,
+:where(:root[data-mode="dark"]) :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="tooltip-content"], [data-atlas-motion]),
+.atlas[data-mode="dark"] {
+  --atlas-ai-glow-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  --atlas-ai-shine: rgb(255 255 255 / .55);
+}
+.atlas[data-mode="light"] {
+  --atlas-ai-glow-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  --atlas-ai-shine: rgb(255 255 255 / .9);
+}
+
+/* Reduced motion, as the prototype's anim(): every duration at most 160 ms, linear, no distance and no pop.
+   fast (120) and menu (140) are already shorter; the stagger keeps the order readable; the glow keeps its
+   length because it becomes a background-only fade (st-highlight, styles/ai.css, aiMotion.glow); loops keep
+   their tokens and stand still below. The same block applies under a preview's [data-atlas-reduced-motion]. */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  .atlas,
+  :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="tooltip-content"], [data-atlas-motion]) {
+    --atlas-motion-fast: calc(120ms * var(--atlas-motion-scale, 1));
+    --atlas-motion-base: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-motion-slow: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-motion-menu: calc(140ms * var(--atlas-motion-scale, 1));
+    --atlas-motion-surface: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-motion-pop: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-ai-reveal: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-ai-gather: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-ai-morph: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-ai-solidify: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-ai-flight: calc(160ms * var(--atlas-motion-scale, 1));
+    --atlas-ease-out: linear;
+    --atlas-ease-inout: linear;
+    --atlas-ease-in: linear;
+    --atlas-ease-travel: linear;
+    --atlas-rise: 0px;
+    --atlas-lift: 0px;
+    --atlas-press: 1;
+    --st-pop-from: 1;
+    --atlas-glow-spread: 0px;
+  }
+}
+[data-atlas-reduced-motion],
+[data-atlas-reduced-motion] :where(.atlas, [data-slot="dropdown-menu-content"], [data-slot="popover-content"], [data-slot="tooltip-content"], [data-atlas-motion]) {
+  --atlas-motion-fast: calc(120ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-base: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-slow: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-menu: calc(140ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-surface: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-motion-pop: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-reveal: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-gather: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-morph: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-solidify: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-ai-flight: calc(160ms * var(--atlas-motion-scale, 1));
+  --atlas-ease-out: linear;
+  --atlas-ease-inout: linear;
+  --atlas-ease-in: linear;
+  --atlas-ease-travel: linear;
+  --atlas-rise: 0px;
+  --atlas-lift: 0px;
+  --atlas-press: 1;
+  --st-pop-from: 1;
+  --atlas-glow-spread: 0px;
+}
+
+.atlas :where(button, a[href], summary, input, select, textarea,
+  .nav-link, .tree-row, .sidebar-space-row, .library-item, .history-version,
+  .omnisearch-input):not(:where(.md-editor, .md-editor *, .md-renderer, .md-renderer *)) {
+  transition-property: background-color, color, border-color, box-shadow, filter, opacity;
+  transition-duration: var(--atlas-motion-fast);
+  transition-timing-function: var(--atlas-motion-ease);
+}
+
+/* Only fade surfaces. A transformed ancestor would change the containing block
+   of the fixed action menus, and moving tree rows would change drop hit areas. */
+.atlas :where(.overview, .module-content > section,
+  .library-items,
+  .entry-card, .sw-form, .search-filters, .notice):not(:where(.md-editor, .md-editor *, .md-renderer, .md-renderer *, .document-editor-surface *)) {
+  animation: atlas-reveal var(--atlas-motion-surface) var(--atlas-motion-ease);
+}
+
+/* Reka overlays are portalled outside .atlas; Reka keeps a closing surface until its animation ends.
+   A menu or popover grows from its trigger (the prototype's menuIn: scale .94, 4 px, the menu token's 140 ms, as the editor's
+   popovers open) and leaves with menuOut (scale .97, 120 ms, as the editor's close). Reka's popper wrapper does the positioning, so a
+   transform on the content moves nothing else; the generated components set the transform origin to the trigger's side.
+   A tooltip only fades. */
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]) {
+  animation: atlas-menu-in var(--atlas-motion-menu) var(--atlas-ease-out);
+}
+/* The 4 px always start at the trigger. menuIn comes down from a trigger above; a surface that Reka places over its
+   trigger (no room below, the selection toolbar) or beside it comes from there instead of dropping onto it. Zero
+   specificity, so the closing rule below and the reduced-motion fades keep winning. */
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]):where([data-side="top"]) { animation-name: atlas-menu-in-top; }
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]):where([data-side="left"]) { animation-name: atlas-menu-in-left; }
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]):where([data-side="right"]) { animation-name: atlas-menu-in-right; }
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-state="closed"] {
+  animation: atlas-menu-out var(--atlas-motion-fast) var(--atlas-ease-out) forwards;
+}
+:where([data-slot="tooltip-content"]) {
+  animation: atlas-backdrop-in var(--atlas-motion-menu) var(--atlas-ease-out);
+}
+:where([data-slot="tooltip-content"])[data-state="closed"] {
+  animation: atlas-dismiss var(--atlas-motion-fast) var(--atlas-ease-out) forwards;
+}
+
+:where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]) :where(button, a, [role="menuitem"]) {
+  transition: background-color var(--atlas-motion-fast), color var(--atlas-motion-fast);
+}
+
+.atlas :where(.workspace, .sidebar) {
+  scrollbar-gutter: stable;
+}
+
+/* The arrow turns as long as the tree it opens takes to unfold, on the same curve: one motion, not a flick before it. */
+.atlas .tree-toggle > svg { transition: rotate calc(var(--atlas-motion-base) * 1.25) var(--atlas-ease-travel); }
+.atlas .tree-toggle[aria-expanded="true"] > svg { rotate: 90deg; }
+
+/* Loops of work (plan §1.1): a skeleton and a busy button pulse, a spinner spins, a source dot pulses
+   (the prototype's `.src.busy .dot`). Only while something works; they stand under reduced motion. */
+.atlas .loading-skeleton-rows {
+  animation: atlas-loading-pulse var(--atlas-motion-loop) ease-in-out var(--atlas-motion-fast) infinite;
+}
+
+.atlas button[aria-busy="true"]:not(:where(.md-editor *, .md-renderer *)) { animation: atlas-loading-pulse var(--atlas-motion-loop) ease-in-out infinite; }
+.atlas :where(.library-refresh[aria-busy="true"] > svg, .library-more[aria-busy="true"] > svg, .atlas-spinner) {
+  animation: atlas-spin var(--atlas-motion-spin) linear infinite;
+}
+.atlas .atlas-pulse { animation: atlas-pulse var(--atlas-motion-pulse) ease-in-out infinite; }
+
+/* Progress sits inside its existing surface and never changes its dimensions.
+   It fades in after the defer, so a fast response never flashes it. */
+.atlas :where(.personal-library, .document-status, .workspace-bar, .organization-body) { position: relative; }
+.atlas :where(.personal-library[aria-busy="true"], .document-status[aria-busy="true"], .workspace-bar[aria-busy="true"], .organization-body[aria-busy="true"])::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  background-size: 200% 100%;
+  animation: atlas-backdrop-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both, atlas-progress var(--atlas-motion-loop) ease-in-out infinite;
+}
+
+.atlas :where(.nav-link, .library-tabs button)[aria-current],
+.atlas button[aria-pressed="true"]:not(:where(.md-editor *, .md-renderer *)) {
+  transition-duration: var(--atlas-motion-surface);
+}
+
+.atlas dialog[open]:not(:where(.search-dialog, .md-editor, .md-editor *, .md-renderer, .md-renderer *)) {
+  animation: atlas-reveal var(--atlas-motion-surface) var(--atlas-motion-ease);
+}
+
+.atlas dialog[open]:not([data-animated-backdrop]):not(:where(.md-editor, .md-editor *, .md-renderer, .md-renderer *))::backdrop,
+.atlas .sidebar-backdrop {
+  animation: atlas-backdrop-in var(--atlas-motion-menu) var(--atlas-motion-ease);
+}
+
+.atlas details[open]:not(:where(.md-editor, .md-editor *, .md-renderer, .md-renderer *)) > :not(:where(summary, .md-editor, .md-renderer)) {
+  animation: atlas-reveal var(--atlas-motion-menu) var(--atlas-motion-ease);
+}
+
+/* Drag targets must respond immediately, including their interactive children. */
+.atlas :is(.tree-row:is(.tree-dragging, .drop-before, .drop-after, .drop-inside), .sidebar-space-row.drop-inside),
+.atlas :is(.tree-row:is(.tree-dragging, .drop-before, .drop-after, .drop-inside), .sidebar-space-row.drop-inside) :where(a, button) {
+  transition: none;
+}
+
+/* Reduced motion beyond the tokens: menus only fade, loops stand (a busy indicator still fades in after
+   the defer), the tree arrow fades instead of turning and nothing scrolls smoothly. Written twice, for the
+   system preference and for a preview's [data-atlas-reduced-motion]. The :is() lists carry the specificity
+   of the loop rules above, so the reduced rule always wins. */
+@media (prefers-reduced-motion: reduce) {
+  :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]) { animation-name: atlas-backdrop-in; }
+  :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-state="closed"] { animation-name: atlas-dismiss; }
+  .atlas :is(.loading-skeleton-rows, button[aria-busy="true"], .library-refresh[aria-busy="true"] > svg, .library-more[aria-busy="true"] > svg, .atlas-spinner, .atlas-pulse):not(:where(.md-editor *, .md-renderer *)),
+  .atlas :is(.personal-library, .document-status, .workspace-bar, .organization-body)[aria-busy="true"]::after {
+    animation: atlas-backdrop-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both;
+  }
+  .atlas .tree-toggle > svg { transition-property: opacity; }
+  .atlas :where(*):not(:where(.md-editor, .md-editor *, .md-renderer, .md-renderer *)) {
+    scroll-behavior: auto !important;
+  }
+}
+[data-atlas-reduced-motion] :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"]) { animation-name: atlas-backdrop-in; }
+[data-atlas-reduced-motion] :where([data-slot="dropdown-menu-content"], [data-slot="popover-content"])[data-state="closed"] { animation-name: atlas-dismiss; }
+[data-atlas-reduced-motion] :is(.loading-skeleton-rows, button[aria-busy="true"], .library-refresh[aria-busy="true"] > svg, .library-more[aria-busy="true"] > svg, .atlas-spinner, .atlas-pulse):not(:where(.md-editor *, .md-renderer *)),
+[data-atlas-reduced-motion] :is(.personal-library, .document-status, .workspace-bar, .organization-body)[aria-busy="true"]::after {
+  animation: atlas-backdrop-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both;
+}
+[data-atlas-reduced-motion] .tree-toggle > svg { transition-property: opacity; }
+[data-atlas-reduced-motion] :where(*):not(:where(.md-editor, .md-editor *, .md-renderer, .md-renderer *)) {
+  scroll-behavior: auto !important;
+}
+
+/* EditLockToggle.vue: the pulse (ring and pop) and the highlight that replaces it under reduced motion. */
+@keyframes atlas-edit-lock-ring { from { opacity: .8; transform: scale(1); } to { opacity: 0; transform: scale(1.7); } }
+@keyframes atlas-edit-lock-pop { 40% { transform: scale(1.14); } }
+@keyframes atlas-edit-lock-flash { 0%, 100% { outline: 2px solid transparent; } 30%, 70% { outline: 2px solid var(--accent); background: var(--accent-soft); } }
+@keyframes atlas-reveal {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+
+/* The loading wave (plan 3.5): a band of light passing down a page that is still loading (DocumentEditor's .document-loading-wave). */
+@keyframes atlas-loading-wave {
+  from { transform: translateY(-40vh); }
+  to { transform: translateY(100vh); }
+}
+
+@keyframes atlas-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes atlas-dismiss {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* The prototype's menuIn() and menuOut(). */
+@keyframes atlas-menu-in {
+  from { opacity: 0; transform: scale(.94) translateY(calc(var(--atlas-rise) * -.5)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes atlas-menu-out {
+  from { opacity: 1; }
+  to { opacity: 0; transform: scale(.97); }
+}
+/* menuIn from the other three sides of the trigger (see the rules above). */
+@keyframes atlas-menu-in-top {
+  from { opacity: 0; transform: scale(.94) translateY(calc(var(--atlas-rise) * .5)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes atlas-menu-in-left {
+  from { opacity: 0; transform: scale(.94) translateX(calc(var(--atlas-rise) * .5)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes atlas-menu-in-right {
+  from { opacity: 0; transform: scale(.94) translateX(calc(var(--atlas-rise) * -.5)); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The prototype's toast(): in 10 px from below (base), out 6 px down (surface); the distances are rise
+   tokens, so reduced motion keeps the fade. */
+@keyframes atlas-toast-in {
+  from { opacity: 0; transform: translateY(calc(var(--atlas-rise) * 1.25)); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes atlas-toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateY(calc(var(--atlas-rise) * .75)); }
+}
+
+@keyframes atlas-loading-pulse {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+
+@keyframes atlas-spin { to { rotate: 360deg; } }
+
+/* A board connector's flow (objects spec §5.3): short dashes travel one period of 22 board units along the line per loop. Under
+   reduced motion the board stops it (BoardEdge). */
+@keyframes atlas-dash-flow { to { stroke-dashoffset: -22; } }
+
+/* The prototype's `pulse`: a dot of a source that is still loading. */
+@keyframes atlas-pulse { 50% { opacity: .3; } }
+
+@keyframes atlas-progress {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* Shared keyframes of the design system (settings, flows, pickers). Distances are tokens, so reduced motion keeps only the fade. */
+/* The fade is done after the first three fifths of the time, the rise takes all of it: entering content can be read
+   almost at once and still settles into place (the article arrives the same way, editor/articleMotion.ts). With a
+   fade as long as the rise, lists stayed under 90 % opacity for 130–150 ms after their DOM was ready (measured). */
+@keyframes st-rise-in {
+  from { opacity: 0; transform: translateY(var(--atlas-rise)); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+@keyframes st-rise-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(calc(var(--atlas-rise) * -.75)); }
+}
+@keyframes st-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes st-fade-out { from { opacity: 1; } to { opacity: 0; } }
+/* The prototype's popStatus(): .8 → 1.06 → 1 (plan O14); with --st-pop-from 1 (reduced motion) only the fade. */
+@keyframes st-pop {
+  0% { opacity: 0; transform: scale(var(--st-pop-from, .8)); }
+  60% { opacity: 1; transform: scale(calc(1 + (1 - var(--st-pop-from, .8)) * .3)); }
+  100% { opacity: 1; transform: scale(1); }
+}
+/* A new row glows like an accepted AI change (plan O13): the glow colour and a 3 px ring fade, ending on
+   the row's own background. Under reduced motion the ring is 0 px, so only the background fades. */
+@keyframes st-highlight {
+  0% { background-color: var(--atlas-ai-glow-color); box-shadow: 0 0 0 var(--atlas-glow-spread) var(--atlas-ai-glow-color); }
+  100% { box-shadow: 0 0 0 var(--atlas-glow-spread) transparent; }
+}
+
+/* The editor's motion on the Atlas tokens, one source of truth (plan §4.8; the editor's README "Motion tokens"
+   documents the contract). @atlas/markdown declares --md-motion-* under :where(:root); these rules win by
+   specificity in any load order. :root covers body-level surfaces (the full-screen editor, the editor's overlays,
+   the assist module's popups); the second selector recomputes the tokens inside a preview .atlas that sets its own
+   --atlas-motion-scale. The Atlas tokens carry the slow-down and the reduced path themselves, so
+   --md-motion-time-scale stays untouched (it only multiplies the editor's JavaScript literals).
+   Not mapped on purpose: --md-motion-rise and --md-motion-pop-from (the editor's geometry, which it zeroes by
+   itself under reduced motion), --md-motion-surface (an alias of --md-motion-target), --md-motion-time-scale and the
+   --md-conceal-* group (the invisible ink and the vault keep the editor's signature timing). The --md-assist-*
+   names default to the core tokens above, so only the module's own tokens are mapped. */
+:root,
+.atlas :where(.md-editor, .md-renderer) {
+  --md-motion-fast: var(--atlas-motion-fast);
+  --md-motion-base: var(--atlas-motion-base);
+  --md-motion-slow: var(--atlas-motion-slow);
+  --md-motion-menu: var(--atlas-motion-menu);
+  --md-motion-target: var(--atlas-motion-surface);
+  --md-motion-pop: var(--atlas-motion-pop);
+  --md-motion-glow: var(--atlas-motion-glow);
+  --md-motion-loop: var(--atlas-motion-loop);
+  --md-motion-spin: var(--atlas-motion-spin);
+  --md-motion-pulse: var(--atlas-motion-pulse);
+  --md-motion-ease: var(--atlas-ease-out);
+  --md-motion-ease-io: var(--atlas-ease-inout);
+  --md-assist-morph: var(--atlas-ai-morph);
+  --md-assist-solidify: var(--atlas-ai-solidify);
+  --md-assist-glow-color: var(--atlas-ai-glow-color);
+}
+/* The editor's loops stand still through a 0s token, not through a rule of its own, so under reduced motion the
+   mapped loop, spin and pulse are 0s (the Atlas tokens keep their length for Atlas's own loops, which swap
+   the animation for a fade above). */
+@media (prefers-reduced-motion: reduce) {
+  :root,
+  .atlas :where(.md-editor, .md-renderer) {
+    --md-motion-loop: 0s;
+    --md-motion-spin: 0s;
+    --md-motion-pulse: 0s;
+  }
+}
+[data-atlas-reduced-motion],
+[data-atlas-reduced-motion] .atlas :where(.md-editor, .md-renderer) {
+  --md-motion-loop: 0s;
+  --md-motion-spin: 0s;
+  --md-motion-pulse: 0s;
+}
+
+/* Immediate view switches keep keyboard response while the new content settles into place. */
+.atlas-view-enter { animation: st-rise-in var(--atlas-motion-surface) var(--atlas-ease-out) both; }
+
+/* Publication has its own progress icon; keep its label and click area steady. */
+.atlas .publish-button { min-width: 132px; }
+.atlas .publish-button[aria-busy="true"] { animation: none; }
+.atlas .publish-button > svg { flex: 0 0 auto; }
+.atlas .publish-button:not([aria-busy="true"]) > svg { transition: transform var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas .publish-button:not(:disabled):hover > svg { transform: translate(1px, -1px); }
+.atlas .document-status[data-transient] { overflow: visible; }
+.atlas .document-status .status-badge { white-space: normal; }
+@media (prefers-reduced-motion: reduce) {
+  .atlas .publish-button:not(:disabled):hover > svg { transform: none; }
+}
+
+/* Confirmed document feedback and collaborator interaction share the Atlas motion scale. */
+@keyframes atlas-collaborator-pencil { 25%, 65% { transform: translate(.6px, -.7px) rotate(-9deg); } 45%, 85% { transform: translate(-.5px, .5px) rotate(6deg); } }
+@keyframes status-settle { 0% { transform: scale(.97); } 55% { transform: scale(1.025); } 100% { transform: scale(1); } }
+@keyframes status-halo { to { box-shadow: 0 0 0 5px transparent; } }
+@keyframes status-label { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@keyframes status-circle { from { stroke-dashoffset: 70; } to { stroke-dashoffset: 0; } }
+@keyframes status-check { from { stroke-dashoffset: 30; } to { stroke-dashoffset: 0; } }
+[data-atlas-reduced-motion] .publish-button:not(:disabled):hover > svg { transform: none; }
+
+/* A requirement's „Hotovo“ check (projector/requirementHeading.css), in its --atlas-check-tone: the ring fills inward, then a soft halo rings out
+   and fades; the tick is written short stroke first, long stroke second, and settles from a small pop. Unticked, the fill just drains
+   away. Box shadows, a clip and scale only: the box keeps its size and place. */
+@keyframes atlas-check-fill {
+  from { background-color: transparent; box-shadow: inset 0 0 0 0 var(--atlas-check-tone), 0 0 0 0 color-mix(in srgb, var(--atlas-check-tone) 45%, transparent); }
+  40% { background-color: transparent; box-shadow: inset 0 0 0 9px var(--atlas-check-tone), 0 0 0 0 color-mix(in srgb, var(--atlas-check-tone) 45%, transparent); }
+  to { box-shadow: inset 0 0 0 9px var(--atlas-check-tone), 0 0 0 6px transparent; }
+}
+@keyframes atlas-check-draw {
+  from { clip-path: inset(calc(100% - 2px) 100% 0 0); }
+  40% { clip-path: inset(calc(100% - 2px) 0 0 0); scale: 1; }
+  75% { clip-path: inset(0); scale: 1.2; }
+  to { clip-path: inset(0); scale: 1; }
+}
+@keyframes atlas-check-drain { from { box-shadow: inset 0 0 0 9px var(--atlas-check-tone); } }
+
+/* ===== Atlas 2.5 UI refresh: keyframes per area. Each area adds only under its own heading. ===== */
+
+/* --- 2.5 library --- */
+
+
+/* --- 2.5 article and editor --- */
+
+
+/* --- 2.5 settings --- */
+
+
+/* --- 2.5 theme and shell --- */
+/* A bottom sheet (the "Sekce" of settings on a phone) comes up from the edge it belongs to and goes back there,
+   like the navigation drawer slides from the left. Reduced motion swaps both for st-fade-in/out (refresh.css §8). */
+@keyframes atlas-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes atlas-sheet-out { from { transform: none; } to { transform: translateY(100%); } }
+/* 2.6: a list of the rail that scrolls under its heading or its footer fades at the edge where more of it waits
+   (refresh.css §2, lib/scrollEdges.ts). The two lengths are registered so the fade can ease in and out. */
+@property --atlas-scroll-fade-top { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --atlas-scroll-fade-bottom { syntax: "<length>"; inherits: false; initial-value: 0px; }
+/* The same for a row that scrolls sideways (the tabs of a space on a phone, `v-scroll-edges:x`). */
+@property --atlas-scroll-fade-start { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --atlas-scroll-fade-end { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+
+/* --- 2.5 end --- */
+
+
+/* ===== Atlas 2.6: shared entrance (AGENTS.md „Interaction, motion and layout“) ===== */
+
+/* Content of a page or a section enters one after another (board 16 „Načtení stránky a sekcí“): each child
+   rises --atlas-rise and fades in over slow, 40 ms apart, at most the first eight; the rest arrive with the
+   eighth. `backwards` leaves no transform behind, so fixed menus inside behave once the entrance ends. */
+.atlas-stagger > * { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) backwards; animation-delay: calc(var(--st-stagger, 40ms) * 8); }
+.atlas-stagger > :nth-child(1) { animation-delay: 0s; }
+.atlas-stagger > :nth-child(2) { animation-delay: calc(var(--st-stagger, 40ms) * 1); }
+.atlas-stagger > :nth-child(3) { animation-delay: calc(var(--st-stagger, 40ms) * 2); }
+.atlas-stagger > :nth-child(4) { animation-delay: calc(var(--st-stagger, 40ms) * 3); }
+.atlas-stagger > :nth-child(5) { animation-delay: calc(var(--st-stagger, 40ms) * 4); }
+.atlas-stagger > :nth-child(6) { animation-delay: calc(var(--st-stagger, 40ms) * 5); }
+.atlas-stagger > :nth-child(7) { animation-delay: calc(var(--st-stagger, 40ms) * 6); }
+.atlas-stagger > :nth-child(8) { animation-delay: calc(var(--st-stagger, 40ms) * 7); }
+/* Reduced motion: the rows fade in at once, without the step (F17), also where a component sets a step of its own. */
+@media (prefers-reduced-motion: reduce) { .atlas-stagger { --st-stagger: 0ms !important; } }
+[data-atlas-reduced-motion] .atlas-stagger { --st-stagger: 0ms !important; }
+
+/* The page's reveal wave (plan 3.6 „Vlna zjevení“, F7) is played by DocumentEditor (`playReveal`, the atlas-reveal frames by script).
+   No counting selector (:nth-child, :nth-of-type, :nth-last-child) may match the editor's top-level blocks: Chrome then marks the block
+   list for good and restyles every block after an inserted or removed one, on each Enter or Backspace (2,000 blocks: 54 → 28 ms a key). */

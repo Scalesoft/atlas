@@ -1,0 +1,7 @@
+{
+  "Audit lze načítat po 1 až 100 záznamech.": "The audit can be loaded in batches of 1 to 100 records.",
+  "Neplatný kurzor auditu.": "Invalid audit cursor.",
+  "Audit přístupů je dostupný pouze správci wiki.": "The access audit is available only to wiki admins.",
+  "Období lze zadat na 1 až 3650 dní.": "The period can be set to 1 to 3650 days.",
+  "Přehled aktivity je dostupný pouze správci wiki.": "The activity overview is available only to wiki admins."
+}

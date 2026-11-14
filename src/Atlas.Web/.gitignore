@@ -1,0 +1,3 @@
+.tmp/
+tsconfig.local.generated.json
+tsconfig.local.*.generated.json

@@ -1,0 +1,20 @@
+{
+  "Potvrďte změnu přístupových práv cílového prostoru.": "Confirm the change of access permissions of the target space.",
+  "Stránka byla přesunuta. Načtěte strom znovu.": "The page was moved. Load the tree again.",
+  "Pro změnu umístění v témže prostoru použijte přesun ve stromu.": "To change the position within the same space, use the move in the tree.",
+  "Přesun podporuje nejvýše 1000 stránek. Rozdělte podstrom na menší části.": "A move supports at most 1000 pages. Split the subtree into smaller parts.",
+  "Nejprve obnovte podstránky v koši nebo je přesuňte mimo tento podstrom.": "First restore the subpages in the trash or move them out of this subtree.",
+  "Potvrďte přesun všech podstránek.": "Confirm moving all subpages.",
+  "Nejprve uložte společné úpravy všech přesouvaných stránek.": "First save the shared edits of all pages being moved.",
+  "Stránka obsahuje podstránky. Potvrďte přesun celého podstromu do koše.": "The page contains subpages. Confirm moving the whole subtree to the trash.",
+  "Stránku nelze přesunout pod sebe ani pod vlastní podstránku.": "A page cannot be moved under itself or under its own subpage.",
+  "Pod cílovou stránku nemůžete vkládat podstránky, protože nemáte oprávnění k jejím úpravám.": "You cannot insert subpages under the target page because you do not have permission to edit it.",
+  "Pod touto stránkou nemůžete nic přesouvat ani odebírat, protože nemáte oprávnění k jejím úpravám.": "You cannot move or remove anything under this page because you do not have permission to edit it.",
+  "Cílová rodičovská stránka není dostupná v tomto prostoru.": "The target parent page is not available in this space.",
+  "Cílová pozice není dostupná.": "The target position is not available.",
+  "Pro tuto úroveň již není dostupná pozice.": "The position is no longer available for this level.",
+  "Struktura prostoru se mezitím změnila. Obnovte strom a zopakujte akci.": "The space structure has changed in the meantime. Refresh the tree and repeat the action.",
+  "Neplatné stránkování koše.": "Invalid trash pagination.",
+  "Stránku z koše trvale maže správce prostoru.": "A page is permanently deleted from the trash by a space admin.",
+  "Stránku z koše obnovuje správce prostoru.": "A page is restored from the trash by a space admin."
+}

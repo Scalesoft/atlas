@@ -1,0 +1,91 @@
+.atlas .settings-section {
+  min-width: 0;
+  max-width: 100%;
+}
+/* A card inside a card is a band that bleeds to the outer card's edges; settings.css lifts this cap for it. */
+/* A collapsible part (InlineReveal) at the end of a card body. Closed it is zero high, but it is still a flex item of
+   the body, so its 12 px gap (and, after a row that reaches the card edge, the body's bottom padding) stayed as a blank
+   band under the last row. `reveal-tail` takes the gap back with a negative top margin and carries it as padding of its
+   content, so closed it takes no room and opening grows the gap together with the height (nothing flips when the
+   animation starts). `reveal-lead` goes on the row or list before it, which is the card's last row while the part is
+   closed and so keeps reaching the card's bottom edge; `reveal-tail-bleed` then also carries that bottom inset. */
+.atlas .settings-section-body > .reveal-lead { margin-bottom: calc(var(--st-body-pad-y, 16px) * -1); }
+.atlas .settings-section-body > .reveal-tail { margin-top: calc(var(--st-body-gap, 12px) * -1); }
+.atlas .reveal-tail > .inline-reveal > .inline-reveal-inner { padding-top: var(--st-body-gap, 12px); }
+.atlas .reveal-tail-bleed > .inline-reveal > .inline-reveal-inner { padding-top: calc(var(--st-body-gap, 12px) + var(--st-body-pad-y, 16px)); }
+/* The wiki sidebar's Nastavení wiki button; SettingsNav shares the class name but lays itself out. */
+.atlas .nav-link.settings-nav {
+  margin: 10px 0;
+}
+/* Needs attention, like a warning count in the settings navigation. */
+.atlas .nav-attention {
+  display: inline-grid;
+  place-items: center;
+  margin-left: auto;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: var(--warning);
+  background: var(--warning-bg);
+}
+.atlas .login-methods fieldset {
+  margin: 0;
+  padding: 0;
+}
+.atlas .login-methods form > [data-slot="button"],
+.atlas .external-methods > [data-slot="button"] {
+  width: 100%;
+  margin-bottom: 9px;
+}
+.atlas .external-methods {
+  margin: 20px 0;
+}
+.atlas .login-separator {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 17px 0;
+}
+.atlas .login-alternative {
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 12px;
+  padding: 10px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.atlas .login-methods h2 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.atlas .admin-recovery {
+  padding-top: 4px;
+}
+.atlas .admin-recovery h2 {
+  margin: 0 0 8px;
+}
+.atlas .admin-recovery form {
+  margin-top: 18px;
+}
+.recovery-path {
+  display: block;
+  overflow-wrap: anywhere;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.login-recovery {
+  display: block;
+  margin: 8px auto 0;
+  font-size: 12px;
+}
+/* Kicker of the first-run module wizard header; specificity is raised to beat
+   shell.css's generic muted .eyebrow. */
+.atlas .module-host .eyebrow:not(.md-editor):not(.md-editor *) {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: var(--accent);
+}

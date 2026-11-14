@@ -1,0 +1,4571 @@
+{
+ "versions": {
+  "yjs": "13.6.33",
+  "@tiptap/y-tiptap": "3.0.9",
+  "prosemirror-model": "1.25.11"
+ },
+ "cases": [
+  {
+   "name": "fixture-web-document",
+   "source": "Fixtures/document-schema/web-document.json: every node, mark and component",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-web-document/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-drop-github-deployment-guide",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-drop-github-deployment-guide.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-drop-github-deployment-guide/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-drop-obsidian-meeting-notes",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-drop-obsidian-meeting-notes.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-drop-obsidian-meeting-notes/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-drop-wikijs-ops-incident-policy",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-drop-wikijs-ops-incident-policy.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-drop-wikijs-ops-incident-policy/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-github-deployment-guide",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-github-deployment-guide.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-github-deployment-guide/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-github-home",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-github-home.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-github-home/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-github-release-process",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-github-release-process.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-github-release-process/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-github-runbook",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-github-runbook.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-github-runbook/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-obsidian-meeting-notes",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-obsidian-meeting-notes.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-obsidian-meeting-notes/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-obsidian-project-alpha",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-obsidian-project-alpha.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-obsidian-project-alpha/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-wikijs-ops-escalation",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-wikijs-ops-escalation.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-wikijs-ops-escalation/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-wikijs-ops-incident-policy",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-wikijs-ops-incident-policy.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-wikijs-ops-incident-policy/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-imported-server-wikijs-ops-on-call",
+   "source": "src/Atlas.Markdown/src/source/fixtures/imported-server-wikijs-ops-on-call.json: a foreign wiki page as the editor imports it",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-imported-server-wikijs-ops-on-call/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-secrets-v1",
+   "source": "src/Atlas.Markdown/src/plugins/secrets/fixtures/secrets-v1.json, migrated to the current plugin version",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-secrets-v1/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-secrets-v2",
+   "source": "src/Atlas.Markdown/src/plugins/secrets/fixtures/secrets-v2.json, migrated to the current plugin version",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-secrets-v2/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-secrets-v3",
+   "source": "src/Atlas.Markdown/src/plugins/secrets/fixtures/secrets-v3.json, migrated to the current plugin version",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-secrets-v3/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-secrets-v4",
+   "source": "src/Atlas.Markdown/src/plugins/secrets/fixtures/secrets-v4.json, migrated to the current plugin version",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "fixture-secrets-v4/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-y-tiptap-crash-1",
+   "source": "src/Atlas.Markdown/src/collab/fixtures/y-tiptap-selection-crash.json: Yjs formatting cleanup after the remote change",
+   "steps": [
+    {
+     "payload": "fixture-y-tiptap-crash-1/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "fixture-y-tiptap-crash-1/001.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "fixture-y-tiptap-crash-2",
+   "source": "src/Atlas.Markdown/src/collab/fixtures/y-tiptap-selection-crash.json: y-tiptap deleting a node it cannot build, inside the remote change",
+   "steps": [
+    {
+     "payload": "fixture-y-tiptap-crash-2/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "fixture-y-tiptap-crash-2/001.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "editor-unicode",
+   "source": "Czech, astral characters (emoji, ZWJ sequences, flags), combining marks, other scripts, invisible characters",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "editor-unicode/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "editor-escapes",
+   "source": "every character JSON escapes, control characters, U+2028/2029",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "editor-escapes/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "editor-marks",
+   "source": "overlapping, adjacent and nested marks, links with attributes, split equal links",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "editor-marks/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "editor-empty-blocks",
+   "source": "empty paragraphs, heading, quote, list item and code block",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "editor-empty-blocks/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "empty-document",
+   "source": "a Y.Doc nothing was written to: the editor shows its empty document",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "empty-document/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "editor-session",
+   "source": "one editor: typing, marks, a link, split, delete, align, hard break, table, task list, undo; one update per step",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "editor-session/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/001.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/002.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/003.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/004.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/005.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/006.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/007.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/008.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/009.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/010.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/011.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/012.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/013.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/014.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/015.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/016.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-session/017.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "editor-concurrent",
+   "source": "two editors: overlapping bold and italic, inserts and deletes in the same sentence, a link, a row and a column at once",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "editor-concurrent/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/001.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/002.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/003.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/004.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/005.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/006.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/007.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/008.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/009.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/010.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "editor-concurrent/011.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "gc-concurrent-delete",
+   "source": "a state with GC structs, then an update whose items reference the collected content",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "gc-concurrent-delete/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "gc-concurrent-delete/001.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "gc-everything-deleted",
+   "source": "every block deleted and collected: the editor shows its empty document",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "gc-everything-deleted/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "raw-surrogate-split",
+   "source": "an insert inside an emoji: the split halves become U+FFFD",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "raw-surrogate-split/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "raw-surrogate-split/001.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "raw-attributes",
+   "source": "attributes set out of schema order, unknown, undefined, null and removed ones: schema order, defaults",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "raw-attributes/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "raw-mark-order",
+   "source": "formats in another order than the mark ranks, partial and hashed mark attributes, a `true` format value",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "raw-mark-order/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "raw-adjacent-texts",
+   "source": "adjacent XmlTexts and runs whose marks are equal merge into one text node",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "raw-adjacent-texts/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "raw-numbers",
+   "source": "number values as JSON.stringify writes them: floats, exponents, -0, extremes",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "raw-numbers/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "raw-ignored",
+   "source": "attributes on a text, other roots and an empty text: nothing the editor shows",
+   "editor": true,
+   "steps": [
+    {
+     "payload": "raw-ignored/000.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-unknown-node",
+   "source": "an element the schema does not know",
+   "steps": [
+    {
+     "payload": "unsupported-unknown-node/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-unknown-mark",
+   "source": "a format the schema does not know",
+   "steps": [
+    {
+     "payload": "unsupported-unknown-mark/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-mark-not-allowed",
+   "source": "bold inside a code block",
+   "steps": [
+    {
+     "payload": "unsupported-mark-not-allowed/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-invalid-content",
+   "source": "a paragraph inside a paragraph",
+   "steps": [
+    {
+     "payload": "unsupported-invalid-content/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-text-in-list",
+   "source": "text directly in a bullet list",
+   "steps": [
+    {
+     "payload": "unsupported-text-in-list/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-top-level-list-item",
+   "source": "a list item at the top level",
+   "steps": [
+    {
+     "payload": "unsupported-top-level-list-item/000.state.bin",
+     "expect": "error",
+     "why": "ProseMirror wraps top-level nodes the document does not accept"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-text-at-root",
+   "source": "a text directly in the fragment",
+   "steps": [
+    {
+     "payload": "unsupported-text-at-root/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap fails: TypeError: el.toArray is not a function"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-hook",
+   "source": "an XmlHook inside a paragraph",
+   "steps": [
+    {
+     "payload": "unsupported-hook/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap fails: TypeError: text.toDelta is not a function"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-map-child",
+   "source": "a Y.Map inside a paragraph",
+   "steps": [
+    {
+     "payload": "unsupported-map-child/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap fails: TypeError: text.toDelta is not a function"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-any-child",
+   "source": "a plain value inside a paragraph",
+   "steps": [
+    {
+     "payload": "unsupported-any-child/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap fails: TypeError: Cannot read properties of undefined (reading 'right')"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-embed",
+   "source": "an embed inside a text",
+   "steps": [
+    {
+     "payload": "unsupported-embed/000.state.bin",
+     "expect": "error",
+     "why": "an embed in a text"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-type-attribute",
+   "source": "a shared type as an attribute value",
+   "steps": [
+    {
+     "payload": "unsupported-type-attribute/000.state.bin",
+     "expect": "error",
+     "why": "a shared type as an attribute value (ProseMirror keeps the Y type)"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-binary-attribute",
+   "source": "binary data as an attribute value",
+   "steps": [
+    {
+     "payload": "unsupported-binary-attribute/000.state.bin",
+     "expect": "error",
+     "why": "binary data as an attribute value (JSON.stringify writes an object of indexes)",
+     "refused": true
+    }
+   ]
+  },
+  {
+   "name": "unsupported-nested-undefined",
+   "source": "undefined inside an attribute value",
+   "steps": [
+    {
+     "payload": "unsupported-nested-undefined/000.state.bin",
+     "expect": "error",
+     "why": "undefined inside an attribute value (JSON.stringify drops or nulls it)",
+     "refused": true
+    }
+   ]
+  },
+  {
+   "name": "unsupported-nan",
+   "source": "NaN as an attribute value",
+   "steps": [
+    {
+     "payload": "unsupported-nan/000.state.bin",
+     "expect": "error",
+     "why": "a non-finite number (JSON.stringify writes null)",
+     "refused": true
+    }
+   ]
+  },
+  {
+   "name": "unsupported-bigint",
+   "source": "a bigint as an attribute value",
+   "steps": [
+    {
+     "payload": "unsupported-bigint/000.state.bin",
+     "expect": "error",
+     "why": "y-tiptap fails: TypeError: Do not know how to serialize a BigInt"
+    }
+   ]
+  },
+  {
+   "name": "unsupported-format-string",
+   "source": "a link format whose value is a string",
+   "steps": [
+    {
+     "payload": "unsupported-format-string/000.state.bin",
+     "expect": "error",
+     "why": "a format value that is not an object for a mark with attributes (ProseMirror falls back to the defaults)",
+     "refused": true
+    }
+   ]
+  },
+  {
+   "name": "unsupported-pending",
+   "source": "an update whose previous update is missing",
+   "steps": [
+    {
+     "payload": "unsupported-pending/000.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "unsupported-pending/001.update.bin",
+     "expect": "error",
+     "why": "Yjs parks a payload whose dependencies are missing"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-paragraph",
+   "source": "yjs-corpus/node-paragraph: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-paragraph/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-paragraph/001-insert_paragraph.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-paragraph/002-attr_paragraph_textAlign.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-paragraph/003-type_into_paragraph_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-paragraph/004-type_into_paragraph_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-paragraph/005-type_into_paragraph_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-paragraph/006-delete_paragraph.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-paragraph-007-state",
+   "source": "yjs-corpus/node-paragraph/007-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-paragraph/007-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-blockquote",
+   "source": "yjs-corpus/node-blockquote: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-blockquote/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-blockquote/001-insert_blockquote.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-blockquote/002-type_into_blockquote_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-blockquote/003-type_into_blockquote_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-blockquote/004-type_into_blockquote_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-blockquote/005-delete_blockquote.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-blockquote-006-state",
+   "source": "yjs-corpus/node-blockquote/006-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-blockquote/006-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-bulletList",
+   "source": "yjs-corpus/node-bulletList: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-bulletList/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-bulletList/001-insert_bulletList.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-bulletList/002-attr_bulletList_tight.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-bulletList/003-delete_bulletList.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-bulletList-004-state",
+   "source": "yjs-corpus/node-bulletList/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-bulletList/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-codeBlock",
+   "source": "yjs-corpus/node-codeBlock: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-codeBlock/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-codeBlock/001-insert_codeBlock.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-codeBlock/002-attr_codeBlock_language.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-codeBlock/003-type_into_codeBlock_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-codeBlock/004-type_into_codeBlock_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-codeBlock/005-type_into_codeBlock_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-codeBlock/006-delete_codeBlock.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-codeBlock-007-state",
+   "source": "yjs-corpus/node-codeBlock/007-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-codeBlock/007-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-hardBreak",
+   "source": "yjs-corpus/node-hardBreak: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-hardBreak/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-hardBreak/001-insert_hardBreak.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-hardBreak/002-delete_hardBreak.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-hardBreak-003-state",
+   "source": "yjs-corpus/node-hardBreak/003-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-hardBreak/003-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-heading",
+   "source": "yjs-corpus/node-heading: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-heading/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-heading/001-insert_heading.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-heading/002-attr_heading_level.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-heading/003-type_into_heading_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-heading/004-type_into_heading_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-heading/005-type_into_heading_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-heading/006-delete_heading.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-heading-007-state",
+   "source": "yjs-corpus/node-heading/007-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-heading/007-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-horizontalRule",
+   "source": "yjs-corpus/node-horizontalRule: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-horizontalRule/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-horizontalRule/001-insert_horizontalRule.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-horizontalRule/002-delete_horizontalRule.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-horizontalRule-003-state",
+   "source": "yjs-corpus/node-horizontalRule/003-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-horizontalRule/003-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-orderedList",
+   "source": "yjs-corpus/node-orderedList: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-orderedList/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-orderedList/001-insert_orderedList.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-orderedList/002-attr_orderedList_tight.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-orderedList/003-delete_orderedList.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-orderedList-004-state",
+   "source": "yjs-corpus/node-orderedList/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-orderedList/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-image",
+   "source": "yjs-corpus/node-image: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-image/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-image/001-insert_image.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-image/002-attr_image_src.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-image/003-delete_image.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-image-004-state",
+   "source": "yjs-corpus/node-image/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-image/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-table",
+   "source": "yjs-corpus/node-table: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-table/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-table/001-insert_table.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-table/002-attr_table_chartRef.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-table/003-delete_table.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-table-004-state",
+   "source": "yjs-corpus/node-table/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-table/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-taskList",
+   "source": "yjs-corpus/node-taskList: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-taskList/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-taskList/001-insert_taskList.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-taskList/002-delete_taskList.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-taskList-003-state",
+   "source": "yjs-corpus/node-taskList/003-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-taskList/003-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-callout",
+   "source": "yjs-corpus/node-callout: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-callout/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-callout/001-insert_callout.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-callout/002-attr_callout_variant.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-callout/003-type_into_callout_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-callout/004-type_into_callout_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-callout/005-type_into_callout_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-callout/006-delete_callout.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-callout-007-state",
+   "source": "yjs-corpus/node-callout/007-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-callout/007-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-disclosure",
+   "source": "yjs-corpus/node-disclosure: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-disclosure/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-disclosure/001-insert_disclosure.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    },
+    {
+     "payload": "../yjs-corpus/node-disclosure/002-attr_disclosure_title.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    },
+    {
+     "payload": "../yjs-corpus/node-disclosure/003-type_into_disclosure_0.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    },
+    {
+     "payload": "../yjs-corpus/node-disclosure/004-type_into_disclosure_1.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    },
+    {
+     "payload": "../yjs-corpus/node-disclosure/005-type_into_disclosure_2.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    },
+    {
+     "payload": "../yjs-corpus/node-disclosure/006-delete_disclosure.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-disclosure-007-state",
+   "source": "yjs-corpus/node-disclosure/007-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-disclosure/007-final.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-youtrackIssue",
+   "source": "yjs-corpus/node-youtrackIssue: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-youtrackIssue/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-youtrackIssue/001-insert_youtrackIssue.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-youtrackIssue/002-attr_youtrackIssue_key.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-youtrackIssue/003-delete_youtrackIssue.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-youtrackIssue-004-state",
+   "source": "yjs-corpus/node-youtrackIssue/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-youtrackIssue/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-contactCard",
+   "source": "yjs-corpus/node-contactCard: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-contactCard/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-contactCard/001-insert_contactCard.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-contactCard/002-attr_contactCard_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-contactCard/003-delete_contactCard.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-contactCard-004-state",
+   "source": "yjs-corpus/node-contactCard/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-contactCard/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-contactInline",
+   "source": "yjs-corpus/node-contactInline: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-contactInline/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-contactInline/001-insert_contactInline.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-contactInline/002-attr_contactInline_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-contactInline/003-delete_contactInline.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-contactInline-004-state",
+   "source": "yjs-corpus/node-contactInline/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-contactInline/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-attachment",
+   "source": "yjs-corpus/node-attachment: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-attachment/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-attachment/001-insert_attachment.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-attachment/002-attr_attachment_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-attachment/003-delete_attachment.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-attachment-004-state",
+   "source": "yjs-corpus/node-attachment/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-attachment/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-chart",
+   "source": "yjs-corpus/node-chart: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-chart/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-chart/001-insert_chart.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-chart/002-attr_chart_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-chart/003-delete_chart.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-chart-004-state",
+   "source": "yjs-corpus/node-chart/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-chart/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-openapi",
+   "source": "yjs-corpus/node-openapi: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-openapi/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-openapi/001-insert_openapi.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-openapi/002-attr_openapi_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-openapi/003-delete_openapi.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-openapi-004-state",
+   "source": "yjs-corpus/node-openapi/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-openapi/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-diagram",
+   "source": "yjs-corpus/node-diagram: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-diagram/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-diagram/001-insert_diagram.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-diagram/002-attr_diagram_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-diagram/003-delete_diagram.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-diagram-004-state",
+   "source": "yjs-corpus/node-diagram/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-diagram/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-mathBlock",
+   "source": "yjs-corpus/node-mathBlock: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-mathBlock/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-mathBlock/001-insert_mathBlock.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-mathBlock/002-attr_mathBlock_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-mathBlock/003-delete_mathBlock.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-mathBlock-004-state",
+   "source": "yjs-corpus/node-mathBlock/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-mathBlock/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-mathInline",
+   "source": "yjs-corpus/node-mathInline: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-mathInline/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-mathInline/001-insert_mathInline.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-mathInline/002-attr_mathInline_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-mathInline/003-delete_mathInline.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-mathInline-004-state",
+   "source": "yjs-corpus/node-mathInline/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-mathInline/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-tableOfContents",
+   "source": "yjs-corpus/node-tableOfContents: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-tableOfContents/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-tableOfContents/001-insert_tableOfContents.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-tableOfContents/002-attr_tableOfContents_data.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-tableOfContents/003-delete_tableOfContents.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-tableOfContents-004-state",
+   "source": "yjs-corpus/node-tableOfContents/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-tableOfContents/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-emoji",
+   "source": "yjs-corpus/node-emoji: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-emoji/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-emoji/001-insert_emoji.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-emoji/002-attr_emoji_name.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-emoji/003-delete_emoji.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-emoji-004-state",
+   "source": "yjs-corpus/node-emoji/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-emoji/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-pageReference",
+   "source": "yjs-corpus/node-pageReference: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-pageReference/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-pageReference/001-insert_pageReference.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-pageReference/002-attr_pageReference_title.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-pageReference/003-delete_pageReference.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-pageReference-004-state",
+   "source": "yjs-corpus/node-pageReference/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-pageReference/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-concealedContent",
+   "source": "yjs-corpus/node-concealedContent: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-concealedContent/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-concealedContent/001-insert_concealedContent.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-concealedContent/002-attr_concealedContent_reveal.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-concealedContent/003-type_into_concealedContent_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-concealedContent/004-type_into_concealedContent_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-concealedContent/005-type_into_concealedContent_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-concealedContent/006-delete_concealedContent.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-concealedContent-007-state",
+   "source": "yjs-corpus/node-concealedContent/007-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-concealedContent/007-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-secretReference",
+   "source": "yjs-corpus/node-secretReference: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-secretReference/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-secretReference/001-insert_secretReference.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-secretReference/002-attr_secretReference_showCopy.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-secretReference/003-delete_secretReference.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-secretReference-004-state",
+   "source": "yjs-corpus/node-secretReference/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-secretReference/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-secretInlineReference",
+   "source": "yjs-corpus/node-secretInlineReference: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-secretInlineReference/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-secretInlineReference/001-insert_secretInlineReference.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-secretInlineReference/002-attr_secretInlineReference_showCopy.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/node-secretInlineReference/003-delete_secretInlineReference.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-node-secretInlineReference-004-state",
+   "source": "yjs-corpus/node-secretInlineReference/004-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/node-secretInlineReference/004-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-editing",
+   "source": "yjs-corpus/editing: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/editing/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/001-type_5_chars_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/002-type_5_chars_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/003-type_5_chars_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/004-type_5_chars_3.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/005-type_5_chars_4.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/006-bold.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/007-italic.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/008-underline.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/009-strike.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/010-highlight.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/011-code.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/012-link.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/013-change_link_href.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/014-unbold.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/015-type_inside_marked_text_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/016-type_inside_marked_text_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/017-enter_split_.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/018-heading.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/019-heading_level.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/020-text_align.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/021-bullet_list.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/022-ordered_list.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/023-task_list.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/024-check_task.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/025-blockquote.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/026-code_block.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/027-table_insert.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/028-table_type_in_cell_0.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/029-table_type_in_cell_1.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/030-table_type_in_cell_2.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/031-table_type_in_cell_3.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/032-table_add_row.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/033-table_add_column.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/034-cell_background.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/035-paste_rich_html.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/036-delete_range.update.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/editing/037-delete_all.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-editing-038-state",
+   "source": "yjs-corpus/editing/038-final.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/editing/038-final.state.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-all-nodes",
+   "source": "yjs-corpus/all-nodes: the baseline, then every captured update",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/all-nodes/000-all-allowed-nodes.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-all-nodes-001-state",
+   "source": "yjs-corpus/all-nodes/001-with-secrets.state.bin on its own",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/all-nodes/001-with-secrets.state.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-001",
+   "source": "yjs-corpus/hostile/001-unknown_top-level_node.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/001-unknown_top-level_node.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-002",
+   "source": "yjs-corpus/hostile/002-script_node.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/002-script_node.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-003",
+   "source": "yjs-corpus/hostile/003-raw_secretReference_block.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/003-raw_secretReference_block.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-004",
+   "source": "yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-005",
+   "source": "yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-006",
+   "source": "yjs-corpus/hostile/006-unknown_attribute_on_existing_paragraph.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/006-unknown_attribute_on_existing_paragraph.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-007",
+   "source": "yjs-corpus/hostile/007-unknown_mark_on_existing_text.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/007-unknown_mark_on_existing_text.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-008",
+   "source": "yjs-corpus/hostile/008-mark_named_secretInlineReference.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/008-mark_named_secretInlineReference.update.bin",
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-009",
+   "source": "yjs-corpus/hostile/009-text_embed.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/009-text_embed.update.bin",
+     "expect": "error",
+     "why": "an embed in a text"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-010",
+   "source": "yjs-corpus/hostile/010-other_root_map.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/010-other_root_map.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-011",
+   "source": "yjs-corpus/hostile/011-other_root_text.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/011-other_root_text.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-012",
+   "source": "yjs-corpus/hostile/012-secret_inserted_and_deleted_in_the_same_update_smuggle_.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/012-secret_inserted_and_deleted_in_the_same_update_smuggle_.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-013",
+   "source": "yjs-corpus/hostile/013-unknown_node_inserted_and_deleted_in_the_same_update_smuggle_.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/013-unknown_node_inserted_and_deleted_in_the_same_update_smuggle_.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-014",
+   "source": "yjs-corpus/hostile/014-legit_type_control_.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/014-legit_type_control_.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-015",
+   "source": "yjs-corpus/hostile/015-legit_delete-only_control_.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/015-legit_delete-only_control_.update.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-016",
+   "source": "yjs-corpus/hostile/016-pending_structs.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/016-pending_structs.update.bin",
+     "expect": "error",
+     "why": "Yjs parks a payload whose dependencies are missing"
+    }
+   ]
+  },
+  {
+   "name": "corpus-hostile-017",
+   "source": "yjs-corpus/hostile/017-pending_ds.update.bin against the baseline",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/hostile/000-baseline.state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/hostile/017-pending_ds.update.bin",
+     "expect": "error",
+     "why": "Yjs parks a payload whose dependencies are missing"
+    }
+   ]
+  },
+  {
+   "name": "corpus-perf-50k",
+   "source": "yjs-corpus/perf/50k: the state and 200 random edits",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/perf/50k/state.bin",
+     "expect": "json"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u000.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u001.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u002.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u003.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u004.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u005.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u006.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u007.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u008.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u009.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u010.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u011.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u012.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u013.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u014.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u015.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u016.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u017.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u018.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u019.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u020.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u021.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u022.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u023.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u024.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u025.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u026.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u027.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u028.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u029.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u030.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u031.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u032.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u033.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u034.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u035.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u036.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u037.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u038.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u039.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u040.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u041.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u042.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u043.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u044.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u045.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u046.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u047.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u048.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u049.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u050.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u051.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u052.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u053.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u054.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u055.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u056.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u057.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u058.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u059.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u060.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u061.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u062.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u063.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u064.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u065.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u066.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u067.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u068.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u069.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u070.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u071.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u072.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u073.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u074.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u075.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u076.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u077.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u078.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u079.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u080.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u081.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u082.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u083.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u084.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u085.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u086.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u087.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u088.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u089.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u090.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u091.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u092.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u093.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u094.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u095.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u096.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u097.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u098.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u099.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u100.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u101.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u102.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u103.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u104.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u105.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u106.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u107.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u108.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u109.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u110.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u111.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u112.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u113.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u114.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u115.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u116.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u117.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u118.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u119.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u120.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u121.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u122.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u123.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u124.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u125.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u126.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u127.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u128.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u129.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u130.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u131.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u132.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u133.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u134.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u135.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u136.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u137.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u138.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u139.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u140.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u141.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u142.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u143.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u144.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u145.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u146.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u147.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u148.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u149.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u150.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u151.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u152.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u153.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u154.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u155.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u156.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u157.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u158.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u159.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u160.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u161.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u162.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u163.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u164.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u165.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u166.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u167.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u168.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u169.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u170.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u171.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u172.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u173.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u174.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u175.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u176.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u177.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u178.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u179.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u180.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u181.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u182.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u183.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u184.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u185.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u186.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u187.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u188.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u189.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u190.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u191.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u192.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u193.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u194.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u195.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u196.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u197.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u198.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/50k/u199.bin",
+     "expect": "json"
+    }
+   ]
+  },
+  {
+   "name": "corpus-perf-256k",
+   "source": "yjs-corpus/perf/256k: the state and 200 random edits",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/perf/256k/state.bin",
+     "expect": "sha256",
+     "sha256": "e8b6d708ec47c0a116a4b25b27eb3225f3fc08fcb09be1cfad28c25daae6093a",
+     "bytes": 240913
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u000.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u001.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u002.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u003.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u004.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u005.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u006.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u007.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u008.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u009.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u010.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u011.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u012.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u013.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u014.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u015.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u016.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u017.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u018.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u019.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u020.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u021.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u022.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u023.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u024.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u025.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u026.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u027.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u028.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u029.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u030.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u031.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u032.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u033.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u034.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u035.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u036.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u037.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u038.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u039.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u040.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u041.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u042.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u043.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u044.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u045.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u046.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u047.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u048.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u049.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u050.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u051.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u052.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u053.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u054.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u055.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u056.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u057.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u058.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u059.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u060.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u061.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u062.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u063.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u064.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u065.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u066.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u067.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u068.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u069.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u070.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u071.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u072.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u073.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u074.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u075.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u076.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u077.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u078.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u079.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u080.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u081.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u082.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u083.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u084.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u085.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u086.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u087.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u088.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u089.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u090.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u091.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u092.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u093.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u094.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u095.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u096.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u097.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u098.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u099.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u100.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u101.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u102.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u103.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u104.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u105.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u106.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u107.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u108.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u109.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u110.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u111.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u112.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u113.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u114.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u115.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u116.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u117.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u118.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u119.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u120.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u121.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u122.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u123.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u124.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u125.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u126.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u127.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u128.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u129.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u130.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u131.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u132.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u133.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u134.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u135.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u136.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u137.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u138.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u139.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u140.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u141.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u142.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u143.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u144.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u145.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u146.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u147.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u148.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u149.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u150.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u151.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u152.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u153.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u154.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u155.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u156.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u157.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u158.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u159.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u160.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u161.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u162.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u163.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u164.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u165.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u166.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u167.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u168.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u169.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u170.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u171.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u172.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u173.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u174.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u175.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u176.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u177.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u178.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u179.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u180.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u181.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u182.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u183.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u184.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u185.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u186.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u187.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u188.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u189.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u190.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u191.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u192.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u193.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u194.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u195.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u196.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u197.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u198.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/256k/u199.bin",
+     "expect": "sha256",
+     "sha256": "ddff505e48b16d8f271c848c272fd03623486bb286fc0d7ca7011cd5284f3520",
+     "bytes": 259021
+    }
+   ]
+  },
+  {
+   "name": "corpus-perf-1m",
+   "source": "yjs-corpus/perf/1m: the state and 200 random edits",
+   "steps": [
+    {
+     "payload": "../yjs-corpus/perf/1m/state.bin",
+     "expect": "sha256",
+     "sha256": "8a67246ab56f57909a83badc0aff5c2dfd8660c5cfd132cc3f61627f9f011722",
+     "bytes": 940655
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u000.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u001.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u002.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u003.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u004.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u005.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u006.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u007.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u008.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u009.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u010.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u011.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u012.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u013.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u014.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u015.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u016.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u017.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u018.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u019.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u020.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u021.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u022.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u023.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u024.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u025.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u026.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u027.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u028.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u029.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u030.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u031.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u032.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u033.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u034.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u035.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u036.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u037.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u038.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u039.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u040.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u041.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u042.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u043.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u044.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u045.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u046.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u047.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u048.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u049.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u050.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u051.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u052.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u053.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u054.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u055.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u056.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u057.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u058.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u059.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u060.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u061.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u062.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u063.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u064.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u065.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u066.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u067.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u068.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u069.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u070.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u071.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u072.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u073.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u074.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u075.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u076.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u077.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u078.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u079.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u080.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u081.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u082.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u083.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u084.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u085.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u086.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u087.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u088.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u089.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u090.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u091.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u092.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u093.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u094.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u095.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u096.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u097.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u098.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u099.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u100.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u101.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u102.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u103.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u104.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u105.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u106.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u107.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u108.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u109.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u110.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u111.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u112.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u113.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u114.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u115.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u116.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u117.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u118.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u119.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u120.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u121.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u122.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u123.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u124.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u125.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u126.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u127.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u128.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u129.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u130.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u131.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u132.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u133.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u134.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u135.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u136.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u137.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u138.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u139.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u140.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u141.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u142.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u143.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u144.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u145.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u146.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u147.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u148.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u149.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u150.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u151.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u152.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u153.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u154.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u155.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u156.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u157.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u158.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u159.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u160.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u161.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u162.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u163.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u164.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u165.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u166.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u167.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u168.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u169.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u170.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u171.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u172.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u173.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u174.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u175.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u176.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u177.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u178.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u179.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u180.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u181.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u182.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u183.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u184.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u185.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u186.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u187.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u188.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u189.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u190.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u191.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u192.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u193.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u194.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u195.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u196.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u197.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u198.bin",
+     "expect": "none"
+    },
+    {
+     "payload": "../yjs-corpus/perf/1m/u199.bin",
+     "expect": "sha256",
+     "sha256": "67f90159449b045900d6663e62e081228d025eb51ac93c234906074963781db3",
+     "bytes": 962328
+    }
+   ]
+  },
+  {
+   "name": "near-4m",
+   "source": "9897 blocks of every kind and 19794 small edits of four other clients: 4173142 bytes",
+   "steps": [
+    {
+     "payload": "near-4m/000.state.bin.gz",
+     "expect": "sha256",
+     "sha256": "e2e331d526f2b5e2990735800a47bf458b13659961d6cb4d3cfc765fa0b7de29",
+     "bytes": 6718915
+    }
+   ]
+  }
+ ]
+}

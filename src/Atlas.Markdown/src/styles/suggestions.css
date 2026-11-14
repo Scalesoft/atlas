@@ -1,0 +1,50 @@
+.md-suggestion-list {
+  width: 300px; max-width: calc(100vw - 16px); box-sizing: border-box;
+  max-height: min(320px, calc(100dvh - 16px)); overflow-y: auto; overscroll-behavior: contain;
+  padding: 4px; background: var(--paper, #fffefe); border: 1px solid var(--line, #d4e4e7);
+  border-radius: var(--radius-md, 8px); box-shadow: var(--shadow-menu, 0 8px 28px rgb(16 32 57 / .14));
+  color: var(--text, #102f36);
+  /* This is a body-level portal (features/suggestions/popup.ts appends it to
+     <body>, outside .md-editor's DOM subtree) so it never inherits the host's
+     font from CSS inheritance alone — without this it fell back to the
+     browser's UA default (Times New Roman). font-sans is copied onto the
+     portal element by core/overlayTheme.ts. */
+  font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif);
+  font-size: 13px;
+  animation: md-popover-enter var(--md-motion-menu) var(--md-motion-ease) both;
+}
+/* A panel's search field's rows (field.ts): inside the panel, not a floating frame of their own. */
+.md-suggestion-list.md-suggestion-field-list { width: 100%; max-height: 300px; margin-top: 8px; padding: 0; border: 0; box-shadow: none; background: transparent; animation: none; }
+/* D7: its room is reserved from the start (three rows), and a slow answer shows rows of the row's height, not a line of text (field.ts). */
+.md-suggestion-field-list { min-height: calc(3 * var(--control-h, 36px)); }
+.md-suggestion-field-list[aria-busy=true] > .empty {
+  height: calc(3 * var(--control-h, 36px)); box-sizing: border-box; padding: 0; color: transparent;
+  background: repeating-linear-gradient(transparent 0 6px, var(--bg-3, #e2eef0) 6px calc(var(--control-h, 36px) - 6px), transparent 0 var(--control-h, 36px));
+}
+.md-suggestion-list .empty { padding: 10px; color: var(--text-dimmer); font-size: 13px; text-align: center; }
+/* Same menu-item family as .bb-item / table menus: 36px min-height, 13px text, 16px icon, 10px gap. */
+.md-suggestion-list .row {
+  display: flex; gap: 10px; align-items: center; min-height: var(--control-h, 36px); padding: 6px 10px; width: 100%; text-align: left;
+  border-radius: var(--radius-sm, 6px); border: none; background: transparent; cursor: pointer; color: var(--text); font-size: 13px;
+  transition: background-color var(--md-motion-fast), color var(--md-motion-fast);
+}
+/* The action menu (P2, also on a board) is pointed at as often as tapped: its rows take the 44 px target of §2.3. */
+.md-intentions-menu .row { min-height: 44px; }
+.md-suggestion-list .row:hover:not(:disabled), .md-suggestion-list .row.on { background: var(--bg-3, var(--state-hover-bg)); }
+.md-suggestion-list .row:disabled { opacity: .5; cursor: not-allowed; }
+.md-suggestion-list .row.on { color: var(--chip-accent-fg); }
+.md-suggestion-list .ic { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--icon-sm, 16px); width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); color: var(--text-dim); font-size: 13px; }
+.md-suggestion-list .ic img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+.md-suggestion-list .row.on .ic { color: var(--chip-accent-fg); }
+.md-suggestion-list .body { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow-wrap: anywhere; }
+.md-suggestion-list .t { font-size: 13px; font-weight: 500; }
+.md-suggestion-list .d { font-size: 11px; color: var(--text-dimmer); }
+/* The row's keyboard shortcut, right-aligned; the row's own room, so it never moves the title. */
+.md-suggestion-list .k { margin-left: auto; padding-left: 12px; font: 500 11px var(--font-mono, ui-monospace, monospace); color: var(--text-dimmer); white-space: nowrap; }
+/* The current state's row (the block's own kind in „Změnit na“): a check at the end. */
+.md-suggestion-list .ck { flex: none; margin-left: auto; color: var(--chip-accent-fg); }
+.md-suggestion-list .k + .ck { margin-left: 8px; }
+/* The slash menu (a list with a heading): the heading in small caps, icons on quiet tiles, bolder titles. */
+.md-suggestion-heading { padding: 6px 10px 2px; color: var(--text-dim); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.has-heading .ic { flex-basis: 28px; height: 28px; border: 1px solid var(--line); border-radius: 7px; }
+.has-heading .t { font-weight: 600; }

@@ -1,0 +1,152 @@
+/*
+ * Editor components on a board without a card (owner, 28. 10.; boardFlow.blockLayoutOf): the page's own rendering, without the page
+ * around it, filling its item (`fill`) or as tall as its content in the item's width (`flow`). Every rule is inside a board node, so a
+ * page never changes. The item's colour is the component's background with the colour's text, light on the dark tones: the editor's
+ * tokens follow it inside the component.
+ */
+.board-node[data-block-layout] .board-block { container: board-block / inline-size; }
+.board-node[data-block-layout="fill"] .board-block { height: 100%; }
+.board-node[data-block-layout] .board-block .ProseMirror > * { margin-top: 0; margin-bottom: 0; }
+.board-node[data-block-layout] .board-block .ProseMirror > .md-module { padding: 0; border: 0; }
+
+/* The light tones' ink in the light mode is the palette's icon colour, too light for text: a component's text there is a darker step
+   of the same hue (appearance.css --ah, --ac). The dark mode's light inks need none. */
+:root:not([data-mode="dark"]) .board-node[data-block-layout][data-board-color]:is([data-color$="-1"], [data-color$="-2"]) {
+  --appearance-fg: oklch(33% calc(var(--ac) * .7) var(--ah));
+}
+
+/* A component's colour pair, registered so that a change of colour fades: the background, the text and every token derived from them
+   (lines, tints, a table's header) move together instead of the text switching before the background has come (motion review). */
+@property --board-block-bg { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --board-block-fg { syntax: "<color>"; inherits: true; initial-value: #142f3b; }
+.board-node[data-block-layout] { --board-block-bg: transparent; --board-block-fg: var(--text); }
+.board-node[data-block-layout][data-board-color] { --board-block-bg: var(--appearance-bg); --board-block-fg: var(--appearance-fg); }
+.board-node[data-block-layout][data-board-color="white"] { --board-block-fg: var(--text); }
+
+/* The colour's text and lines inside the component (white keeps the page's own). */
+.board-node[data-block-layout][data-board-color]:not([data-board-color="white"]) .board-block .md-editor {
+  --text: var(--board-block-fg); --md-text: var(--board-block-fg);
+  --text-dim: color-mix(in oklab, var(--board-block-fg) 92%, var(--board-block-bg)); --text-dimmer: color-mix(in oklab, var(--board-block-fg) 82%, var(--board-block-bg));
+  --line: color-mix(in oklab, var(--board-block-fg) 24%, transparent); --line-2: color-mix(in oklab, var(--board-block-fg) 34%, transparent);
+  --bg-1: color-mix(in oklab, var(--board-block-fg) 6%, var(--board-block-bg)); --bg-2: color-mix(in oklab, var(--board-block-fg) 10%, var(--board-block-bg));
+  --bg-3: color-mix(in oklab, var(--board-block-fg) 14%, var(--board-block-bg)); --paper: var(--board-block-bg);
+  --surface: var(--bg-1); --muted: var(--text-dim); --accent-ink: var(--board-block-fg); --accent-strong: var(--board-block-fg);
+  /* The focus ring of a control inside (a link, a reveal) and its links: the colour's text, never the theme's accent,
+     which all but vanishes on the middle and dark tones (WCAG 1.4.11). */
+  --accent: var(--board-block-fg);
+  /* A diagram's boxes and lines (and other accent surfaces) are a step of the colour, never the theme's light or dark accent. */
+  --accent-soft: var(--bg-3); --accent-line: color-mix(in oklab, var(--board-block-fg) 45%, var(--board-block-bg));
+  /* A table's own surfaces (the midnight theme's are opaque navy) give way to the colour. */
+  --tt-th-bg: var(--bg-3); --tt-cell-bg: transparent; --tt-selected-bg: color-mix(in oklab, var(--board-block-fg) 16%, transparent);
+}
+/* Code highlighting is drawn in the theme's accent hues, made for the page's background: on a colour it keeps the colour's text,
+   strings and names a step apart, comments dimmer. */
+.board-node[data-block-layout][data-board-color]:not([data-board-color="white"]) .board-block pre.tt-code-block {
+  --accent: var(--board-block-fg); --purple: var(--board-block-fg); --orange: var(--board-block-fg);
+  --green: color-mix(in oklab, var(--board-block-fg) 92%, var(--board-block-bg)); --amber: color-mix(in oklab, var(--board-block-fg) 92%, var(--board-block-bg));
+  --text-muted: var(--text-dimmer);
+}
+
+/* On a background the component's own card is the background: no second frame inside it. */
+.board-node[data-block-layout][data-board-color]:not([data-board-color="white"]) .board-block :is(.md-contact-card, .md-youtrack-issue, pre.tt-code-block) {
+  padding-inline: 0; border-color: transparent; background: transparent; box-shadow: none;
+}
+.board-node[data-block-layout][data-board-color]:not([data-board-color="white"]) .board-block :is(.md-youtrack-issue, pre.tt-code-block) { padding-block: 0; }
+
+/* Tone 4 has the least room between its text and its background (about 4.6:1 in the dark mode): nothing on it is dimmed and no tint
+   lies under text; headers, initials and a diagram's boxes keep their lines. */
+.board-node[data-block-layout][data-board-color][data-color$="-4"] .board-block .md-editor {
+  --text-dim: var(--board-block-fg); --text-dimmer: var(--board-block-fg);
+  --bg-3: transparent; --accent-soft: transparent; --tt-th-bg: transparent;
+}
+/* A diagram or chart reads its colours on its module's host and a transparent token there as black: the boxes take the component's
+   own background, outlined. */
+.board-node[data-block-layout][data-board-color][data-color$="-4"] .board-block [data-module-runtime] { --accent-soft: var(--board-block-bg); }
+.board-node[data-block-layout][data-board-color][data-color$="-4"] .board-block pre.tt-code-block { --green: var(--board-block-fg); --amber: var(--board-block-fg); --text-muted: var(--board-block-fg); }
+.board-node[data-block-layout][data-board-color][data-color$="-4"] .board-block .md-contact-avatar { box-shadow: inset 0 0 0 1px var(--line-2); }
+
+/* fill: the whole box, down to the component's own drawing. */
+.board-node[data-block-layout="fill"] .board-block :is(.md-editor, .md-editor > div, .md-editor > div > div, .paper-inner, .editor-body, .ProseMirror) { height: 100%; min-height: 0; }
+.board-node[data-block-layout="fill"] .board-block .ProseMirror > :is(.md-module, .md-concealed-block) { display: flex; flex-direction: column; box-sizing: border-box; height: 100%; min-height: 0; }
+.board-node[data-block-layout="fill"] .board-block .ProseMirror > .md-module > div:first-child,
+.board-node[data-block-layout="fill"] .board-block .ProseMirror > .md-module > div:first-child > div { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+
+/* Graf: the title over a plot that takes the rest; its data table is for the editor and the page. */
+.board-node[data-block-layout] .board-block .md-chart-visual { flex: 1; height: auto; min-height: 48px; }
+.board-node[data-block-layout] .board-block .md-chart-title ~ details { display: none; }
+
+/* Diagram: the drawing fits the box, proportions kept; its source belongs to editing. */
+.board-node[data-block-layout] .board-block .md-diagram { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.board-node[data-block-layout] .board-block .md-diagram-visual { flex: 1; min-height: 0; padding: 0; overflow: hidden; }
+.board-node[data-block-layout] .board-block .md-diagram-visual img { width: 100%; height: 100%; max-width: none; max-height: none; object-fit: contain; }
+.board-node[data-block-layout] .board-block .md-diagram > :is(details, .md-diagram-status) { display: none; }
+.board-node[data-block-layout] .board-block .md-diagram figcaption { margin: 4px 0 0; }
+
+/* Vzorec: centred; BoardBlock scales it to the box (`fit`). */
+/* Drawn at the size it fits, never first at the renderer's own and then jumping (BoardBlock marks it until fitted). */
+.board-node[data-block-layout] .board-block[data-fit-pending] .katex { visibility: hidden; }
+.board-node[data-block-layout] .board-block .ProseMirror > .md-module:has(.katex) > div:first-child > div { align-items: center; justify-content: center; overflow: hidden; }
+.board-node[data-block-layout] .board-block .katex { white-space: nowrap; }
+
+/* Skrytý obsah: the scratch surface is the whole item. */
+.board-node[data-block-layout] .board-block .md-concealed-block { position: relative; display: grid; place-items: center; }
+.board-node[data-block-layout] .board-block .md-concealed-block__ink { position: absolute; inset: 0; height: auto; border-radius: inherit; }
+.board-node[data-block-layout] .board-block .md-concealed__particles canvas { width: 100%; height: 100%; }
+
+/* Informační box: the box is the item; its text reflows with the width. */
+.board-node[data-block-layout] .board-block .md-callout { margin: 0; }
+
+
+/* Blok kódu: lines wrap instead of scrolling (a scroll inside fights with moving the board); as tall as the code. The page's margin
+   rules name the editor body, and so does this one. */
+.board-node[data-block-layout] .board-block .md-editor .editor-body pre.tt-code-block { margin: 0; }
+.board-node[data-block-layout] .board-block pre.tt-code-block { overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; }
+.board-node[data-block-layout] .board-block pre.tt-code-block > code { white-space: inherit; }
+
+/* Tabulka: the columns share the item's width and their text wraps; it is as tall as its rows. Through the editor body, as the page's
+   rules go (a table of six columns and more is `max-content` there). */
+/* Never scrolled (it always fits the width): while edited its row and column controls stand a little outside it, in the editor's
+   margins, which only a table at rest drops. */
+.board-node[data-block-layout] .board-block .md-editor .editor-body .tableWrapper { overflow: visible; padding-right: 0; padding-bottom: 0; }
+.board-node[data-block-layout] .board-block:not(.is-editing) .md-editor .editor-body .tableWrapper { margin: 0; padding: 0; }
+.board-node[data-block-layout] .board-block .md-editor .editor-body .tableWrapper > table { width: 100%; min-width: 0; table-layout: fixed; }
+.board-node[data-block-layout] .board-block .md-editor .editor-body .tableWrapper > table :is(th, td) { min-width: 0; overflow-wrap: anywhere; }
+@container board-block (max-width: 320px) {
+  .board-node[data-block-layout] .board-block .tableWrapper > table { font-size: 12px; }
+  .board-node[data-block-layout] .board-block .tableWrapper > table :is(th, td) { padding: 6px 8px; }
+}
+
+/* Kontakt: the card is the item; narrow it keeps the avatar, the name and the role. */
+.board-node[data-block-layout] .board-block .md-contact-list { padding: 0; }
+@container contact-list (max-width: 259px) {
+  .board-node[data-block-layout] .board-block :is(.md-contact-details, .md-contact-download) { display: none; }
+  .board-node[data-block-layout] .board-block .md-contact-card { grid-template-columns: 40px minmax(0, 1fr); }
+}
+
+/* Úkol YouTrack: a card of the issue (its key and state over the title) instead of a chip in a line of text. */
+.board-node[data-block-layout] .board-block .ProseMirror > p:has(> .md-youtrack-issue) { margin: 0; }
+.board-node[data-block-layout] .board-block .md-youtrack-issue {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: var(--atlas-radius-md); background: var(--bg-1); color: var(--text); text-decoration: none; white-space: normal;
+}
+.board-node[data-block-layout] .board-block .md-youtrack-issue > span { max-width: none; }
+/* The card is the item: a click selects and drags it; its key is the link to YouTrack. */
+.board-node[data-block-layout] .board-block .md-youtrack-issue { pointer-events: none; }
+.board-node[data-block-layout] .board-block .md-youtrack-issue-key { pointer-events: auto; cursor: pointer; font-family: var(--font-mono, monospace); font-size: 12px; color: var(--text-dim); }
+@media (hover: hover) and (pointer: fine) { .board-node[data-block-layout] .board-block .md-youtrack-issue-key:hover { color: var(--accent-ink); text-decoration: underline; } }
+/* A finger has no hover: the link shows as one and its target is at least 24 px tall. */
+@media (pointer: coarse) {
+  .board-node[data-block-layout] .board-block .md-youtrack-issue-key { display: inline-flex; align-items: center; min-height: 24px; text-decoration: underline; }
+}
+.board-node[data-block-layout] .board-block .md-youtrack-issue-key:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--atlas-radius-sm); }
+.board-node[data-block-layout] .board-block .md-youtrack-issue-state {
+  justify-self: end; padding: 1px 8px; border-radius: 999px; background: var(--bg-3); color: var(--text); font-size: 12px; font-weight: 600;
+}
+.board-node[data-block-layout] .board-block .md-youtrack-issue-title {
+  grid-column: 1 / -1; grid-row: 2; display: -webkit-box; overflow: hidden; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 3; font-size: 14px; font-weight: 650; line-height: 1.35;
+}
+
+/* On a colour the header keeps the colour's text (the page mixes it with a fixed teal) and the state is a ring, not a tint that would
+   take contrast from it. */
+.board-node[data-block-layout][data-board-color]:not([data-board-color="white"]) .board-block .md-editor .editor-body .tableWrapper > table th { color: var(--board-block-fg); }
+.board-node[data-block-layout][data-board-color]:not([data-board-color="white"]) .board-block .md-youtrack-issue-state { border: 1px solid var(--line-2); background: transparent; }

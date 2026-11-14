@@ -1,0 +1,6 @@
+{
+  "Formát je csv nebo vcard.": "The format is csv or vcard.",
+  "Druh entity je contact.": "The entity kind is contact.",
+  "Rozsah je instance, nebo space, subtree či resource s id.": "The scope is instance, or space, subtree or resource with an id.",
+  "Filtr je příliš dlouhý.": "The filter is too long."
+}

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220">
+<rect width="640" height="220" fill="#ffffff"/>
+<defs><pattern id="g" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#dedede" stroke-width="1"/></pattern></defs>
+<rect width="640" height="220" fill="url(#g)"/>
+<rect x="50" y="30" width="76" height="36" rx="8" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<rect x="62" y="44" width="40" height="8" rx="4" fill="#5a5a5a"/>
+<rect x="50" y="84" width="76" height="36" rx="8" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/>
+<rect x="62" y="98" width="50" height="8" rx="4" fill="#9a9a9a"/>
+<rect x="50" y="138" width="76" height="36" rx="8" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<rect x="62" y="152" width="30" height="8" rx="4" fill="#bdbdbd"/>
+<path d="M126 48c60 0 70 52 140 52M126 102h140M126 156c60 0 70-56 140-56" fill="none" stroke="#9a9a9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="180" cy="64" r="4" fill="#5a5a5a"/>
+<circle cx="200" cy="102" r="4" fill="#5a5a5a"/>
+<circle cx="184" cy="136" r="4" fill="#5a5a5a"/>
+<path d="M324 100L331.7 100M317 117L322.4 122.4M300 124L300 131.7M283 117L277.6 122.4M276 100L268.3 100M283 83L277.6 77.6M300 76L300 68.3M317 83L322.4 77.6" fill="none" stroke="#3a3a3a" stroke-width="7.68" stroke-linecap="round" stroke-linejoin="round"/><circle cx="300" cy="100" r="24" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/><circle cx="300" cy="100" r="8.6" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M340 100h92" fill="none" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M427.1 104L434 100L427.1 96" fill="none" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="372" cy="100" r="4" fill="#5a5a5a"/>
+<circle cx="396" cy="100" r="4" fill="#9a9a9a"/>
+<path d="M448 50v104a62 14 0 0 0 124 0V50" fill="#ffffff" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="510" cy="50" rx="62" ry="14" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M448 86a62 14 0 0 0 124 0M448 120a62 14 0 0 0 124 0" fill="none" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="470" y="98" width="60" height="6" rx="3" fill="#bdbdbd"/>
+<rect x="470" y="132" width="44" height="6" rx="3" fill="#5a5a5a"/>
+</svg>

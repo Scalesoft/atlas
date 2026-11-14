@@ -1,0 +1,90 @@
+{
+  "about": "Golden corpus of the linking engine. Typing cases: `typed` goes in one character at a time; `hits` are the pure core's decisions at each word-ending character (core/recognition recognizeTail), `after` the document once typing settled, `backspace` after one Backspace right then, `undo` after Ctrl+Z over a Y.Doc. In documents a chip is [kind:text]. `block: heading` types into a heading, `linked` is text already inside a link before the caret. Read by src/Atlas.Markdown/src/core/recognition/corpus.test.ts (pure core and a real editor); the server port reads the same file.",
+  "lexicons": {
+    "place": {
+      "version": "1",
+      "truncated": false,
+      "people": [
+        { "key": "object:0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "contactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "userId": null, "name": "Petr Svoboda", "aliases": [], "org": "Modelsoft", "role": null, "uses": 4 },
+        { "key": "object:1b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "contactId": "1b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "userId": null, "name": "Jana Nováková", "aliases": [], "org": "Modelsoft", "role": "PM", "uses": 9 },
+        { "key": "object:2b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "contactId": "2b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "userId": null, "name": "Jana Nováková", "aliases": [], "org": "Example", "role": null, "uses": 1 },
+        { "key": "object:3b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "contactId": "3b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "userId": "u-3", "name": "Marek Musil", "aliases": ["MMu", "Mára"], "org": "Modelsoft", "role": null, "uses": 2 },
+        { "key": "object:4b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "contactId": "4b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "userId": null, "name": "Jan Pavel Novák", "aliases": [], "org": null, "role": null, "uses": 0 }
+      ],
+      "pages": [
+        { "id": "c0ffee00-0000-4000-8000-000000000001", "title": "Provozní příručka" }
+      ],
+      "youTrackProjects": ["PX2", "ISO", "UTF"]
+    },
+    "truncated": {
+      "version": "2",
+      "truncated": true,
+      "people": [
+        { "key": "object:0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "contactId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", "userId": null, "name": "Petr Svoboda", "aliases": [], "org": null, "role": null, "uses": 0 }
+      ],
+      "pages": [],
+      "youTrackProjects": []
+    }
+  },
+  "issues": { "PX2-1": "Přihlášení přes SSO", "PX2-1235": "Export do PDF" },
+  "typing": [
+    { "name": "a whole known name becomes the chip at the space", "lexicon": "place", "typed": "Volal Petr Svoboda ",
+      "hits": [{ "text": "Petr Svoboda", "decision": "chip" }],
+      "after": "Volal [person:Petr Svoboda] ", "backspace": "Volal Petr Svoboda", "undo": "Volal Petr Svoboda " },
+    { "name": "case and diacritics aside, the chip holds the known name", "lexicon": "place", "typed": "volal petr svoboda,",
+      "hits": [{ "text": "petr svoboda", "decision": "chip" }],
+      "after": "volal [person:Petr Svoboda],", "backspace": "volal petr svoboda", "undo": "volal petr svoboda," },
+    { "name": "two Janas: an unresolved chip, nobody picked", "lexicon": "place", "typed": "Píše Jana Nováková.",
+      "hits": [{ "text": "Jana Nováková", "decision": "unresolved" }],
+      "after": "Píše [unresolved:Jana Nováková].", "backspace": "Píše Jana Nováková", "undo": "Píše Jana Nováková." },
+    { "name": "an inflected name is only offered", "lexicon": "place", "typed": "Napiš Petru Svobodovi ",
+      "hits": [{ "text": "Petru Svobodovi", "decision": "suggest" }],
+      "after": "Napiš Petru Svobodovi ", "backspace": "Napiš Petru Svobodovi" },
+    { "name": "an alias is only offered (D4)", "lexicon": "place", "typed": "Zápis pošle MMu ",
+      "hits": [{ "text": "MMu", "decision": "suggest" }],
+      "after": "Zápis pošle MMu ", "backspace": "Zápis pošle MMu" },
+    { "name": "initials (derived from the name) are only offered, spelled in capitals", "lexicon": "place", "typed": "Ví to JPN, ne jpn ",
+      "hits": [{ "text": "JPN", "decision": "suggest" }],
+      "after": "Ví to JPN, ne jpn ", "backspace": "Ví to JPN, ne jpn" },
+    { "name": "a truncated lexicon never makes a chip", "lexicon": "truncated", "typed": "Volal Petr Svoboda ",
+      "hits": [{ "text": "Petr Svoboda", "decision": "suggest" }],
+      "after": "Volal Petr Svoboda ", "backspace": "Volal Petr Svoboda" },
+    { "name": "an issue key of a project becomes the chip once confirmed", "lexicon": "place", "typed": "Viz #PX2-1 ",
+      "hits": [{ "text": "#PX2-1", "decision": "pending" }],
+      "after": "Viz [issue:PX2-1] ", "backspace": "Viz #PX2-1", "undo": "Viz #PX2-1 " },
+    { "name": "an unknown issue of a project stays text", "lexicon": "place", "typed": "Viz PX2-99 ",
+      "hits": [{ "text": "PX2-99", "decision": "pending" }],
+      "after": "Viz PX2-99 ", "backspace": "Viz PX2-99" },
+    { "name": "UTF-8 is an encoding, never an issue", "lexicon": "place", "typed": "Kódování UTF-8 ",
+      "hits": [], "after": "Kódování UTF-8 ", "backspace": "Kódování UTF-8" },
+    { "name": "ISO-9001 is a norm, never an issue", "lexicon": "place", "typed": "Dle ISO-9001 ",
+      "hits": [], "after": "Dle ISO-9001 ", "backspace": "Dle ISO-9001" },
+    { "name": "a key of no project of the place stays text", "lexicon": "place", "typed": "Kód XY-12 ",
+      "hits": [], "after": "Kód XY-12 ", "backspace": "Kód XY-12" },
+    { "name": "a page title is only offered as a link", "lexicon": "place", "typed": "Viz Provozní příručka ",
+      "hits": [{ "text": "Provozní příručka", "decision": "suggest" }],
+      "after": "Viz Provozní příručka ", "backspace": "Viz Provozní příručka" },
+    { "name": "nothing in a heading", "lexicon": "place", "block": "heading", "typed": "Petr Svoboda ",
+      "hits": [], "after": "Petr Svoboda ", "backspace": "Petr Svoboda" },
+    { "name": "nothing in inline code", "lexicon": "place", "typed": "`Petr Svoboda` ",
+      "hits": [], "after": "Petr Svoboda ", "backspace": "Petr Svoboda" },
+    { "name": "nothing inside a link", "lexicon": "place", "linked": "Petr Svoboda", "typed": " ",
+      "hits": [], "after": "Petr Svoboda ", "backspace": "Petr Svoboda" }
+  ],
+  "documents": [
+    { "name": "names in prose: one person a chip, two Janas unresolved", "lexicon": "place", "text": "Volal Petr Svoboda a pak Jana Nováková.",
+      "hits": [{ "kind": "person", "text": "Petr Svoboda", "decision": "chip" }, { "kind": "person", "text": "Jana Nováková", "decision": "unresolved" }] },
+    { "name": "an inflected name in prose is only offered", "lexicon": "place", "text": "Napiš Petru Svobodovi zítra.",
+      "hits": [{ "kind": "person", "text": "Petru Svobodovi", "decision": "suggest" }] },
+    { "name": "an alias only as learned, initials only in capitals", "lexicon": "place", "text": "Zápis pošle MMu, ne mmu; ví to JPN.",
+      "hits": [{ "kind": "person", "text": "MMu", "decision": "suggest" }, { "kind": "person", "text": "JPN", "decision": "suggest" }] },
+    { "name": "issue keys of the place's projects, never a standard's", "lexicon": "place", "text": "Viz #PX2-1235, UTF-8, ISO-9001 a XY-12.",
+      "hits": [{ "kind": "issue", "text": "#PX2-1235", "decision": "pending" }] },
+    { "name": "a page title in prose is only offered", "lexicon": "place", "text": "Postup je v Provozní příručka.",
+      "hits": [{ "kind": "page", "text": "Provozní příručka", "decision": "suggest" }] },
+    { "name": "no piece of an e-mail address", "lexicon": "place", "text": "Pište na petr.svoboda@firma.example.test nebo jana.novakova.",
+      "hits": [] },
+    { "name": "a truncated lexicon only offers", "lexicon": "truncated", "text": "Volal Petr Svoboda.",
+      "hits": [{ "kind": "person", "text": "Petr Svoboda", "decision": "suggest" }] }
+  ]
+}

@@ -1,0 +1,97 @@
+@page { size: A4; margin: 23mm 22mm 23mm; }
+* { box-sizing: border-box; }
+html { color-scheme: light; background: white; }
+/* Paper has no time: every motion token is zero, so a card captured right after it mounts is already where it ends (fades, unfolds, bars). */
+html { --atlas-motion-fast: 0ms; --atlas-motion-base: 0ms; --atlas-motion-slow: 0ms; --atlas-motion-pop: 0ms; --atlas-motion-menu: 0ms; --atlas-motion-defer: 0ms;
+  --atlas-motion-glow: 0ms; --atlas-ai-reveal: 0ms; --atlas-ai-flight: 0ms; --atlas-ai-gather: 0ms; --atlas-ai-morph: 0ms; --atlas-ai-solidify: 0ms; --atlas-ai-stagger: 0ms; --atlas-ai-shine: 0ms; }
+body { margin: 0; color: #172a36; background: white; font: 10.5pt/1.55 "DM Sans Variable", sans-serif; }
+.print-cover { break-after: page; min-height: 238mm; display: flex; flex-direction: column; padding-top: 9mm; }
+.print-kicker { margin: 26mm 0 5mm; color: #526b7b; font-size: 10pt; }
+.print-cover h1 { font-size: 29pt; line-height: 1.18; letter-spacing: -.025em; overflow-wrap: anywhere; margin: 0 0 15mm; }
+.print-metadata { margin: auto 0 9mm; padding-top: 10mm; }
+.print-metadata div { display: grid; grid-template-columns: 46mm 1fr; border-bottom: .2mm solid #d7e0e5; padding: 3mm 0; }
+.print-metadata dt { color: #526b7b; }
+.print-metadata dd { margin: 0; font-weight: 600; }
+.print-identity { font-size: 8pt; color: #637888; overflow-wrap: anywhere; }
+.print-document-title { font-size: 22pt; line-height: 1.2; margin: 0 0 10mm; }
+.print-content { counter-reset: figure; }
+/* The page's read-only editor (PrintDocument.vue) on paper: no frame, shadow (a blurred shadow prints as an image per page), inset or
+   width of its own; the print's type. `.paper` outweighs the editor's own paper rules, whose stylesheet loads after this one. */
+.print-content .md-editor.paper { font: inherit; color: inherit; --font-sans: "DM Sans Variable", sans-serif; background: none; border: 0; border-radius: 0; box-shadow: none; }
+.print-content .md-editor.paper :is(.paper-inner, .editor-body) { max-width: none; padding: 0; min-height: 0; font: inherit; letter-spacing: normal; }
+.print-content .md-editor .paper-footer { display: none; }
+.print-content :is(p, li) { orphans: 3; widows: 3; }
+.print-content p { text-align: left; hyphens: auto; overflow-wrap: anywhere; margin: 0 0 3mm; }
+.print-content :is(h1,h2,h3,h4,h5,h6) { break-after: avoid; page-break-after: avoid; line-height: 1.25; color: #172a36; }
+/* Six distinct levels. The renderer's themes size only h1–h4 (and win over a plain .print-content rule); the browser's own h5/h6 print smaller than the text. */
+.print-content .md-editor.paper .editor-body :is(h1,h2,h3,h4,h5,h6) { font-weight: 650; letter-spacing: normal; line-height: 1.25; color: #172a36; }
+.print-content .md-editor.paper .editor-body h1 { font-size: 18pt; letter-spacing: -.015em; margin: 10mm 0 4mm; }
+.print-content .md-editor.paper .editor-body h2 { font-size: 15pt; margin: 8mm 0 3mm; }
+.print-content .md-editor.paper .editor-body h3 { font-size: 13pt; margin: 6mm 0 2.5mm; }
+.print-content .md-editor.paper .editor-body h4 { font-size: 11.5pt; margin: 5mm 0 2mm; }
+.print-content .md-editor.paper .editor-body h5 { font-size: 10.5pt; margin: 4mm 0 1.5mm; }
+.print-content .md-editor.paper .editor-body h6 { font-size: 10pt; margin: 4mm 0 1.5mm; font-style: italic; color: #3d5666; }
+/* A requirement heading keeps its row's size as its reader sees it (requirementHeading.css: 16px), whatever its level. */
+.print-content .md-editor.paper .editor-body :is(h1,h2,h3,h4)[data-state] { font-size: 12pt; }
+.print-content figure { break-inside: avoid; max-width: 100%; margin: 5mm auto; }
+.print-content figure:has(figcaption) { counter-increment: figure; }
+.print-content figcaption { font-size: 9pt; color: #526b7b; text-align: center; margin-top: 2mm; }
+.print-content figcaption::before { content: "Obrázek " counter(figure) " – "; font-weight: 600; }
+.print-content img { max-width: 100%; max-height: 220mm; object-fit: contain; }
+.print-content table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; }
+.print-content thead { display: table-header-group; }
+.print-content tr { break-inside: avoid; }
+.print-content :is(td, th) { border: .2mm solid #bbcbd5; padding: 2mm; overflow-wrap: anywhere; }
+.print-content th { background: #edf2f5; text-align: left; }
+.print-content pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 8pt; background: #f2f5f7; padding: 3mm; }
+.print-content a { color: #214f70; text-decoration: underline; overflow-wrap: anywhere; }
+.print-content blockquote { border-left: .6mm solid #8ea7b6; padding-left: 4mm; margin-left: 0; }
+.print-content :is(.md-table-scroll, .md-table-wrapper) { overflow: visible !important; }
+.print-content * { content-visibility: visible !important; }
+@media screen { body { width: 166mm; margin: 23mm auto; } }
+/* The renderer uses .tableWrapper and stored column widths. Print all columns, not a scroll viewport. */
+.print-content .tableWrapper { overflow: visible !important; max-height: none !important; }
+.print-content .md-editor.paper .editor-body table { width: 100% !important; min-width: 0 !important; max-width: 100% !important; table-layout: fixed !important; }
+.print-content .md-editor.paper .editor-body :is(td, th, col) { width: auto !important; min-width: 0 !important; }
+.print-content .md-editor.paper .editor-body :is(td, th) { overflow-wrap: anywhere; word-break: normal; }
+.print-content .md-editor.paper .editor-body p { text-align: left; hyphens: auto; overflow-wrap: anywhere; margin: 0 0 3mm; }
+.print-content .md-editor.paper .editor-body pre { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; }
+.print-content .md-editor.paper .editor-body :is(h1,h2,h3,h4,h5,h6) { break-after: avoid; }
+
+@media print { body { width: 166mm; } }
+.print-content .md-diagram details, .print-content .md-diagram-source-editor { display: none !important; }
+/* Controls that act only on screen (a requirement's or a heading's fold, the comment field, a contact's download): nothing to press on paper.
+   A section folded on screen prints whole (headingFold.css hides it on screen only). */
+.print-content :is(.atlas-heading-fold, .summary-chevron, .md-contact-download, [data-summary-fold]) { display: none !important; }
+/* Every overview card on paper: its whole content, no level slider and no actions (contacts, issues; the requirements card knows it prints). */
+.print-content :is([data-overview-level], .overview-actions, .page-contacts-actions, .issue-overview-foot) { display: none !important; }
+/* A line cut with „…“ on screen has nowhere to open on paper: the overview's names, notes and chips wrap instead. */
+.print-content .atlas-requirement-summary-view :is(.summary-section-name, .summary-row-note, .summary-list button) { white-space: normal !important; overflow: visible !important; }
+.print-content .tableWrapper { border-radius: 0 !important; }
+/* The Přehled on paper: its stacks as flex columns and its rows whole. Chromium cut a row of the card's grids at a page break without
+   growing the grid, so a row's open list overlapped the next row and the card's end the heading after it. No blurred shadow (an image). */
+.print-content .atlas-requirement-summary-view :is(.summary, .summary-progress, .summary-part:not(.summary-chips)) { display: flex; flex-direction: column; box-shadow: none; }
+.print-content .summary-sections { display: block; }
+.print-content .summary-section { break-inside: avoid; }
+
+/* A requirement section's tint on paper: a flat, lighter fill and a blocked one's thin red frame. The screen's fading gradients and the
+   frame's mask print as images (1.6 of 3.7 MB in a 40-page deployment's PDF); opaque colours stay vector. */
+.print-content .rq-tint { background: color-mix(in srgb, var(--rq-tone) 5%, white); }
+.print-content [data-state="blocked"] > .rq-tint::before { padding: 0; background: none; mask: none; border: .2mm solid color-mix(in srgb, var(--error, #c53030) 35%, white); }
+
+/* Colours on paper: backgrounds print as they are, and the print page has no app theme, so the in-progress blue (--accent) is set here, and
+   the faint planned / n/a tints become opaque greys (a 10 % tint vanished in the bar and the legend dots). */
+html { print-color-adjust: exact; -webkit-print-color-adjust: exact; --accent: #006c80; }
+.print-content :is(.atlas-requirement-view, .atlas-requirement-summary-view, .rq-chips) { --rq-tone-planned: #c3ced5; --rq-tone-not_applicable: #dde4e8; }
+/* A group of the Přehled („Čekáme na“, …) stays on one page when it fits on one. */
+.print-content .summary-list { break-inside: avoid; }
+/* A contact's card is one unit: only whole, it keeps the heading before it with it (cut inside its section, the heading stayed alone at a page's foot). */
+.print-content .md-module[data-md-module="contactCard"] { break-inside: avoid; }
+
+/* A table that runs over pages (3.6 QA F7): the editor's frame (border, radius, hidden overflow, shadow, the wrapper's padding) leaves an empty
+   bordered stub at a page's foot where the rows stop. On paper the cells carry the rules (collapsed borders), the table no frame. Header repeat stays. */
+.print-content .md-editor.paper .editor-body .tableWrapper { padding: 0 !important; margin: 3mm 0; }
+.print-content .md-editor.paper .editor-body .tableWrapper > table { border: 0; border-radius: 0; box-shadow: none; overflow: visible; border-collapse: collapse; }
+.print-content .md-editor.paper .editor-body .tableWrapper > table :is(td, th) { border: .2mm solid #bbcbd5; height: auto; min-height: 0; }
+/* Identifiers in narrow columns break by width (overflow-wrap) but get no hyphen of their own. */
+.print-content :is(td, th), .print-content :is(td, th) :is(p, code), .print-content .md-editor.paper .editor-body :is(td, th) p { hyphens: manual; }

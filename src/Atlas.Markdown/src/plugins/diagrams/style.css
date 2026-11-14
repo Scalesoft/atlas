@@ -1,0 +1,23 @@
+.md-diagram { margin: 0; min-width: 0; }
+.md-diagram-visual { display: flex; align-items: center; justify-content: center; padding: 22px 12px; min-height: 80px; overflow: auto; }
+/* Natural size (the SVG's viewBox, see naturalSizeSvg), never wider than the column; large diagrams fit it. */
+.md-diagram-visual img { display: block; width: auto; height: auto; max-width: 100%; max-height: 640px; object-fit: contain; }
+.md-diagram figcaption { margin: 6px 0 12px; text-align: center; font-size: 12px; color: var(--text-dim, #49676e); }
+.md-diagram pre { margin: 0; max-width: 100%; overflow: auto; white-space: pre; font: 12px/1.6 var(--font-mono, monospace); }
+.md-diagram-status { margin: 8px 0; font-size: 12px; line-height: 1.5; color: var(--text-dim, #49676e); }
+.md-diagram-status:empty { display: none; }
+.md-diagram-source-editor { display: grid; gap: 12px; margin-top: 14px; border: 1px solid var(--line, #d4e4e7); border-radius: 10px; padding: 12px; background: var(--bg-2, #edf5f6); }
+.md-diagram [hidden] { display: none; }
+.md-diagram-editor-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 11px; font-weight: 600; color: var(--text-dim, #49676e); }
+.md-diagram-source-editor label { display: grid; gap: 6px; font-size: 11px; font-weight: 550; color: var(--text-dim, #49676e); }
+.md-diagram-source-editor textarea, .md-diagram-source-editor input { width: 100%; box-sizing: border-box; border: 1px solid var(--line, #d4e4e7); border-radius: 7px; padding: 10px 12px; color: var(--text, #102f36); background: var(--paper, #ffffff); }
+.md-diagram-source-editor textarea { font: 12px/1.65 var(--font-mono, monospace); min-height: 160px; max-height: 440px; resize: vertical; tab-size: 2; }
+.md-diagram-source-editor input { font: 12px/1.4 var(--font-sans, sans-serif); }
+.md-diagram-source-editor textarea:focus-visible, .md-diagram-source-editor input:focus-visible { outline: 2px solid var(--accent, #58a9b9); outline-offset: 1px; }
+.md-diagram-editor-head button { background: transparent; border: 0; border-radius: 5px; padding: 5px 7px; font: inherit; color: var(--text-dim, #49676e); cursor: pointer; }
+.md-diagram-editor-head button:hover { color: var(--text, #102f36); background: var(--bg-3, #e2eef0); }
+.md-diagram-editor-head button:focus-visible { outline: 2px solid var(--accent, #58a9b9); outline-offset: 1px; }
+.md-diagram-editor-hint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--text-dimmer, #71878c); }
+
+.md-diagram-foot { position: relative; min-height: 26px; }
+.md-diagram-foot > .md-read-actions { top: -3px; }

@@ -1,0 +1,42 @@
+{
+  "relationKinds": [
+    {
+      "kind": "attached",
+      "used": "out"
+    },
+    {
+      "kind": "catalog",
+      "used": "in"
+    },
+    {
+      "kind": "link",
+      "used": "in"
+    },
+    {
+      "kind": "mention",
+      "used": "in"
+    },
+    {
+      "kind": "party",
+      "used": "in"
+    },
+    {
+      "kind": "placement",
+      "used": "out"
+    },
+    {
+      "kind": "reference",
+      "used": "in"
+    },
+    {
+      "kind": "template",
+      "used": "in"
+    }
+  ],
+  "objectTypes": [
+    "atlas.board",
+    "atlas.contact",
+    "atlas.note",
+    "atlas.page"
+  ]
+}

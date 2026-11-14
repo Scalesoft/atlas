@@ -1,0 +1,5 @@
+{
+  "Počet podobných stránek musí být 1–5.": "The number of similar pages must be 1–5.",
+  "Hledání trvalo příliš dlouho. Zkuste přesnější dotaz.": "The search took too long. Try a more specific query.",
+  "Počet výsledků musí být 1–50 a posun nezáporný.": "The number of results must be 1–50 and the offset non-negative."
+}

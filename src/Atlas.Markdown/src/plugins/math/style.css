@@ -1,0 +1,15 @@
+.md-math-panel, .md-math-popover .md-math-source { display: grid; gap: 8px; }
+.md-math-panel { margin-top: 10px; border: 1px solid var(--line, #d4e4e7); border-radius: 10px; padding: 12px; background: var(--bg-2, #edf5f6); animation: md-math-panel-enter var(--md-motion-menu) var(--md-motion-ease) both; }
+.md-math-panel[hidden] { display: none; }
+.md-math-source { display: grid; gap: 8px; }
+.md-math-source label { display: grid; gap: 6px; font-size: 11px; font-weight: 550; color: var(--text-dim, #49676e); }
+.md-math-source textarea { width: 100%; box-sizing: border-box; min-height: 64px; resize: vertical; border: 1px solid var(--line, #d4e4e7); border-radius: 7px; padding: 8px 10px; font: 13px/1.6 var(--font-mono, monospace); color: var(--text, #102f36); background: var(--paper, #fff); }
+.md-math-source textarea:focus-visible { outline: 2px solid var(--accent, #58a9b9); outline-offset: 1px; }
+.md-math-error { margin: 0; font-size: 12px; line-height: 1.5; color: var(--danger, #b3261e); }
+.md-math-hint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--text-dimmer, #71878c); }
+.md-math-source button { justify-self: end; }
+.md-math-popover { width: min(420px, calc(100vw - 24px)); }
+@keyframes md-math-panel-enter { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .md-math-panel { animation: none; } }
+
+.md-math { position: relative; }

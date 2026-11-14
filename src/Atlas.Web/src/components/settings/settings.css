@@ -1,0 +1,353 @@
+/* Shared surface, card and motion rules of the settings design system.
+   Loaded only with the settings chunk. Every duration, easing and distance comes from
+   the motion tokens in motion.css, so reduced motion turns movement into a calm fade
+   without a second set of rules. */
+
+.settings-ui {
+  --st-radius: var(--atlas-radius-lg, 14px);
+  --st-radius-sm: var(--atlas-radius-md, 10px);
+  --st-card-shadow: 0 1px 2px color-mix(in srgb, var(--text) 5%, transparent);
+  --st-hover-shadow: 0 6px 18px -6px color-mix(in srgb, var(--accent) 28%, transparent), 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent);
+  /* --st-pop-from (.8, reduced 1) is a motion token of motion.css (plan O14). */
+  /* Delay between items that enter one after another, and how long a new row glows. */
+  --st-stagger: 40ms;
+  --st-glow: var(--atlas-motion-glow);
+  /* Refresh 2.5 grid (boards 06–10): one inner padding for every card, a soft line between the rows of
+     a card, a quiet tint for footers and summaries, one control height. A row puts its label in the first
+     column and its control in the second at the same ratio in every card, so controls line up down a page. */
+  --st-pad-x: 18px;
+  --st-line-soft: color-mix(in srgb, var(--line) 58%, transparent);
+  --st-subtle: color-mix(in srgb, var(--accent-soft) 26%, var(--surface));
+  --st-control-h: var(--control-h, 36px);
+  --st-label-col: minmax(0, 1fr);
+  --st-control-col: minmax(0, 1.3fr);
+  --st-col-gap: 24px;
+  --st-body-pad-y: 16px;
+  --st-body-gap: 12px;
+  /* The widest a settings frame gets, gutters included: 1,184 px of content, where a row's label and control stay together. */
+  --st-frame-max: 1280px;
+  color: var(--text);
+}
+@container settings-shell (max-width: 560px) {
+  .settings-ui .settings-shell-content { --st-pad-x: 14px; --st-col-gap: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Reduced motion: everything fades at once (F17). */
+  .settings-ui { --st-pop-from: 1; --st-stagger: 0ms; }
+}
+
+/* Access levels have their own colours, so a column of levels reads at a glance (PROTOTYPE,
+   security centre redesign 2026-09-29). Vidí slate · Čte teal · Upravuje green · Spravuje violet;
+   amber and red stay reserved for warnings and errors. An element with data-level-color picks one. */
+.settings-ui {
+  --level-discover: #4b5a6e; --level-discover-bg: #e7ecf2;
+  --level-read: #0a6f86; --level-read-bg: #d6f0f6;
+  --level-write: #14713f; --level-write-bg: #d5f2e0;
+  --level-manage: #6a3fc2; --level-manage-bg: #ebe3ff;
+}
+[data-mode="dark"] .settings-ui, .settings-ui[data-mode="dark"] {
+  --level-discover: #b6c1ce; --level-discover-bg: oklch(36% 0.015 255);
+  --level-read: #86d2e4; --level-read-bg: oklch(37% 0.045 215);
+  --level-write: #98d8b1; --level-write-bg: oklch(37% 0.045 155);
+  --level-manage: #c9b3ff; --level-manage-bg: oklch(37% 0.06 295);
+}
+.settings-ui [data-level-color="discover"] { --level: var(--level-discover); --level-bg: var(--level-discover-bg); }
+.settings-ui [data-level-color="read"] { --level: var(--level-read); --level-bg: var(--level-read-bg); }
+.settings-ui [data-level-color="write"] { --level: var(--level-write); --level-bg: var(--level-write-bg); }
+.settings-ui [data-level-color="manage"] { --level: var(--level-manage); --level-bg: var(--level-manage-bg); }
+
+/* The theme or the accent is changing (SettingsShell sets data-theming for the length of the fade): every colour inside the
+   shell eases over the slow token, as the application shell around it does (refresh-theme.css §1), so the page changes as
+   one. Only while it runs, and only the colours. The rule has no specificity of its own (:where), so an element that has a
+   transition of its own keeps it, and the ring of a swatch or the press of a card is not switched off for the length of the fade; what
+   has none eases its colours. The drawing inside an icon follows the icon's colour, so it is left out. */
+:where(.settings-shell.settings-ui[data-theming]) :where(:not(svg *)) {
+  transition:
+    background-color var(--atlas-motion-slow) var(--atlas-ease-out),
+    border-color var(--atlas-motion-slow) var(--atlas-ease-out),
+    color var(--atlas-motion-slow) var(--atlas-ease-out);
+}
+
+/* Focus offsets: shell.css draws the one ring of every button, link, summary and [tabindex] with a selector that outranks a
+   component's scoped `outline-offset`, and reads --focus-offset for it. A component whose ring sits inside a clipping
+   container (−2 px: tabs, the overview tasks, the step strip) or closer than 2 px therefore sets --focus-offset to the same
+   value beside its own outline-offset; without it the inside rings were drawn outside and clipped away entirely. */
+
+/* A card that can be hovered, pressed and selected: choice cards, task cards, vault cards. */
+.settings-ui .st-card {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: var(--st-radius);
+  background: var(--surface);
+  box-shadow: var(--st-card-shadow);
+  transition:
+    transform var(--atlas-motion-base) var(--atlas-ease-out),
+    box-shadow var(--atlas-motion-base) var(--atlas-ease-out),
+    border-color var(--atlas-motion-fast) var(--atlas-ease-out),
+    background-color var(--atlas-motion-fast) var(--atlas-ease-out),
+    scale var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.settings-ui .st-card.is-interactive { cursor: pointer; }
+/* A card that is a link (a stat tile, a module) is pressed like a button. */
+.settings-ui .st-card.is-interactive:active:not(:disabled):not([aria-disabled="true"]) { scale: var(--atlas-press); }
+.settings-ui .st-card.is-interactive:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+  box-shadow: var(--st-hover-shadow);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+}
+@media (hover: hover) and (pointer: fine) {
+  .settings-ui .st-card.is-interactive:hover:not(:disabled):not([aria-disabled="true"]) { box-shadow: var(--st-hover-shadow); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+}
+.settings-ui .st-card.is-interactive:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.settings-ui .st-icon-tile {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  transition: transform var(--atlas-motion-base) var(--atlas-ease-out), background-color var(--atlas-motion-fast);
+}
+.settings-ui .st-icon-tile[data-tone="success"] { color: var(--success); background: var(--success-bg); }
+.settings-ui .st-icon-tile[data-tone="warning"] { color: var(--warning); background: var(--warning-bg); }
+.settings-ui .st-icon-tile[data-tone="danger"] { color: var(--error); background: var(--error-bg); }
+.settings-ui .st-icon-tile[data-tone="info"] { color: var(--info); background: var(--info-bg); }
+.settings-ui .st-icon-tile[data-tone="neutral"] { color: var(--muted); background: var(--st-subtle); box-shadow: inset 0 0 0 1px var(--st-line-soft); }
+
+.settings-ui .st-mono {
+  font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+  font-size: .92em;
+  font-variant-numeric: tabular-nums;
+}
+.settings-ui .st-muted { color: var(--muted); }
+.settings-ui .st-sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Plain text links inside settings copy. */
+.settings-ui .st-link {
+  color: var(--accent);
+  font-weight: 550;
+  text-decoration: none;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .settings-ui .st-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
+.settings-ui .st-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.settings-ui .st-link > svg { transition: translate var(--atlas-motion-fast) var(--atlas-ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .settings-ui .st-link:hover > svg:last-child { translate: calc(var(--atlas-lift) * 1.5) 0; }
+}
+
+/* Native inputs inside settings follow Input.vue's look (see tailwind.css for <select>). */
+.settings-ui :is(input[type="text"], input[type="search"], input[type="password"], input[type="datetime-local"], input[type="number"], input:not([type]), textarea).st-input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--st-control-h);
+  padding: 7px 11px;
+  border: 1px solid var(--input-line);
+  border-radius: var(--atlas-radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  transition: border-color var(--atlas-motion-fast), box-shadow var(--atlas-motion-fast);
+}
+/* The one focus ring of the app, text fields included (D6). */
+.settings-ui .st-input:focus-visible { outline: var(--state-focus-ring); outline-offset: var(--state-focus-offset); }
+/* :is(input, textarea) matches the specificity of the base rule above, which would otherwise keep its border. */
+.settings-ui :is(input, textarea).st-input[aria-invalid="true"] { border-color: var(--error); }
+
+/* The shared st-* keyframes live in motion.css, so components outside settings animate the same. */
+
+/* Step and list transitions used by StepFlow, lists and result rows. */
+.settings-ui .st-step-enter-active { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
+.settings-ui .st-step-leave-active { animation: st-rise-out var(--atlas-motion-fast) var(--atlas-ease-in) both; pointer-events: none; }
+/* An entering row only rises in: the glow belongs to a row a flow has created ([data-new] below). Every row of a list that
+   comes back when a search is cleared glowed too, with its ring over the next row's, a flash of the whole list. */
+.settings-ui .st-list-enter-active { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
+.settings-ui .st-list-leave-active { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; }
+.settings-ui .st-list-move { transition: transform var(--atlas-motion-base) var(--atlas-ease-out); }
+/* When the rows change again while a row still glides, Vue takes the move class off it, but a transition that falls back to
+   `all` keeps running towards the same end value. The row's place was then read with the rest of that glide in it, and the
+   row was thrown back to its old place in one frame (222 → 130 px when two characters are typed within the glide). A row
+   without the class has no transition; a row that declares one of its own (the hover of an access row) outranks this. */
+:where(.settings-ui .settings-list > li:not(.st-list-move)) { transition-property: none; }
+/* Reduced motion keeps the fades and not the travel: a row that moves to its new place is there at once (without a transform to glide, Vue's move is skipped). */
+@media (prefers-reduced-motion: reduce) { .settings-ui .st-list-move { transition-property: opacity; } }
+[data-atlas-reduced-motion] .settings-ui .st-list-move { transition-property: opacity; }
+/* A row of a SettingsList that leaves keeps its place but not its room, so the rows after it can glide up while it fades. */
+.settings-ui .settings-list > .st-list-leave-active { position: absolute; inset-inline: 0; pointer-events: none; }
+.settings-ui .st-fade-enter-active { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.settings-ui .st-fade-leave-active { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; }
+/* A whole settings page replaced by another (the sections of the rail): the next one rises in at once while the old one
+   fades out over it. The leaving page is taken out of the flow (the shell's content is its containing block), so the
+   new page never waits for it and nothing below holds the old height. */
+.settings-ui .st-page-enter-active { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
+.settings-ui .settings-shell-content > .st-page-leave-active { position: absolute; inset-inline: 0; animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; pointer-events: none; }
+
+/* Small shared bits: counts in headings, rows of buttons, notes with an icon. */
+.settings-ui .st-count { display: inline-flex; align-items: center; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--muted); background: var(--hover); }
+.settings-ui .st-count[data-tone="warning"] { color: var(--warning); background: var(--warning-bg); }
+.settings-ui .st-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.settings-ui .st-actions.is-end { justify-content: flex-end; }
+/* A note is one flow of text with its icon beside it. It was a flex row, so a link or a <strong> inside the sentence became a box
+   of its own with an 8 px gap on each side and split it; the text (and what is inline in it) now shares one block, and the icon hangs
+   in the padding at the start of the first line (the icon and the 8 px it had as a gap). */
+.settings-ui .st-note { --st-note-icon: 15px; position: relative; display: block; margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.55; }
+.settings-ui .st-note:has(> svg:first-child) { padding-inline-start: calc(var(--st-note-icon) + 8px); }
+.settings-ui .st-note:has(> svg:first-child[width="13"]) { --st-note-icon: 13px; }
+.settings-ui .st-note:has(> svg:first-child[width="14"]) { --st-note-icon: 14px; }
+.settings-ui .st-note:has(> svg:first-child[width="16"]) { --st-note-icon: 16px; }
+.settings-ui .st-note > svg:first-child { position: absolute; inset-inline-start: 0; top: 2px; }
+
+/* A row a flow has just created: rises in and glows once. */
+.settings-ui [data-new] {
+  animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both, st-highlight var(--st-glow) var(--atlas-ease-out) var(--atlas-motion-slow);
+  border-radius: var(--st-radius-sm);
+}
+
+/* A list row that reaches the edges of its card glows inside the row: no ring (the glow's spread is 0). The ring lay over the
+   card's border and, on the last row, its corner (10 px) stuck out of the card's (13 inside the border) instead of following it. */
+.settings-ui .settings-section:not(.is-flush) .settings-list-row[data-new] { --atlas-glow-spread: 0px; border-radius: 0; }
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .settings-list:last-child > .settings-list-row[data-new]:last-child { border-radius: 0 0 calc(var(--st-radius) - 1px) calc(var(--st-radius) - 1px); }
+
+.settings-ui a[data-slot="button"] { text-decoration: none; }
+.settings-ui .settings-list-row-meta .st-link { font-size: 12.5px; }
+
+/* ---------- Refresh 2.5: one grid for every settings card (boards 06–10) ---------- */
+
+/* A small uppercase heading above a group of cards or tiles: "Stav wiki", "Časté úkoly". */
+.settings-ui .st-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.settings-ui .st-group { display: grid; gap: 10px; min-width: 0; }
+
+/* A labelled switch in a page or card header (module pages, AI): the switch says its state in words. */
+.settings-ui .st-switch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--st-control-h);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--st-radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .settings-ui .st-switch-pill:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+}
+.settings-ui .st-switch-pill:has(:disabled) { color: var(--muted); cursor: not-allowed; border-color: var(--st-line-soft); }
+
+/* Rows and lists reach the edges of their card, so the line between two rows runs across the whole card
+   and every label starts at the same inset. The card body keeps the inset for notes and buttons. */
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > :is(.settings-row, .settings-list, .st-bleed, .reveal-rows) {
+  margin-inline: calc(var(--st-pad-x) * -1);
+  --st-row-pad-x: var(--st-pad-x);
+}
+.settings-ui .settings-section-body > :is(.settings-row, .settings-list, .st-bleed, .reveal-rows) + :is(.settings-row, .settings-list, .st-bleed, .reveal-rows) { margin-top: calc(var(--st-body-gap) * -1); }
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > :is(.settings-row, .settings-list, .st-bleed, .reveal-rows):first-child { margin-top: calc(var(--st-body-pad-y) * -1); }
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > :is(.settings-row, .settings-list, .st-bleed, .reveal-rows):last-child { margin-bottom: calc(var(--st-body-pad-y) * -1); }
+/* Rows a disclosure reveals under a row (the interval under its switch, the spaces under „all spaces“) continue the rows of
+   the card: an InlineReveal marked `reveal-rows` takes part in the rules above, so it reaches the card edges, sits flush
+   against the row before it (closed, it takes no room and the row above still reaches the card's bottom edge) and its
+   first row draws the line between the two. The rows used to lose that line, stand 12 px off the row above and draw
+   their lines inside the card inset. The margins hang on the class, not on what is rendered, so nothing moves when the
+   reveal mounts its content or drops it after closing. */
+.settings-ui :is(.settings-row, .settings-list, .st-bleed, .reveal-rows) + .reveal-rows > .inline-reveal > .inline-reveal-inner > .settings-row:first-child,
+.settings-ui :is(.reveal-rows, .choice-reveal) .settings-row + .inline-reveal-root > .inline-reveal > .inline-reveal-inner > .settings-row:first-child {
+  border-top: 1px solid var(--st-line-soft);
+}
+/* The rows a choice reveals (the SMB account under „Síťová složka SMB“) reach the card edges as well. Only the width
+   depends on what is rendered, and a reveal without content has no height to show it. */
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .choice-cards > .inline-reveal-root:has(.choice-reveal > .settings-row:first-child):not(:has(.choice-reveal > :not(.settings-row, .settings-list, .inline-reveal-root))) {
+  margin-inline: calc(var(--st-pad-x) * -1);
+  --st-row-pad-x: var(--st-pad-x);
+}
+.settings-ui .settings-section-body > .choice-cards:has(> .inline-reveal-root .choice-reveal > .settings-row) + :is(.settings-row, .settings-list) { margin-top: calc(var(--st-body-gap) * -1); }
+/* Rows a choice reveals at the very end of a card end it like any last row (directly in the body, or inside the body's last
+   InlineReveal: the custom backup target), instead of standing 16 px above the card's own bottom padding. */
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .choice-cards:last-child:has(> .inline-reveal-root .choice-reveal > .settings-row),
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .inline-reveal-root:last-child > .inline-reveal > .inline-reveal-inner > .choice-cards:last-child:has(> .inline-reveal-root .choice-reveal > .settings-row) { margin-bottom: calc(var(--st-body-pad-y) * -1); }
+/* Any other InlineReveal in a card body gives the body's gap back while it is folded and carries it as the padding of its
+   content, so a closed one takes no room and opening grows the gap with the height (what `reveal-tail` did by hand; the
+   rows variant above sits flush instead, `reveal-tail-bleed` keeps its own inset). A folded reveal used to leave a blank
+   12 px band in the card. */
+.settings-ui .settings-section-body > .inline-reveal-root:not(.reveal-rows) { margin-top: calc(var(--st-body-gap) * -1); }
+.settings-ui .settings-section-body > .inline-reveal-root:not(.reveal-rows, .reveal-tail-bleed) > .inline-reveal > .inline-reveal-inner { padding-top: var(--st-body-gap); }
+/* A list or an empty state that a LoadingRegion wraps in a card body is still the card's list: it reaches the card edges and
+   needs no frame of its own (the profile's activity and the templates did this each for themselves). */
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .loading-region > .loading-region-content > .settings-list {
+  margin-inline: calc(var(--st-pad-x) * -1);
+  --st-row-pad-x: var(--st-pad-x);
+}
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .loading-region:first-child:not(:has(> .loading-region-note)) > .loading-region-content > .settings-list:first-child { margin-top: calc(var(--st-body-pad-y) * -1); }
+.settings-ui .settings-section:not(.is-flush) .settings-section-body > .loading-region:last-child > .loading-region-content > .settings-list:last-child { margin-bottom: calc(var(--st-body-pad-y) * -1); }
+/* A wizard's fields are a grid with a gap of its own (ProgressiveFlow): rows in it meet on their line, as in a card,
+   instead of standing 12 px below it (28 px above the line, 16 below). */
+.settings-ui .progressive-fields > :is(.settings-row, .settings-list) + :is(.settings-row, .settings-list) { margin-top: calc(var(--st-body-gap) * -1); }
+
+/* A card inside a card is a band of the outer card: no frame of its own, a soft line above it, the same
+   insets. Its rows therefore line up with the rows of the outer card. */
+.settings-ui .settings-section:not(.is-flush) .settings-section:not(.is-flush) {
+  max-width: none;
+  margin-inline: calc(var(--st-pad-x) * -1);
+  border: 0;
+  border-top: 1px solid var(--st-line-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.settings-ui .settings-section-body > .settings-section:not(.is-flush):last-child { margin-bottom: calc(var(--st-body-pad-y) * -1); }
+.settings-ui .settings-section:not(.is-flush) .settings-section:not(.is-flush) > .settings-section-header:not(.is-toggle) { min-height: 0; padding-top: 14px; padding-bottom: 0; border-bottom: 0; border-radius: 0; }
+.settings-ui .settings-section:not(.is-flush) .settings-section:not(.is-flush) > .settings-section-header.is-toggle { border-radius: 0; }
+.settings-ui .settings-section:not(.is-flush) .settings-section:not(.is-flush) > .settings-section-header .settings-section-title { font-size: 14px; }
+.settings-ui .settings-section:not(.is-flush) .settings-section:not(.is-flush) > .settings-section-header + .settings-section-body { padding-top: 12px; }
+
+/* A footer band of a card: a note on the left, the card's buttons on the right (board 10). */
+.settings-ui .st-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 4px calc(var(--st-pad-x) * -1) calc(var(--st-body-pad-y) * -1);
+  padding: 12px var(--st-pad-x);
+  border-top: 1px solid var(--st-line-soft);
+  background: var(--st-subtle);
+  border-radius: 0 0 var(--st-radius) var(--st-radius);
+}
+.settings-ui .st-card-footer > .st-note:first-child,
+.settings-ui .st-card-footer > .st-card-footer-text { flex: 1 1 240px; margin: 0; color: var(--muted); font-size: 13px; }
+
+/* An empty list inside a card needs no second frame. */
+.settings-ui .settings-section-body > .st-empty,
+/* Nor when a list component stands in the body and shows its empty state (a timeline, the requests with their note): it
+   had a dashed frame inside the card there, while the same empty state directly in a body had none. */
+.settings-ui .settings-section-body > :not(.settings-section, .st-card) > .st-empty:only-child,
+.settings-ui .settings-section-body > :not(.settings-section, .st-card):only-child > .st-empty:first-child,
+.settings-ui .settings-section-body > .loading-region > .loading-region-content > .st-empty { border-style: none; padding-block: 20px; }

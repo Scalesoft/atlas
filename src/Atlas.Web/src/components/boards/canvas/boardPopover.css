@@ -1,0 +1,18 @@
+/*
+ * The board's menus and panels in the page editor's look (`md-context-popover`): ActionMenu, the colour palette, the settings and the pickers.
+ * Not scoped: reka-ui renders the popover element itself, which gets no scope attribute.
+ */
+/* reka-ui's wrapper places the popover; the editor's own popovers are fixed and place themselves. */
+.md-context-popover:is(.board-menu, .board-palette, .board-settings, .board-picker) { position: relative; }
+/* Leaves as the page's menus do (motion.css), where the editor's popover enters. */
+.md-context-popover:is(.board-menu, .board-palette, .board-settings, .board-picker)[data-state="closed"] { animation: st-fade-out var(--atlas-motion-surface) var(--atlas-ease-out) both; }
+.md-context-popover.board-palette { width: auto; }
+/* They carry `.md-editor` for the editor's theme tokens, not for its gutter of the block grip (drag.css: 32 px left of an editor). */
+.md-editor.board-toolbar:not(.readonly):not(.paper):not(.compact) { padding-left: 4px; }
+.md-editor:is(.board-menu, .board-palette, .board-settings, .board-picker, .board-command-panel):not(.readonly):not(.paper):not(.compact) { padding-left: 0; }
+.md-context-popover.board-settings { width: min(340px, calc(100vw - 24px)); }
+/* The link popover's width, a little more for a contact's or an issue's second line; padding comes from the picker's parts. */
+.md-context-popover.board-picker { width: min(380px, calc(100vw - 24px)); max-height: calc(var(--reka-popover-content-available-height, 100dvh) - 12px); padding: 0; }
+/* The keys under a picker's list, as the editor's pickers say them (ContactPicker). */
+.board-picker-keys { margin: 0; color: var(--muted); font-size: 11.5px; }
+.board-picker-keys kbd { padding: 0 4px; border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 11px; }

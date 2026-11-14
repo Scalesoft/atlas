@@ -1,0 +1,10 @@
+{
+  "Seznam objektů není platný.": "The list of objects is not valid.",
+  "Komentář nebyl nalezen.": "Comment not found.",
+  "Komentáře jsou v tomto prostoru vypnuté.": "Comments are turned off in this space.",
+  "Upravit komentář smí jen jeho autor, smazat ho autor nebo správce.": "Only its author can edit a comment; its author or an admin can delete it.",
+  "Komentář byl odstraněn.": "The comment has been removed.",
+  "Napište text komentáře.": "Write the comment text.",
+  "Komentář nesmí obsahovat řídicí znaky.": "A comment must not contain control characters.",
+  "Místo komentáře není platné.": "The comment's place is not valid."
+}

@@ -1,0 +1,10 @@
+{
+  "Vyberte úroveň přístupu ke stránce: read (čte), write (upravuje) nebo manage (spravuje).": "Choose a page access level: read, write or manage.",
+  "Přístup nelze udělit na dobu delší, než je platnost vašeho oprávnění ke správě stránky.": "Access cannot be granted for longer than your page management permission is valid.",
+  "Kopii nemůžete upravovat.": "You cannot edit a copy.",
+  "Neplatná role stránky.": "Invalid page role.",
+  "Vyberte uživatele nebo skupinu a hledejte nejvýše 200 znaků.": "Choose a user or group and search for at most 200 characters.",
+  "Neplatné stránkování historie přístupů.": "Invalid access history pagination.",
+  "Počet výsledků musí být 1–100, posun nezáporný a hledání nejvýše 200 znaků.": "The number of results must be 1–100, the offset non-negative and the search at most 200 characters.",
+  "Hledaný text je příliš dlouhý.": "The search text is too long."
+}

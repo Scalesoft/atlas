@@ -1,0 +1,72 @@
+[
+  {
+    "name": "nested blocks count once, what does not apply is left out",
+    "blocks": [
+      { "id": "m", "key": "m", "direction": "internal", "state": "in_progress", "date": "", "party": "", "requires": ["v", "s", "x"], "parent": null },
+      { "id": "v", "key": "v", "direction": "inbound", "state": "planned", "date": "", "party": "IT", "requires": [], "parent": "m" },
+      { "id": "s", "key": "s", "direction": "inbound", "state": "done", "date": "2026-09-10", "party": "IT", "requires": [], "parent": "m" },
+      { "id": "x", "key": "x", "direction": "inbound", "state": "not_applicable", "date": "", "party": "", "requires": [], "parent": "m" },
+      { "id": "w", "key": "w", "direction": "inbound", "state": "waiting_for_input", "date": "2026-10-01", "party": " IT ", "requires": [], "parent": "m" },
+      { "id": "n", "key": "n", "direction": "internal", "state": "done", "date": "2026-10-02", "party": "", "requires": [], "parent": null }
+    ],
+    "summary": { "total": 6, "applicable": 5, "done": 2, "percent": 40, "waiting": 1, "inboundMissing": ["v", "w"],
+      "states": { "planned": 1, "waiting_for_input": 1, "in_progress": 1, "done": 2, "blocked": 0, "not_applicable": 1 } },
+    "waitingOn": { "m": ["v"] },
+    "parties": [["IT", ["w"]]]
+  },
+  {
+    "name": "a key with no block on the page and the block's own key wait on nothing; a finished block waits on nothing",
+    "blocks": [
+      { "id": "a", "key": "a", "direction": "internal", "state": "planned", "date": "", "party": "", "requires": [], "parent": null },
+      { "id": "b", "key": "b", "direction": "internal", "state": "blocked", "date": "", "party": "", "requires": ["b", "gone", "a"], "parent": null },
+      { "id": "c", "key": "c", "direction": "internal", "state": "done", "date": "", "party": "", "requires": ["a"], "parent": null }
+    ],
+    "summary": { "total": 3, "applicable": 3, "done": 1, "percent": 33, "waiting": 0, "inboundMissing": [],
+      "states": { "planned": 1, "waiting_for_input": 0, "in_progress": 0, "done": 1, "blocked": 1, "not_applicable": 0 } },
+    "waitingOn": { "b": ["a"] },
+    "parties": []
+  },
+  {
+    "name": "everything done or not applicable is 100 %",
+    "blocks": [
+      { "id": "a", "key": "a", "direction": "inbound", "state": "done", "date": "", "party": "", "requires": [], "parent": null },
+      { "id": "b", "key": "b", "direction": "inbound", "state": "not_applicable", "date": "", "party": "", "requires": [], "parent": null }
+    ],
+    "summary": { "total": 2, "applicable": 1, "done": 1, "percent": 100, "waiting": 0, "inboundMissing": [],
+      "states": { "planned": 0, "waiting_for_input": 0, "in_progress": 0, "done": 1, "blocked": 0, "not_applicable": 1 } },
+    "waitingOn": {},
+    "parties": []
+  },
+  {
+    "name": "nothing that applies is 0 %, and so is an empty page",
+    "blocks": [
+      { "id": "a", "key": "a", "direction": "inbound", "state": "not_applicable", "date": "", "party": "", "requires": [], "parent": null }
+    ],
+    "summary": { "total": 1, "applicable": 0, "done": 0, "percent": 0, "waiting": 0, "inboundMissing": [],
+      "states": { "planned": 0, "waiting_for_input": 0, "in_progress": 0, "done": 0, "blocked": 0, "not_applicable": 1 } },
+    "waitingOn": {},
+    "parties": []
+  },
+  {
+    "name": "an empty page",
+    "blocks": [],
+    "summary": { "total": 0, "applicable": 0, "done": 0, "percent": 0, "waiting": 0, "inboundMissing": [],
+      "states": { "planned": 0, "waiting_for_input": 0, "in_progress": 0, "done": 0, "blocked": 0, "not_applicable": 0 } },
+    "waitingOn": {},
+    "parties": []
+  },
+  {
+    "name": "whom we wait on: by party, the longest waited first, undated last",
+    "blocks": [
+      { "id": "p1", "key": "p1", "direction": "internal", "state": "waiting_for_input", "date": "2026-10-05", "party": "Jana", "requires": [], "parent": null },
+      { "id": "p2", "key": "p2", "direction": "internal", "state": "waiting_for_input", "date": "2026-09-01", "party": "IT", "requires": [], "parent": null },
+      { "id": "p3", "key": "p3", "direction": "internal", "state": "waiting_for_input", "date": "", "party": "", "requires": [], "parent": null },
+      { "id": "p4", "key": "p4", "direction": "internal", "state": "waiting_for_input", "date": "2026-08-15", "party": "Jana", "requires": [], "parent": null },
+      { "id": "p5", "key": "p5", "direction": "internal", "state": "waiting_for_input", "date": "", "party": "IT", "requires": [], "parent": null }
+    ],
+    "summary": { "total": 5, "applicable": 5, "done": 0, "percent": 0, "waiting": 5, "inboundMissing": [],
+      "states": { "planned": 0, "waiting_for_input": 5, "in_progress": 0, "done": 0, "blocked": 0, "not_applicable": 0 } },
+    "waitingOn": {},
+    "parties": [["Jana", ["p4", "p1"]], ["IT", ["p2", "p5"]], ["", ["p3"]]]
+  }
+]

@@ -1,0 +1,283 @@
+{
+  "name": "@atlas/markdown",
+  "private": true,
+  "version": "0.18.0",
+  "description": "Headless-friendly Markdown and rich-text editor for Vue 3 with optional Yjs collaboration.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Atlas contributors",
+  "module": "./dist/atlas-markdown.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/atlas-markdown.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "import": "./dist/icons.js"
+    },
+    "./match": {
+      "types": "./dist/match/index.d.ts",
+      "import": "./dist/match.js"
+    },
+    "./concealment": {
+      "types": "./dist/concealment/index.d.ts",
+      "import": "./dist/concealment.js"
+    },
+    "./concealment/style.css": "./dist/concealment/style.css",
+    "./assist": {
+      "types": "./dist/assist/index.d.ts",
+      "import": "./dist/assist.js"
+    },
+    "./assist/style.css": "./dist/assist/style.css",
+    "./source": {
+      "types": "./dist/source/index.d.ts",
+      "import": "./dist/source.js"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.ts",
+      "import": "./dist/schema.js"
+    },
+    "./plugins/youtrack": {
+      "types": "./dist/plugins/youtrack/index.d.ts",
+      "import": "./dist/plugins/youtrack.js"
+    },
+    "./plugins/contacts": {
+      "types": "./dist/plugins/contacts/index.d.ts",
+      "import": "./dist/plugins/contacts.js"
+    },
+    "./plugins/secrets": {
+      "types": "./dist/plugins/secrets/index.d.ts",
+      "import": "./dist/plugins/secrets.js"
+    },
+    "./plugins/concealed": {
+      "types": "./dist/plugins/concealed/index.d.ts",
+      "import": "./dist/plugins/concealed.js"
+    },
+    "./plugins/attachments": {
+      "types": "./dist/plugins/attachments/index.d.ts",
+      "import": "./dist/plugins/attachments.js"
+    },
+    "./plugins/charts": {
+      "types": "./dist/plugins/charts/index.d.ts",
+      "import": "./dist/plugins/charts.js"
+    },
+    "./plugins/openapi": {
+      "types": "./dist/plugins/openapi/index.d.ts",
+      "import": "./dist/plugins/openapi.js"
+    },
+    "./plugins/diagrams": {
+      "types": "./dist/plugins/diagrams/index.d.ts",
+      "import": "./dist/plugins/diagrams.js"
+    },
+    "./plugins/math": {
+      "types": "./dist/plugins/math/index.d.ts",
+      "import": "./dist/plugins/math.js"
+    },
+    "./plugins/toc": {
+      "types": "./dist/plugins/toc/index.d.ts",
+      "import": "./dist/plugins/toc.js"
+    },
+    "./plugins/emoji": {
+      "types": "./dist/plugins/emoji/index.d.ts",
+      "import": "./dist/plugins/emoji.js"
+    },
+    "./plugins/pages": {
+      "types": "./dist/plugins/pages/index.d.ts",
+      "import": "./dist/plugins/pages.js"
+    },
+    "./plugins/editor-tools": {
+      "types": "./dist/plugins/editor-tools/index.d.ts",
+      "import": "./dist/plugins/editor-tools.js"
+    },
+    "./plugins/heading-anchors": {
+      "types": "./dist/plugins/heading-anchors/index.d.ts",
+      "import": "./dist/plugins/heading-anchors.js"
+    },
+    "./collaboration/signalr": {
+      "types": "./dist/collaboration/signalr.d.ts",
+      "import": "./dist/collaboration/signalr.js"
+    },
+    "./collaboration/recovery-panel": {
+      "types": "./dist/collaboration/recovery-panel.d.ts",
+      "import": "./dist/collaboration/recovery-panel.js"
+    },
+    "./collaboration/simulator": {
+      "types": "./dist/collaboration/simulator.d.ts",
+      "import": "./dist/collaboration/simulator.js"
+    },
+    "./draft": {
+      "types": "./dist/draft/index.d.ts",
+      "import": "./dist/draft.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server.js"
+    },
+    "./schema.json": "./schema/markdown-schema.json",
+    "./style.css": "./dist/atlas-markdown.css",
+    "./styles/base.css": "./dist/styles/base.css",
+    "./styles/states.css": "./dist/styles/states.css",
+    "./themes/ocean.css": "./dist/themes/ocean.css",
+    "./themes/sand.css": "./dist/themes/sand.css",
+    "./themes/forest.css": "./dist/themes/forest.css",
+    "./themes/midnight.css": "./dist/themes/midnight.css"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICES.md",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "vite build --configLoader runner && vue-tsc --emitDeclarationOnly -p tsconfig.build.json",
+    "test": "vitest --configLoader runner",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.build.json --incremental --tsBuildInfoFile node_modules/.cache/typecheck-build.tsbuildinfo && vue-tsc --noEmit -p tsconfig.test.json --incremental --tsBuildInfoFile node_modules/.cache/typecheck-test.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "@floating-ui/dom": "^1.7.6",
+    "@microsoft/signalr": "^10.0.0 || ^11.0.0",
+    "@tiptap/core": "^3.27.4",
+    "@tiptap/extension-character-count": "^3.27.4",
+    "@tiptap/extension-code-block-lowlight": "^3.31.0",
+    "@tiptap/extension-collaboration": "^3.27.4",
+    "@tiptap/extension-collaboration-caret": "^3.27.4",
+    "@tiptap/extension-drag-handle-vue-3": "^3.27.4",
+    "@tiptap/extension-emoji": "^3.31.0",
+    "@tiptap/extension-find-and-replace": "^3.31.0",
+    "@tiptap/extension-highlight": "^3.27.4",
+    "@tiptap/extension-image": "^3.27.4",
+    "@tiptap/extension-invisible-characters": "^3.31.0",
+    "@tiptap/extension-link": "^3.27.4",
+    "@tiptap/extension-node-range": "^3.27.4",
+    "@tiptap/extension-placeholder": "^3.27.4",
+    "@tiptap/extension-table": "^3.27.4",
+    "@tiptap/extension-table-cell": "^3.27.4",
+    "@tiptap/extension-table-header": "^3.27.4",
+    "@tiptap/extension-table-row": "^3.27.4",
+    "@tiptap/extension-task-item": "^3.27.4",
+    "@tiptap/extension-task-list": "^3.27.4",
+    "@tiptap/extension-text-align": "^3.27.4",
+    "@tiptap/extension-typography": "^3.27.4",
+    "@tiptap/extension-underline": "^3.27.4",
+    "@tiptap/extension-unique-id": "^3.31.0",
+    "@tiptap/pm": "^3.27.4",
+    "@tiptap/starter-kit": "^3.27.4",
+    "@tiptap/suggestion": "^3.27.4",
+    "@tiptap/vue-3": "^3.27.4",
+    "@tiptap/y-tiptap": "^3.0.9",
+    "echarts": "^6.1.0",
+    "highlight.js": "^11.12.0",
+    "katex": "^0.18.5 || ^0.19.1",
+    "lowlight": "^3.3.0",
+    "mermaid": "^11.17.2 || ^12.2.0",
+    "tiptap-markdown": "^0.9.0",
+    "vue": "^3.5.13",
+    "y-protocols": "^1.0.7",
+    "yaml": "^2.9.1",
+    "yjs": "^13.6.31"
+  },
+  "peerDependenciesMeta": {
+    "yaml": {
+      "optional": true
+    },
+    "@tiptap/extension-code-block-lowlight": {
+      "optional": true
+    },
+    "@tiptap/extension-emoji": {
+      "optional": true
+    },
+    "@tiptap/extension-find-and-replace": {
+      "optional": true
+    },
+    "@tiptap/extension-invisible-characters": {
+      "optional": true
+    },
+    "@tiptap/extension-unique-id": {
+      "optional": true
+    },
+    "highlight.js": {
+      "optional": true
+    },
+    "lowlight": {
+      "optional": true
+    },
+    "echarts": {
+      "optional": true
+    },
+    "mermaid": {
+      "optional": true
+    },
+    "katex": {
+      "optional": true
+    },
+    "@tiptap/y-tiptap": {
+      "optional": true
+    },
+    "@microsoft/signalr": {
+      "optional": true
+    },
+    "@tiptap/extension-collaboration": {
+      "optional": true
+    },
+    "@tiptap/extension-collaboration-caret": {
+      "optional": true
+    },
+    "y-protocols": {
+      "optional": true
+    },
+    "yjs": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@microsoft/signalr": "^11.0.0",
+    "@scalar/api-reference": "1.78.1",
+    "@tiptap/extension-code-block-lowlight": "3.31.3",
+    "@tiptap/extension-collaboration": "^3.27.4",
+    "@tiptap/extension-collaboration-caret": "^3.27.4",
+    "@tiptap/extension-emoji": "3.31.3",
+    "@tiptap/extension-find-and-replace": "3.31.3",
+    "@tiptap/extension-invisible-characters": "3.31.3",
+    "@tiptap/extension-unique-id": "3.31.3",
+    "@tiptap/y-tiptap": "^3.0.9",
+    "@types/katex": "^0.16.8",
+    "@types/node": "^26.6.6",
+    "@vitejs/plugin-vue": "^6.0.11",
+    "echarts": "^6.1.0",
+    "highlight.js": "^11.12.0",
+    "jsdom": "31.0.0",
+    "katex": "^0.19.1",
+    "lowlight": "^3.3.0",
+    "mermaid": "^12.3.0",
+    "monaco-editor": "0.52.2",
+    "monaco-yaml": "5.5.1",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0",
+    "vue": "3.5.45",
+    "vue-tsc": "3.3.11",
+    "y-protocols": "^1.0.7",
+    "yaml": "2.9.1",
+    "yjs": "^13.6.33"
+  },
+  "keywords": [
+    "vue",
+    "tiptap",
+    "markdown",
+    "editor",
+    "yjs",
+    "signalr"
+  ]
+}

@@ -1,0 +1,32 @@
+/* Optional warm Sand theme. Import it and add md-theme-sand to the editor. */
+.md-editor.md-theme-sand {
+  --bg-1: #fffdf8;
+  --bg-2: #f6efe2;
+  --bg-3: #ede2d1;
+  --paper: #fffaf0;
+  --paper-line: #e4d4bc;
+  --paper-shadow: 0 20px 60px rgba(83, 57, 28, 0.1), 0 2px 8px rgba(83, 57, 28, 0.06);
+  --text: #3b2d20;
+  --text-dim: #6f5b47;
+  --text-dimmer: #927d67;
+  --line: #e3d5c2;
+  --line-2: #cfbda5;
+  --accent: #c47742;
+  --accent-ink: #733b1e;
+  --accent-line: #d9a47e;
+  --accent-soft: #fae6d4;
+  --green: #4d7a5a;
+  --amber: #ad681b;
+  --red: #b84943;
+  --chip-accent-fg: #743b1f;
+  --chip-green-fg: #376447;
+  --chip-amber-fg: #8b500f;
+  --chip-red-fg: #9c3432;
+  --font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --shadow-1: 0 1px 2px rgba(72, 48, 24, 0.08);
+  --shadow-2: 0 12px 32px rgba(72, 48, 24, 0.14);
+  --z-sticky: 100;
+  --z-modal: 1000;
+  color-scheme: light;
+}

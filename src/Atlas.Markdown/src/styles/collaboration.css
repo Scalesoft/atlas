@@ -1,0 +1,36 @@
+/* ADR-018 A-M4 — remote collaboration carets + selections. CollaborationCaret
+   renders a bare <span class="collaboration-carets__caret"> with only an inline
+   border-color, and y-tiptap tags the selection with .ProseMirror-yjs-selection
+   + an inline translucent background. The width/label chrome is ours. Colours
+   are per-user literals (awareness palette), so they must NOT be overridden. */
+.md-editor .editor-body .collaboration-carets__caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 1px solid var(--text, #102f36);
+  border-right: 1px solid var(--text, #102f36);
+  border-color: currentColor; /* inline style supplies the real per-user colour */
+  word-break: normal;
+  pointer-events: none;
+}
+.md-editor .editor-body .collaboration-carets__label {
+  position: absolute;
+  top: -1.35em;
+  left: -1px;
+  padding: 1px 6px;
+  border-radius: 4px 4px 4px 0;
+  font-family: var(--font-mono, "SFMono-Regular", Consolas, "Liberation Mono", monospace);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: #fff;
+  user-select: none;
+  pointer-events: none;
+  /* Labels can stack on the same line; keep the freshest on top when hovered. */
+  z-index: 20;
+}
+.md-editor .editor-body .ProseMirror-yjs-selection {
+  /* inline style supplies the per-user translucent background */
+  border-radius: 1px;
+}

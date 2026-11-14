@@ -1,0 +1,825 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "See also "
+          },
+          {
+            "type": "text",
+            "text": "Home",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/fb28dd5f-4ec5-4726-b30f-09902053a813",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " and "
+          },
+          {
+            "type": "text",
+            "text": "Release process",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/6db5fb51-bdc5-40c9-be49-cfdf9f287948",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ". Relative link: "
+          },
+          {
+            "type": "text",
+            "text": "Runbook",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/6817ee41-f942-4cfd-b82c-731502608638",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " and "
+          },
+          {
+            "type": "text",
+            "text": "Runbook section",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/6817ee41-f942-4cfd-b82c-731502608638?heading=import-444e818c9b2c3612d9b1ad90",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ", same-page "
+          },
+          {
+            "type": "text",
+            "text": "jump",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/022f2a08-0d9b-4506-bc58-506c5f2f2883?heading=import-d56fd4617a88c1f0480835a3",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "attrs": {
+          "variant": "note"
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Deployments are frozen on Fridays."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "callout",
+        "attrs": {
+          "variant": "warning"
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Never deploy without a backup."
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2,
+          "headingId": "import-f0c5e0417a74cf8cab16138c"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Prerequisites"
+          }
+        ]
+      },
+      {
+        "type": "taskList",
+        "content": [
+          {
+            "type": "taskItem",
+            "attrs": {
+              "checked": true
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Access to the cluster"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "taskItem",
+            "attrs": {
+              "checked": false
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "VPN configured"
+                  }
+                ]
+              },
+              {
+                "type": "taskList",
+                "content": [
+                  {
+                    "type": "taskItem",
+                    "attrs": {
+                      "checked": false
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "nested task"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "attrs": {
+          "tight": true
+        },
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Plain bullet with "
+                  },
+                  {
+                    "type": "text",
+                    "text": "strikethrough",
+                    "marks": [
+                      {
+                        "type": "strike"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " and "
+                  },
+                  {
+                    "type": "text",
+                    "text": "bold ",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "nested italic",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      },
+                      {
+                        "type": "italic"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " and "
+                  },
+                  {
+                    "type": "text",
+                    "text": "inline code",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "orderedList",
+        "attrs": {
+          "tight": true,
+          "start": 1
+        },
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "First"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Second"
+                  }
+                ]
+              },
+              {
+                "type": "orderedList",
+                "attrs": {
+                  "tight": true,
+                  "start": 1
+                },
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Nested ordered"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Third"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "content": [
+          {
+            "type": "tableRow",
+            "content": [
+              {
+                "type": "tableHeader",
+                "attrs": {
+                  "textAlign": "left",
+                  "align": "left"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Service"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableHeader",
+                "attrs": {
+                  "textAlign": "right",
+                  "align": "right"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Port"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableHeader",
+                "attrs": {
+                  "textAlign": "center",
+                  "align": "center"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Owner"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableRow",
+            "content": [
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "left",
+                  "align": "left"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "api"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "right",
+                  "align": "right"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "8080"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "center",
+                  "align": "center"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "@team"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableRow",
+            "content": [
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "left",
+                  "align": "left"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "worker"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "right",
+                  "align": "right"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "—"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "center",
+                  "align": "center"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "ops"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 3,
+          "headingId": "import-3c375b78bf4bfb3587537cc2"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Architecture"
+          }
+        ]
+      },
+      {
+        "type": "diagram",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "source": "flowchart LR\n  A[Client] --> B[API]",
+            "caption": ""
+          }
+        }
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Inline math "
+          },
+          {
+            "type": "mathInline",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "expression": "E = mc^2"
+              }
+            }
+          },
+          {
+            "type": "text",
+            "text": " and block math:"
+          }
+        ]
+      },
+      {
+        "type": "mathBlock",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "expression": "\\sum_{i=1}^n i = \\frac{n(n+1)}{2}"
+          }
+        }
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 3,
+          "headingId": "import-d56fd4617a88c1f0480835a3"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Rollback"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Bare URL "
+          },
+          {
+            "type": "text",
+            "text": "https://example.com/docs",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://example.com/docs",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " and autolink "
+          },
+          {
+            "type": "text",
+            "text": "https://example.org",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://example.org",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ". Footnote reference"
+          },
+          {
+            "type": "text",
+            "text": "[1]",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "/#/pages/022f2a08-0d9b-4506-bc58-506c5f2f2883?heading=import-1a72b432d5014021b38b386e",
+                  "target": "_blank",
+                  "rel": "noopener noreferrer"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ". Emoji "
+          },
+          {
+            "type": "text",
+            "text": "🚀"
+          },
+          {
+            "type": "text",
+            "text": "."
+          }
+        ]
+      },
+      {
+        "type": "image",
+        "attrs": {
+          "src": "/api/attachments/aa5d19f2-a148-0321-3385-e7385b02f92b/content",
+          "alt": "Architecture diagram",
+          "title": null
+        }
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 3,
+          "headingId": "import-advanced-options"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Advanced options"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Hidden "
+          },
+          {
+            "type": "text",
+            "text": "content",
+            "marks": [
+              {
+                "type": "bold"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " here."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Line one"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "line two"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "hard break above."
+          }
+        ]
+      },
+      {
+        "type": "codeBlock",
+        "attrs": {
+          "language": "bash"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "kubectl rollout undo deployment/api"
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2,
+          "headingId": "import-1a72b432d5014021b38b386e"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Poznámky pod čarou"
+          }
+        ]
+      },
+      {
+        "type": "orderedList",
+        "attrs": {
+          "tight": true,
+          "start": 1
+        },
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "The footnote text."
+                  },
+                  {
+                    "type": "text",
+                    "text": " "
+                  },
+                  {
+                    "type": "text",
+                    "text": "↩",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "/#/pages/022f2a08-0d9b-4506-bc58-506c5f2f2883?heading=import-d56fd4617a88c1f0480835a3",
+                          "target": "_blank",
+                          "rel": "noopener noreferrer"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "diagrams",
+      "version": 2
+    },
+    {
+      "id": "heading-anchors",
+      "version": 1
+    },
+    {
+      "id": "math",
+      "version": 1
+    }
+  ]
+}

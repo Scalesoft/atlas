@@ -1,0 +1,49 @@
+# A local or self-hosting example: `docker compose up -d`, then http://localhost:8080 (README, "Rychlý start").
+# The passwords below are placeholders. Before the installation holds anything real, set your own in .env next to this file
+# (never commit it): ATLAS_DB_OWNER_PASSWORD, ATLAS_DB_APP_PASSWORD; no ';' in either. Pin ATLAS_IMAGE to a released version.
+services:
+  wiki-db:
+    # postgres:18.6-alpine plus pgvector (deploy/postgres): same base and data volume as the former postgres:18-alpine.
+    # Atlas 2.0 requires pgvector; swap this image before upgrading to 2.0 (docs/operations.md, "Upgrade na 2.0").
+    image: ${ATLAS_POSTGRES_IMAGE:-ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2}
+    restart: unless-stopped
+    environment:
+      # The schema's owner: migrations and the installation restore. An existing volume keeps the password it was created with.
+      POSTGRES_USER: wikiuser
+      POSTGRES_PASSWORD: ${ATLAS_DB_OWNER_PASSWORD:-change-me-owner}
+      POSTGRES_DB: wikidb
+    volumes:
+      - wiki-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  atlas:
+    image: ${ATLAS_IMAGE:-ghcr.io/scalesoft/atlas:latest}
+    restart: unless-stopped
+    # Expose a limit to .NET inside nested LXC/Docker; reserve memory for PostgreSQL and the host.
+    mem_limit: 1536m
+    memswap_limit: 1536m
+    depends_on:
+      wiki-db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_HTTP_PORTS: "8080"
+      Authentication__OpenIdConnect__RequireDatabaseAtStartup: "true"
+      # Requests, jobs and listeners run as atlas_app, not the superuser: the owner creates it at each start with this password and
+      # grants it the rows of the schema, without UPDATE, DELETE or TRUNCATE on audit facts (RuntimeDatabaseRole).
+      ConnectionStrings__atlas-db: Host=wiki-db;Port=5432;Database=wikidb;Username=atlas_app;Password=${ATLAS_DB_APP_PASSWORD:-change-me-app}
+      ConnectionStrings__atlas-db-owner: Host=wiki-db;Port=5432;Database=wikidb;Username=wikiuser;Password=${ATLAS_DB_OWNER_PASSWORD:-change-me-owner}
+    ports:
+      # Bind to the reverse proxy's interface (ATLAS_BIND_ADDRESS=127.0.0.1 when the proxy runs on this host); all interfaces by default.
+      - "${ATLAS_BIND_ADDRESS:-0.0.0.0}:8080:8080"
+    volumes:
+      - atlas-data:/data
+
+volumes:
+  wiki-db-data:
+  atlas-data:

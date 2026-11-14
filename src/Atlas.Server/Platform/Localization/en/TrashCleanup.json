@@ -1,0 +1,6 @@
+{
+  "Zvolte, zda o čištění rozhodují prostory, nebo platí jedno pravidlo všude.": "Choose whether spaces decide about the cleanup, or one rule applies everywhere.",
+  "O čištění rozhoduje pravidlo celé wiki ve Správě wiki.": "The cleanup is decided by the wiki-wide rule in Wiki administration.",
+  "Zvolte, zda čistit ručně, nebo automaticky.": "Choose whether to clean up manually or automatically.",
+  "Počet dní musí být od {minDays} do {maxDays}.": "The number of days must be from {minDays} to {maxDays}."
+}

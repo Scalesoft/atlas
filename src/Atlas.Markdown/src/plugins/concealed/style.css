@@ -1,0 +1,81 @@
+/* Concealed blocks. Authors edit the content inside a quiet ink frame; readers see the shared invisible ink
+   (concealment/style.css) laid over the content, which keeps its place so the page never jumps. */
+.md-concealed-block {
+  --md-concealed-block-ink: color-mix(in srgb, var(--paper, #fffefe) 86%, var(--text, #102f36));
+  --md-concealed-block-line: color-mix(in srgb, var(--accent, #58a9b9) 38%, var(--line, #d4e4e7));
+  position: relative; margin: 1rem 0; border-radius: 16px;
+}
+
+/* One box in every state (contract 3.6-0): the body keeps the room the sealed block needs (the ink and its Reveal control), so the block
+   measures the same in the static render, the readonly editor and the editor. Editing shows the content in it, framed (an inset ring takes no
+   space) and with the chip straddling the frame's top edge; reading hides the content and lays the ink over it. */
+.md-concealed-block > .md-concealed-block__body { position: relative; min-height: 6.5rem; padding: 1rem 1rem 3.4rem; border-radius: 16px; }
+[data-md-concealed-view]:not([data-sealed]) > .md-concealed-block__body {
+  box-shadow: inset 0 0 0 1px var(--md-concealed-block-line);
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--accent, #58a9b9) 10%, transparent) 0 1.5px, transparent 2px) 0 0 / 22px 22px,
+    radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--amber, #e3aa5d) 12%, transparent) 0 1px, transparent 1.5px) 0 0 / 31px 31px,
+    linear-gradient(135deg, color-mix(in srgb, var(--md-concealed-block-ink) 45%, transparent), transparent 70%);
+  transition: box-shadow var(--md-motion-base);
+}
+[data-md-concealed-view]:not([data-sealed]):hover > .md-concealed-block__body { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent, #58a9b9) 60%, var(--line, #d4e4e7)); }
+.md-concealed-block__chip {
+  position: absolute; z-index: 1; inset-block-start: 0; inset-inline-start: .75rem; transform: translateY(-50%);
+  display: inline-flex; align-items: center; gap: .4rem; max-width: calc(100% - 1.5rem); margin: 0; padding: .2rem .65rem .2rem .5rem;
+  border: 1px solid var(--md-concealed-block-line); border-radius: 999px; cursor: pointer; user-select: none;
+  font-size: .74rem; font-weight: 600; line-height: 1.4; color: var(--text-dim, #49676e);
+  background: color-mix(in srgb, var(--paper, #fffefe) 88%, var(--bg, #fff));
+  transition: color var(--md-motion-fast), background-color var(--md-motion-fast), border-color var(--md-motion-fast);
+}
+.md-concealed-block__chip:hover { color: var(--text, #102f36); border-color: var(--accent, #58a9b9); }
+.md-concealed-block__chip:focus-visible { outline: 2px solid var(--accent, #58a9b9); outline-offset: 2px; }
+.md-concealed-block__chip svg { flex: 0 0 auto; color: var(--accent-ink, #123f49); opacity: .8; }
+.md-concealed-block__hint { font-weight: 500; opacity: .7; }
+.md-concealed-block__hint::before { content: '·'; margin-inline-end: .4rem; }
+.md-concealed-block__content > :first-child { margin-block-start: 0; }
+.md-concealed-block__content > :last-child { margin-block-end: 0; }
+.ProseMirror-selectednode[data-md-concealed-view] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #58a9b9) 45%, transparent); }
+
+/* Reading (renderer, readonly editor or the author's preview): the content keeps laying out the block but is
+   hidden and inert; the ink covers it and Reveal shows a copy of it with the same spacing. */
+.md-concealed-block[data-sealed] > .md-concealed-block__body {
+  /* Placeholder ink while the invisible ink loads with the first sealed block; the surface then covers it. */
+  background: var(--md-concealed-block-ink);
+}
+[data-md-concealed-view][data-readonly] > .md-concealed-block__chip { display: none; }
+.md-concealed-block[data-sealed] > .md-concealed-block__body > .md-concealed-block__content { visibility: hidden; }
+.md-concealed-block[data-sealed] .md-concealed-block__ink { position: absolute; inset: 0; min-height: 0; }
+.md-concealed-block__ink .md-concealed-block__copy > :first-child { margin-block-start: 0; }
+.md-concealed-block__ink .md-concealed-block__copy > :last-child { margin-block-end: 0; }
+.md-concealed-block__ink .md-concealed__content { padding: 1rem 1rem 3.4rem; }
+.md-concealed-block__ink .md-concealed__skeleton { position: absolute; inset: 1rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-md-concealed-view], .md-concealed-block__chip { transition: none; }
+}
+
+/* Anchored settings panel in the style of the other module panels: radio tiles, applied as one undo step. */
+.md-concealed-settings { width: min(380px, calc(100vw - 24px)); }
+.md-concealed-settings__form { display: grid; gap: 8px; }
+.md-concealed-settings__heading { margin: 4px 0 0; font-size: 12px; font-weight: 600; color: var(--text-dim, #49676e); transition: opacity var(--md-motion-fast); }
+.md-concealed-settings__heading[data-disabled=true] { opacity: .45; }
+.md-concealed-settings__tiles { display: grid; grid-template-columns: repeat(var(--md-concealed-columns, 2), minmax(0, 1fr)); gap: 6px; }
+.md-context-popover-body .md-concealed-settings__tile {
+  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-width: 0; padding: 8px 10px; border-radius: 9px; text-align: start;
+  border: 1px solid var(--line, #d4e4e7); background: var(--bg, #fff);
+  transition: background-color var(--md-motion-fast), border-color var(--md-motion-fast), box-shadow var(--md-motion-fast), opacity var(--md-motion-fast);
+}
+.md-context-popover-body .md-concealed-settings__tile:hover:not(:disabled) { border-color: var(--accent-line, #b8d8de); }
+.md-context-popover-body .md-concealed-settings__tile[aria-checked=true] {
+  background: var(--accent-soft, #e3f4f7); border-color: var(--accent, #58a9b9); box-shadow: inset 0 0 0 1px var(--accent, #58a9b9);
+}
+.md-context-popover-body .md-concealed-settings__tile:disabled { opacity: .45; cursor: default; }
+.md-concealed-settings__icon { display: flex; align-items: center; height: 22px; color: var(--accent-ink, #246979); }
+.md-concealed-settings__label { font-size: 12px; font-weight: 600; line-height: 1.35; color: var(--text, #102f36); }
+.md-concealed-settings__hint { font-size: 10px; line-height: 1.4; color: var(--text-dim, #49676e); }
+.md-concealed-settings__note { margin: 6px 0 0; padding: 8px 10px; border-radius: 8px; font-size: 11px; line-height: 1.5; color: var(--text-dim, #49676e); background: color-mix(in srgb, var(--amber, #b66b12) 9%, transparent); }
+.md-concealed-settings__footer { display: flex; justify-content: flex-end; gap: 7px; padding-top: 12px; margin-top: 4px; border-top: 1px solid var(--line, #d4e4e7); }
+.md-context-popover-body .md-concealed-settings__footer .md-concealed-settings__apply { color: var(--paper, #fff); background: var(--accent-ink, #246979); border-color: transparent; }
+.md-context-popover-body .md-concealed-settings__footer .md-concealed-settings__apply:hover:not(:disabled) { background: color-mix(in srgb, var(--accent-ink, #246979) 88%, #000); }
+@media (prefers-reduced-motion: reduce) { .md-concealed-settings__tile, .md-concealed-settings__heading { transition: none; } }

@@ -1,0 +1,18 @@
+{
+  "format je \"markdown\", nebo chybí.": "format is \"markdown\", or missing.",
+  "API tokeny všech uživatelů spravuje správce wiki.": "API tokens of all users are managed by a wiki admin.",
+  "Platnost tokenu musí být 1 až 365 dní.": "The token validity must be 1 to 365 days.",
+  "Zvolte rozsah Čtení, nebo Zápis.": "Choose the scope Read or Write.",
+  "Zvolte alespoň jeden kanál: REST API nebo MCP.": "Choose at least one channel: REST API or MCP.",
+  "Používání osobních API tokenů musí povolit správce wiki.": "A wiki admin must allow the use of personal API tokens.",
+  "Takový rozsah vám správce wiki nepovolil.": "A wiki admin has not allowed you that scope.",
+  "Nejprve odvolejte některý z dvaceti aktivních tokenů.": "First revoke one of the twenty active tokens.",
+  "Token nebyl nalezen.": "Token not found.",
+  "Povolení API spravuje správce wiki.": "API permission is managed by a wiki admin.",
+  "Neznámá úroveň osobního API.": "Unknown personal API level.",
+  "Zvolte úroveň osobního API.": "Choose the personal API level.",
+  "Offset musí být 0 až 100000 a limit 1 až 100.": "The offset must be 0 to 100000 and the limit 1 to 100.",
+  "Token nemá požadovaný rozsah oprávnění.": "The token does not have the required permission scope.",
+  "Příliš mnoho neplatných pokusů o přihlášení tokenem. Zkuste to za chvíli.": "Too many invalid token sign-in attempts. Try again in a moment.",
+  "Název tokenu": "Token name"
+}

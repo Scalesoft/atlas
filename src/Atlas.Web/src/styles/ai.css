@@ -1,0 +1,398 @@
+/* The visual language of AI and suggestions follows the owner's motion prototype.
+   Version 2.6 strengthens the gestures so they read at actual button sizes.
+   Durations and easings are the tokens of motion.css; one-off movement goes through
+   src/motion/aiMotion.ts. No other stylesheet writes these keyframes.
+
+   twinkle and shimmer mean "the model is working". They are the only allowed loops, they stop
+   with the result, and rule-based suggestions never use them (they show a spinner). The one exception is the answer
+   effort meter (.ai-effort, components/ai/AiEffortMeter.vue): its loops show how much the next answer will read, not
+   work in progress, and they stop under reduced motion.
+
+   A preview (the gallery) may slow everything down with --atlas-motion-scale and force reduced motion
+   with [data-atlas-reduced-motion], like the prototype's two switches; the slow-down is in the tokens
+   (motion.css), and aiMotion.ts follows both. The application sets neither. */
+.atlas-ai-twinkle {
+  animation: atlas-ai-twinkle var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes atlas-ai-twinkle {
+  0%, 100% { transform: scale(.9) rotate(0); }
+  45% { transform: scale(1.08) rotate(14deg); }
+  70% { transform: scale(.96) rotate(4deg); }
+}
+
+.atlas-ai-shimmer {
+  background: linear-gradient(100deg, var(--muted) 0%, var(--muted) 40%, var(--atlas-ai-shine) 50%, var(--muted) 60%, var(--muted) 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: atlas-ai-shimmer var(--atlas-motion-loop) linear infinite;
+}
+
+@keyframes atlas-ai-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -50% 0; }
+}
+
+/* An accepted change glows once where it happened. It ends on the element's own background and
+   leaves no fill behind, so hover and focus styles apply again afterwards. */
+.atlas-glow {
+  animation: atlas-ai-glow var(--atlas-ai-glow) var(--atlas-ease-out) backwards;
+}
+
+@keyframes atlas-ai-glow {
+  0% { background-color: var(--atlas-ai-glow-color); box-shadow: 0 0 0 3px var(--atlas-ai-glow-color); }
+  100% { box-shadow: 0 0 0 3px transparent; }
+}
+
+@keyframes atlas-ai-glowfade {
+  0% { background-color: var(--atlas-ai-glow-color); }
+}
+
+/* A dashed outline means "a suggestion, not saved yet". It is an SVG rect, not a dashed border,
+   so solidify() can join the dashes (6/5 -> 11/0). Place the svg inside a positioned surface:
+   <svg class="atlas-suggestion-outline" aria-hidden="true"><rect x=".5" y=".5" rx=".." ry=".."/></svg>
+   The prototype's --line-strong is Atlas's --input-line (the prototype's own fallback pair). */
+.atlas-suggestion-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.atlas-suggestion-outline rect {
+  fill: none;
+  stroke: var(--input-line);
+  stroke-width: 1;
+  stroke-dasharray: 6 5;
+  width: calc(100% - 1px);
+  height: calc(100% - 1px);
+}
+
+/* Dark mode: --muted at 60 % (UX design §5.1), quieter than a field border on dark surfaces. */
+:where(:root[data-mode="dark"]) .atlas-suggestion-outline rect,
+.atlas[data-mode="dark"] .atlas-suggestion-outline rect {
+  stroke: color-mix(in srgb, var(--muted) 60%, transparent);
+}
+.atlas[data-mode="light"] .atlas-suggestion-outline rect {
+  stroke: var(--input-line);
+}
+
+/* Reduced motion as in the prototype: loops stand still, the shimmer is plain muted text and the
+   glow fades only its background. */
+@media (prefers-reduced-motion: reduce) {
+  .atlas-ai-twinkle,
+  .atlas-ai-shimmer {
+    animation: none;
+  }
+  .atlas-ai-shimmer {
+    color: var(--muted);
+    background: none;
+  }
+  .atlas-glow {
+    animation-name: atlas-ai-glowfade;
+  }
+}
+/* The same, forced by a preview's "Omezený pohyb" switch. */
+:where([data-atlas-reduced-motion]) .atlas-ai-twinkle,
+:where([data-atlas-reduced-motion]) .atlas-ai-shimmer {
+  animation: none;
+}
+:where([data-atlas-reduced-motion]) .atlas-ai-shimmer {
+  color: var(--muted);
+  background: none;
+}
+:where([data-atlas-reduced-motion]) .atlas-glow {
+  animation-name: atlas-ai-glowfade;
+}
+
+/* ---- Refresh 2.5: AI colour and the states of the one glyph (components/ai/AiGlyph.vue) ----
+   Board „AI znak – velikosti, stavy a průběh“. One drawing (the registry's sparkles: the big star is the 1st child,
+   the plus the 2nd and 3rd, the dot the 4th), many states; the text beside it says what exactly happens.
+
+   Colour: the AI ink leans the accent a little towards indigo, so AI reads as AI in every accent and in dark mode
+   without a second brand colour. --ai-ink is the one switch: a fixed teal→indigo gradient (an open question of the
+   design) would be a paint server referenced by --ai-glyph-fill/--ai-glyph-stroke, nothing else changes. The wash
+   and line tint the few AI entries (the Asistent item, the composer, the assistant's avatar).
+
+   Motion: working loops are thinking (the small stars orbit, the star sways), searching (a dashed ring turns, the
+   star breathes, the small stars twinkle) and writing (the star pulses with the text); they stop with the result.
+   done (the small stars gather into the big one, a short pop and a tick, then the glyph is whole again), ready
+   (pointer or focus on the control around it) and suggest (one soft halo) play once. unavailable never moves.
+   Reduced motion: nothing moves; the working states only breathe their opacity (board: „omezený pohyb: jen dýchání
+   průhlednosti“), so "something happens" stays visible next to the text that says what. */
+:root, .atlas {
+  --ai-ink: color-mix(in oklch, var(--accent) 72%, #5b63d6);
+  --ai-wash: color-mix(in srgb, var(--ai-ink) 8%, transparent);
+  --ai-wash-strong: color-mix(in srgb, var(--ai-ink) 14%, transparent);
+  --ai-line: color-mix(in srgb, var(--ai-ink) 26%, transparent);
+  --ai-line-strong: color-mix(in srgb, var(--ai-ink) 46%, transparent);
+  --ai-badge: #d99a1e;
+  --ai-glyph-fill: currentColor;
+  --ai-glyph-stroke: currentColor;
+}
+[data-ai-glyph] .ai-glyph-mark { overflow: visible; }
+[data-ai-glyph] .ai-glyph-mark > * { transform-box: fill-box; transform-origin: center; stroke: var(--ai-glyph-stroke); }
+/* The star and the dot are solid, as on the board; the plus stays a stroke. */
+[data-ai-glyph] .ai-glyph-mark > :first-child, [data-ai-glyph] .ai-glyph-mark > circle { fill: var(--ai-glyph-fill); }
+[data-ai-glyph] .ai-glyph-mark > :not(:first-child) { transform-box: view-box; transform-origin: 12px 12px; }
+
+/* 2.6: visible at the actual 16–22 px production sizes, not only on a 40 px storyboard.
+   The halo stays inside the icon's existing gap; it never changes the control's hit area. */
+[data-ai-glyph][data-working]::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--ai-line-strong), transparent);
+  pointer-events: none;
+  animation: atlas-ai-working-halo var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+[data-ai-glyph][data-state="thinking"] .ai-glyph-mark > :first-child {
+  animation: atlas-ai-think var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+
+/* thinking: the small stars orbit the big one, which sways (atlas-ai-twinkle on the svg, the prototype's loop). */
+[data-ai-glyph][data-state="thinking"] .ai-glyph-mark > :not(:first-child) {
+  animation: atlas-ai-orbit var(--atlas-motion-loop) linear infinite;
+}
+/* searching: a dashed ring turns around the glyph, the star breathes, the small stars twinkle. */
+[data-ai-glyph][data-state="searching"] .ai-glyph-mark > :first-child {
+  animation: atlas-ai-breathe var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+[data-ai-glyph][data-state="searching"] .ai-glyph-mark > :not(:first-child) {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ai-sparkle var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+[data-ai-glyph][data-state="searching"]::after {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  border: max(1px, calc(var(--ai-glyph-size, 16px) * .085)) dashed currentColor;
+  border-radius: 50%;
+  opacity: .8;
+  pointer-events: none;
+  animation: atlas-spin var(--atlas-motion-loop) linear infinite;
+}
+/* writing: the star pulses in the rhythm of the text, the small stars with it. */
+[data-ai-glyph][data-state="writing"] .ai-glyph-mark > :first-child {
+  animation: atlas-ai-pulse var(--atlas-motion-pulse) var(--atlas-ease-inout) infinite;
+}
+[data-ai-glyph][data-state="writing"] .ai-glyph-mark > :not(:first-child) {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ai-write-spark var(--atlas-motion-pulse) var(--atlas-ease-inout) infinite;
+}
+/* done, once: the small stars gather into the star, it pops, gives way to a tick, and the glyph is whole again. */
+[data-ai-glyph][data-state="done"] .ai-glyph-mark > :first-child {
+  animation: atlas-ai-done-pop var(--atlas-ai-glow) var(--atlas-ease-out) both;
+}
+[data-ai-glyph][data-state="done"] .ai-glyph-mark > :nth-child(2),
+[data-ai-glyph][data-state="done"] .ai-glyph-mark > :nth-child(3) {
+  --ai-gather: -8px 8px;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ai-done-gather var(--atlas-ai-glow) var(--atlas-ease-out) both;
+}
+[data-ai-glyph][data-state="done"] .ai-glyph-mark > :nth-child(4) {
+  --ai-gather: 8px -8px;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ai-done-gather var(--atlas-ai-glow) var(--atlas-ease-out) both;
+}
+[data-ai-glyph] .ai-glyph-check {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: none;
+  stroke: var(--success);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  opacity: 0;
+  pointer-events: none;
+}
+[data-ai-glyph][data-state="done"] .ai-glyph-check {
+  animation: atlas-ai-done-check var(--atlas-ai-glow) var(--atlas-ease-out) both;
+}
+/* suggest, once: a soft aura, the small stars light up. */
+[data-ai-glyph][data-state="suggest"]::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--ai-line-strong), transparent);
+  animation: atlas-ai-halo var(--atlas-ai-glow) var(--atlas-ease-out) both;
+  pointer-events: none;
+}
+[data-ai-glyph][data-state="suggest"] .ai-glyph-mark > :not(:first-child) {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ai-sparkle var(--atlas-ai-glow) var(--atlas-ease-out);
+}
+/* ready: the star turns once and the small stars blink when the control around it is pointed at or focused. */
+:is(a, button, [role="button"], [role="tab"], [role="menuitem"]):is(:hover, :focus-visible) [data-ai-glyph][data-state="ready"] .ai-glyph-mark > :first-child {
+  animation: atlas-ai-ready calc(var(--atlas-motion-slow) * 3) var(--atlas-ease-inout);
+}
+:is(a, button, [role="button"], [role="tab"], [role="menuitem"]):is(:hover, :focus-visible) [data-ai-glyph][data-state="ready"] .ai-glyph-mark > :not(:first-child) {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-ai-greet-spark calc(var(--atlas-motion-slow) * 3) var(--atlas-ease-inout);
+}
+/* unavailable: grey with an amber dot; nothing moves. */
+[data-ai-glyph][data-state="unavailable"] { color: var(--muted); }
+[data-ai-glyph][data-state="unavailable"] .ai-glyph-mark { opacity: .55; }
+[data-ai-glyph][data-state="unavailable"]::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: var(--ai-badge);
+  box-shadow: 0 0 0 1.5px var(--surface);
+}
+
+/* The one status line (components/ai/AiStatus.vue): the indeterminate bar of a working card and the three dots
+   of writing. The current step reads in the AI ink with the prototype's shimmer. */
+.atlas-ai-shimmer[data-tone="ink"] {
+  background-image: linear-gradient(100deg, var(--ai-ink) 0%, var(--ai-ink) 40%, color-mix(in srgb, var(--ai-ink) 40%, var(--atlas-ai-shine)) 50%, var(--ai-ink) 60%, var(--ai-ink) 100%);
+}
+.ai-status-bar > i {
+  animation: atlas-ai-indeterminate var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+.ai-status-dots > i {
+  animation: atlas-ai-typing var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+.ai-status-dots > i:nth-child(2) { animation-delay: var(--atlas-motion-defer); }
+.ai-status-dots > i:nth-child(3) { animation-delay: calc(var(--atlas-motion-defer) * 2); }
+
+@keyframes atlas-ai-orbit { to { rotate: 360deg; } }
+@keyframes atlas-ai-working-halo { 0%, 100% { opacity: .25; scale: .7; } 50% { opacity: .75; scale: 1.2; } }
+@keyframes atlas-ai-think { 0%, 100% { rotate: -12deg; scale: .92; } 50% { rotate: 16deg; scale: 1.1; } }
+@keyframes atlas-ai-breathe { 0%, 100% { scale: .86; } 50% { scale: 1.16; } }
+@keyframes atlas-ai-pulse { 0%, 100% { scale: .94; rotate: -6deg; } 35% { scale: 1.2; rotate: 8deg; } 65% { scale: 1; rotate: 0deg; } }
+@keyframes atlas-ai-write-spark { 0%, 100% { opacity: .4; scale: .65; translate: 0 1.5px; } 45% { opacity: 1; scale: 1.15; translate: 0 -1.5px; } }
+@keyframes atlas-ai-sparkle { 0%, 100% { opacity: .3; scale: .55; } 50% { opacity: 1; scale: 1.15; } }
+@keyframes atlas-ai-done-pop { 0%, 26% { scale: 1; opacity: 1; } 36% { scale: 1.32; opacity: 1; } 46% { scale: 1; opacity: 1; } 56%, 80% { scale: .4; opacity: 0; } 100% { scale: 1; opacity: 1; } }
+@keyframes atlas-ai-done-gather { 0%, 8% { translate: 0 0; scale: 1; opacity: 1; } 30% { translate: var(--ai-gather); scale: .2; opacity: 0; } 82% { translate: 0 0; scale: .2; opacity: 0; } 100% { translate: 0 0; scale: 1; opacity: 1; } }
+@keyframes atlas-ai-done-check { 0%, 46% { stroke-dashoffset: 24; opacity: 0; } 50% { opacity: 1; } 64%, 82% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes atlas-ai-halo { 0% { opacity: .9; scale: .6; } 100% { opacity: 0; scale: 1.5; } }
+@keyframes atlas-ai-ready { 0%, 100% { rotate: 0deg; scale: 1; } 30% { rotate: -14deg; scale: .9; } 60% { rotate: 32deg; scale: 1.2; } 82% { rotate: -6deg; scale: 1.04; } }
+@keyframes atlas-ai-greet-spark { 0%, 100% { opacity: 1; scale: 1; } 25% { opacity: .3; scale: .5; } 60% { opacity: 1; scale: 1.35; } 80% { scale: .9; } }
+@keyframes atlas-ai-indeterminate { 0% { translate: -100% 0; } 100% { translate: 250% 0; } }
+@keyframes atlas-ai-typing { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes atlas-ai-fade-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
+/* Reduced motion: no movement at all; the working states keep a slow fade so "something happens" stays visible. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ai-glyph] .ai-glyph-mark > *, [data-ai-glyph]::before, [data-ai-glyph]::after, [data-ai-glyph] .ai-glyph-check { animation: none !important; }
+  [data-ai-glyph][data-working] .ai-glyph-mark, .ai-status-bar > i { animation: atlas-ai-fade-breathe var(--atlas-motion-loop) linear infinite; }
+  [data-ai-glyph][data-working]::before { opacity: .25; }
+  .ai-status-bar > i { translate: 75% 0; }
+  .ai-status-dots > i { animation: none; opacity: .6; }
+  .atlas-ai-shimmer[data-tone="ink"] { color: var(--ai-ink); background: none; }
+}
+:where([data-atlas-reduced-motion]) [data-ai-glyph] .ai-glyph-mark > *,
+:where([data-atlas-reduced-motion]) [data-ai-glyph]::before,
+:where([data-atlas-reduced-motion]) [data-ai-glyph]::after,
+:where([data-atlas-reduced-motion]) [data-ai-glyph] .ai-glyph-check { animation: none !important; }
+:where([data-atlas-reduced-motion]) [data-ai-glyph][data-working] .ai-glyph-mark,
+:where([data-atlas-reduced-motion]) .ai-status-bar > i { animation: atlas-ai-fade-breathe var(--atlas-motion-loop) linear infinite; }
+:where([data-atlas-reduced-motion]) [data-ai-glyph][data-working]::before { opacity: .25; }
+:where([data-atlas-reduced-motion]) .ai-status-bar > i { translate: 75% 0; }
+:where([data-atlas-reduced-motion]) .ai-status-dots > i { animation: none; opacity: .6; }
+:where([data-atlas-reduced-motion]) .atlas-ai-shimmer[data-tone="ink"] { color: var(--ai-ink); background: none; }
+
+/* ---- The answer effort meter (components/ai/AiEffortMeter.vue) ----
+   Five steps, each a little livelier and only in the AI colours: the fill leans from the accent to the AI ink and on to
+   violet; Vyváženě sends a sheen towards the handle (the status bar's indeterminate sweep); from Důkladně on, sparks fly
+   into the handle, more and faster with every step; Do hloubky adds stars (the glyph's sparkle) and a glow round the
+   handle, Naplno lets the glow breathe. Reduced motion: the colours, the stars and a still glow; nothing moves. */
+/* The picker's button (AiEffortPicker) lights its blocks in the same colours. */
+:is(.ai-effort, .ai-effort-pick) {
+  --ai-effort-violet: color-mix(in oklch, var(--ai-ink) 55%, #8b5cf6);
+  --ai-effort-from: color-mix(in oklch, var(--accent) 75%, var(--surface));
+  --ai-effort-to: color-mix(in oklch, var(--accent) 75%, var(--surface));
+  --ai-effort-fly: calc(var(--atlas-motion-loop) * 1.5);
+  --ai-effort-thumb-shadow: 0 1px 3px rgb(0 0 0 / .22);
+}
+:is(.ai-effort, .ai-effort-pick)[data-level="1"] { --ai-effort-from: var(--accent); --ai-effort-to: color-mix(in oklch, var(--accent) 50%, var(--ai-ink)); }
+:is(.ai-effort, .ai-effort-pick)[data-level="2"] { --ai-effort-from: var(--accent); --ai-effort-to: var(--ai-ink); }
+:is(.ai-effort, .ai-effort-pick)[data-level="3"] { --ai-effort-from: var(--accent); --ai-effort-to: var(--ai-effort-violet); --ai-effort-fly: calc(var(--atlas-motion-loop) * 1.1); }
+:is(.ai-effort, .ai-effort-pick)[data-level="4"] { --ai-effort-from: var(--ai-ink); --ai-effort-to: var(--ai-effort-violet); --ai-effort-fly: calc(var(--atlas-motion-loop) * .8); }
+
+.ai-effort:not([data-level="0"]) .ai-effort-fill::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .28), transparent);
+  animation: atlas-ai-indeterminate calc(var(--atlas-motion-loop) * 1.6) var(--atlas-ease-inout) infinite;
+}
+.ai-effort-spark {
+  position: absolute;
+  left: 0;
+  right: 12px;
+  top: var(--y);
+  height: var(--size);
+  margin-top: calc(var(--size) / -2);
+  animation: atlas-ai-effort-fly var(--ai-effort-fly) var(--atlas-ease-inout) infinite;
+  animation-delay: calc(var(--delay) * var(--ai-effort-fly));
+}
+.ai-effort-spark::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 4px 1px rgb(255 255 255 / .55);
+}
+.ai-effort-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 6px;
+  height: 6px;
+  background: rgb(255 255 255 / .9);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: atlas-ai-sparkle var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+  animation-delay: calc(var(--delay) * var(--atlas-motion-loop));
+}
+.ai-effort:is([data-level="3"], [data-level="4"]) {
+  --ai-effort-thumb-shadow: 0 1px 3px rgb(0 0 0 / .22), 0 0 10px 2px color-mix(in srgb, var(--ai-effort-to) 45%, transparent);
+}
+.ai-effort[data-level="4"] [data-slot="slider-thumb"] {
+  animation: atlas-ai-effort-glow calc(var(--atlas-motion-loop) * 1.5) var(--atlas-ease-inout) infinite;
+}
+
+@keyframes atlas-ai-effort-fly {
+  0% { translate: -100% 0; opacity: 0; }
+  20%, 75% { opacity: .9; }
+  100% { translate: 0 var(--dy, 0); opacity: 0; }
+}
+@keyframes atlas-ai-effort-glow {
+  0%, 100% { box-shadow: 0 1px 3px rgb(0 0 0 / .22), 0 0 8px 1px color-mix(in srgb, var(--ai-effort-to) 35%, transparent); }
+  50% { box-shadow: 0 1px 3px rgb(0 0 0 / .22), 0 0 14px 4px color-mix(in srgb, var(--ai-effort-to) 55%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-effort-spark, .ai-effort .ai-effort-fill::after { display: none; }
+  .ai-effort-star, .ai-effort [data-slot="slider-thumb"] { animation: none !important; }
+}
+:where([data-atlas-reduced-motion]) .ai-effort-spark,
+:where([data-atlas-reduced-motion]) .ai-effort .ai-effort-fill::after { display: none; }
+:where([data-atlas-reduced-motion]) .ai-effort-star,
+:where([data-atlas-reduced-motion]) .ai-effort [data-slot="slider-thumb"] { animation: none !important; }

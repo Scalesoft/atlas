@@ -1,0 +1,9 @@
+{
+  "Vyberte úroveň sdílení: read (čte) nebo write (upravuje).": "Choose a sharing level: read or write.",
+  "Zadejte nový název nebo text.": "Enter a new name or text.",
+  "Poznámka nebyla nalezena.": "Note not found.",
+  "Položku vlastníte; sdílejte ji s někým jiným.": "You own the item; share it with someone else.",
+  "Sdílení položky spravuje jen její vlastník.": "Only its owner manages the sharing of an item.",
+  "Poznámka je vždy soukromá: založte ji s rozsahem private.": "A note is always private: create it with the private scope.",
+  "Název poznámky je povinný.": "The note title is required."
+}

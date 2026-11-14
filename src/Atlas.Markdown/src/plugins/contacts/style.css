@@ -1,0 +1,67 @@
+.md-contact-list{display:grid;gap:6px;padding:2px}.md-contact-card{display:flex;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line,#d8e7eb);border-radius:12px;background:var(--paper,#fff);color:var(--text,#12333a);box-shadow:0 1px 2px #113a4408}.md-contact-avatar{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--accent-soft,#e5f5f8);color:var(--accent-strong,#26758a);font-size:13px;font-weight:650;letter-spacing:.02em}.md-contact-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:var(--paper,#fff)}.md-contact-body{display:grid;gap:1px;min-width:0;flex:1}.md-contact-body strong{font-size:15px;line-height:1.4;font-weight:650}.md-contact-subtitle,.md-contact-status{color:var(--muted,#657b80);font-size:12px;line-height:1.5}.md-contact-details{display:flex;flex-wrap:wrap;gap:4px 14px;overflow-wrap:anywhere;white-space:pre-line;font-size:13px;line-height:1.5}.md-contact-details a{color:var(--accent-strong,#26758a);text-decoration:none}.md-contact-details a:hover{text-decoration:underline}.md-contact-details[hidden]{display:none}.md-contact-list button,.md-contact-inline button:not(.md-chip){font:inherit;color:inherit;cursor:pointer}.md-contact-download{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid var(--line,#d8e7eb);border-radius:7px;background:var(--paper,#fff);font-size:12px!important;font-weight:550!important;white-space:nowrap}.md-contact-download:hover,.md-contact-download-all:hover{background:var(--accent-soft,#e5f5f8)}.md-contact-download:focus-visible,.md-contact-download-all:focus-visible{outline:2px solid var(--accent,#4f9fb1);outline-offset:3px}.md-contact-download-all{justify-self:end;background:transparent;border:0;border-radius:6px;padding:6px 9px;font-size:12px!important;color:var(--accent-strong,#26758a)!important}.md-contact-inline{display:inline-flex;max-width:100%;vertical-align:middle}.md-contact-status:empty,.md-contact-subtitle:empty,.md-contact-details:empty{display:none}.md-contact-status{margin:4px 8px}.md-contact-manager-list{display:grid;gap:6px;max-height:300px;overflow-y:auto}.md-contact-manager-row{display:flex;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid var(--line,#d8e7eb)}.md-contact-manager-row>span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:550}.md-contact-manager-row button{flex-shrink:0}.md-contact-search{display:grid;gap:5px}.md-contact-directory .md-contact-status{margin:8px 0}.md-contact-manager>button{margin-top:12px}@media(max-width:520px){.md-contact-card{gap:10px;padding:12px;flex-wrap:wrap}.md-contact-card>.md-contact-download{margin-left:auto}.md-contact-search{flex-wrap:wrap}}
+/* A person in a sentence is the shared chip (chip.ts; chip.css owns its box, states and focus ring): the card is only its holder. */
+.md-contact-inline .md-contact-card { display: inline-flex; max-width: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.md-contact-inline .md-contact-avatar { width: 18px; height: 18px; flex-basis: 18px; font-family: var(--font-mono, monospace); font-size: 8px; font-weight: 700; }
+.md-contact-inline .md-contact-internal .md-contact-avatar { color: #fff; }
+/* Nobody picked yet: no user colour, so the initials sit on the unresolved state's muted ink (white on the accent tint was invisible). */
+.md-contact-inline [data-contact-kind=unresolved] .md-contact-avatar { background: var(--state-unresolved, #657b80); }
+/* Open: the chip keeps its hover look (its own token, so the unresolved state's dashed frame stays). */
+.md-contact-name.md-chip[aria-expanded=true] { --md-chip-bg: var(--md-chip-hover-bg); }
+.md-contact-reader { width: min(330px, calc(100vw - 24px)); }
+.md-contact-reader-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.md-contact-reader-profile > div { min-width: 0; overflow-wrap: anywhere; }
+.md-contact-reader-profile strong { font-size: 14px; }
+.md-contact-reader-profile p { margin: 4px 0 0; font-size: 12px; color: var(--text-dim, #49676e); line-height: 1.5; }
+.md-contact-reader-profile p:empty { display: none; }
+.md-contact-reader .md-contact-details { display: grid; gap: 7px; }
+.md-contact-reader .md-contact-download { margin-top: 16px; }
+.md-contact-list { container: contact-list / inline-size; min-width: 0; }
+.md-contact-body strong { overflow-wrap: anywhere; }
+.md-contact-list .md-contact-download > svg { display: none; flex-shrink: 0; }
+@container contact-list (max-width: 440px) {
+  .md-contact-card { display: grid; grid-template-columns: 36px minmax(0, 1fr) 44px; align-items: center; gap: 10px; padding: 10px; }
+  .md-contact-list .md-contact-download { width: 44px; height: 44px; padding: 0; justify-content: center; }
+  .md-contact-list .md-contact-download > svg { display: block; }
+  .md-contact-download-label { display: none; }
+}
+.md-contact-username-label { color: var(--muted, #657b80); }
+.md-contact-role, .md-contact-unavailable { color: var(--muted, #657b80); font-size: 12px; line-height: 1.4; }
+.md-contact-unavailable { font-style: italic; }
+.md-contact-inline .md-contact-unavailable { margin-left: 4px; }
+/* A contact in the trash or gone from the directory: dimmed, dashed, flat (as the board's missing card). */
+.md-contact-gone { border-style: dashed; background: transparent; box-shadow: none; color: var(--muted, #657b80); }
+.md-contact-gone .md-contact-name { --md-chip-ink: var(--muted, #657b80); }
+.md-contact-gone .md-contact-avatar { filter: grayscale(1); opacity: .6; }
+/* Live data that differs from the snapshot fades in (reduced motion shortens it through the token). */
+.md-contact-refreshed { animation: md-contact-fade var(--md-motion-base) var(--md-motion-ease); }
+@keyframes md-contact-fade { from { opacity: .4; } to { opacity: 1; } }
+/* A link failure is said quietly: in the text only to assistive technology and as the mention's tooltip. */
+.md-contact-inline .md-contact-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.md-contact-form-note { margin: 4px 0 0; color: var(--muted, #657b80); font-size: 12px; line-height: 1.5; }
+.md-contact-form-note a { color: var(--accent-strong, #26758a); }
+/* A writer's card opens its edit on click: say so on hover. */
+.md-contact-card[data-md-editable] { cursor: pointer; transition: border-color var(--md-motion-fast) var(--md-motion-ease), background-color var(--md-motion-fast) var(--md-motion-ease); }
+@media (hover: hover) and (pointer: fine) { .md-contact-card[data-md-editable]:hover { border-color: var(--accent, #4f9fb1); } }
+/* The most likely person of an unresolved chip stands out among the others (names.ts ranks them). */
+.md-chip-detail.md-contact-likely { color: var(--text, #102f36); font-weight: 600; }
+
+/* J2.6: a chip, a card link and the card's buttons are at least 44 px tall to tap; the chip keeps its look and grows its hit area only. */
+@media (pointer: coarse) {
+  .md-contact-name { position: relative; }
+  .md-contact-name::before { content: ''; position: absolute; inset: -12px -4px; }
+  .md-contact-details a, .md-contact-download { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+/* Reader card: the copy buttons beside a phone or an e-mail, and the places that use the contact. */
+.md-contact-copy { appearance: none; border: 0; background: transparent; padding: 2px 4px; margin-inline-start: 4px; border-radius: 6px; cursor: pointer; color: var(--text-dim, #6b6760); }
+.md-contact-copy:hover { color: var(--text, #2f2d29); background: var(--accent-soft, #e3f4f7); }
+.md-contact-used { display: grid; gap: 2px; margin-top: 10px; font-size: 12.5px; }
+.md-contact-used > strong { font-size: 12px; color: var(--text-dim, #49676e); }
+.md-contact-used > span { color: var(--text-dim, #6b6760); }
+.md-contact-row { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.md-contact-row > a { min-width: 0; overflow-wrap: anywhere; }
+@media (pointer: coarse) {
+  .md-contact-copy { min-width: 44px; height: 44px; box-sizing: border-box; display: inline-grid; place-items: center; }
+  .md-contact-reader .md-contact-download { min-height: 44px; box-sizing: border-box; }
+  .md-contact-used a { min-height: 44px; display: inline-flex; align-items: center; }
+}

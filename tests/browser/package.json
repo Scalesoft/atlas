@@ -1,0 +1,7 @@
+{
+  "name": "atlas-browser-tests",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "playwright test", "test:fake-ai": "node --test fake-ai/server.test.mjs" },
+  "devDependencies": { "@playwright/test": "1.64.1" }
+}

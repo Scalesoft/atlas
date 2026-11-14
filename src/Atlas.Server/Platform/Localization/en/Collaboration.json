@@ -1,0 +1,14 @@
+{
+  "Tato verze u stránky není.": "This version does not exist for the page.",
+  "První verzi stránky nejde vrátit; stránku můžete přesunout do koše.": "The first version of a page cannot be reverted; you can move the page to the trash.",
+  "Místo, které ta změna upravila, se od ní změnilo. Vraťte ji ručně, nebo obnovte celou verzi z historie.": "The place edited by that change has changed since. Revert it manually, or restore the whole version from the history.",
+  "Stránka není dostupná.": "The page is not available.",
+  "Společné změny se ještě ukládají.": "Shared changes are still being saved.",
+  "Stránku mezitím někdo obnovil nebo přesunul. Načtěte ji znovu a zkuste to znovu.": "Someone has restored or moved the page in the meantime. Load it again and retry.",
+  "Společná editace má novější stav. Obnovte připojení k dokumentu.": "Shared editing has a newer state. Refresh the connection to the document.",
+  "Stránku teď nikdo neupravuje.": "Nobody is editing the page right now.",
+  "Na stránce jsou neuložené živé úpravy jiných uživatelů. Počkejte, až je uloží, a zkuste to znovu.": "The page has unsaved live edits by other users. Wait until they save them and try again.",
+  "Na stránce jsou neuložené živé úpravy. Počkejte, až se uloží, a zkuste to znovu.": "The page has unsaved live edits. Wait until they are saved and try again.",
+  "Stránku mezitím upravil někdo jiný. Načtěte ji znovu a změnu zopakujte nad aktuálním obsahem.": "Someone else has edited the page in the meantime. Load it again and repeat the change over the current content.",
+  "Místo, které měníte, mezitím upravil někdo jiný. Načtěte stránku znovu a změnu zopakujte.": "Someone else has edited the place you are changing in the meantime. Load the page again and repeat the change."
+}

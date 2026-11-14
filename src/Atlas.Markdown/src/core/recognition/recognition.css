@@ -1,0 +1,7 @@
+/* What the linking engine knows by name in written text (core/recognition, loaded with the editor styles, styles/editor.css): a dotted underline that offers the link, never a change of layout. */
+.md-editor .md-recognition-candidate {
+  text-decoration: underline dotted color-mix(in srgb, var(--accent, #4f9fb1) 70%, transparent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

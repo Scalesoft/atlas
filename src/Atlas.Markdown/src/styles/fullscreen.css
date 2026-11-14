@@ -1,0 +1,154 @@
+/* V25 Phase 7 — fullscreen toggle */
+.md-editor .md-fullscreen-toggle {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: var(--control-h-sm, 32px); height: var(--control-h-sm, 32px);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-2, #edf5f6);
+  border: 1px solid var(--line, #d4e4e7);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-dim, #49676e);
+  cursor: pointer;
+  /* Keep the control discoverable on touch screens, which have no hover
+     state. It can stay quiet without becoming an invisible hit target. */
+  opacity: 0.55;
+  transition: opacity var(--md-motion-fast), color var(--md-motion-fast), border-color var(--md-motion-fast), background var(--md-motion-fast);
+  z-index: 6;
+  padding: 0;
+}
+.md-editor:hover .md-fullscreen-toggle,
+.md-editor .md-fullscreen-toggle:focus-visible {
+  opacity: 1;
+}
+.md-editor .md-fullscreen-toggle:hover {
+  color: var(--text, #102f36);
+  border-color: var(--accent-line, #9dcbd6);
+  background: var(--bg-3, #e2eef0);
+}
+.md-editor .md-fullscreen-toggle svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); }
+
+/* In fullscreen mode the user just took a deliberate step into a maximised
+   surface — they don't want a permanently-bright UI affordance staring at
+   them. Keep the exit toggle near-invisible at rest, ghost it in faintly
+   when the cursor enters the editor (broad target), and only fully reveal
+   it when the cursor reaches the corner. The transparent background +
+   borderless treatment in fullscreen also keeps the button from looking
+   like a chrome island. */
+.md-editor.is-fullscreen .md-fullscreen-toggle {
+  background: transparent;
+  border-color: transparent;
+  opacity: 0.35;
+}
+.md-editor.is-fullscreen:hover .md-fullscreen-toggle {
+  opacity: 0.55;
+}
+.md-editor.is-fullscreen .md-fullscreen-toggle:hover,
+.md-editor.is-fullscreen .md-fullscreen-toggle:focus-visible {
+  opacity: 1;
+  background: var(--bg-2, #edf5f6);
+  border-color: var(--line, #d4e4e7);
+}
+
+/* Paper-mode toggle nested into the footer alongside the word count. */
+.md-editor .paper-footer-fs {
+  margin-left: 8px;
+  width: var(--control-h-sm, 32px); height: var(--control-h-sm, 32px);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-dimmer, #71878c);
+  cursor: pointer;
+  border-radius: var(--radius-sm, 6px);
+  padding: 0;
+  transition: color var(--md-motion-fast), background var(--md-motion-fast);
+}
+.md-editor .paper-footer-fs:hover,
+.md-editor .paper-footer-fs:focus-visible {
+  color: var(--text, #102f36);
+  background: var(--bg-3, #e2eef0);
+  background: color-mix(in oklab, var(--text, #102f36) 6%, transparent);
+}
+.md-editor .paper-footer-fs svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); }
+
+.md-editor.is-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 1000);
+  border-radius: 0;
+  border: none;
+  background: var(--bg-1, var(--bg-2, #edf5f6));
+  box-shadow: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  /* The editor lives in a Vue Teleport when fullscreen — the wrapper sits
+     directly under <body>, so the scoped data-v- attribute selectors
+     resolve normally and the previously-noticed transformed-ancestor trap
+     no longer applies. */
+}
+/* Header bar — centred to match the content column so the label sits
+   directly above where the user is typing. Sticky so a long doc keeps the
+   anchor visible while scrolling. */
+.md-editor .md-fs-header {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-sizing: border-box;
+  /* Stay anchored so the title remains visible as the user scrolls a long
+     answer. The `--bg-1` background masks the editor body underneath. */
+  position: sticky;
+  top: 0;
+  background: var(--bg-1, var(--bg-2, #edf5f6));
+  z-index: 1;
+}
+.md-editor .md-fs-header-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text, #102f36);
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.md-editor .md-fs-header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.md-editor .md-fs-header-actions kbd {
+  padding: 2px 6px; border: 1px solid var(--line, #d4e4e7); border-radius: 4px;
+  background: var(--bg-2, #edf5f6); color: var(--text-dimmer, #71878c); font-size: 11px; line-height: 1.4;
+}
+@media (pointer: coarse) { .md-editor .md-fs-header-actions kbd { display: none; } }
+.md-editor.is-fullscreen .paper-inner {
+  flex: 1;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  /* Tighter top padding so content sits close to the header (when present)
+     instead of floating in a sea of whitespace. The header bar already
+     supplies the visual frame on top. */
+  padding: 12px 32px 56px;
+  box-sizing: border-box;
+}
+.md-editor.is-fullscreen:not(.paper) .editor-body {
+  font-size: 15px;
+  line-height: 1.7;
+}
+.md-editor.is-fullscreen .paper-footer {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+}
+
+body[data-editor-fullscreen] {
+  overflow: hidden;
+}
+
+@media (pointer: coarse) {
+  .md-editor .md-fullscreen-toggle,
+  .md-editor .paper-footer-fs { width: 40px; height: 40px; }
+}

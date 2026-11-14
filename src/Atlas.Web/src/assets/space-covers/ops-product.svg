@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220">
+<rect width="640" height="220" fill="#ffffff"/>
+<rect x="50" y="50" width="40" height="12" rx="6" fill="#5a5a5a"/>
+<rect x="98" y="52" width="80" height="8" rx="4" fill="#bdbdbd"/>
+<rect x="50" y="76" width="40" height="12" rx="6" fill="#9a9a9a"/>
+<rect x="98" y="78" width="64" height="8" rx="4" fill="#bdbdbd"/>
+<rect x="50" y="102" width="40" height="12" rx="6" fill="#bdbdbd"/>
+<rect x="98" y="104" width="72" height="8" rx="4" fill="#bdbdbd"/>
+<rect x="50" y="128" width="40" height="12" rx="6" fill="#e6e6e6"/>
+<rect x="98" y="130" width="50" height="8" rx="4" fill="#bdbdbd"/>
+<g transform="rotate(-8 270 68)"><rect x="240" y="40" width="60" height="56" rx="4" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/><rect x="250" y="54" width="36" height="6" rx="3" fill="#5a5a5a"/><rect x="250" y="66" width="28" height="5" rx="2.5" fill="#bdbdbd"/></g>
+<g transform="rotate(6 280 138)"><rect x="250" y="110" width="60" height="56" rx="4" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/><rect x="260" y="124" width="36" height="6" rx="3" fill="#9a9a9a"/><rect x="260" y="136" width="30" height="5" rx="2.5" fill="#bdbdbd"/></g>
+<path d="M420 40l70 30-70 30-70-30z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M350 70v74l70 30v-74z" fill="#ffffff" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M490 70v74l-70 30v-74z" fill="#bdbdbd" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M384 55l70 30" fill="none" stroke="#9a9a9a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M372 112l30 13" fill="none" stroke="#9a9a9a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="rotate(5 550 88)"><rect x="520" y="60" width="62" height="58" rx="4" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/><rect x="520" y="60" width="62" height="12" rx="0" fill="#5a5a5a"/><rect x="530" y="82" width="40" height="6" rx="3" fill="#bdbdbd"/><rect x="530" y="94" width="30" height="5" rx="2.5" fill="#bdbdbd"/></g>
+<path d="M540 150L543 157L550 160L543 163L540 170L537 163L530 160L537 157z" fill="#9a9a9a"/>
+</svg>

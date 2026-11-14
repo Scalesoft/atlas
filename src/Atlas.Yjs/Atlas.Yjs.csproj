@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- No ASP.NET or Atlas dependency: a plain library the Markdown sync builds on. -->
+    <IsPackable>false</IsPackable>
+    <Description>A faithful managed port of the parts of yjs, lib0 and y-prosemirror (@tiptap/y-tiptap) the Atlas server runs: lib0 v1 decoding and encoding, update merging, a document replica, local edits and the ProseMirror binding's writes.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Atlas.Markdown.Sync" />
+    <InternalsVisibleTo Include="Atlas.Markdown.Sync.Tests" />
+    <InternalsVisibleTo Include="Atlas.Yjs.Tests" />
+  </ItemGroup>
+</Project>

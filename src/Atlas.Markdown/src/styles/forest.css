@@ -1,0 +1,32 @@
+/* Optional calm Forest theme. Import it and add md-theme-forest to the editor. */
+.md-editor.md-theme-forest {
+  --bg-1: #fbfdf9;
+  --bg-2: #edf3e9;
+  --bg-3: #e0eadb;
+  --paper: #fdfef9;
+  --paper-line: #d4dfcf;
+  --paper-shadow: 0 20px 60px rgba(35, 65, 38, 0.09), 0 2px 8px rgba(35, 65, 38, 0.05);
+  --text: #1f3929;
+  --text-dim: #526c5a;
+  --text-dimmer: #76897a;
+  --line: #d3dfd0;
+  --line-2: #b9cdb7;
+  --accent: #4d8b64;
+  --accent-ink: #245338;
+  --accent-line: #91b79b;
+  --accent-soft: #e0f0e2;
+  --green: #287551;
+  --amber: #a26d1b;
+  --red: #b3464d;
+  --chip-accent-fg: #245c3c;
+  --chip-green-fg: #246446;
+  --chip-amber-fg: #87540f;
+  --chip-red-fg: #9d333d;
+  --font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --shadow-1: 0 1px 2px rgba(31, 57, 41, 0.07);
+  --shadow-2: 0 12px 32px rgba(31, 57, 41, 0.13);
+  --z-sticky: 100;
+  --z-modal: 1000;
+  color-scheme: light;
+}

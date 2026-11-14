@@ -1,0 +1,50 @@
+/*
+ * The state tokens of every interactive element (docs/interaction-rules.md P12): one name per state for the page editor, boards and
+ * the application. Atlas loads this file globally (`@atlas/markdown/styles/states.css` in main.ts), the editor through editor.css.
+ * The values are the ones each surface already used, so nothing is restyled; a new component takes the token, not its own colour.
+ *
+ *   hover       --state-hover-bg          rows, menu items, a chip under the pointer (the shell's --hover, the editor's --accent-soft)
+ *   selected    --state-selected          outline of a selected component (.md-component-selected, .ProseMirror-selectednode chip, board .is-selected)
+ *   editing     --state-editing           the element being edited in place (same accent as selected; a field inside shows the focus ring)
+ *   focus       --state-focus-ring        :focus-visible, the host's --focus-ring (one look for buttons, rows and text fields, a query wrapper takes it on :focus-within; D6)
+ *   active row  --state-active-row-bg/-mark  the row Enter takes while a search has the focus (P8): hover tint + a 2 px bar, so it differs from a row merely under the pointer
+ *   error       --state-error             an invalid value under its field, a refused save
+ *   unresolved  --state-unresolved        the dashed muted frame and ink of a not yet decided chip („nejspíš X · nebo Y“)
+ *   touch       --touch-target            D5: the least hit area of a control on a coarse pointer (an invisible pseudo-element, below)
+ *
+ * The tokens are declared where they are used too (a block tints its own --accent on a board; the chip and the selected outline
+ * resolve the accent of their own element, as before), so `var(--accent)` here always means the accent of the element drawn.
+ */
+:where(:root, .atlas, .md-editor, .md-context-popover, .md-suggestion-popup, .md-picker, .md-module-dialog, .md-chip, .md-component-selected, .board-node) {
+  --state-hover-bg: var(--hover, var(--accent-soft, #e3f4f7));
+  --state-selected: var(--accent, #58a9b9);
+  --state-selected-outline: 2px solid var(--state-selected);
+  --state-editing: var(--state-selected);
+  --state-focus-ring: var(--focus-ring, 2px solid var(--accent, #58a9b9));
+  --state-focus-offset: var(--focus-offset, 2px);
+  --state-active-row-bg: var(--state-hover-bg);
+  --state-active-row-mark: inset 2px 0 0 var(--accent, #58a9b9);
+  --state-error: var(--error, var(--danger, var(--red, #b83e46)));
+  --state-unresolved: var(--muted, var(--text-dim, #657b80));
+  --state-unresolved-border: 1px dashed var(--state-unresolved);
+  --touch-target: 44px;
+}
+
+/*
+ * D5: on a touch screen a small control of the editor takes at least --touch-target as an invisible hit area centred on it; its visible
+ * box and the mouse stay as they are. ::after, because a chip's ::before may draw its icon (a requirement's mask icon, rq-i).
+ * The area never covers another target's visible box: a chip in text grows to 44 px across but only to its line box up and down (the
+ * lines above and below keep their own chips and links); the block grip and its „+“ share one column, so the grip's area grows up and
+ * the „+“'s down, both toward the gutter only, and they meet in the 2 px gap between them (the text beside stays a caret tap).
+ */
+@media (pointer: coarse) {
+  /* The connection dot (22 px) and a history line's stamp (18 px, a click edits it) too (F6). */
+  :is(.md-chip, .dh-grip, .dh-add, .md-link-dot-button, .tt-timed-date) { position: relative; }
+  :is(.md-chip, .dh-grip, .dh-add, .md-link-dot-button, .tt-timed-date)::after {
+    content: ""; position: absolute; top: 50%; left: 50%; width: max(100%, var(--touch-target, 44px)); height: max(100%, var(--touch-target, 44px)); translate: -50% -50%;
+  }
+  .md-chip::after { height: max(100%, 1lh); }
+  :is(.dh-grip, .dh-add)::after { left: auto; right: 0; translate: none; }
+  .dh-grip::after { top: auto; bottom: -1px; }
+  .dh-add::after { top: -1px; }
+}

@@ -1,0 +1,812 @@
+[
+  {
+    "name": "contacts",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Vlastník "
+              },
+              {
+                "type": "contactInline",
+                "attrs": {
+                  "data": {
+                    "version": 1,
+                    "contacts": [
+                      {
+                        "name": "Jan Novák",
+                        "phones": [
+                          "+420 777 123 456"
+                        ],
+                        "emails": [
+                          "jan@example.com"
+                        ],
+                        "objectId": "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "text",
+                "text": " a "
+              },
+              {
+                "type": "contactInline",
+                "attrs": {
+                  "data": {
+                    "version": 1,
+                    "contacts": [
+                      {
+                        "name": "# Eva *Malá*",
+                        "kind": "internal",
+                        "internalUser": {
+                          "id": "u-42",
+                          "name": "Eva Malá"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          },
+          {
+            "type": "contactCard",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "contacts": [
+                  {
+                    "name": "Petr Dvořák",
+                    "title": "Správce sítě",
+                    "organization": "Modelsoft",
+                    "department": "Provoz",
+                    "username": "pdvorak",
+                    "phones": [
+                      "+420 777 000 111",
+                      "+420 777 000 111",
+                      "(555) 123-4567"
+                    ],
+                    "emails": [
+                      "petr@example.com"
+                    ],
+                    "website": "https://example.com/petr",
+                    "address": "Brno, Česko"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "contactCard",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "contacts": [
+                  {
+                    "name": "Služba [helpdesk]",
+                    "emails": [
+                      "help@example.com"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "contacts",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "Vlastník [Jan Novák](a-contact:?name=Jan%20Novák&phone=+420%20777%20123%20456&email=jan@example.com&objectId=0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b) a [# Eva *Malá*](a-contact:?name=%23%20Eva%20*Malá*&kind=internal&internalUser.id=u-42&internalUser.name=Eva%20Malá).\n\n```a-contact\n- name: Petr Dvořák\n  title: Správce sítě\n  organization: Modelsoft\n  department: Provoz\n  username: pdvorak\n  phones: [\"+420 777 000 111\", (555) 123-4567]\n  emails: [petr@example.com]\n  website: https://example.com/petr\n  address: Brno, Česko\n```\n\n```a-contact\n- name: Služba [helpdesk]\n  emails: [help@example.com]\n```"
+  },
+  {
+    "name": "references",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Viz "
+              },
+              {
+                "type": "pageReference",
+                "attrs": {
+                  "id": "5e940f4d-55c2-4527-addd-10f1d68d742c",
+                  "title": "Provoz (staré) [x]",
+                  "url": "#/pages/5e940f4d-55c2-4527-addd-10f1d68d742c"
+                }
+              },
+              {
+                "type": "text",
+                "text": ", úkol "
+              },
+              {
+                "type": "youtrackIssue",
+                "attrs": {
+                  "id": "2-12",
+                  "key": "ABC-12",
+                  "title": "Opravit *přihlášení*",
+                  "url": "https://youtrack.example.com/issue/ABC-12",
+                  "state": "Open"
+                }
+              },
+              {
+                "type": "text",
+                "text": " a "
+              },
+              {
+                "type": "youtrackIssue",
+                "attrs": {
+                  "id": "2-13",
+                  "key": "ABC-13",
+                  "title": "Bez stavu",
+                  "url": "https://youtrack.example.com/issue/ABC-13(1)",
+                  "state": null
+                }
+              },
+              {
+                "type": "text",
+                "text": " "
+              },
+              {
+                "type": "emoji",
+                "attrs": {
+                  "name": "rocket"
+                }
+              },
+              {
+                "type": "emoji",
+                "attrs": {
+                  "name": "+1"
+                }
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Heslo k VPN "
+              },
+              {
+                "type": "secretInlineReference",
+                "attrs": {
+                  "secretId": "d847b3af-4a87-4e97-aab8-a74a4cf48c89",
+                  "field": "password"
+                }
+              },
+              {
+                "type": "text",
+                "text": ", uživatel "
+              },
+              {
+                "type": "secretInlineReference",
+                "attrs": {
+                  "secretId": "d847b3af-4a87-4e97-aab8-a74a4cf48c89",
+                  "field": "username",
+                  "showCopy": false,
+                  "autoHideSeconds": null
+                }
+              }
+            ]
+          },
+          {
+            "type": "secretReference",
+            "attrs": {
+              "secretId": "d847b3af-4a87-4e97-aab8-a74a4cf48c89",
+              "fields": [
+                "password",
+                "username"
+              ],
+              "showDetails": true,
+              "autoHideSeconds": 120
+            }
+          },
+          {
+            "type": "secretReference",
+            "attrs": {
+              "secretId": "d847b3af-4a87-4e97-aab8-a74a4cf48c89",
+              "fields": [
+                "url"
+              ]
+            }
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "emoji",
+          "version": 1
+        },
+        {
+          "id": "pages",
+          "version": 1
+        },
+        {
+          "id": "secrets",
+          "version": 4
+        },
+        {
+          "id": "youtrack",
+          "version": 1
+        }
+      ]
+    },
+    "markdown": "Viz [Provoz (staré) \\[x\\]](#/pages/5e940f4d-55c2-4527-addd-10f1d68d742c), úkol [ABC-12: Opravit \\*přihlášení\\* · Open](https://youtrack.example.com/issue/ABC-12) a [ABC-13: Bez stavu](https://youtrack.example.com/issue/ABC-13\\(1\\)) \uD83D\uDE80\uD83D\uDC4D\n\nHeslo k VPN :secret{secretId=d847b3af-4a87-4e97-aab8-a74a4cf48c89}, uživatel :secret{secretId=d847b3af-4a87-4e97-aab8-a74a4cf48c89 field=username showCopy=false autoHideSeconds=null}\n\n::secret{secretId=d847b3af-4a87-4e97-aab8-a74a4cf48c89 fields=\"password username\" showDetails=true autoHideSeconds=120}\n\n::secret{secretId=d847b3af-4a87-4e97-aab8-a74a4cf48c89 fields=url}"
+  },
+  {
+    "name": "modules",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "chart",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "title": "Tržby *2026*",
+                "kind": "bar",
+                "grid": [
+                  [
+                    "Měsíc",
+                    "Tržby",
+                    "Náklady"
+                  ],
+                  [
+                    "Leden",
+                    "12",
+                    "1 234,5"
+                  ],
+                  [
+                    "Únor",
+                    "18",
+                    "-3"
+                  ]
+                ],
+                "source": null,
+                "sourceStatus": null
+              }
+            }
+          },
+          {
+            "type": "attachment",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "name": "smlouva.pdf",
+                "url": "/api/attachments/0b6b1c38-6b8c-4d9f-9d1e-1b2c3d4e5f60/download",
+                "size": 1536,
+                "mimeType": "application/pdf",
+                "description": "Podepsaná verze"
+              }
+            }
+          },
+          {
+            "type": "attachment",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "name": "velký.zip",
+                "url": "/api/attachments/6a1c0c38-6b8c-4d9f-9d1e-1b2c3d4e5f61/download",
+                "size": 1072693248
+              }
+            }
+          },
+          {
+            "type": "attachment",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "name": "malý.txt",
+                "url": "",
+                "size": 10
+              }
+            }
+          },
+          {
+            "type": "openapi",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "filename": "petstore.yaml",
+                "source": "openapi: 3.1.0\ninfo:\n  title: Petstore\n  version: '2.1'\n  contact:\n    name: API tým\npaths:\n  /pets:\n    get:\n      responses:\n        '200':\n          description: ok\n    POST:\n      responses: {}\n  /pets/{id}:\n    delete:\n      responses: {}\n    parameters: []\ncomponents:\n  schemas:\n    Pet:\n      type: object\n    Error:\n      type: object\n"
+              }
+            }
+          },
+          {
+            "type": "openapi",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "filename": "openapi.json",
+                "uploadedBy": "Eva Malá",
+                "source": "{\"openapi\": \"3.0.3\", \"info\": {\"title\": \"Prázdné API\", \"version\": \"1.0\"}, \"paths\": {}}"
+              }
+            }
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "attachments",
+          "version": 1
+        },
+        {
+          "id": "charts",
+          "version": 1
+        },
+        {
+          "id": "openapi",
+          "version": 1
+        }
+      ]
+    },
+    "markdown": "```a-chart\ntitle: Tržby *2026*\n---\n| Měsíc | Tržby | Náklady |\n| --- | --- | --- |\n| Leden | 12 | 1 234,5 |\n| Únor | 18 | -3 |\n```\n\nsmlouva.pdf · 1,5 KiB · Podepsaná verze · /api/attachments/0b6b1c38-6b8c-4d9f-9d1e-1b2c3d4e5f60/download\n\nvelký.zip · 1\u00A0023 MiB · /api/attachments/6a1c0c38-6b8c-4d9f-9d1e-1b2c3d4e5f61/download\n\nmalý.txt · 10 B\n\nPetstore · v2.1 · petstore.yaml\n\nPrázdné API · v1.0 · openapi.json"
+  },
+  {
+    "name": "dialect",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "table",
+            "attrs": {
+              "chartRef": "tabulka-trzby"
+            },
+            "content": [
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "chartRef": "h0"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Pobočka"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "chartRef": "h1"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Období"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "attrs": {
+                      "chartRef": "h2"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Tržby"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "chartRef": "a0"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Brno"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "chartRef": "a1"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Leden"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "chartRef": "a2"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "12,5"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "chartRef": "b0"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Praha"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "chartRef": "b1"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Únor"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "attrs": {
+                      "chartRef": "b2"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "18"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "chart",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "title": "Tržby 2026",
+                "kind": "line",
+                "grid": [
+                  [
+                    "Období",
+                    "Tržby"
+                  ],
+                  [
+                    "Leden",
+                    "12,5"
+                  ],
+                  [
+                    "Únor",
+                    "18"
+                  ]
+                ],
+                "source": {
+                  "tableId": "tabulka-trzby",
+                  "cells": [
+                    [
+                      "h1",
+                      "h2"
+                    ],
+                    [
+                      "a1",
+                      "a2"
+                    ],
+                    [
+                      "b1",
+                      "b2"
+                    ]
+                  ]
+                },
+                "sourceStatus": "linked"
+              }
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "{#tabulka-trzby}"
+              }
+            ]
+          },
+          {
+            "type": "chart",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "title": "Bez tabulky",
+                "kind": "pie",
+                "grid": [
+                  [
+                    "A",
+                    "B"
+                  ],
+                  [
+                    "x",
+                    "1"
+                  ]
+                ],
+                "source": {
+                  "tableId": "nikde",
+                  "cells": [
+                    [
+                      "n0",
+                      "n1"
+                    ],
+                    [
+                      "n2",
+                      "n3"
+                    ]
+                  ]
+                },
+                "sourceStatus": "missing"
+              }
+            }
+          },
+          {
+            "type": "chart",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "title": "",
+                "kind": "bar",
+                "grid": [
+                  [
+                    "Kategorie",
+                    "A|B"
+                  ],
+                  [
+                    "C:\\data\\n",
+                    "1"
+                  ],
+                  [
+                    "dva\nřádky",
+                    ""
+                  ]
+                ],
+                "source": null,
+                "sourceStatus": null
+              }
+            }
+          },
+          {
+            "type": "contactCard",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "contacts": [
+                  {
+                    "name": "2026",
+                    "title": "true",
+                    "phones": [
+                      "+420777123456"
+                    ],
+                    "address": "Náměstí 1\nBrno",
+                    "kind": "external",
+                    "directoryId": "007"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "codeBlock",
+            "attrs": {
+              "language": "a-chart"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "title: x\n---"
+              }
+            ]
+          },
+          {
+            "type": "paragraph"
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "charts",
+          "version": 1
+        },
+        {
+          "id": "contacts",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "| Pobočka | Období | Tržby |\n| --- | --- | --- |\n| Brno | Leden | 12,5 |\n| Praha | Únor | 18 |\n\n{#tabulka-trzby}\n\n```a-chart\ntitle: Tržby 2026\nkind: line\nsource:\n  table: tabulka-trzby\n  rows: 1-3\n  columns: 2-3\n---\n| Období | Tržby |\n| --- | --- |\n| Leden | 12,5 |\n| Únor | 18 |\n```\n\n\\{#tabulka-trzby}\n\nBez tabulky\nA · B\nx · 1\n\n```a-chart\n---\n| Kategorie | A\\|B |\n| --- | --- |\n| C:\\\\data\\\\n | 1 |\n| dva\\nřádky |  |\n```\n\n```a-contact\n- name: \"2026\"\n  title: \"true\"\n  phones: [\"+420777123456\"]\n  address: |-\n    Náměstí 1\n    Brno\n  kind: external\n  directoryId: \"007\"\n```\n\n```a-code a-chart\ntitle: x\n---\n```"
+  },
+  {
+    "name": "concealed",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Před"
+              }
+            ]
+          },
+          {
+            "type": "concealedContent",
+            "attrs": {
+              "reveal": "button"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Skrytý "
+                  },
+                  {
+                    "type": "text",
+                    "text": "text",
+                    "marks": [
+                      {
+                        "type": "bold"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "attrs": {
+                  "tight": true
+                },
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "bod"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Po"
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "concealed",
+          "version": 2
+        }
+      ]
+    },
+    "markdown": "Před\n\nSkrytý **text**\n\n- bod\n\nPo"
+  }
+]

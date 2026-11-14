@@ -1,0 +1,4 @@
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"mathBlock","attrs":{"data":{"version":1,"expression":"E = mc^2"}}},{"type":"paragraph","attrs":{"textAlign":null}}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"mathBlock","attrs":{"data":{"version":1,"expression":"E = mc^2 edited"}}},{"type":"paragraph","attrs":{"textAlign":null}}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"paragraph","attrs":{"textAlign":null}}]}

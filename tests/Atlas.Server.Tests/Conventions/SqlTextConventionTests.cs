@@ -1,0 +1,495 @@
+using System.Reflection;
+using System.Text.RegularExpressions;
+using Atlas.Server.Tests.Platform;
+using Xunit;
+
+namespace Atlas.Server.Tests.Conventions;
+
+/// <summary>
+/// docs/architecture.md (Konvence kódu): native SQL is the exception, and each place that writes it belongs to a category. This test
+/// reads the IL of the server assembly for every call of CreateSQLQuery, ReadRowsAsync, the Npgsql command types and CreateCommand of a
+/// connection (session.Connection.CreateCommand() too) and allows one
+/// only in the methods listed below, each with its category. The list is exact both ways: a new method fails, and so does a listed
+/// one that no longer writes native SQL. A new entry names the category it belongs to; a method that fits none is written with
+/// QueryOver or LINQ instead.
+/// What it cannot see: SQL in the embedded files of the migrations, and a call made through a delegate or another wrapper.
+/// </summary>
+[Trait("Category", "Guard")]
+public sealed class SqlTextConventionTests
+{
+    /// <summary>The categories of docs/architecture.md, plus the one the document lacks: a read that bypasses NHibernate and its flush.</summary>
+    private enum Kind
+    {
+        /// <summary>2: advisory and row locks, transaction variables.</summary>
+        Lock,
+        /// <summary>3: code without an NHibernate session.</summary>
+        OutsideOrm,
+        /// <summary>4: an atomic or set-based write in one statement.</summary>
+        AtomicWrite,
+        /// <summary>5: an authorized or performance-critical read projection.</summary>
+        ReadProjection,
+        /// <summary>SessionExtensions.ReadRowsAsync: nothing is flushed first, so only a read that needs no pending change of the session.</summary>
+        ReadRows,
+    }
+
+    [Fact]
+    public void Native_SQL_is_written_only_where_the_list_says()
+    {
+        var found = ServerIl.Calls.Where(call => IsNativeSql(call.Callee))
+            .Select(call => call.Site).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+
+        var problems = found.Where(site => !Allowed.ContainsKey(site))
+            .Select(site => $"{site}: writes native SQL. Use QueryOver or LINQ, or list the method here with its category (docs/architecture.md).")
+            .Concat(Allowed.Keys.Except(found, StringComparer.Ordinal).Select(site => $"{site}: listed, but writes no native SQL any more."))
+            .ToArray();
+        Assert.True(problems.Length == 0, string.Join("\n", problems));
+        // The scan sees the places where native SQL belongs, so finding none elsewhere is not a scan that sees nothing.
+        Assert.Contains("Atlas.Server.Platform.Persistence.AtlasLocks", found.Select(site => site[..site.LastIndexOf('.')]));
+    }
+
+    /// <summary>
+    /// Since 2026110930 what a row of these tables brings along (envelope, tree history and token, metadata history, contribution, live
+    /// notification) is written by ContentRowEffects when NHibernate writes the entity; bare SQL bypasses it. So a file of the server that
+    /// writes one of them in SQL text is listed here with what it writes and why nothing more is needed (or that it writes it itself).
+    /// Exact both ways, per file; the embedded migration scripts are not C# and not scanned.
+    /// </summary>
+    private static readonly Dictionary<string, string> BareRowWriters = new(StringComparer.Ordinal)
+    {
+        ["Features/Boards/BoardContent.cs"] = "trash, restore and move of a page subtree's boards: envelope and tree token in the same statement",
+        ["Features/TreeReferences/TreeReferenceContent.cs"] = "trash, restore, purge and move of a subtree's nodes: tree token in the same statement",
+        ["Features/Boards/Domain/BoardPurge.cs"] = "deletes boards and their envelopes in one statement",
+        ["Platform/Objects/ObjectPurge.cs"] = "deletes the nodes pointing at purged objects and moves their spaces' tree token",
+        ["Features/PageOrganization/Domain/PagePurge.cs"] = "PurgedAt of a page and its emptied revisions: no column anything derives from",
+        ["Features/Contacts/Commands/ContactCommands.cs"] = "a merged contact's nodes point at the survivor (TargetId): not a tree column",
+        ["Features/PageHistory/Commands/NameVersionHandler.cs"] = "the label of an immutable revision: nothing derives from it",
+        ["Features/Contacts/ContactLinkMigration.cs"] = "rewrites a revision's ContentJson in place: no insert, nothing derived here",
+        ["Features/Pages/Domain/RequirementPageConversion.cs"] = "rewrites a revision's ContentJson in place: no insert, nothing derived here",
+        ["Features/Backups/Installation/InstallationModules.cs"] = "the restore's touches of unchanged columns and version groups of an old dump; the "
+            + "restored tables carry the derived rows",
+    };
+
+    private static readonly Regex BareRowWrite = new("""(INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+\\?"(Page|PageRevision|Board|TreeReference|Space)\\?"[\s(]""",
+        RegexOptions.IgnoreCase);
+
+    [Fact]
+    public void Rows_of_pages_boards_tree_nodes_and_spaces_are_written_in_SQL_only_where_the_list_says()
+    {
+        var root = Path.Combine(RepositoryRoot(), "src", "Atlas.Server");
+        var writers = Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
+                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            .Where(path => BareRowWrite.IsMatch(File.ReadAllText(path)))
+            .Select(path => Path.GetRelativePath(root, path).Replace(Path.DirectorySeparatorChar, '/')).ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("Features/Boards/BoardContent.cs", writers);
+
+        var problems = writers.Where(name => !BareRowWriters.ContainsKey(name))
+            .Select(name => $"{name}: writes Page, PageRevision, Board, TreeReference or Space in SQL. Write the entity (ContentRowEffects) or list it here with its reason.")
+            .Concat(BareRowWriters.Keys.Where(name => !writers.Contains(name)).Select(name => $"{name}: listed, but writes none of them in SQL any more."))
+            .ToArray();
+        Assert.True(problems.Length == 0, string.Join("\n", problems));
+    }
+
+    private static string RepositoryRoot([System.Runtime.CompilerServices.CallerFilePath] string path = "")
+        => Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(path))))!;
+
+    // CreateCommand of System.Data covers session.Connection.CreateCommand(), the driver command NHibernate hands out (a DbConnection).
+    private static bool IsNativeSql(MethodBase callee) => callee.Name is "CreateSQLQuery" or "ReadRowsAsync"
+        || callee.Name == "CreateCommand" && callee.DeclaringType is { Namespace: "Npgsql" or "System.Data" or "System.Data.Common" }
+        || callee.DeclaringType is { Namespace: "Npgsql" } && callee.IsConstructor && callee.DeclaringType.Name is "NpgsqlCommand" or "NpgsqlBatch";
+
+    /// <summary>
+    /// The methods that write native SQL as of 2026-10-30. The category is chosen by what the method's own native statements do, not by
+    /// its name: a statement that inserts, updates or deletes is AtomicWrite, FOR UPDATE/SHARE and advisory locks are Lock, a query
+    /// setting (set_config, SET LOCAL) is Lock, ANALYZE and code without a session is OutsideOrm, and ReadProjection and ReadRows are for SELECT only.
+    /// A method whose native SQL is a SELECT (BoardPagePurge.PurgeAsync, HubMigrationHandler.SaveObservationAsync) stays a read even
+    /// though the rest of it writes through the ORM.
+    /// </summary>
+    private static readonly Dictionary<string, Kind> Allowed = new(StringComparer.Ordinal)
+    {
+        ["Atlas.Server.Features.Access.Commands.RevokeAllAccessHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Access.Domain.AutomaticAccessRows.WikiAdminsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Access.Domain.RevokeAllRows.CloseLocalMembershipsAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Access.Domain.RevokeAllRows.ImpactAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AccessAudit.Queries.GetActivitySummaryHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Administration.Commands.SetSpaceGrantHandler.RequirePermanentAdminAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Administration.SpaceAccessKind.ForResourceAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Administration.Domain.GroupHistory.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Ai.Access.AiAccessAdministrationHandler.GroupViewAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Ai.Access.AiPolicyResolver.ResolveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Ai.Settings.Queries.GetAiOverviewHandler.UsageAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Ai.Settings.SavedProfiles.SavedProfileStore.RequireNameAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Ai.Usage.Commands.RecordAiUsageHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexTasks.EnqueuePageAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexTasks.EnqueueSpaceAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Contacts.PageObjectMentionRebuildJob.RunAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.PageObjectMentions.MentionedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.PageObjectMentions.RefreshAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Contacts.PageObjectMentions.RefreshStaleAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkProjection.RefreshAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageLinks.PageLinkRebuildJob.RunAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.ActivateAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.CancelAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.ClaimAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.CompletenessAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.DeleteTaskAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.EnqueueInconsistentAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.GenerationQuery"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.IndexedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.InsertOwnNeighborsAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.LockNeighborsAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.AiIndex.IndexStore.LockPageAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.AiIndex.IndexStore.LockTaskAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.AiIndex.IndexStore.MissingAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.NearestPagesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.NeighborRefreshesDueAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.NextDueAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.PagesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.PurgeBatchAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.QueueAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.RefreshGenerationNeighborsAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.RefreshNeighborsAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.ReleaseAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.ReleaseLeaseAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.RemoveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.ReusableAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.SampleTitlesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.StartAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiIndex.IndexStore.StatsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiIndex.IndexStore.WriteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.LinkCandidatesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.LinkCandidatesSemanticAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.MayCreateBelowPageAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.PlacementAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.PrepareAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.RankByContextAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.SpaceInAiAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AiSuggestions.SemanticSuggestionSql.TemplateAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.ApiActivity.Commands.RecordApiActivityHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.AppLogs.AppLogQueryHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.AppLogs.AppLogQueryHandler.SummaryAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Feedback.AiFeedbackStore.GetAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Feedback.AiFeedbackStore.OwnedAnswerAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Feedback.AiFeedbackStore.SaveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.AiProposalStore.InsertAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.AiProposalStore.MoveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.AiProposalStore.Query"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.AiProposalStore.SupersedeAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.CancelStaleAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.CompleteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.ConversationQuery"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.DailyCountAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.DeleteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.DependenciesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.HasPreparingAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.HistoryAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.InsertConversationAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.InsertDependenciesAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.InsertMessageAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.InsertTurnAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.ListOwnedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.LockAllOwnedAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.LockExpiredAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.MessageAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.MessagesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.NextOrdinalAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.RepinProfileAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Persistence.ConversationStore.SetListedAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.ChunkTextsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.CurrentSpacesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.DescribeAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.PublishedRevisionsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.SourcesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.StatusAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Assistant.Sources.AnswerSourceSql.SummarySourcesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Auth.Commands.MarkReleaseNotesSeenHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Auth.Commands.SaveAiPreferencesHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Auth.Developer.Queries.FindDeveloperAccountHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Auth.OpenIdConnect.OidcEndpoints.MapOpenIdConnect"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Auth.Queries.CurrentAiPreference.LoadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Auth.Queries.GetCurrentUserHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Archive.WikiBackupArchive.ContentTokenAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Archive.WikiBackupArchive.CreateAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Archive.WikiBackupArchive.RequireContentBudgetAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.BackupRunLock.DisposeAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Features.Backups.BackupRunLock.TryAcquireAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Features.Backups.Commands.AuthorizeBackupDestinationHandler.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Git.GitBackupService.SnapshotAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Backups.Installation.AccountNamesPart.ExportAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.AccountNamesPart.RestoreAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Installation.AttachmentBlobsPart.ExportAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.InstallationExport.ContentTokenAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.InstallationExport.WriteAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.InstallationExport.WatermarkAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.InstallationRestore.ClearAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Installation.InstallationRestore.IsEmptyAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.InstallationRestore.RestoreTablesAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Installation.InstallationRestore.ValidateAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.TableBackup.ChangeStampAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.TableBackup.ExportRowsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.TableBackup.InsertAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Installation.TableBackup.RebuildAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Installation.TableBackup.RestoreRowsAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Backups.Installation.TableSchema.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Backups.Installation.VaultFilesPart.ExportAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.BoardContent.ListAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.BoardContent.ResolveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.BoardContent.SearchAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.BoardContent.UnderAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Boards.BoardObjectType.ProjectAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.Commands.BoardBatchWriter.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Boards.Commands.BoardBatchWriter.RequireBudgetAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.Domain.BoardAccess.ReadSharedAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Boards.Domain.BoardPagePurge.PurgeAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.Domain.BoardPurge.DeleteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Boards.Domain.BoardSearch.RefreshAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Boards.Queries.GetBoardOperationsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Boards.Queries.ListBoardsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Collaboration.Commands.LiveWriteCommandsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Collaboration.Domain.CollaborationCheckpoints.ResetAllAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Collaboration.Domain.CollaborationSecretReferences.ClearAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Collaboration.Domain.CollaborationSecretReferences.OfAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Collaboration.Domain.CollaborationSecretReferences.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Comments.CommentSearch.SearchAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Comments.Persistence.CommentWrites.DeriveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Comments.Queries.CommentReads.CountAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Comments.Queries.CommentReads.PageAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Comments.Queries.GetCommentCountsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.AccountContacts.CreateOwnAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.AccountContacts.SweepAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.Commands.AccountContactSuggestionsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.Commands.ResolveAccountContactHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Contacts.Commands.ContactDuplicatesHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.Commands.MergeContactsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.ContactLinkMigration.LinkBatchAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Contacts.ContactLinkMigration.RevisionsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.LinkRun.ContactLinkRuns.SaveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Contacts.Persistence.ContactDirectory.CandidatesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Contacts.Persistence.ContactDuplicates.RefuseAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.ContentExport.Queries.BuildContentExportHandler.ReadableLinksAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.ContentExport.Queries.RevalidateContentExportHandler.RequireFinalAuthorityAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Entities.EntityCatalog.RefreshAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Entities.Commands.AnnounceCatalogRebuildHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Entities.Queries.ListEntitiesHandler.Handle"] = Kind.ReadRows,
+        ["Atlas.Server.Features.ExternalSharing.Queries.OpenSharedPageHandler.SharedPagesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.ExternalSharing.ShareLinkReader.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Domain.HubHistory.BindingAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Hub.Domain.HubHistory.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Hub.Commands.HubConfigurationHandler.ValidateCommitAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Migration.HubMigrationHandler.ApplyPageBoundaryAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Hub.Migration.HubMigrationHandler.CloseGrantAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Hub.Migration.HubMigrationHandler.ReplaceMembershipAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Hub.Migration.HubMigrationHandler.SaveObservationAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Migration.HubMigrationSnapshot.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Persistence.HubReads.NowAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Persistence.HubSettingsReader.BindingVersionAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Persistence.HubSettingsReader.HealthAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Persistence.HubSettingsReader.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Hub.Queries.HubSettingsQueriesHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Jobs.Queries.JobQueryHandler.Sql"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.Commands.RecordAiInteractionHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.KnowledgeMaintenance.DismissDuplicatePagesHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.DuplicatePageStore.DismissAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.KnowledgeMaintenance.DuplicatePageStore.ListAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.GetAiQualityReportHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.GetAiUsageReportHandler.DaysAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.GetAiUsageReportHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.GetAiUsageReportHandler.ProvidersAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.KnowledgeMaintenance.Queries.ContentValidationStore.ValidateAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Linking.Lexicon.Queries.SpaceLexiconHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Mcp.Domain.McpPagePaths.DescribeAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Mcp.McpVisibility.ExcludedSpacesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Mcp.McpVisibility.PagesInScopeAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Mcp.McpVisibility.RequireSpaceAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Mcp.Queries.GetMcpPageStatesHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.ModuleSettings.OidcRuntimeLoader.LoadAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Features.ModuleSettings.Queries.OidcSettingsReader.ToViewAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Notifications.Commands.MarkNotificationsReadHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Notifications.Commands.SetNotificationPreferenceHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Notifications.NotificationReads.PageAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Notifications.NotificationReads.UnreadAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Notifications.NotificationRequestedHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Notifications.PageMentionNoticesHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Notifications.Queries.GetNotificationPreferencesHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Objects.Commands.ObjectTrashHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.Commands.SetPageAccessModeHandler.CopySpaceDefaultsAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.Commands.SetPageAccessModeHandler.CurrentVersionAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageAccess.Commands.SetPageAccessModeHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.Commands.SetPageGrantHandler.WriteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.PageAccessAudit.RecordOpeningAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.PageItemAccess.CopyFromParentAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.PageItemAccess.ResetAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageAccess.Queries.GetPageAccessHistoryHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageAccess.Queries.PageAccessDirectory.CandidatesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageAccess.Queries.PageAccessDirectory.Query"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageAccess.Queries.PageAccessDirectory.ShareLinksAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageAccess.Queries.PagePeopleHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageHistory.Commands.NameVersionHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageHistory.Queries.GetPageHistoryHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkStore.CheckAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkStore.FindByTitleAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkStore.LinksHereAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkStore.RelatedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkStore.RelatedPeopleAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageLinks.PageLinkStore.ResolveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageOrganization.Domain.PagePurge.RunAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageOrganization.Domain.TitleOrder.SetAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PagePdfExports.PagePdfExportRunner.NextDueAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PagePdfExports.PagePdfExportRunner.RunDueAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PagePdfExports.PagePdfExportRunner.RunOneAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Features.PageTags.PageTagStore.BrowseAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageTags.PageTagStore.CandidatesInSpaceAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageTags.PageTagStore.PreviousBoundariesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageTags.PageTagStore.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageTags.PageTagStore.ReadManyAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageTags.PageTagStore.ResolveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PageTags.PageTagStore.SuggestAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageTemplates.SetPageTemplateHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsHeadingsHandler.ActiveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsHeadingsHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsHeadingsHandler.ProgressAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsHeadingsHandler.SkipAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsHeadingsHandler.UnsavedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PersonalLibrary.Queries.ListRecentChangesHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.ProjectorIndexJob.NextPagesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.ProjectorIndex.EnsureFreshAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.ProjectorIndex.RefreshAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsOverviewHandler.EditingAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsOverviewHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.ConvertRequirementsOverviewHandler.ProgressAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.CatalogSystemsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.ProgressAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.ActiveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.NextAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.StoreAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Commands.FillRequirementSystemsHandler.UnsavedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Commands.SavePageHandler.RedirectMergedContactsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Domain.RequirementPageConversion.CatalogsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Domain.RequirementPageConversion.ConvertPagesAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Domain.RequirementPageConversion.KeyMapAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Domain.RequirementPageConversion.RepairOnOpenAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Pages.Domain.RequirementPageConversion.RewriteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Pages.Domain.RequirementPageConversion.UseAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Pages.Live.PageChangeListener.ExecuteAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Features.Pages.Objects.PageObjectType.ProjectAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PersonalItems.Commands.SetItemGrantHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.PersonalItems.Queries.PersonalItemsQueryHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.ManagedReleaseVaultsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.Readership"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.Visible"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PersonalLibrary.Commands.RecordPageVisitHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Projector.Commands.SetCatalogPageHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Projector.Persistence.CrossPageRequirements.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.ProjectorCatalogReader.ContentsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.ProjectorCatalogReader.PublicationsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.ProjectorOpenings.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Projector.Persistence.RequirementIndex.LastChangesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.RequirementIndex.PageAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.RequirementIndex.SpaceAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.Persistence.RequirementIndex.StateChangesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Projector.ProjectorPurge.PurgeAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Projector.Queries.GetProjectorPresetsHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Relations.Domain.UsageReasons.PartsAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Relations.Domain.UsageReasons.ReadAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Relations.Persistence.RelationNodes.ReadAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Search.SearchDocuments.ExecuteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Search.SearchDocumentsRebuildJob.RunBatchAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.BoundedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.DidYouMeanAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.ExcludedFromAiAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.GenerationActiveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.Hits"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.PageTextsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.PrepareAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Search.SearchSql.PrepareSimilarAsync"] = Kind.Lock,
+        ["Atlas.Server.Features.Search.SearchSql.SimilarAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.SimilarSemanticAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Search.SearchSql.SpacesAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.SearchGaps.SearchGapStore.InsertAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.SearchGaps.SearchGapStore.ListAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.SearchGaps.SearchGapStore.ReadSecretAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.SearchGaps.SearchGapStore.ResolveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.SearchGaps.SearchGapStore.SecretAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Security.Commands.EndReauthWindowHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Security.Domain.SecurityHistory.AddressAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Security.Domain.SecurityHistory.ConfigurationAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Spaces.Commands.PurgeSpaceHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Spaces.Queries.ListSpaceTrashHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.TrashCleanup.Queries.TrashCleanupCandidates.MentionedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.TrashCleanup.Queries.TrashCleanupCandidates.TrashedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.TrashCleanup.Queries.TrashCleanupCandidates.UnusedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.TrashCleanup.TrashCleanupRunner.StillDueAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.TreeReferences.TreeReferenceContent.NodesAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.TreeReferences.TreeReferenceContent.PurgeAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.TreeReferences.TreeReferenceContent.UnderAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Vaults.Domain.VaultLocationHistory.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Vaults.Commands.VaultGrantHandler.ApplyAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Vaults.Queries.VaultAccessDirectory.LastChangeAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Vaults.Queries.VaultAccessDirectory.Query"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Vaults.Release.SecretReleaseHandler.AuditAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Features.Vaults.Release.SecretReleaseHandler.ConfirmedPageAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Vaults.Requests.AccessRequestReads.ListAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Vaults.Requests.VaultManagers.ResolveAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Vaults.VaultAccess.ReadSecretAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Events.Commands.RetryDeadOutboxMessagesHandler.Handle"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Linking.ContentReferenceStore.CommentsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Linking.ContentReferenceStore.RefreshBoardAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Linking.ContentReferenceStore.RefreshPageAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Linking.ContentReferenceStore.RemoveAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Linking.ContentReferenceStore.SweepAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Linking.ContentReferenceStore.WriteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Linking.LinkingScope.RequireAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Linking.PlaceNames.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.Linking.Queries.ListUnlinkedHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Events.Queries.GetOutboxHealthHandler.Handle"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Identity.AccessAuditLog.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.AccountHistory.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.AccountHistory.RecordCredentialAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.BrowserSessionRevocations.IsRevokedAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Identity.DownloadCredentials.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Identity.EffectiveWikiAdmin.ReadAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Identity.GrantSubjects.RequireExistsAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Identity.PageAccessModeHistory.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.ShareRevocation.CloseAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.ShareRevocation.IssuerKeepsShareAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Identity.ShareRevocation.RecordAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.ShareRevocation.SpaceAsync"] = Kind.AtomicWrite,
+        // Job requests merge on the partial unique indexes and change a run only from the state they expect, each in one statement.
+        ["Atlas.Server.Platform.Jobs.JobRequests.CancelAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Jobs.JobRequests.LockJobAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Jobs.JobRequests.QueueAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Jobs.JobRequests.RetryAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Jobs.JobRequests.UpsertQueuedAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Objects.ObjectGrants.AccessAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Objects.ObjectPurge.AuditAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Objects.ObjectPurge.ForgetAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Logs.AppLogWriter.WriteAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.AcquireAdvisoryAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.AcquireContentSharedAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.LockAccountSharedAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.LockGroupsForKeyShareAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.LockPagesForUpdateAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.LockRowAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.LockSpaceSharedAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.ReadSecurityConfigurationSharedAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.ReadSharedAsync"] = Kind.Lock,
+        ["Atlas.Server.Platform.Persistence.AtlasLocks.SetActorAsync"] = Kind.Lock,
+        // Runs no SQL of its own: NHibernate's command type, which forgets its prepared statements when it fails (PreparedStatements).
+        ["Atlas.Server.Platform.Persistence.AtlasNpgsqlDriver+ForgettingCommand..ctor"] = Kind.OutsideOrm,
+        // The rows written with a page, revision, board, tree node or space, inside NHibernate's flush (its listeners cannot query
+        // through the session there), and a page's space lock before its insert: the triggers' work until 2026110930.
+        ["Atlas.Server.Platform.Persistence.ContentRowEffects.Command"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Persistence.DatabaseStatistics.RefreshAccessAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Platform.Persistence.DatabaseStatistics.RefreshImportedContentAsync"] = Kind.OutsideOrm,
+        // Runs no SQL: the command hands Wolverine the DbTransaction NHibernate keeps, for its envelope writes over ADO.NET.
+        ["Atlas.Server.Platform.Persistence.NHibernateEnvelopeTransaction.EnlistAsync"] = Kind.OutsideOrm,
+        // The runtime role and its rights, on a connection of the schema owner's own (no NHibernate session there).
+        ["Atlas.Server.Platform.Persistence.RuntimeDatabaseRole.EnsureAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Platform.Persistence.RuntimeDatabaseRole.ScalarAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Platform.Persistence.SessionExtensions.ReadRowsAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Platform.Resources.RelationAnchor.ReadAllAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Platform.Resources.RelationAnchor.ReadAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Platform.Retention.OperationalRetention.CountAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Platform.Retention.OperationalRetention.DeleteAsync"] = Kind.AtomicWrite,
+    };
+}

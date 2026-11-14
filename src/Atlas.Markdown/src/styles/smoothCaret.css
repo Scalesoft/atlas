@@ -1,0 +1,19 @@
+/*
+ * The gliding caret (extensions/SmoothCaret.ts, `MarkdownEditor` `smoothCaret`). The native caret is transparent while the drawn one
+ * stands in for it, above a host's own caret colour (a board text's `currentColor`). The mark is 1 px tall and scaled to the line, so
+ * moving and resizing it is a transform on its own layer; it takes the editor's text colour unless `--md-caret-color` says otherwise.
+ * It glides in `--md-motion-fast` on the editor's ease-out curve and stands at once when it appears or travels far (`is-jump`). Idle,
+ * it blinks like the system caret (`is-off`, a timer that every move restarts lit). Reduced motion: the editor's transition guard
+ * (motion.css) leaves only opacity, so it moves without the glide, and it does not blink, as the editor's loops stand.
+ */
+.ProseMirror.md-smooth-caret { caret-color: transparent !important; }
+.md-smooth-caret-mark {
+  position: absolute; top: 0; left: -1px; width: 2px; height: 1px; transform-origin: 0 0;
+  background: var(--md-caret-color, currentColor); pointer-events: none; visibility: hidden;
+  transition: transform var(--md-motion-fast) var(--md-motion-ease);
+}
+.md-smooth-caret-mark.is-jump { transition: none; }
+.md-smooth-caret-mark.is-shown { visibility: visible; }
+.md-smooth-caret-mark.is-off { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .md-smooth-caret-mark.is-off { opacity: 1; } }
+[data-md-motion=reduced] .md-smooth-caret-mark.is-off { opacity: 1; }

@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Atlas/">
+    <Project Path="src/Atlas.AppHost/Atlas.AppHost.csproj" />
+    <Project Path="src/Atlas.Markdown.Sync/Atlas.Markdown.Sync.csproj" />
+    <Project Path="src/Atlas.Markdown/Atlas.Markdown.esproj" />
+    <Project Path="src/Atlas.Server/Atlas.Server.csproj" />
+    <Project Path="src/Atlas.YouTrack/Atlas.YouTrack.csproj" />
+    <Project Path="src/Atlas.Yjs/Atlas.Yjs.csproj" />
+    <Project Path="src/Atlas.Web/Atlas.Web.esproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Atlas.Markdown.Sync.Tests/Atlas.Markdown.Sync.Tests.csproj" />
+    <Project Path="tests/Atlas.Server.Tests/Atlas.Server.Tests.csproj" />
+    <Project Path="tests/Atlas.YouTrack.Tests/Atlas.YouTrack.Tests.csproj" />
+    <Project Path="tests/Atlas.Yjs.Tests/Atlas.Yjs.Tests.csproj" />
+  </Folder>
+</Solution>

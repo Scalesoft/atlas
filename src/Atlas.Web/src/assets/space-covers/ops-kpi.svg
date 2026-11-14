@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220">
+<rect width="640" height="220" fill="#ffffff"/>
+<path d="M90 50h60v30a30 30 0 0 1-60 0z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M90 58H76a14 14 0 0 0 14 22M150 58h14a14 14 0 0 1-14 22" fill="none" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M120 110v20" fill="none" stroke="#3a3a3a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="96" y="130" width="48" height="14" rx="4" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2"/>
+<polygon points="120,62 123.2,69.6 131.4,70.3 125.1,75.7 127.1,83.7 120,79.4 112.9,83.7 114.9,75.7 108.6,70.3 116.8,69.6" fill="#5a5a5a"/>
+<rect x="250" y="30" width="320" height="160" rx="10" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M250 58V42a12 12 0 0 1 12-12h296a12 12 0 0 1 12 12v16z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="266" y="40" width="60" height="8" rx="4" fill="#ffffff"/>
+<rect x="392" y="40" width="40" height="8" rx="4" fill="#ffffff"/>
+<rect x="266" y="74" width="110" height="7" rx="3.5" fill="#bdbdbd"/><rect x="392" y="74" width="60" height="7" rx="3.5" fill="#9a9a9a"/><circle cx="484" cy="77" r="7" fill="#5a5a5a"/><path d="M520 81l8-8 8 8" fill="none" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="266" y="102" width="110" height="7" rx="3.5" fill="#bdbdbd"/><rect x="392" y="102" width="60" height="7" rx="3.5" fill="#9a9a9a"/><circle cx="484" cy="105" r="7" fill="#e6e6e6"/><path d="M520 101l8 8 8-8" fill="none" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="266" y="130" width="110" height="7" rx="3.5" fill="#bdbdbd"/><rect x="392" y="130" width="60" height="7" rx="3.5" fill="#9a9a9a"/><circle cx="484" cy="133" r="7" fill="#9a9a9a"/><path d="M520 137l8-8 8 8" fill="none" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="266" y="158" width="110" height="7" rx="3.5" fill="#bdbdbd"/><rect x="392" y="158" width="60" height="7" rx="3.5" fill="#9a9a9a"/><circle cx="484" cy="161" r="7" fill="#5a5a5a"/><path d="M520 165l8-8 8 8" fill="none" stroke="#3a3a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,1 @@
+{"type":"doc","content":[{"type":"secretReference","attrs":{"secretId":"d847b3af-4a87-4e97-aab8-a74a4cf48c89","field":"password","fields":null,"showCopy":true,"showDetails":false,"autoHideSeconds":60}},{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Schema v1 stored only the block reference ID."}]}]}

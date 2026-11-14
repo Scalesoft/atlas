@@ -1,0 +1,13 @@
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { effectScope, ref } from "vue";
+import { flushPromises } from "@vue/test-utils";
+const api=vi.hoisted(()=>({preparePageSummary:vi.fn(),completeMessage:vi.fn(),sendFeedback:vi.fn()}));
+vi.mock("./assistantApi",()=>api);
+import {usePageSummary} from "./usePageSummary";
+let scope:ReturnType<typeof effectScope>;
+beforeEach(()=>{vi.clearAllMocks();api.preparePageSummary.mockResolvedValue({conversationId:"c",messageId:"m",state:"preparing",sources:[],truncated:true});api.completeMessage.mockResolvedValue({id:"m",role:"assistant",state:"answered",sources:[],sentences:[{text:"Souhrn.",sources:[]}],truncated:true});});
+afterEach(()=>scope?.stop());
+const setup=()=>{scope=effectScope();const page=ref({id:"p",version:1}),enabled=ref(true);const summary=scope.run(()=>usePageSummary(page,enabled))!;return{page,enabled,summary};};
+it("summarizes only on request and preserves incomplete coverage",async()=>{const {summary}=setup();expect(api.preparePageSummary).not.toHaveBeenCalled();await summary.ask();expect(summary.state.value).toBe("done");expect(summary.truncated.value).toBe(true);expect(api.preparePageSummary.mock.calls[0]![0]).toBe("p");});
+it("aborts a summary after page/version changes and discards a late answer",async()=>{const {summary,page}=setup();let resolve!: (v:unknown)=>void;api.completeMessage.mockReturnValue(new Promise(r=>resolve=r));const pending=summary.ask();await flushPromises();const signal=api.completeMessage.mock.calls[0]![1] as AbortSignal;page.value={id:"p",version:2};expect(signal.aborted).toBe(true);resolve({state:"answered",sentences:[{text:"old",sources:[]}],sources:[]});await pending;expect(summary.visible.value).toBe(false);expect(summary.message.value).toBeNull();});
+it("does not start when unavailable and erases metadata if the capability is withdrawn",async()=>{const {summary,enabled}=setup();enabled.value=false;await summary.ask();expect(api.preparePageSummary).not.toHaveBeenCalled();enabled.value=true;await summary.ask();enabled.value=false;expect(summary.message.value).toBeNull();expect(summary.sources.value).toEqual([]);});

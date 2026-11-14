@@ -1,0 +1,10 @@
+{
+  "Neplatné nastavení přihlášení. Lze přidat nejvýše 10 poskytovatelů.": "Invalid sign-in settings. At most 10 providers can be added.",
+  "Nastavení změnil jiný správce. Načtěte je znovu.": "Another admin changed the settings. Load them again.",
+  "Zkontrolujte HTTPS adresu wiki a issueru, unikátní ID poskytovatele, ID klienta, scopes a pravidla správce (nejvýše 20 unikátních dvojic claim/hodnota). Interní claimy oi_, odhlášení u poskytovatele ani offline_access nejsou podporované.": "Check the HTTPS addresses of the wiki and issuer, the unique provider ID, the client ID, scopes and admin rules (at most 20 unique claim/value pairs). Internal oi_ claims, sign-out at the provider and offline_access are not supported.",
+  "Neplatné údaje poskytovatele přihlášení.": "Invalid sign-in provider details.",
+  "Při změně issueru nebo Client ID zadejte nový secret, nebo jej výslovně odeberte.": "When changing the issuer or Client ID, enter a new secret or explicitly remove it.",
+  "Poskytovatel nebyl nalezen. Nejdříve nastavení uložte.": "Provider not found. Save the settings first.",
+  "Vyberte zadání nového secretu nebo jeho odebrání.": "Choose entering a new secret or removing it.",
+  "Nastavení modulů spravuje správce wiki.": "Module settings are managed by a wiki admin."
+}

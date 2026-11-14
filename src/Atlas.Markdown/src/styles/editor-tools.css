@@ -1,0 +1,15 @@
+/* Optional view decorations: no upstream CSS injection, document or export changes. */
+.md-editor .find-and-replace-result { background: var(--accent-soft, #e3f4f7); box-shadow: inset 0 -1px var(--accent, #58a9b9); }
+.md-editor .find-and-replace-result-current { background: var(--accent, #58a9b9); color: var(--accent-ink, #123f49); }
+.md-editor .tiptap-invisible-character { height: 0; width: 0; padding: 0; pointer-events: none; user-select: none; }
+.md-editor .tiptap-invisible-character::before { display: inline-block; width: 0; line-height: 1em; color: var(--text-muted, var(--text-dimmer, #6b858b)); font-style: normal; font-weight: 400; }
+.md-editor .tiptap-invisible-character--space::before { content: '·'; }
+.md-editor .tiptap-invisible-character--nbsp::before { content: '⍽'; }
+.md-editor .tiptap-invisible-character--break::before { content: '¬'; }
+.md-editor .tiptap-invisible-character--paragraph::before { content: '¶'; }
+.md-editor .tiptap-invisible-character + img.ProseMirror-separator { width: 0 !important; height: 0 !important; pointer-events: none; }
+.md-editor :is(.hljs-comment, .hljs-quote) { color: var(--text-muted, var(--text-dimmer, #6b858b)); font-style: italic; }
+.md-editor :is(.hljs-keyword, .hljs-selector-tag, .hljs-built_in) { color: var(--accent, #58a9b9); }
+.md-editor :is(.hljs-string, .hljs-attr, .hljs-template-variable) { color: var(--green, #278464); }
+.md-editor :is(.hljs-number, .hljs-literal, .hljs-symbol) { color: var(--purple, var(--amber, #b66b12)); }
+.md-editor :is(.hljs-title, .hljs-type, .hljs-name) { color: var(--orange, var(--accent, #58a9b9)); }

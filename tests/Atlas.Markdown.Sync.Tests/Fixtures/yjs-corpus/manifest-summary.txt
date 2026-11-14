@@ -1,0 +1,216 @@
+node-paragraph                 0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-paragraph                 1 update      27 accept                                    insert paragraph {"el":["paragraph"],"m":[]}
+node-paragraph                 2 update      38 accept                                    attr paragraph.textAlign {"el":[],"m":[]}
+node-paragraph                 3 update      18 accept                                    type into paragraph#0 {"el":[],"m":[]}
+node-paragraph                 4 update      18 accept                                    type into paragraph#1 {"el":[],"m":[]}
+node-paragraph                 5 update      18 accept                                    type into paragraph#2 {"el":[],"m":[]}
+node-paragraph                 6 update      10 accept                                    delete paragraph {"el":[],"m":[]}
+node-paragraph                 7 state      165 accept                                    final {"el":["paragraph"],"m":[]}
+node-blockquote                0 state       56 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-blockquote                1 update      61 accept                                    insert blockquote {"el":["blockquote","paragraph"],"m":[]}
+node-blockquote                2 update      25 accept                                    type into blockquote#0 {"el":[],"m":[]}
+node-blockquote                3 update      16 accept                                    type into blockquote#1 {"el":[],"m":[]}
+node-blockquote                4 update      16 accept                                    type into blockquote#2 {"el":[],"m":[]}
+node-blockquote                5 update      11 accept                                    delete blockquote {"el":[],"m":[]}
+node-blockquote                6 state      204 accept                                    final {"el":["blockquote","paragraph"],"m":[]}
+node-bulletList                0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-bulletList                1 update      99 accept                                    insert bulletList {"el":["bulletList","listItem","paragraph"],"m":[]}
+node-bulletList                2 update      26 accept                                    attr bulletList.tight {"el":[],"m":[]}
+node-bulletList                3 update      12 accept                                    delete bulletList {"el":[],"m":[]}
+node-bulletList                4 state      258 accept                                    final {"el":["bulletList","listItem","paragraph"],"m":[]}
+node-codeBlock                 0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-codeBlock                 1 update      75 accept                                    insert codeBlock {"el":["codeBlock","paragraph"],"m":[]}
+node-codeBlock                 2 update      44 accept                                    attr codeBlock.language {"el":[],"m":[]}
+node-codeBlock                 3 update      28 accept                                    type into codeBlock#0 {"el":[],"m":[]}
+node-codeBlock                 4 update      18 accept                                    type into codeBlock#1 {"el":[],"m":[]}
+node-codeBlock                 5 update      18 accept                                    type into codeBlock#2 {"el":[],"m":[]}
+node-codeBlock                 6 update      12 accept                                    delete codeBlock {"el":[],"m":[]}
+node-codeBlock                 7 state      265 accept                                    final {"el":["codeBlock","paragraph"],"m":[]}
+node-hardBreak                 0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-hardBreak                 1 update      27 accept                                    insert hardBreak {"el":["hardBreak"],"m":[]}
+node-hardBreak                 2 update      10 accept                                    delete hardBreak {"el":[],"m":[]}
+node-hardBreak                 3 state      109 accept                                    final {"el":["hardBreak","paragraph"],"m":[]}
+node-heading                   0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-heading                   1 update      60 accept                                    insert heading {"el":["heading","paragraph"],"m":[]}
+node-heading                   2 update      27 accept                                    attr heading.level {"el":[],"m":[]}
+node-heading                   3 update      28 accept                                    type into heading#0 {"el":[],"m":[]}
+node-heading                   4 update      18 accept                                    type into heading#1 {"el":[],"m":[]}
+node-heading                   5 update      18 accept                                    type into heading#2 {"el":[],"m":[]}
+node-heading                   6 update      12 accept                                    delete heading {"el":[],"m":[]}
+node-heading                   7 state      218 accept                                    final {"el":["heading","paragraph"],"m":[]}
+node-horizontalRule            0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-horizontalRule            1 update      50 accept                                    insert horizontalRule {"el":["horizontalRule","paragraph"],"m":[]}
+node-horizontalRule            2 update      10 accept                                    delete horizontalRule {"el":[],"m":[]}
+node-horizontalRule            3 state      149 accept                                    final {"el":["horizontalRule","paragraph"],"m":[]}
+node-orderedList               0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-orderedList               1 update     117 accept                                    insert orderedList {"el":["listItem","orderedList","paragraph"],"m":[]}
+node-orderedList               2 update      26 accept                                    attr orderedList.tight {"el":[],"m":[]}
+node-orderedList               3 update      14 accept                                    delete orderedList {"el":[],"m":[]}
+node-orderedList               4 state      294 accept                                    final {"el":["listItem","orderedList","paragraph"],"m":[]}
+node-image                     0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-image                     1 update     101 accept                                    insert image {"el":["image","paragraph"],"m":[]}
+node-image                     2 update      61 accept                                    attr image.src {"el":[],"m":[]}
+node-image                     3 update      14 accept                                    delete image {"el":[],"m":[]}
+node-image                     4 state      297 accept                                    final {"el":["image","paragraph"],"m":[]}
+node-table                     0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-table                     1 update     816 accept                                    insert table {"el":["paragraph","table","tableCell","tableHeader","tableRow"],"m":[]}
+node-table                     2 update      76 accept                                    attr table.chartRef {"el":[],"m":[]}
+node-table                     3 update      12 accept                                    delete table {"el":[],"m":[]}
+node-table                     4 state     1730 accept                                    final {"el":["paragraph","table","tableCell","tableHeader","tableRow"],"m":[]}
+node-taskList                  0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-taskList                  1 update      99 accept                                    insert taskList {"el":["paragraph","taskItem","taskList"],"m":[]}
+node-taskList                  2 update      10 accept                                    delete taskList {"el":[],"m":[]}
+node-taskList                  3 state      247 accept                                    final {"el":["paragraph","taskItem","taskList"],"m":[]}
+node-callout                   0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-callout                   1 update      88 accept                                    insert callout {"el":["callout","paragraph"],"m":[]}
+node-callout                   2 update      41 accept                                    attr callout.variant {"el":[],"m":[]}
+node-callout                   3 update      28 accept                                    type into callout#0 {"el":[],"m":[]}
+node-callout                   4 update      18 accept                                    type into callout#1 {"el":[],"m":[]}
+node-callout                   5 update      18 accept                                    type into callout#2 {"el":[],"m":[]}
+node-callout                   6 update      12 accept                                    delete callout {"el":[],"m":[]}
+node-callout                   7 state      288 accept                                    final {"el":["callout","paragraph"],"m":[]}
+node-disclosure                0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-disclosure                1 update      89 accept                                    insert disclosure {"el":["disclosure","paragraph"],"m":[]}
+node-disclosure                2 update      41 accept                                    attr disclosure.title {"el":[],"m":[]}
+node-disclosure                3 update      28 accept                                    type into disclosure#0 {"el":[],"m":[]}
+node-disclosure                4 update      18 accept                                    type into disclosure#1 {"el":[],"m":[]}
+node-disclosure                5 update      18 accept                                    type into disclosure#2 {"el":[],"m":[]}
+node-disclosure                6 update      12 accept                                    delete disclosure {"el":[],"m":[]}
+node-disclosure                7 state      290 accept                                    final {"el":["disclosure","paragraph"],"m":[]}
+node-youtrackIssue             0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-youtrackIssue             1 update     173 accept                                    insert youtrackIssue {"el":["youtrackIssue"],"m":[]}
+node-youtrackIssue             2 update      40 accept                                    attr youtrackIssue.key {"el":[],"m":[]}
+node-youtrackIssue             3 update      12 accept                                    delete youtrackIssue {"el":[],"m":[]}
+node-youtrackIssue             4 state      424 accept                                    final {"el":["paragraph","youtrackIssue"],"m":[]}
+node-contactCard               0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-contactCard               1 update     106 accept                                    insert contactCard {"el":["contactCard","paragraph"],"m":[]}
+node-contactCard               2 update      77 accept                                    attr contactCard.data {"el":[],"m":[]}
+node-contactCard               3 update      12 accept                                    delete contactCard {"el":[],"m":[]}
+node-contactCard               4 state      323 accept                                    final {"el":["contactCard","paragraph"],"m":[]}
+node-contactInline             0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-contactInline             1 update      90 accept                                    insert contactInline {"el":["contactInline"],"m":[]}
+node-contactInline             2 update      77 accept                                    attr contactInline.data {"el":[],"m":[]}
+node-contactInline             3 update      12 accept                                    delete contactInline {"el":[],"m":[]}
+node-contactInline             4 state      287 accept                                    final {"el":["contactInline","paragraph"],"m":[]}
+node-attachment                0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-attachment                1 update     100 accept                                    insert attachment {"el":["attachment","paragraph"],"m":[]}
+node-attachment                2 update      72 accept                                    attr attachment.data {"el":[],"m":[]}
+node-attachment                3 update      12 accept                                    delete attachment {"el":[],"m":[]}
+node-attachment                4 state      306 accept                                    final {"el":["attachment","paragraph"],"m":[]}
+node-chart                     0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-chart                     1 update     170 accept                                    insert chart {"el":["chart","paragraph"],"m":[]}
+node-chart                     2 update     147 accept                                    attr chart.data {"el":[],"m":[]}
+node-chart                     3 update      12 accept                                    delete chart {"el":[],"m":[]}
+node-chart                     4 state      521 accept                                    final {"el":["chart","paragraph"],"m":[]}
+node-openapi                   0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-openapi                   1 update     166 accept                                    insert openapi {"el":["openapi","paragraph"],"m":[]}
+node-openapi                   2 update     143 accept                                    attr openapi.data {"el":[],"m":[]}
+node-openapi                   3 update      12 accept                                    delete openapi {"el":[],"m":[]}
+node-openapi                   4 state      509 accept                                    final {"el":["openapi","paragraph"],"m":[]}
+node-diagram                   0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-diagram                   1 update     128 accept                                    insert diagram {"el":["diagram","paragraph"],"m":[]}
+node-diagram                   2 update      97 accept                                    attr diagram.data {"el":[],"m":[]}
+node-diagram                   3 update      12 accept                                    delete diagram {"el":[],"m":[]}
+node-diagram                   4 state      387 accept                                    final {"el":["diagram","paragraph"],"m":[]}
+node-mathBlock                 0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-mathBlock                 1 update      92 accept                                    insert mathBlock {"el":["mathBlock","paragraph"],"m":[]}
+node-mathBlock                 2 update      65 accept                                    attr mathBlock.data {"el":[],"m":[]}
+node-mathBlock                 3 update      12 accept                                    delete mathBlock {"el":[],"m":[]}
+node-mathBlock                 4 state      283 accept                                    final {"el":["mathBlock","paragraph"],"m":[]}
+node-mathInline                0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-mathInline                1 update      75 accept                                    insert mathInline {"el":["mathInline"],"m":[]}
+node-mathInline                2 update      65 accept                                    attr mathInline.data {"el":[],"m":[]}
+node-mathInline                3 update      12 accept                                    delete mathInline {"el":[],"m":[]}
+node-mathInline                4 state      245 accept                                    final {"el":["mathInline","paragraph"],"m":[]}
+node-tableOfContents           0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-tableOfContents           1 update     122 accept                                    insert tableOfContents {"el":["paragraph","tableOfContents"],"m":[]}
+node-tableOfContents           2 update      89 accept                                    attr tableOfContents.data {"el":[],"m":[]}
+node-tableOfContents           3 update      12 accept                                    delete tableOfContents {"el":[],"m":[]}
+node-tableOfContents           4 state      367 accept                                    final {"el":["paragraph","tableOfContents"],"m":[]}
+node-emoji                     0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-emoji                     1 update      45 accept                                    insert emoji {"el":["emoji"],"m":[]}
+node-emoji                     2 update      40 accept                                    attr emoji.name {"el":[],"m":[]}
+node-emoji                     3 update      12 accept                                    delete emoji {"el":[],"m":[]}
+node-emoji                     4 state      160 accept                                    final {"el":["emoji","paragraph"],"m":[]}
+node-pageReference             0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-pageReference             1 update     134 accept                                    insert pageReference {"el":["pageReference"],"m":[]}
+node-pageReference             2 update      41 accept                                    attr pageReference.title {"el":[],"m":[]}
+node-pageReference             3 update      12 accept                                    delete pageReference {"el":[],"m":[]}
+node-pageReference             4 state      347 accept                                    final {"el":["pageReference","paragraph"],"m":[]}
+node-concealedContent          0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-concealedContent          1 update      96 accept                                    insert concealedContent {"el":["concealedContent","paragraph"],"m":[]}
+node-concealedContent          2 update      41 accept                                    attr concealedContent.reveal {"el":[],"m":[]}
+node-concealedContent          3 update      28 accept                                    type into concealedContent#0 {"el":[],"m":[]}
+node-concealedContent          4 update      18 accept                                    type into concealedContent#1 {"el":[],"m":[]}
+node-concealedContent          5 update      18 accept                                    type into concealedContent#2 {"el":[],"m":[]}
+node-concealedContent          6 update      12 accept                                    delete concealedContent {"el":[],"m":[]}
+node-concealedContent          7 state      304 accept                                    final {"el":["concealedContent","paragraph"],"m":[]}
+node-secretReference           0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-secretReference           1 update     243 reject reserved:secretReference           insert secretReference {"el":["paragraph","secretReference"],"m":[]}
+node-secretReference           2 update      26 reject reserved-attr:secretReference.showCopy attr secretReference.showCopy {"el":[],"m":[]}
+node-secretReference           3 update      14 accept                                    delete secretReference {"el":[],"m":[]}
+node-secretReference           4 state      546 reject reserved:secretReference           final {"el":["paragraph","secretReference"],"m":[]}
+node-secretInlineReference     0 state       59 accept                                    baseline {"el":["paragraph"],"m":[]}
+node-secretInlineReference     1 update     188 reject reserved:secretInlineReference     insert secretInlineReference {"el":["secretInlineReference"],"m":[]}
+node-secretInlineReference     2 update      26 reject reserved-attr:secretInlineReference.showCopy attr secretInlineReference.showCopy {"el":[],"m":[]}
+node-secretInlineReference     3 update      12 accept                                    delete secretInlineReference {"el":[],"m":[]}
+node-secretInlineReference     4 state      440 reject reserved:secretInlineReference     final {"el":["paragraph","secretInlineReference"],"m":[]}
+editing                        0 state      145 accept                                    baseline {"el":["paragraph"],"m":[]}
+editing                        1 update      24 accept                                    type 5 chars#0 {"el":[],"m":[]}
+editing                        2 update      24 accept                                    type 5 chars#1 {"el":[],"m":[]}
+editing                        3 update      24 accept                                    type 5 chars#2 {"el":[],"m":[]}
+editing                        4 update      24 accept                                    type 5 chars#3 {"el":[],"m":[]}
+editing                        5 update      24 accept                                    type 5 chars#4 {"el":[],"m":[]}
+editing                        6 update      53 accept                                    bold {"el":[],"m":["bold"]}
+editing                        7 update     105 accept                                    italic {"el":[],"m":["italic"]}
+editing                        8 update      96 accept                                    underline {"el":[],"m":["bold","italic","underline"]}
+editing                        9 update      57 accept                                    strike {"el":[],"m":["strike"]}
+editing                       10 update      63 accept                                    highlight {"el":[],"m":["highlight"]}
+editing                       11 update      53 accept                                    code {"el":[],"m":["code"]}
+editing                       12 update     153 accept                                    link {"el":[],"m":["link"]}
+editing                       13 update     261 accept                                    change link href {"el":[],"m":["link"]}
+editing                       14 update      90 accept                                    unbold {"el":[],"m":["bold","link"]}
+editing                       15 update      57 accept                                    type inside marked text#0 {"el":[],"m":["bold","italic"]}
+editing                       16 update      24 accept                                    type inside marked text#1 {"el":[],"m":["italic"]}
+editing                       17 update     521 accept                                    enter (split) {"el":["paragraph"],"m":["code","highlight","italic","link","strike","underline"]}
+editing                       18 update     136 accept                                    heading {"el":["heading"],"m":["italic"]}
+editing                       19 update      30 accept                                    heading level {"el":[],"m":[]}
+editing                       20 update      38 accept                                    text align {"el":[],"m":[]}
+editing                       21 update     136 accept                                    bullet list {"el":["bulletList","listItem","paragraph"],"m":[]}
+editing                       22 update     210 accept                                    ordered list {"el":["listItem","orderedList","paragraph"],"m":[]}
+editing                       23 update     129 accept                                    task list {"el":["paragraph","taskItem","taskList"],"m":[]}
+editing                       24 update      29 accept                                    check task {"el":[],"m":[]}
+editing                       25 update     184 accept                                    blockquote {"el":["blockquote","heading"],"m":["italic"]}
+editing                       26 update     102 accept                                    code block {"el":["codeBlock","paragraph"],"m":[]}
+editing                       27 update    1118 accept                                    table insert {"el":["paragraph","table","tableCell","tableHeader","tableRow"],"m":[]}
+editing                       28 update      31 accept                                    table type in cell#0 {"el":[],"m":[]}
+editing                       29 update      20 accept                                    table type in cell#1 {"el":[],"m":[]}
+editing                       30 update      20 accept                                    table type in cell#2 {"el":[],"m":[]}
+editing                       31 update      27 accept                                    table type in cell#3 {"el":[],"m":[]}
+editing                       32 update     518 accept                                    table add row {"el":["paragraph","tableCell","tableRow"],"m":[]}
+editing                       33 update     459 accept                                    table add column {"el":["paragraph","tableCell","tableHeader"],"m":[]}
+editing                       34 update      45 accept                                    cell background {"el":[],"m":[]}
+editing                       35 update     425 accept                                    paste rich html {"el":["bulletList","heading","listItem","paragraph"],"m":["bold","italic","link"]}
+editing                       36 update      14 accept                                    delete range {"el":[],"m":[]}
+editing                       37 update      24 accept                                    delete all {"el":[],"m":[]}
+editing                       38 state     5081 accept                                    final {"el":["paragraph"],"m":[]}
+all-nodes                      0 state     3897 accept                                    all-allowed-nodes {"el":["attachment","blockquote","bulletList","callout","chart","codeBlock","concealedContent","contactCard","contactInline","diagram","disclosure","emoji","hardBreak","heading","horizontalRule","image","listItem","mathBlock","mathInline","openapi","orderedList","pageReference","paragraph","table","tableCell","tableHeader","tableOfContents","tableRow","taskItem","taskList","youtrackIssue"],"m":["bold","code","highlight","italic","link","strike","underline"]}
+all-nodes                      1 state     4325 reject reserved:secretInlineReference     with-secrets {"el":["attachment","blockquote","bulletList","callout","chart","codeBlock","concealedContent","contactCard","contactInline","diagram","disclosure","emoji","hardBreak","heading","horizontalRule","image","listItem","mathBlock","mathInline","openapi","orderedList","pageReference","paragraph","secretInlineReference","secretReference","table","tableCell","tableHeader","tableOfContents","tableRow","taskItem","taskList","youtrackIssue"],"m":["bold","code","highlight","italic","link","strike","underline"]}
+hostile                        0 state      862 accept                                    baseline {"el":["paragraph","table","tableCell","tableRow"],"m":[]}
+hostile                        1 update      32 reject unknown-node:evilNode              unknown top-level node {"el":["evilNode"],"m":[]}
+hostile                        2 update      30 reject unknown-node:script                script node {"el":["script"],"m":[]}
+hostile                        3 update     231 reject reserved:secretReference           raw secretReference block {"el":["secretReference"],"m":[]}
+hostile                        4 update      61 reject reserved:secretInlineReference     secretInlineReference deep in table cell {"el":["secretInlineReference"],"m":[]}
+hostile                        5 update      80 reject reserved:secretReference           secret nested inside new blockquote subtree {"el":["blockquote","secretReference"],"m":[]}
+hostile                        6 update      35 reject unknown-attr:paragraph.hiddenPayload unknown attribute on existing paragraph {"el":[],"m":[]}
+hostile                        7 update      55 reject unknown-mark:evilMark              unknown mark on existing text {"el":[],"m":["evilMark"]}
+hostile                        8 update     110 reject unknown-mark:secretInlineReference mark named secretInlineReference {"el":[],"m":["secretInlineReference"]}
+hostile                        9 update      31 reject embed                              text embed {"el":[],"m":[]}
+hostile                       10 update      28 reject other-root                         other root map {"el":[],"m":[]}
+hostile                       11 update      25 reject other-root                         other root text {"el":[],"m":[]}
+hostile                       12 update     239 accept                                    secret inserted and deleted in the same update (smuggle) {"el":[],"m":[]}
+hostile                       13 update      40 accept                                    unknown node inserted and deleted in the same update (smuggle) {"el":[],"m":[]}
+hostile                       14 update      29 accept                                    legit type (control) {"el":[],"m":[]}
+hostile                       15 update      10 accept                                    legit delete-only (control) {"el":[],"m":[]}
+hostile                       16 update      33 reject pending                            pending structs (missing parent) {"el":[],"m":[]}
+hostile                       17 update      10 reject pending                            pending delete set (deletes unseen items) {"el":[],"m":[]}

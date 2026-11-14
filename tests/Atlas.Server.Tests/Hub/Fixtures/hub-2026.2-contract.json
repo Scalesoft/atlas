@@ -1,0 +1,522 @@
+{
+  "build": "2026.2.52366",
+  "captured": "2026-10-01",
+  "environment": "disposable-local-hub",
+  "identity": {
+    "before": {
+      "issuer": "https://hub.example.test/hub",
+      "client": "atlas-local-development",
+      "signatureVerified": true,
+      "stateVerified": true,
+      "nonceVerified": true,
+      "subject": "10000000-0000-4000-8000-000000000001",
+      "userinfoSubject": "10000000-0000-4000-8000-000000000001",
+      "restUser": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000001",
+        "name": "admin",
+        "banned": false,
+        "guest": false
+      },
+      "subjectEqualsRestId": true
+    },
+    "after": {
+      "issuer": "https://hub.example.test/hub",
+      "client": "atlas-local-development",
+      "signatureVerified": true,
+      "stateVerified": true,
+      "nonceVerified": true,
+      "subject": "10000000-0000-4000-8000-000000000001",
+      "userinfoSubject": "10000000-0000-4000-8000-000000000001",
+      "restUser": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000001",
+        "name": "Atlas OIDC Renamed",
+        "banned": false,
+        "guest": false
+      },
+      "subjectEqualsRestId": true
+    }
+  },
+  "expandedCollection": {
+    "expected": 107,
+    "actual": 107,
+    "collectionPageTotal": 107
+  },
+  "cases": [
+    {
+      "name": "active-user",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,eraseTimestamp,transitiveGroups(id,name)",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "banned": false,
+        "guest": false,
+        "transitiveGroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000003",
+            "name": "All Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000004",
+            "name": "Registered Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000005",
+            "name": "Atlas Contract Parent"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000006",
+            "name": "Atlas Contract Child"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000007",
+            "name": "Atlas Contract Other"
+          }
+        ]
+      }
+    },
+    {
+      "name": "memberships-page-0",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002/transitivegroups?fields=id,name&$top=2&$skip=0",
+      "status": 200,
+      "body": {
+        "type": "TransitivegroupsPage",
+        "next": "https://hub.example.test/hub/api/rest/users/10000000-0000-4000-8000-000000000002/transitivegroups?%24skip=2&%24top=2",
+        "skip": 0,
+        "top": 2,
+        "transitivegroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000003",
+            "name": "All Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000004",
+            "name": "Registered Users"
+          }
+        ]
+      }
+    },
+    {
+      "name": "memberships-page-2",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002/transitivegroups?fields=id,name&$top=2&$skip=2",
+      "status": 200,
+      "body": {
+        "type": "TransitivegroupsPage",
+        "prev": "https://hub.example.test/hub/api/rest/users/10000000-0000-4000-8000-000000000002/transitivegroups?%24top=2",
+        "next": "https://hub.example.test/hub/api/rest/users/10000000-0000-4000-8000-000000000002/transitivegroups?%24skip=4&%24top=2",
+        "skip": 2,
+        "top": 2,
+        "transitivegroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000005",
+            "name": "Atlas Contract Parent"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000006",
+            "name": "Atlas Contract Child"
+          }
+        ]
+      }
+    },
+    {
+      "name": "memberships-page-4",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002/transitivegroups?fields=id,name&$top=2&$skip=4",
+      "status": 200,
+      "body": {
+        "type": "TransitivegroupsPage",
+        "prev": "https://hub.example.test/hub/api/rest/users/10000000-0000-4000-8000-000000000002/transitivegroups?%24skip=2&%24top=2",
+        "skip": 4,
+        "top": 2,
+        "total": 5,
+        "transitivegroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000007",
+            "name": "Atlas Contract Other"
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete-membership-page",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002/transitivegroups?fields=id,name&$top=1000&$skip=0",
+      "status": 200,
+      "body": {
+        "type": "TransitivegroupsPage",
+        "skip": 0,
+        "top": 1000,
+        "total": 5,
+        "transitivegroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000003",
+            "name": "All Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000004",
+            "name": "Registered Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000005",
+            "name": "Atlas Contract Parent"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000006",
+            "name": "Atlas Contract Child"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000007",
+            "name": "Atlas Contract Other"
+          }
+        ]
+      }
+    },
+    {
+      "name": "write-denied",
+      "method": "POST",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000007",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "Item of type UserGroup with id [10000000-0000-4000-8000-000000000007] is not found",
+        "error_developer_message": "Item of type UserGroup with id [10000000-0000-4000-8000-000000000007] is not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html",
+        "error_field": null,
+        "error_params": []
+      }
+    },
+    {
+      "name": "invalid-token",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,eraseTimestamp,transitiveGroups(id,name)",
+      "status": 401,
+      "body": {
+        "error": "invalid_token",
+        "error_code": 401,
+        "error_description": "Permanent token is invalid",
+        "error_developer_message": "Permanent token is invalid"
+      }
+    },
+    {
+      "name": "banned-user",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,eraseTimestamp,transitiveGroups(id,name)",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "banned": true,
+        "guest": false,
+        "transitiveGroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000003",
+            "name": "All Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000004",
+            "name": "Registered Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000005",
+            "name": "Atlas Contract Parent"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000006",
+            "name": "Atlas Contract Child"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000007",
+            "name": "Atlas Contract Other"
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing-user",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000008?fields=id,banned,guest",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "User with id=\"10000000-0000-4000-8000-000000000008\" was not found",
+        "error_developer_message": "User with id=\"10000000-0000-4000-8000-000000000008\" was not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html"
+      }
+    },
+    {
+      "name": "missing-group",
+      "method": "GET",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000008?fields=id,name",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "UserGroup with id=\"10000000-0000-4000-8000-000000000008\" was not found",
+        "error_developer_message": "UserGroup with id=\"10000000-0000-4000-8000-000000000008\" was not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html"
+      }
+    },
+    {
+      "name": "restricted-group-with-read-group",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000005?fields=id,name",
+      "status": 200,
+      "body": {
+        "type": "userGroup",
+        "id": "10000000-0000-4000-8000-000000000005",
+        "name": "Atlas Contract Parent"
+      }
+    },
+    {
+      "name": "restricted-group-without-read-group",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000005?fields=id,name",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "Item of type UserGroup with id [10000000-0000-4000-8000-000000000005] is not found",
+        "error_developer_message": "Item of type UserGroup with id [10000000-0000-4000-8000-000000000005] is not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html",
+        "error_field": null,
+        "error_params": []
+      }
+    },
+    {
+      "name": "restricted-memberships-without-read-group",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,transitiveGroups(id,name)",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "banned": false,
+        "guest": false
+      }
+    },
+    {
+      "name": "restricted-page-without-read-group",
+      "route": "/users/10000000-0000-4000-8000-000000000002/transitivegroups?fields=id,name&$top=1000",
+      "status": 200,
+      "body": {
+        "type": "TransitivegroupsPage",
+        "skip": 0,
+        "top": 1000,
+        "total": 0,
+        "transitivegroups": []
+      }
+    },
+    {
+      "name": "no-inherited-read-user",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,transitiveGroups(id,name)",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "Item of type User with id [10000000-0000-4000-8000-000000000002] is not found",
+        "error_developer_message": "Item of type User with id [10000000-0000-4000-8000-000000000002] is not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html",
+        "error_field": null,
+        "error_params": []
+      }
+    },
+    {
+      "name": "only-read-basic-and-group",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,transitiveGroups(id,name)",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "banned": false,
+        "guest": false,
+        "transitiveGroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000003",
+            "name": "All Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000004",
+            "name": "Registered Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000005",
+            "name": "Atlas Contract Parent"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000006",
+            "name": "Atlas Contract Child"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000007",
+            "name": "Atlas Contract Other"
+          }
+        ]
+      }
+    },
+    {
+      "name": "rename-group",
+      "method": "POST",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000007",
+      "status": 200,
+      "body": null
+    },
+    {
+      "name": "renamed-group-same-id",
+      "method": "GET",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000007?fields=id,name",
+      "status": 200,
+      "body": {
+        "type": "userGroup",
+        "id": "10000000-0000-4000-8000-000000000007",
+        "name": "Atlas Contract Renamed"
+      }
+    },
+    {
+      "name": "remove-direct-child-member",
+      "method": "DELETE",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000006/users/10000000-0000-4000-8000-000000000002",
+      "status": 200,
+      "body": null
+    },
+    {
+      "name": "nested-membership-revoked",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000002?fields=id,banned,guest,transitiveGroups(id,name)",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000002",
+        "banned": false,
+        "guest": false,
+        "transitiveGroups": [
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000003",
+            "name": "All Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000004",
+            "name": "Registered Users"
+          },
+          {
+            "type": "userGroup",
+            "id": "10000000-0000-4000-8000-000000000007",
+            "name": "Atlas Contract Renamed"
+          }
+        ]
+      }
+    },
+    {
+      "name": "restore-direct-child-member",
+      "method": "POST",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000006/users?fields=id",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000002"
+      }
+    },
+    {
+      "name": "create-disposable-group",
+      "method": "POST",
+      "route": "/usergroups?fields=id,name",
+      "status": 200,
+      "body": {
+        "type": "userGroup",
+        "id": "10000000-0000-4000-8000-000000000009",
+        "name": "Atlas Contract Recreated"
+      }
+    },
+    {
+      "name": "delete-disposable-group",
+      "method": "DELETE",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000009",
+      "status": 200,
+      "body": null
+    },
+    {
+      "name": "deleted-group",
+      "method": "GET",
+      "route": "/usergroups/10000000-0000-4000-8000-000000000009?fields=id,name",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "UserGroup with id=\"10000000-0000-4000-8000-000000000009\" was not found",
+        "error_developer_message": "UserGroup with id=\"10000000-0000-4000-8000-000000000009\" was not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html"
+      }
+    },
+    {
+      "name": "recreate-group",
+      "method": "POST",
+      "route": "/usergroups?fields=id,name",
+      "status": 200,
+      "body": {
+        "type": "userGroup",
+        "id": "10000000-0000-4000-8000-000000000010",
+        "name": "Atlas Contract Recreated"
+      }
+    },
+    {
+      "name": "create-disposable-user",
+      "method": "POST",
+      "route": "/users?fields=id",
+      "status": 200,
+      "body": {
+        "type": "user",
+        "id": "10000000-0000-4000-8000-000000000011"
+      }
+    },
+    {
+      "name": "delete-disposable-user",
+      "method": "DELETE",
+      "route": "/users/10000000-0000-4000-8000-000000000011",
+      "status": 200,
+      "body": null
+    },
+    {
+      "name": "deleted-user",
+      "method": "GET",
+      "route": "/users/10000000-0000-4000-8000-000000000011?fields=id,banned,guest,eraseTimestamp",
+      "status": 404,
+      "body": {
+        "error": "Not Found",
+        "error_code": 404,
+        "error_description": "User with id=\"10000000-0000-4000-8000-000000000011\" was not found",
+        "error_developer_message": "User with id=\"10000000-0000-4000-8000-000000000011\" was not found",
+        "error_uri": "https://www.jetbrains.com/help/youtrack/devportal/HUB-REST-API.html"
+      }
+    }
+  ]
+}

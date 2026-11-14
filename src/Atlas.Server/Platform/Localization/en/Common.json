@@ -1,0 +1,20 @@
+{
+  "Přihlaste se.": "Please sign in.",
+  "Přihlášení vypršelo.": "Your sign-in has expired.",
+  "Přístup byl odepřen.": "Access denied.",
+  "Stránka nebyla nalezena.": "Page not found.",
+  "Prostor nebyl nalezen.": "Space not found.",
+  "Prostor nebyl nalezen nebo k němu nemáte přístup.": "The space was not found, or you have no access to it.",
+  "Uživatel nebyl nalezen.": "User not found.",
+  "Stránku mezitím změnil jiný uživatel. Vaše změny zůstávají v editoru; načtěte aktuální verzi před dalším uložením.": "Another user has changed the page in the meantime. Your changes remain in the editor; load the current version before saving again.",
+  "Stránku mezitím změnil jiný uživatel. Načtěte aktuální verzi stránky znovu a změnu zopakujte s jejím novým expectedVersion.": "Another user has changed the page in the meantime. Load the current version of the page again and repeat the change with its new expectedVersion.",
+  "Nepodporované nastavení vzhledu.": "Unsupported appearance setting.",
+  "Tělo požadavku není platný JSON.": "The request body is not valid JSON.",
+  "Pole {field} v těle požadavku není platný JSON nebo má jiný typ hodnoty (zpětné lomítko v cestě se píše jako \\\\).": "The field {field} of the request body is not valid JSON or has another type of value (a backslash in a path is written as \\\\).",
+  "Tělo požadavku překračuje povolenou velikost.": "The request body exceeds the allowed size.",
+  "Požadavek není platný.": "The request is not valid.",
+  "Ověření požadavku vypršelo. Obnovte stránku.": "The request verification has expired. Reload the page.",
+  "Požadavek se nepodařilo dokončit.": "The request could not be completed.",
+  "K této operaci potřebujete být správcem prostoru.": "You need to be a space admin for this operation.",
+  "K úpravám obsahu potřebujete v prostoru oprávnění k zápisu.": "You need write permission in the space to edit content."
+}

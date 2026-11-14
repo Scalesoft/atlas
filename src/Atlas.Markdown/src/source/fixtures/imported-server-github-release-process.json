@@ -1,0 +1,24 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Steps."
+          }
+        ]
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "heading-anchors",
+      "version": 1
+    }
+  ]
+}

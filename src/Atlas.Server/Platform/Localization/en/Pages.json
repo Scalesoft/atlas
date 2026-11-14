@@ -1,0 +1,19 @@
+{
+  "Šablona se mezitím změnila; pošlete požadavek znovu.": "The template has changed in the meantime; send the request again.",
+  "Šablona nebyla nalezena.": "Template not found.",
+  "Podstránku můžete vytvořit jen pod stránkou, kterou smíte upravovat.": "You can create a subpage only under a page you may edit.",
+  "Rodičovská stránka není dostupná v tomto prostoru.": "The parent page is not available in this space.",
+  "markdown je povinné: celý text stránky z GET /api/v1/pages/{id}?format=markdown se značkami ⟦c:N⟧.": "markdown is required: the whole page text from GET /api/v1/pages/{id}?format=markdown with the ⟦c:N⟧ markers.",
+  "Markdown je příliš dlouhý: nejvýše 1 000 000 znaků. Upravte stránku po sekcích.": "The Markdown is too long: at most 1,000,000 characters. Edit the page by sections.",
+  "Koncepty může schvalovat pouze správce wiki.": "Only a wiki admin can approve drafts.",
+  "Stránka již není v tomto prostoru. Obnovte seznam konceptů.": "The page is no longer in this space. Refresh the list of drafts.",
+  "Koncept se od načtení změnil. Před schválením zkontrolujte novou verzi.": "The draft has changed since it was loaded. Review the new version before approving.",
+  "Obsah se mezitím změnil. Počkejte na synchronizaci a uložte stránku znovu.": "The content has changed in the meantime. Wait for the sync and save the page again.",
+  "Stránka zatím nemá publikovanou verzi.": "The page has no published version yet.",
+  "Vyberte publikaci Manual (Ručně), Automatic (Automaticky), nebo Live (Živě); inherit ji zdědí z prostoru.": "Choose publishing Manual, Automatic or Live; inherit takes it from the space.",
+  "Neplatný filtr konceptů. Počet položek musí být 1–100, posun nezáporný a hledaný název nejvýše 200 znaků.": "Invalid draft filter. The number of items must be 1–100, the offset non-negative and the searched title at most 200 characters.",
+  "removeComponents uvádí nejvýše {maxRemoveComponents} čísel značek ⟦c:N⟧.": "removeComponents lists at most {maxRemoveComponents} numbers of ⟦c:N⟧ markers.",
+  "Stránka má neuložené živé úpravy, které by publikace vynechala. Počkejte, až se uloží (editor ukáže „Uloženo“), a zkuste to znovu, nebo stránku publikujte v Atlasu.": "The page has unsaved live edits that publishing would leave out. Wait until they are saved (the editor shows “Saved”) and try again, or publish the page in Atlas.",
+  "Název stránky": "Page title",
+  "Popis změny": "Change note"
+}

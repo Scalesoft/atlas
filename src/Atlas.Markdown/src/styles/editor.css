@@ -1,0 +1,27 @@
+/* Keep these contiguous style segments in cascade order. Surface and fullscreen
+   remain separate because the fullscreen rules override earlier editor modes. */
+@import './tokens.css';
+@import './states.css';
+@import './motion.css';
+@import './upload.css';
+@import './surface.css';
+@import './content.css';
+/* The inline chip lives with its component (core cannot import CSS); every surface that loads the editor styles gets it. */
+@import '../features/chips/chip.css';
+/* A timed item's day and time (features/timed), for the editor and the static rendering. */
+@import '../features/timed/timedList.css';
+/* The recognition underline lives with the linking engine (core cannot import CSS), loaded here for the same surfaces. */
+@import '../core/recognition/recognition.css';
+@import './editor-tools.css';
+@import './tables.css';
+@import './drag.css';
+@import './controls.css';
+@import './suggestions.css';
+@import './pickers.css';
+@import './modules.css';
+@import './contextToolbar.css';
+@import './imageControls.css';
+@import './fullscreen.css';
+@import './collaboration.css';
+/* The gliding caret, opt-in through MarkdownEditor's smoothCaret. */
+@import './smoothCaret.css';

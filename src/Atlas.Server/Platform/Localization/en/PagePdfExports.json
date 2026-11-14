@@ -1,0 +1,15 @@
+{
+  "Soubor s tímto názvem PDF v této složce již vytváří export jiné stránky. Zvolte jiný název PDF nebo složku.": "A file with this PDF name in this folder is already created by the export of another page. Choose a different PDF name or folder.",
+  "Nejdříve uložte nastavení exportu.": "Save the export settings first.",
+  "Automatický export je vypnutý.": "Automatic export is turned off.",
+  "Export nebyl nalezen.": "Export not found.",
+  "Vyberte úložiště.": "Choose a storage.",
+  "Chybí název PDF.": "The PDF name is missing.",
+  "Zadejte platný název PDF bez cesty.": "Enter a valid PDF name without a path.",
+  "Název PDF smí mít nejvýše 120 znaků.": "The PDF name can have at most 120 characters.",
+  "Název souboru musí končit .pdf.": "The file name must end with .pdf.",
+  "Stránka byla přesunuta. Obnovte nastavení.": "The page was moved. Refresh the settings.",
+  "Složka v úložišti neexistuje. Obnovte výpis složek.": "The folder in the storage does not exist. Refresh the folder listing.",
+  "Úložiště není dostupné nebo k této složce nemá server oprávnění. Zkuste to znovu.": "The storage is not available, or the server has no permission for this folder. Try again.",
+  "Export není povolen.": "Export is not allowed."
+}

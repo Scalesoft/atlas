@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "atlas": {
+      "type": "http",
+      "url": "https://atlas.example.test/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ATLAS_TOKEN}"
+      }
+    }
+  }
+}

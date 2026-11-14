@@ -1,0 +1,95 @@
+name: Release
+
+# A push to main is a release: the CI jobs, then the Git tag v<version> (version.json) and the images
+# ghcr.io/<owner>/atlas:<version> and ghcr.io/<owner>/atlas-postgres:<tag> for linux/amd64.
+# Nothing is deployed from here; installations pick a released version themselves.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Tag and publish
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+      - name: Check the release version
+        id: version
+        run: |
+          set -euo pipefail
+          node tooling/release-version.mjs check version.json v
+          version=$(node -p 'require("./version.json").version')
+          props=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props | tr -d '\r')
+          suffix=$(sed -n 's:.*<VersionSuffix>\(.*\)</VersionSuffix>.*:\1:p' Directory.Build.props | tr -d '\r')
+          web=$(node -p 'require("./src/Atlas.Web/package.json").version')
+          [[ "$props" == "$version" && "$web" == "$version" && -z "$suffix" ]] \
+            || { echo 'main must carry the same stable version in version.json, Directory.Build.props and src/Atlas.Web/package.json.' >&2; exit 1; }
+          db_tag=$(sed -n 's/^ARG POSTGRES_VERSION=//p; s/^ARG PGVECTOR_VERSION=/-pgvector/p; s/^ARG IMAGE_REVISION=\(..*\)/-\1/p' deploy/postgres/Dockerfile | tr -d '\r\n')
+          owner=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+          {
+            echo "version=$version"
+            echo "db_tag=$db_tag"
+            echo "image=ghcr.io/$owner/atlas"
+            echo "db_image=ghcr.io/$owner/atlas-postgres"
+          } >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Database image
+        uses: docker/build-push-action@v7
+        with:
+          context: deploy/postgres
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.version.outputs.db_image }}:${{ steps.version.outputs.db_tag }}
+          build-args: SOURCE_REVISION=${{ github.sha }}
+      - name: Application image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.version.outputs.image }}:${{ steps.version.outputs.version }}
+            ${{ steps.version.outputs.image }}:latest
+          build-args: |
+            RELEASE_VERSION=${{ steps.version.outputs.version }}
+            SOURCE_REVISION=${{ github.sha }}
+      - name: Tag and GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # A rerun of the same commit finds its tag (release-version.mjs refuses a tag on another commit).
+          if ! git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null; then
+            git tag "v$VERSION" "$GITHUB_SHA"
+            git push origin "v$VERSION"
+          fi
+          # The user-facing notes of the version („Co je nového“), in English where they exist.
+          notes="src/Atlas.Web/release-notes/$VERSION.en.md"
+          [[ -f "$notes" ]] || notes="src/Atlas.Web/release-notes/$VERSION.md"
+          gh release view "v$VERSION" > /dev/null 2>&1 || gh release create "v$VERSION" --title "Atlas $VERSION" --notes-file "$notes" --verify-tag

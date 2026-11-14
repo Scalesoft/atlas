@@ -1,0 +1,723 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "headingId": "uvod"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Úvod"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "attrs": {
+          "textAlign": "center"
+        },
+        "content": [
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "bold"
+              }
+            ],
+            "text": "Tučně"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "italic"
+              }
+            ],
+            "text": "kurzíva"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://example.com/a?b=1",
+                  "title": "Titulek"
+                }
+              }
+            ],
+            "text": "odkaz"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "code"
+              }
+            ],
+            "text": "kód"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "highlight"
+              }
+            ],
+            "text": "zvýraznění"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "underline"
+              }
+            ],
+            "text": "podtržení"
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "text",
+            "marks": [
+              {
+                "type": "strike"
+              }
+            ],
+            "text": "přeškrtnutí"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "emoji",
+            "attrs": {
+              "name": "smile"
+            }
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "pageReference",
+            "attrs": {
+              "id": "7d3c5f7e-8a51-4f0e-9b3d-2d1f0c2b1a00",
+              "title": "Příručky",
+              "url": "/#/pages/7d3c5f7e-8a51-4f0e-9b3d-2d1f0c2b1a00"
+            }
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "youtrackIssue",
+            "attrs": {
+              "id": "2-123",
+              "key": "ATL-42",
+              "title": "Chyba",
+              "url": "https://youtrack.example.com/issue/ATL-42",
+              "state": "Open"
+            }
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "mathInline",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "expression": "a^2+b^2"
+              }
+            }
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "contactInline",
+            "attrs": {
+              "data": {
+                "version": 1,
+                "contacts": [
+                  {
+                    "name": "Jana Nováková",
+                    "emails": [
+                      "jana@example.com"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "secretInlineReference",
+            "attrs": {
+              "secretId": "5b2f6a3c-1d4e-4f5a-8b6c-7d8e9f0a1b2c",
+              "field": "username",
+              "fields": [
+                "username",
+                "password"
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "heading",
+        "attrs": {
+          "headingId": "postup",
+          "textAlign": "right",
+          "level": 4
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Postup"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Bod"
+                  }
+                ]
+              },
+              {
+                "type": "orderedList",
+                "attrs": {
+                  "start": 3
+                },
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Vnořený"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "taskList",
+        "content": [
+          {
+            "type": "taskItem",
+            "attrs": {
+              "checked": true
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Hotovo"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "timedList",
+        "content": [
+          {
+            "type": "timedItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "3. 11. 2026 17:19 — Zápis"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "blockquote",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Citace"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "codeBlock",
+        "attrs": {
+          "language": "typescript"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "const a = 1;"
+          }
+        ]
+      },
+      {
+        "type": "horizontalRule"
+      },
+      {
+        "type": "image",
+        "attrs": {
+          "src": "/api/attachments/0f8fad5b-d9cb-469f-a165-70867728950e/content",
+          "alt": "Přihlášení",
+          "presentation": {
+            "width": 60,
+            "align": "left",
+            "caption": "Obrazovka přihlášení",
+            "rotate": 90,
+            "flip": true,
+            "brightness": 110,
+            "contrast": 95,
+            "saturation": 100,
+            "filter": "grayscale",
+            "cropLeft": 5,
+            "cropRight": 10,
+            "cropTop": 0,
+            "cropBottom": 20,
+            "naturalWidth": 1280,
+            "naturalHeight": 720
+          }
+        }
+      },
+      {
+        "type": "table",
+        "attrs": {
+          "chartRef": "tbl-1"
+        },
+        "content": [
+          {
+            "type": "tableRow",
+            "attrs": {
+              "chartRef": "row-1"
+            },
+            "content": [
+              {
+                "type": "tableHeader",
+                "attrs": {
+                  "chartRef": "c-1",
+                  "colwidth": [
+                    160
+                  ]
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Měsíc"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableHeader",
+                "attrs": {
+                  "chartRef": "c-2"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Počet"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableRow",
+            "attrs": {
+              "height": 48,
+              "chartRef": "row-2"
+            },
+            "content": [
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "backgroundColor": "green",
+                  "chartRef": "c-3",
+                  "colwidth": [
+                    160
+                  ]
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Leden"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "textAlign": "right",
+                  "chartRef": "c-4"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "12"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableRow",
+            "attrs": {
+              "chartRef": "row-3"
+            },
+            "content": [
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "chartRef": "c-5",
+                  "colwidth": [
+                    160
+                  ]
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Únor"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableCell",
+                "attrs": {
+                  "chartRef": "c-6"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "18"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "chart",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "title": "Počty",
+            "kind": "bar",
+            "grid": [
+              [
+                "Měsíc",
+                "Počet"
+              ],
+              [
+                "Leden",
+                "12"
+              ],
+              [
+                "Únor",
+                "18"
+              ]
+            ],
+            "source": {
+              "tableId": "tbl-1",
+              "cells": [
+                [
+                  "c-1",
+                  "c-2"
+                ],
+                [
+                  "c-3",
+                  "c-4"
+                ],
+                [
+                  "c-5",
+                  "c-6"
+                ]
+              ]
+            },
+            "sourceStatus": "linked"
+          }
+        }
+      },
+      {
+        "type": "callout",
+        "attrs": {
+          "variant": "warning"
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Pozor"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "concealedContent",
+        "attrs": {
+          "reveal": "button",
+          "reconcealAfterMs": null,
+          "completeAtPercent": 80
+        },
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Tajenka"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "attachment",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "name": "Příručka.pdf",
+            "url": "/api/attachments/0f8fad5b-d9cb-469f-a165-70867728950e/download",
+            "size": 52344,
+            "mimeType": "application/pdf",
+            "description": "Původní PDF"
+          }
+        }
+      },
+      {
+        "type": "contactCard",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "contacts": [
+              {
+                "name": "Petr Svoboda",
+                "title": "Správce",
+                "organization": "Modelsoft",
+                "phones": [
+                  "+420 123 456 789"
+                ],
+                "emails": [
+                  "petr@example.com"
+                ],
+                "website": "https://example.com",
+                "kind": "internal",
+                "internalUser": {
+                  "id": "user-1",
+                  "name": "Petr Svoboda"
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "type": "diagram",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "source": "flowchart LR\n  A --> B",
+            "caption": "Tok"
+          }
+        }
+      },
+      {
+        "type": "mathBlock",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "expression": "E = mc^2"
+          }
+        }
+      },
+      {
+        "type": "tableOfContents",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "title": "Obsah",
+            "minLevel": 1,
+            "maxLevel": 4
+          }
+        }
+      },
+      {
+        "type": "openapi",
+        "attrs": {
+          "data": {
+            "version": 1,
+            "filename": "api.yaml",
+            "mode": "reference",
+            "uploadedBy": "Jana Nováková",
+            "source": "openapi: 3.1.0\ninfo:\n  title: Ukázka\n  version: '1.0'\npaths:\n  /ping:\n    get:\n      responses:\n        '200':\n          description: OK\n"
+          }
+        }
+      },
+      {
+        "type": "secretReference",
+        "attrs": {
+          "secretId": "5b2f6a3c-1d4e-4f5a-8b6c-7d8e9f0a1b2c",
+          "showDetails": true,
+          "autoHideSeconds": 30
+        }
+      },
+      {
+        "type": "paragraph"
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "attachments",
+      "version": 1
+    },
+    {
+      "id": "charts",
+      "version": 1
+    },
+    {
+      "id": "concealed",
+      "version": 2
+    },
+    {
+      "id": "contacts",
+      "version": 2
+    },
+    {
+      "id": "diagrams",
+      "version": 2
+    },
+    {
+      "id": "emoji",
+      "version": 1
+    },
+    {
+      "id": "heading-anchors",
+      "version": 2
+    },
+    {
+      "id": "math",
+      "version": 1
+    },
+    {
+      "id": "openapi",
+      "version": 1
+    },
+    {
+      "id": "pages",
+      "version": 1
+    },
+    {
+      "id": "secrets",
+      "version": 4
+    },
+    {
+      "id": "toc",
+      "version": 1
+    },
+    {
+      "id": "youtrack",
+      "version": 1
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "Počet odkazů musí být 1–50.": "The number of links must be 1–50.",
+  "Ověřit lze nejvýše {maxIds} odkazů najednou.": "At most {maxIds} links can be verified at once."
+}

@@ -1,0 +1,2312 @@
+{
+ "yjs": "13.6",
+ "entries": [
+  {
+   "name": "fixture-y-tiptap-crash-1-log",
+   "payloads": [
+    "yjs-materializer/fixture-y-tiptap-crash-1/000.state.bin",
+    "yjs-materializer/fixture-y-tiptap-crash-1/001.update.bin"
+   ],
+   "expected": "yjs-merge/fixture-y-tiptap-crash-1-log.bin"
+  },
+  {
+   "name": "fixture-y-tiptap-crash-1-states",
+   "payloads": [
+    "yjs-merge/fixture-y-tiptap-crash-1/early.state.bin",
+    "yjs-merge/fixture-y-tiptap-crash-1/late.state.bin"
+   ],
+   "expected": "yjs-merge/fixture-y-tiptap-crash-1-states.bin"
+  },
+  {
+   "name": "fixture-y-tiptap-crash-1-late-first",
+   "payloads": [
+    "yjs-merge/fixture-y-tiptap-crash-1/late.state.bin",
+    "yjs-merge/fixture-y-tiptap-crash-1/early.state.bin",
+    "yjs-materializer/fixture-y-tiptap-crash-1/001.update.bin"
+   ],
+   "expected": "yjs-merge/fixture-y-tiptap-crash-1-late-first.bin"
+  },
+  {
+   "name": "fixture-y-tiptap-crash-1-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/fixture-y-tiptap-crash-1/early.state.bin",
+    "yjs-materializer/fixture-y-tiptap-crash-1/001.update.bin"
+   ],
+   "expected": "yjs-merge/fixture-y-tiptap-crash-1-snapshot-and-log.bin"
+  },
+  {
+   "name": "editor-session-log",
+   "payloads": [
+    "yjs-materializer/editor-session/000.state.bin",
+    "yjs-materializer/editor-session/001.update.bin",
+    "yjs-materializer/editor-session/002.update.bin",
+    "yjs-materializer/editor-session/003.update.bin",
+    "yjs-materializer/editor-session/004.update.bin",
+    "yjs-materializer/editor-session/005.update.bin",
+    "yjs-materializer/editor-session/006.update.bin",
+    "yjs-materializer/editor-session/007.update.bin",
+    "yjs-materializer/editor-session/008.update.bin",
+    "yjs-materializer/editor-session/009.update.bin",
+    "yjs-materializer/editor-session/010.update.bin",
+    "yjs-materializer/editor-session/011.update.bin",
+    "yjs-materializer/editor-session/012.update.bin",
+    "yjs-materializer/editor-session/013.update.bin",
+    "yjs-materializer/editor-session/014.update.bin",
+    "yjs-materializer/editor-session/015.update.bin",
+    "yjs-materializer/editor-session/016.update.bin",
+    "yjs-materializer/editor-session/017.update.bin"
+   ],
+   "expected": "yjs-merge/editor-session-log.bin"
+  },
+  {
+   "name": "editor-session-states",
+   "payloads": [
+    "yjs-merge/editor-session/early.state.bin",
+    "yjs-merge/editor-session/late.state.bin"
+   ],
+   "expected": "yjs-merge/editor-session-states.bin"
+  },
+  {
+   "name": "editor-session-late-first",
+   "payloads": [
+    "yjs-merge/editor-session/late.state.bin",
+    "yjs-merge/editor-session/early.state.bin",
+    "yjs-materializer/editor-session/001.update.bin",
+    "yjs-materializer/editor-session/002.update.bin",
+    "yjs-materializer/editor-session/003.update.bin",
+    "yjs-materializer/editor-session/004.update.bin",
+    "yjs-materializer/editor-session/005.update.bin",
+    "yjs-materializer/editor-session/006.update.bin",
+    "yjs-materializer/editor-session/007.update.bin",
+    "yjs-materializer/editor-session/008.update.bin",
+    "yjs-materializer/editor-session/009.update.bin",
+    "yjs-materializer/editor-session/010.update.bin",
+    "yjs-materializer/editor-session/011.update.bin",
+    "yjs-materializer/editor-session/012.update.bin",
+    "yjs-materializer/editor-session/013.update.bin",
+    "yjs-materializer/editor-session/014.update.bin",
+    "yjs-materializer/editor-session/015.update.bin",
+    "yjs-materializer/editor-session/016.update.bin",
+    "yjs-materializer/editor-session/017.update.bin"
+   ],
+   "expected": "yjs-merge/editor-session-late-first.bin"
+  },
+  {
+   "name": "editor-session-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/editor-session/early.state.bin",
+    "yjs-materializer/editor-session/008.update.bin",
+    "yjs-materializer/editor-session/009.update.bin",
+    "yjs-materializer/editor-session/010.update.bin",
+    "yjs-materializer/editor-session/011.update.bin",
+    "yjs-materializer/editor-session/012.update.bin",
+    "yjs-materializer/editor-session/013.update.bin",
+    "yjs-materializer/editor-session/014.update.bin",
+    "yjs-materializer/editor-session/015.update.bin",
+    "yjs-materializer/editor-session/016.update.bin",
+    "yjs-materializer/editor-session/017.update.bin"
+   ],
+   "expected": "yjs-merge/editor-session-snapshot-and-log.bin"
+  },
+  {
+   "name": "editor-concurrent-log",
+   "payloads": [
+    "yjs-materializer/editor-concurrent/000.state.bin",
+    "yjs-materializer/editor-concurrent/001.update.bin",
+    "yjs-materializer/editor-concurrent/002.update.bin",
+    "yjs-materializer/editor-concurrent/003.update.bin",
+    "yjs-materializer/editor-concurrent/004.update.bin",
+    "yjs-materializer/editor-concurrent/005.update.bin",
+    "yjs-materializer/editor-concurrent/006.update.bin",
+    "yjs-materializer/editor-concurrent/007.update.bin",
+    "yjs-materializer/editor-concurrent/008.update.bin",
+    "yjs-materializer/editor-concurrent/009.update.bin",
+    "yjs-materializer/editor-concurrent/010.update.bin",
+    "yjs-materializer/editor-concurrent/011.update.bin"
+   ],
+   "expected": "yjs-merge/editor-concurrent-log.bin"
+  },
+  {
+   "name": "editor-concurrent-states",
+   "payloads": [
+    "yjs-merge/editor-concurrent/early.state.bin",
+    "yjs-merge/editor-concurrent/late.state.bin"
+   ],
+   "expected": "yjs-merge/editor-concurrent-states.bin"
+  },
+  {
+   "name": "editor-concurrent-late-first",
+   "payloads": [
+    "yjs-merge/editor-concurrent/late.state.bin",
+    "yjs-merge/editor-concurrent/early.state.bin",
+    "yjs-materializer/editor-concurrent/001.update.bin",
+    "yjs-materializer/editor-concurrent/002.update.bin",
+    "yjs-materializer/editor-concurrent/003.update.bin",
+    "yjs-materializer/editor-concurrent/004.update.bin",
+    "yjs-materializer/editor-concurrent/005.update.bin",
+    "yjs-materializer/editor-concurrent/006.update.bin",
+    "yjs-materializer/editor-concurrent/007.update.bin",
+    "yjs-materializer/editor-concurrent/008.update.bin",
+    "yjs-materializer/editor-concurrent/009.update.bin",
+    "yjs-materializer/editor-concurrent/010.update.bin",
+    "yjs-materializer/editor-concurrent/011.update.bin"
+   ],
+   "expected": "yjs-merge/editor-concurrent-late-first.bin"
+  },
+  {
+   "name": "editor-concurrent-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/editor-concurrent/early.state.bin",
+    "yjs-materializer/editor-concurrent/005.update.bin",
+    "yjs-materializer/editor-concurrent/006.update.bin",
+    "yjs-materializer/editor-concurrent/007.update.bin",
+    "yjs-materializer/editor-concurrent/008.update.bin",
+    "yjs-materializer/editor-concurrent/009.update.bin",
+    "yjs-materializer/editor-concurrent/010.update.bin",
+    "yjs-materializer/editor-concurrent/011.update.bin"
+   ],
+   "expected": "yjs-merge/editor-concurrent-snapshot-and-log.bin"
+  },
+  {
+   "name": "gc-concurrent-delete-log",
+   "payloads": [
+    "yjs-materializer/gc-concurrent-delete/000.state.bin",
+    "yjs-materializer/gc-concurrent-delete/001.update.bin"
+   ],
+   "expected": "yjs-merge/gc-concurrent-delete-log.bin"
+  },
+  {
+   "name": "gc-concurrent-delete-states",
+   "payloads": [
+    "yjs-merge/gc-concurrent-delete/early.state.bin",
+    "yjs-merge/gc-concurrent-delete/late.state.bin"
+   ],
+   "expected": "yjs-merge/gc-concurrent-delete-states.bin"
+  },
+  {
+   "name": "gc-concurrent-delete-late-first",
+   "payloads": [
+    "yjs-merge/gc-concurrent-delete/late.state.bin",
+    "yjs-merge/gc-concurrent-delete/early.state.bin",
+    "yjs-materializer/gc-concurrent-delete/001.update.bin"
+   ],
+   "expected": "yjs-merge/gc-concurrent-delete-late-first.bin"
+  },
+  {
+   "name": "gc-concurrent-delete-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/gc-concurrent-delete/early.state.bin",
+    "yjs-materializer/gc-concurrent-delete/001.update.bin"
+   ],
+   "expected": "yjs-merge/gc-concurrent-delete-snapshot-and-log.bin"
+  },
+  {
+   "name": "raw-surrogate-split-log",
+   "payloads": [
+    "yjs-materializer/raw-surrogate-split/000.state.bin",
+    "yjs-materializer/raw-surrogate-split/001.update.bin"
+   ],
+   "expected": "yjs-merge/raw-surrogate-split-log.bin"
+  },
+  {
+   "name": "raw-surrogate-split-states",
+   "payloads": [
+    "yjs-merge/raw-surrogate-split/early.state.bin",
+    "yjs-merge/raw-surrogate-split/late.state.bin"
+   ],
+   "expected": "yjs-merge/raw-surrogate-split-states.bin"
+  },
+  {
+   "name": "raw-surrogate-split-late-first",
+   "payloads": [
+    "yjs-merge/raw-surrogate-split/late.state.bin",
+    "yjs-merge/raw-surrogate-split/early.state.bin",
+    "yjs-materializer/raw-surrogate-split/001.update.bin"
+   ],
+   "expected": "yjs-merge/raw-surrogate-split-late-first.bin"
+  },
+  {
+   "name": "raw-surrogate-split-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/raw-surrogate-split/early.state.bin",
+    "yjs-materializer/raw-surrogate-split/001.update.bin"
+   ],
+   "expected": "yjs-merge/raw-surrogate-split-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-paragraph-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-paragraph/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/001-insert_paragraph.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/002-attr_paragraph_textAlign.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/003-type_into_paragraph_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/004-type_into_paragraph_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/005-type_into_paragraph_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/006-delete_paragraph.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-paragraph-log.bin"
+  },
+  {
+   "name": "corpus-node-paragraph-states",
+   "payloads": [
+    "yjs-merge/corpus-node-paragraph/early.state.bin",
+    "yjs-merge/corpus-node-paragraph/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-paragraph-states.bin"
+  },
+  {
+   "name": "corpus-node-paragraph-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-paragraph/late.state.bin",
+    "yjs-merge/corpus-node-paragraph/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/001-insert_paragraph.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/002-attr_paragraph_textAlign.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/003-type_into_paragraph_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/004-type_into_paragraph_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/005-type_into_paragraph_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/006-delete_paragraph.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-paragraph-late-first.bin"
+  },
+  {
+   "name": "corpus-node-paragraph-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-paragraph/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/002-attr_paragraph_textAlign.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/003-type_into_paragraph_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/004-type_into_paragraph_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/005-type_into_paragraph_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-paragraph/006-delete_paragraph.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-paragraph-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-blockquote-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-blockquote/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/001-insert_blockquote.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/002-type_into_blockquote_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/003-type_into_blockquote_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/004-type_into_blockquote_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/005-delete_blockquote.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-blockquote-log.bin"
+  },
+  {
+   "name": "corpus-node-blockquote-states",
+   "payloads": [
+    "yjs-merge/corpus-node-blockquote/early.state.bin",
+    "yjs-merge/corpus-node-blockquote/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-blockquote-states.bin"
+  },
+  {
+   "name": "corpus-node-blockquote-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-blockquote/late.state.bin",
+    "yjs-merge/corpus-node-blockquote/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/001-insert_blockquote.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/002-type_into_blockquote_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/003-type_into_blockquote_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/004-type_into_blockquote_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/005-delete_blockquote.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-blockquote-late-first.bin"
+  },
+  {
+   "name": "corpus-node-blockquote-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-blockquote/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/002-type_into_blockquote_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/003-type_into_blockquote_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/004-type_into_blockquote_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-blockquote/005-delete_blockquote.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-blockquote-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-bulletList-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-bulletList/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/001-insert_bulletList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/002-attr_bulletList_tight.update.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/003-delete_bulletList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-bulletList-log.bin"
+  },
+  {
+   "name": "corpus-node-bulletList-states",
+   "payloads": [
+    "yjs-merge/corpus-node-bulletList/early.state.bin",
+    "yjs-merge/corpus-node-bulletList/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-bulletList-states.bin"
+  },
+  {
+   "name": "corpus-node-bulletList-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-bulletList/late.state.bin",
+    "yjs-merge/corpus-node-bulletList/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/001-insert_bulletList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/002-attr_bulletList_tight.update.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/003-delete_bulletList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-bulletList-late-first.bin"
+  },
+  {
+   "name": "corpus-node-bulletList-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-bulletList/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/001-insert_bulletList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/002-attr_bulletList_tight.update.bin",
+    "yjs-materializer/../yjs-corpus/node-bulletList/003-delete_bulletList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-bulletList-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-codeBlock-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-codeBlock/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/001-insert_codeBlock.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/002-attr_codeBlock_language.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/003-type_into_codeBlock_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/004-type_into_codeBlock_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/005-type_into_codeBlock_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/006-delete_codeBlock.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-codeBlock-log.bin"
+  },
+  {
+   "name": "corpus-node-codeBlock-states",
+   "payloads": [
+    "yjs-merge/corpus-node-codeBlock/early.state.bin",
+    "yjs-merge/corpus-node-codeBlock/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-codeBlock-states.bin"
+  },
+  {
+   "name": "corpus-node-codeBlock-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-codeBlock/late.state.bin",
+    "yjs-merge/corpus-node-codeBlock/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/001-insert_codeBlock.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/002-attr_codeBlock_language.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/003-type_into_codeBlock_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/004-type_into_codeBlock_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/005-type_into_codeBlock_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/006-delete_codeBlock.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-codeBlock-late-first.bin"
+  },
+  {
+   "name": "corpus-node-codeBlock-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-codeBlock/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/002-attr_codeBlock_language.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/003-type_into_codeBlock_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/004-type_into_codeBlock_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/005-type_into_codeBlock_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-codeBlock/006-delete_codeBlock.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-codeBlock-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-hardBreak-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-hardBreak/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-hardBreak/001-insert_hardBreak.update.bin",
+    "yjs-materializer/../yjs-corpus/node-hardBreak/002-delete_hardBreak.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-hardBreak-log.bin"
+  },
+  {
+   "name": "corpus-node-hardBreak-states",
+   "payloads": [
+    "yjs-merge/corpus-node-hardBreak/early.state.bin",
+    "yjs-merge/corpus-node-hardBreak/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-hardBreak-states.bin"
+  },
+  {
+   "name": "corpus-node-hardBreak-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-hardBreak/late.state.bin",
+    "yjs-merge/corpus-node-hardBreak/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-hardBreak/001-insert_hardBreak.update.bin",
+    "yjs-materializer/../yjs-corpus/node-hardBreak/002-delete_hardBreak.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-hardBreak-late-first.bin"
+  },
+  {
+   "name": "corpus-node-hardBreak-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-hardBreak/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-hardBreak/001-insert_hardBreak.update.bin",
+    "yjs-materializer/../yjs-corpus/node-hardBreak/002-delete_hardBreak.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-hardBreak-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-heading-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-heading/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/001-insert_heading.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/002-attr_heading_level.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/003-type_into_heading_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/004-type_into_heading_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/005-type_into_heading_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/006-delete_heading.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-heading-log.bin"
+  },
+  {
+   "name": "corpus-node-heading-states",
+   "payloads": [
+    "yjs-merge/corpus-node-heading/early.state.bin",
+    "yjs-merge/corpus-node-heading/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-heading-states.bin"
+  },
+  {
+   "name": "corpus-node-heading-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-heading/late.state.bin",
+    "yjs-merge/corpus-node-heading/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/001-insert_heading.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/002-attr_heading_level.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/003-type_into_heading_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/004-type_into_heading_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/005-type_into_heading_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/006-delete_heading.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-heading-late-first.bin"
+  },
+  {
+   "name": "corpus-node-heading-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-heading/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/002-attr_heading_level.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/003-type_into_heading_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/004-type_into_heading_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/005-type_into_heading_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-heading/006-delete_heading.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-heading-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-horizontalRule-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/001-insert_horizontalRule.update.bin",
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/002-delete_horizontalRule.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-horizontalRule-log.bin"
+  },
+  {
+   "name": "corpus-node-horizontalRule-states",
+   "payloads": [
+    "yjs-merge/corpus-node-horizontalRule/early.state.bin",
+    "yjs-merge/corpus-node-horizontalRule/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-horizontalRule-states.bin"
+  },
+  {
+   "name": "corpus-node-horizontalRule-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-horizontalRule/late.state.bin",
+    "yjs-merge/corpus-node-horizontalRule/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/001-insert_horizontalRule.update.bin",
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/002-delete_horizontalRule.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-horizontalRule-late-first.bin"
+  },
+  {
+   "name": "corpus-node-horizontalRule-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-horizontalRule/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/001-insert_horizontalRule.update.bin",
+    "yjs-materializer/../yjs-corpus/node-horizontalRule/002-delete_horizontalRule.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-horizontalRule-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-orderedList-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-orderedList/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/001-insert_orderedList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/002-attr_orderedList_tight.update.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/003-delete_orderedList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-orderedList-log.bin"
+  },
+  {
+   "name": "corpus-node-orderedList-states",
+   "payloads": [
+    "yjs-merge/corpus-node-orderedList/early.state.bin",
+    "yjs-merge/corpus-node-orderedList/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-orderedList-states.bin"
+  },
+  {
+   "name": "corpus-node-orderedList-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-orderedList/late.state.bin",
+    "yjs-merge/corpus-node-orderedList/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/001-insert_orderedList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/002-attr_orderedList_tight.update.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/003-delete_orderedList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-orderedList-late-first.bin"
+  },
+  {
+   "name": "corpus-node-orderedList-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-orderedList/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/001-insert_orderedList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/002-attr_orderedList_tight.update.bin",
+    "yjs-materializer/../yjs-corpus/node-orderedList/003-delete_orderedList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-orderedList-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-image-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-image/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-image/001-insert_image.update.bin",
+    "yjs-materializer/../yjs-corpus/node-image/002-attr_image_src.update.bin",
+    "yjs-materializer/../yjs-corpus/node-image/003-delete_image.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-image-log.bin"
+  },
+  {
+   "name": "corpus-node-image-states",
+   "payloads": [
+    "yjs-merge/corpus-node-image/early.state.bin",
+    "yjs-merge/corpus-node-image/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-image-states.bin"
+  },
+  {
+   "name": "corpus-node-image-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-image/late.state.bin",
+    "yjs-merge/corpus-node-image/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-image/001-insert_image.update.bin",
+    "yjs-materializer/../yjs-corpus/node-image/002-attr_image_src.update.bin",
+    "yjs-materializer/../yjs-corpus/node-image/003-delete_image.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-image-late-first.bin"
+  },
+  {
+   "name": "corpus-node-image-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-image/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-image/001-insert_image.update.bin",
+    "yjs-materializer/../yjs-corpus/node-image/002-attr_image_src.update.bin",
+    "yjs-materializer/../yjs-corpus/node-image/003-delete_image.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-image-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-table-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-table/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-table/001-insert_table.update.bin",
+    "yjs-materializer/../yjs-corpus/node-table/002-attr_table_chartRef.update.bin",
+    "yjs-materializer/../yjs-corpus/node-table/003-delete_table.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-table-log.bin"
+  },
+  {
+   "name": "corpus-node-table-states",
+   "payloads": [
+    "yjs-merge/corpus-node-table/early.state.bin",
+    "yjs-merge/corpus-node-table/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-table-states.bin"
+  },
+  {
+   "name": "corpus-node-table-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-table/late.state.bin",
+    "yjs-merge/corpus-node-table/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-table/001-insert_table.update.bin",
+    "yjs-materializer/../yjs-corpus/node-table/002-attr_table_chartRef.update.bin",
+    "yjs-materializer/../yjs-corpus/node-table/003-delete_table.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-table-late-first.bin"
+  },
+  {
+   "name": "corpus-node-table-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-table/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-table/001-insert_table.update.bin",
+    "yjs-materializer/../yjs-corpus/node-table/002-attr_table_chartRef.update.bin",
+    "yjs-materializer/../yjs-corpus/node-table/003-delete_table.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-table-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-taskList-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-taskList/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-taskList/001-insert_taskList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-taskList/002-delete_taskList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-taskList-log.bin"
+  },
+  {
+   "name": "corpus-node-taskList-states",
+   "payloads": [
+    "yjs-merge/corpus-node-taskList/early.state.bin",
+    "yjs-merge/corpus-node-taskList/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-taskList-states.bin"
+  },
+  {
+   "name": "corpus-node-taskList-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-taskList/late.state.bin",
+    "yjs-merge/corpus-node-taskList/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-taskList/001-insert_taskList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-taskList/002-delete_taskList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-taskList-late-first.bin"
+  },
+  {
+   "name": "corpus-node-taskList-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-taskList/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-taskList/001-insert_taskList.update.bin",
+    "yjs-materializer/../yjs-corpus/node-taskList/002-delete_taskList.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-taskList-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-callout-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-callout/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/001-insert_callout.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/002-attr_callout_variant.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/003-type_into_callout_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/004-type_into_callout_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/005-type_into_callout_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/006-delete_callout.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-callout-log.bin"
+  },
+  {
+   "name": "corpus-node-callout-states",
+   "payloads": [
+    "yjs-merge/corpus-node-callout/early.state.bin",
+    "yjs-merge/corpus-node-callout/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-callout-states.bin"
+  },
+  {
+   "name": "corpus-node-callout-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-callout/late.state.bin",
+    "yjs-merge/corpus-node-callout/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/001-insert_callout.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/002-attr_callout_variant.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/003-type_into_callout_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/004-type_into_callout_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/005-type_into_callout_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/006-delete_callout.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-callout-late-first.bin"
+  },
+  {
+   "name": "corpus-node-callout-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-callout/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/002-attr_callout_variant.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/003-type_into_callout_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/004-type_into_callout_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/005-type_into_callout_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-callout/006-delete_callout.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-callout-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-youtrackIssue-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/001-insert_youtrackIssue.update.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/002-attr_youtrackIssue_key.update.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/003-delete_youtrackIssue.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-youtrackIssue-log.bin"
+  },
+  {
+   "name": "corpus-node-youtrackIssue-states",
+   "payloads": [
+    "yjs-merge/corpus-node-youtrackIssue/early.state.bin",
+    "yjs-merge/corpus-node-youtrackIssue/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-youtrackIssue-states.bin"
+  },
+  {
+   "name": "corpus-node-youtrackIssue-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-youtrackIssue/late.state.bin",
+    "yjs-merge/corpus-node-youtrackIssue/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/001-insert_youtrackIssue.update.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/002-attr_youtrackIssue_key.update.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/003-delete_youtrackIssue.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-youtrackIssue-late-first.bin"
+  },
+  {
+   "name": "corpus-node-youtrackIssue-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-youtrackIssue/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/001-insert_youtrackIssue.update.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/002-attr_youtrackIssue_key.update.bin",
+    "yjs-materializer/../yjs-corpus/node-youtrackIssue/003-delete_youtrackIssue.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-youtrackIssue-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-contactCard-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-contactCard/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/001-insert_contactCard.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/002-attr_contactCard_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/003-delete_contactCard.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactCard-log.bin"
+  },
+  {
+   "name": "corpus-node-contactCard-states",
+   "payloads": [
+    "yjs-merge/corpus-node-contactCard/early.state.bin",
+    "yjs-merge/corpus-node-contactCard/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactCard-states.bin"
+  },
+  {
+   "name": "corpus-node-contactCard-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-contactCard/late.state.bin",
+    "yjs-merge/corpus-node-contactCard/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/001-insert_contactCard.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/002-attr_contactCard_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/003-delete_contactCard.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactCard-late-first.bin"
+  },
+  {
+   "name": "corpus-node-contactCard-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-contactCard/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/001-insert_contactCard.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/002-attr_contactCard_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactCard/003-delete_contactCard.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactCard-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-contactInline-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-contactInline/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/001-insert_contactInline.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/002-attr_contactInline_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/003-delete_contactInline.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactInline-log.bin"
+  },
+  {
+   "name": "corpus-node-contactInline-states",
+   "payloads": [
+    "yjs-merge/corpus-node-contactInline/early.state.bin",
+    "yjs-merge/corpus-node-contactInline/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactInline-states.bin"
+  },
+  {
+   "name": "corpus-node-contactInline-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-contactInline/late.state.bin",
+    "yjs-merge/corpus-node-contactInline/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/001-insert_contactInline.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/002-attr_contactInline_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/003-delete_contactInline.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactInline-late-first.bin"
+  },
+  {
+   "name": "corpus-node-contactInline-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-contactInline/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/001-insert_contactInline.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/002-attr_contactInline_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-contactInline/003-delete_contactInline.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-contactInline-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-attachment-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-attachment/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/001-insert_attachment.update.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/002-attr_attachment_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/003-delete_attachment.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-attachment-log.bin"
+  },
+  {
+   "name": "corpus-node-attachment-states",
+   "payloads": [
+    "yjs-merge/corpus-node-attachment/early.state.bin",
+    "yjs-merge/corpus-node-attachment/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-attachment-states.bin"
+  },
+  {
+   "name": "corpus-node-attachment-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-attachment/late.state.bin",
+    "yjs-merge/corpus-node-attachment/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/001-insert_attachment.update.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/002-attr_attachment_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/003-delete_attachment.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-attachment-late-first.bin"
+  },
+  {
+   "name": "corpus-node-attachment-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-attachment/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/001-insert_attachment.update.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/002-attr_attachment_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-attachment/003-delete_attachment.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-attachment-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-chart-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-chart/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/001-insert_chart.update.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/002-attr_chart_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/003-delete_chart.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-chart-log.bin"
+  },
+  {
+   "name": "corpus-node-chart-states",
+   "payloads": [
+    "yjs-merge/corpus-node-chart/early.state.bin",
+    "yjs-merge/corpus-node-chart/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-chart-states.bin"
+  },
+  {
+   "name": "corpus-node-chart-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-chart/late.state.bin",
+    "yjs-merge/corpus-node-chart/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/001-insert_chart.update.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/002-attr_chart_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/003-delete_chart.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-chart-late-first.bin"
+  },
+  {
+   "name": "corpus-node-chart-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-chart/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/001-insert_chart.update.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/002-attr_chart_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-chart/003-delete_chart.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-chart-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-openapi-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-openapi/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/001-insert_openapi.update.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/002-attr_openapi_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/003-delete_openapi.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-openapi-log.bin"
+  },
+  {
+   "name": "corpus-node-openapi-states",
+   "payloads": [
+    "yjs-merge/corpus-node-openapi/early.state.bin",
+    "yjs-merge/corpus-node-openapi/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-openapi-states.bin"
+  },
+  {
+   "name": "corpus-node-openapi-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-openapi/late.state.bin",
+    "yjs-merge/corpus-node-openapi/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/001-insert_openapi.update.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/002-attr_openapi_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/003-delete_openapi.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-openapi-late-first.bin"
+  },
+  {
+   "name": "corpus-node-openapi-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-openapi/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/001-insert_openapi.update.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/002-attr_openapi_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-openapi/003-delete_openapi.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-openapi-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-diagram-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-diagram/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/001-insert_diagram.update.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/002-attr_diagram_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/003-delete_diagram.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-diagram-log.bin"
+  },
+  {
+   "name": "corpus-node-diagram-states",
+   "payloads": [
+    "yjs-merge/corpus-node-diagram/early.state.bin",
+    "yjs-merge/corpus-node-diagram/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-diagram-states.bin"
+  },
+  {
+   "name": "corpus-node-diagram-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-diagram/late.state.bin",
+    "yjs-merge/corpus-node-diagram/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/001-insert_diagram.update.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/002-attr_diagram_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/003-delete_diagram.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-diagram-late-first.bin"
+  },
+  {
+   "name": "corpus-node-diagram-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-diagram/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/001-insert_diagram.update.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/002-attr_diagram_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-diagram/003-delete_diagram.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-diagram-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-mathBlock-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-mathBlock/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/001-insert_mathBlock.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/002-attr_mathBlock_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/003-delete_mathBlock.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathBlock-log.bin"
+  },
+  {
+   "name": "corpus-node-mathBlock-states",
+   "payloads": [
+    "yjs-merge/corpus-node-mathBlock/early.state.bin",
+    "yjs-merge/corpus-node-mathBlock/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathBlock-states.bin"
+  },
+  {
+   "name": "corpus-node-mathBlock-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-mathBlock/late.state.bin",
+    "yjs-merge/corpus-node-mathBlock/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/001-insert_mathBlock.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/002-attr_mathBlock_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/003-delete_mathBlock.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathBlock-late-first.bin"
+  },
+  {
+   "name": "corpus-node-mathBlock-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-mathBlock/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/001-insert_mathBlock.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/002-attr_mathBlock_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathBlock/003-delete_mathBlock.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathBlock-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-mathInline-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-mathInline/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/001-insert_mathInline.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/002-attr_mathInline_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/003-delete_mathInline.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathInline-log.bin"
+  },
+  {
+   "name": "corpus-node-mathInline-states",
+   "payloads": [
+    "yjs-merge/corpus-node-mathInline/early.state.bin",
+    "yjs-merge/corpus-node-mathInline/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathInline-states.bin"
+  },
+  {
+   "name": "corpus-node-mathInline-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-mathInline/late.state.bin",
+    "yjs-merge/corpus-node-mathInline/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/001-insert_mathInline.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/002-attr_mathInline_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/003-delete_mathInline.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathInline-late-first.bin"
+  },
+  {
+   "name": "corpus-node-mathInline-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-mathInline/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/001-insert_mathInline.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/002-attr_mathInline_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-mathInline/003-delete_mathInline.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-mathInline-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-tableOfContents-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/001-insert_tableOfContents.update.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/002-attr_tableOfContents_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/003-delete_tableOfContents.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-tableOfContents-log.bin"
+  },
+  {
+   "name": "corpus-node-tableOfContents-states",
+   "payloads": [
+    "yjs-merge/corpus-node-tableOfContents/early.state.bin",
+    "yjs-merge/corpus-node-tableOfContents/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-tableOfContents-states.bin"
+  },
+  {
+   "name": "corpus-node-tableOfContents-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-tableOfContents/late.state.bin",
+    "yjs-merge/corpus-node-tableOfContents/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/001-insert_tableOfContents.update.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/002-attr_tableOfContents_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/003-delete_tableOfContents.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-tableOfContents-late-first.bin"
+  },
+  {
+   "name": "corpus-node-tableOfContents-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-tableOfContents/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/001-insert_tableOfContents.update.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/002-attr_tableOfContents_data.update.bin",
+    "yjs-materializer/../yjs-corpus/node-tableOfContents/003-delete_tableOfContents.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-tableOfContents-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-emoji-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-emoji/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/001-insert_emoji.update.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/002-attr_emoji_name.update.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/003-delete_emoji.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-emoji-log.bin"
+  },
+  {
+   "name": "corpus-node-emoji-states",
+   "payloads": [
+    "yjs-merge/corpus-node-emoji/early.state.bin",
+    "yjs-merge/corpus-node-emoji/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-emoji-states.bin"
+  },
+  {
+   "name": "corpus-node-emoji-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-emoji/late.state.bin",
+    "yjs-merge/corpus-node-emoji/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/001-insert_emoji.update.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/002-attr_emoji_name.update.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/003-delete_emoji.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-emoji-late-first.bin"
+  },
+  {
+   "name": "corpus-node-emoji-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-emoji/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/001-insert_emoji.update.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/002-attr_emoji_name.update.bin",
+    "yjs-materializer/../yjs-corpus/node-emoji/003-delete_emoji.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-emoji-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-pageReference-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-pageReference/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/001-insert_pageReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/002-attr_pageReference_title.update.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/003-delete_pageReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-pageReference-log.bin"
+  },
+  {
+   "name": "corpus-node-pageReference-states",
+   "payloads": [
+    "yjs-merge/corpus-node-pageReference/early.state.bin",
+    "yjs-merge/corpus-node-pageReference/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-pageReference-states.bin"
+  },
+  {
+   "name": "corpus-node-pageReference-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-pageReference/late.state.bin",
+    "yjs-merge/corpus-node-pageReference/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/001-insert_pageReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/002-attr_pageReference_title.update.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/003-delete_pageReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-pageReference-late-first.bin"
+  },
+  {
+   "name": "corpus-node-pageReference-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-pageReference/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/001-insert_pageReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/002-attr_pageReference_title.update.bin",
+    "yjs-materializer/../yjs-corpus/node-pageReference/003-delete_pageReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-pageReference-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-concealedContent-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-concealedContent/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/001-insert_concealedContent.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/002-attr_concealedContent_reveal.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/003-type_into_concealedContent_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/004-type_into_concealedContent_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/005-type_into_concealedContent_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/006-delete_concealedContent.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-concealedContent-log.bin"
+  },
+  {
+   "name": "corpus-node-concealedContent-states",
+   "payloads": [
+    "yjs-merge/corpus-node-concealedContent/early.state.bin",
+    "yjs-merge/corpus-node-concealedContent/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-concealedContent-states.bin"
+  },
+  {
+   "name": "corpus-node-concealedContent-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-concealedContent/late.state.bin",
+    "yjs-merge/corpus-node-concealedContent/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/001-insert_concealedContent.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/002-attr_concealedContent_reveal.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/003-type_into_concealedContent_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/004-type_into_concealedContent_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/005-type_into_concealedContent_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/006-delete_concealedContent.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-concealedContent-late-first.bin"
+  },
+  {
+   "name": "corpus-node-concealedContent-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-concealedContent/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/002-attr_concealedContent_reveal.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/003-type_into_concealedContent_0.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/004-type_into_concealedContent_1.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/005-type_into_concealedContent_2.update.bin",
+    "yjs-materializer/../yjs-corpus/node-concealedContent/006-delete_concealedContent.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-concealedContent-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-secretReference-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-secretReference/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/001-insert_secretReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/002-attr_secretReference_showCopy.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/003-delete_secretReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretReference-log.bin"
+  },
+  {
+   "name": "corpus-node-secretReference-states",
+   "payloads": [
+    "yjs-merge/corpus-node-secretReference/early.state.bin",
+    "yjs-merge/corpus-node-secretReference/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretReference-states.bin"
+  },
+  {
+   "name": "corpus-node-secretReference-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-secretReference/late.state.bin",
+    "yjs-merge/corpus-node-secretReference/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/001-insert_secretReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/002-attr_secretReference_showCopy.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/003-delete_secretReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretReference-late-first.bin"
+  },
+  {
+   "name": "corpus-node-secretReference-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-secretReference/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/001-insert_secretReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/002-attr_secretReference_showCopy.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretReference/003-delete_secretReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretReference-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-node-secretInlineReference-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/001-insert_secretInlineReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/002-attr_secretInlineReference_showCopy.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/003-delete_secretInlineReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretInlineReference-log.bin"
+  },
+  {
+   "name": "corpus-node-secretInlineReference-states",
+   "payloads": [
+    "yjs-merge/corpus-node-secretInlineReference/early.state.bin",
+    "yjs-merge/corpus-node-secretInlineReference/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretInlineReference-states.bin"
+  },
+  {
+   "name": "corpus-node-secretInlineReference-late-first",
+   "payloads": [
+    "yjs-merge/corpus-node-secretInlineReference/late.state.bin",
+    "yjs-merge/corpus-node-secretInlineReference/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/001-insert_secretInlineReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/002-attr_secretInlineReference_showCopy.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/003-delete_secretInlineReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretInlineReference-late-first.bin"
+  },
+  {
+   "name": "corpus-node-secretInlineReference-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-node-secretInlineReference/early.state.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/001-insert_secretInlineReference.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/002-attr_secretInlineReference_showCopy.update.bin",
+    "yjs-materializer/../yjs-corpus/node-secretInlineReference/003-delete_secretInlineReference.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-node-secretInlineReference-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-editing-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/editing/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/editing/001-type_5_chars_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/002-type_5_chars_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/003-type_5_chars_2.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/004-type_5_chars_3.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/005-type_5_chars_4.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/006-bold.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/007-italic.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/008-underline.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/009-strike.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/010-highlight.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/011-code.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/012-link.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/013-change_link_href.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/014-unbold.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/015-type_inside_marked_text_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/016-type_inside_marked_text_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/017-enter_split_.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/018-heading.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/019-heading_level.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/020-text_align.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/021-bullet_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/022-ordered_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/023-task_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/024-check_task.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/025-blockquote.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/026-code_block.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/027-table_insert.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/028-table_type_in_cell_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/029-table_type_in_cell_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/030-table_type_in_cell_2.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/031-table_type_in_cell_3.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/032-table_add_row.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/033-table_add_column.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/034-cell_background.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/035-paste_rich_html.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/036-delete_range.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/037-delete_all.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-editing-log.bin"
+  },
+  {
+   "name": "corpus-editing-states",
+   "payloads": [
+    "yjs-merge/corpus-editing/early.state.bin",
+    "yjs-merge/corpus-editing/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-editing-states.bin"
+  },
+  {
+   "name": "corpus-editing-late-first",
+   "payloads": [
+    "yjs-merge/corpus-editing/late.state.bin",
+    "yjs-merge/corpus-editing/early.state.bin",
+    "yjs-materializer/../yjs-corpus/editing/001-type_5_chars_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/002-type_5_chars_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/003-type_5_chars_2.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/004-type_5_chars_3.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/005-type_5_chars_4.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/006-bold.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/007-italic.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/008-underline.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/009-strike.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/010-highlight.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/011-code.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/012-link.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/013-change_link_href.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/014-unbold.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/015-type_inside_marked_text_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/016-type_inside_marked_text_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/017-enter_split_.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/018-heading.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/019-heading_level.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/020-text_align.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/021-bullet_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/022-ordered_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/023-task_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/024-check_task.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/025-blockquote.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/026-code_block.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/027-table_insert.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/028-table_type_in_cell_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/029-table_type_in_cell_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/030-table_type_in_cell_2.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/031-table_type_in_cell_3.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/032-table_add_row.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/033-table_add_column.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/034-cell_background.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/035-paste_rich_html.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/036-delete_range.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/037-delete_all.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-editing-late-first.bin"
+  },
+  {
+   "name": "corpus-editing-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-editing/early.state.bin",
+    "yjs-materializer/../yjs-corpus/editing/018-heading.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/019-heading_level.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/020-text_align.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/021-bullet_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/022-ordered_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/023-task_list.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/024-check_task.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/025-blockquote.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/026-code_block.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/027-table_insert.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/028-table_type_in_cell_0.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/029-table_type_in_cell_1.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/030-table_type_in_cell_2.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/031-table_type_in_cell_3.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/032-table_add_row.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/033-table_add_column.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/034-cell_background.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/035-paste_rich_html.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/036-delete_range.update.bin",
+    "yjs-materializer/../yjs-corpus/editing/037-delete_all.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-editing-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-003-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/003-raw_secretReference_block.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-003-log.bin"
+  },
+  {
+   "name": "corpus-hostile-003-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-003/early.state.bin",
+    "yjs-merge/corpus-hostile-003/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-003-states.bin"
+  },
+  {
+   "name": "corpus-hostile-003-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-003/late.state.bin",
+    "yjs-merge/corpus-hostile-003/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/003-raw_secretReference_block.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-003-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-003-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-003/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/003-raw_secretReference_block.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-003-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-004-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-004-log.bin"
+  },
+  {
+   "name": "corpus-hostile-004-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-004/early.state.bin",
+    "yjs-merge/corpus-hostile-004/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-004-states.bin"
+  },
+  {
+   "name": "corpus-hostile-004-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-004/late.state.bin",
+    "yjs-merge/corpus-hostile-004/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-004-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-004-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-004/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-004-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-005-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-005-log.bin"
+  },
+  {
+   "name": "corpus-hostile-005-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-005/early.state.bin",
+    "yjs-merge/corpus-hostile-005/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-005-states.bin"
+  },
+  {
+   "name": "corpus-hostile-005-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-005/late.state.bin",
+    "yjs-merge/corpus-hostile-005/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-005-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-005-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-005/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-005-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-006-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/006-unknown_attribute_on_existing_paragraph.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-006-log.bin"
+  },
+  {
+   "name": "corpus-hostile-006-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-006/early.state.bin",
+    "yjs-merge/corpus-hostile-006/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-006-states.bin"
+  },
+  {
+   "name": "corpus-hostile-006-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-006/late.state.bin",
+    "yjs-merge/corpus-hostile-006/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/006-unknown_attribute_on_existing_paragraph.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-006-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-006-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-006/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/006-unknown_attribute_on_existing_paragraph.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-006-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-010-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/010-other_root_map.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-010-log.bin"
+  },
+  {
+   "name": "corpus-hostile-010-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-010/early.state.bin",
+    "yjs-merge/corpus-hostile-010/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-010-states.bin"
+  },
+  {
+   "name": "corpus-hostile-010-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-010/late.state.bin",
+    "yjs-merge/corpus-hostile-010/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/010-other_root_map.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-010-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-010-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-010/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/010-other_root_map.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-010-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-011-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/011-other_root_text.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-011-log.bin"
+  },
+  {
+   "name": "corpus-hostile-011-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-011/early.state.bin",
+    "yjs-merge/corpus-hostile-011/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-011-states.bin"
+  },
+  {
+   "name": "corpus-hostile-011-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-011/late.state.bin",
+    "yjs-merge/corpus-hostile-011/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/011-other_root_text.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-011-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-011-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-011/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/011-other_root_text.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-011-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-012-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/012-secret_inserted_and_deleted_in_the_same_update_smuggle_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-012-log.bin"
+  },
+  {
+   "name": "corpus-hostile-012-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-012/early.state.bin",
+    "yjs-merge/corpus-hostile-012/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-012-states.bin"
+  },
+  {
+   "name": "corpus-hostile-012-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-012/late.state.bin",
+    "yjs-merge/corpus-hostile-012/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/012-secret_inserted_and_deleted_in_the_same_update_smuggle_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-012-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-012-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-012/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/012-secret_inserted_and_deleted_in_the_same_update_smuggle_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-012-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-013-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/013-unknown_node_inserted_and_deleted_in_the_same_update_smuggle_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-013-log.bin"
+  },
+  {
+   "name": "corpus-hostile-013-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-013/early.state.bin",
+    "yjs-merge/corpus-hostile-013/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-013-states.bin"
+  },
+  {
+   "name": "corpus-hostile-013-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-013/late.state.bin",
+    "yjs-merge/corpus-hostile-013/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/013-unknown_node_inserted_and_deleted_in_the_same_update_smuggle_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-013-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-013-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-013/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/013-unknown_node_inserted_and_deleted_in_the_same_update_smuggle_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-013-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-014-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/014-legit_type_control_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-014-log.bin"
+  },
+  {
+   "name": "corpus-hostile-014-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-014/early.state.bin",
+    "yjs-merge/corpus-hostile-014/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-014-states.bin"
+  },
+  {
+   "name": "corpus-hostile-014-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-014/late.state.bin",
+    "yjs-merge/corpus-hostile-014/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/014-legit_type_control_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-014-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-014-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-014/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/014-legit_type_control_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-014-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-hostile-015-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/hostile/000-baseline.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/015-legit_delete-only_control_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-015-log.bin"
+  },
+  {
+   "name": "corpus-hostile-015-states",
+   "payloads": [
+    "yjs-merge/corpus-hostile-015/early.state.bin",
+    "yjs-merge/corpus-hostile-015/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-015-states.bin"
+  },
+  {
+   "name": "corpus-hostile-015-late-first",
+   "payloads": [
+    "yjs-merge/corpus-hostile-015/late.state.bin",
+    "yjs-merge/corpus-hostile-015/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/015-legit_delete-only_control_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-015-late-first.bin"
+  },
+  {
+   "name": "corpus-hostile-015-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-hostile-015/early.state.bin",
+    "yjs-materializer/../yjs-corpus/hostile/015-legit_delete-only_control_.update.bin"
+   ],
+   "expected": "yjs-merge/corpus-hostile-015-snapshot-and-log.bin"
+  },
+  {
+   "name": "corpus-perf-50k-log",
+   "payloads": [
+    "yjs-materializer/../yjs-corpus/perf/50k/state.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u000.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u001.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u002.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u003.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u004.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u005.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u006.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u007.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u008.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u009.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u010.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u011.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u012.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u013.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u014.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u015.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u016.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u017.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u018.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u019.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u020.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u021.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u022.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u023.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u024.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u025.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u026.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u027.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u028.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u029.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u030.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u031.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u032.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u033.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u034.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u035.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u036.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u037.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u038.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u039.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u040.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u041.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u042.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u043.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u044.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u045.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u046.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u047.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u048.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u049.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u050.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u051.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u052.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u053.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u054.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u055.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u056.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u057.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u058.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u059.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u060.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u061.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u062.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u063.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u064.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u065.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u066.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u067.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u068.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u069.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u070.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u071.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u072.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u073.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u074.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u075.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u076.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u077.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u078.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u079.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u080.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u081.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u082.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u083.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u084.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u085.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u086.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u087.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u088.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u089.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u090.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u091.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u092.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u093.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u094.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u095.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u096.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u097.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u098.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u099.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u100.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u101.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u102.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u103.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u104.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u105.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u106.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u107.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u108.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u109.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u110.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u111.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u112.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u113.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u114.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u115.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u116.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u117.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u118.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u119.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u120.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u121.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u122.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u123.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u124.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u125.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u126.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u127.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u128.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u129.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u130.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u131.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u132.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u133.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u134.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u135.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u136.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u137.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u138.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u139.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u140.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u141.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u142.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u143.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u144.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u145.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u146.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u147.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u148.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u149.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u150.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u151.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u152.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u153.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u154.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u155.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u156.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u157.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u158.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u159.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u160.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u161.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u162.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u163.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u164.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u165.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u166.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u167.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u168.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u169.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u170.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u171.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u172.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u173.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u174.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u175.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u176.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u177.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u178.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u179.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u180.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u181.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u182.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u183.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u184.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u185.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u186.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u187.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u188.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u189.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u190.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u191.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u192.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u193.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u194.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u195.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u196.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u197.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u198.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u199.bin"
+   ],
+   "expected": "yjs-merge/corpus-perf-50k-log.bin"
+  },
+  {
+   "name": "corpus-perf-50k-states",
+   "payloads": [
+    "yjs-merge/corpus-perf-50k/early.state.bin",
+    "yjs-merge/corpus-perf-50k/late.state.bin"
+   ],
+   "expected": "yjs-merge/corpus-perf-50k-states.bin"
+  },
+  {
+   "name": "corpus-perf-50k-late-first",
+   "payloads": [
+    "yjs-merge/corpus-perf-50k/late.state.bin",
+    "yjs-merge/corpus-perf-50k/early.state.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u000.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u001.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u002.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u003.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u004.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u005.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u006.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u007.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u008.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u009.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u010.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u011.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u012.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u013.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u014.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u015.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u016.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u017.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u018.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u019.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u020.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u021.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u022.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u023.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u024.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u025.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u026.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u027.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u028.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u029.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u030.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u031.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u032.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u033.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u034.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u035.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u036.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u037.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u038.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u039.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u040.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u041.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u042.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u043.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u044.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u045.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u046.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u047.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u048.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u049.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u050.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u051.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u052.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u053.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u054.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u055.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u056.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u057.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u058.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u059.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u060.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u061.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u062.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u063.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u064.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u065.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u066.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u067.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u068.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u069.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u070.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u071.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u072.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u073.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u074.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u075.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u076.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u077.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u078.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u079.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u080.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u081.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u082.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u083.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u084.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u085.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u086.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u087.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u088.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u089.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u090.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u091.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u092.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u093.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u094.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u095.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u096.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u097.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u098.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u099.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u100.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u101.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u102.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u103.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u104.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u105.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u106.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u107.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u108.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u109.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u110.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u111.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u112.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u113.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u114.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u115.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u116.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u117.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u118.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u119.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u120.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u121.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u122.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u123.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u124.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u125.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u126.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u127.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u128.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u129.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u130.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u131.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u132.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u133.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u134.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u135.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u136.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u137.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u138.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u139.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u140.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u141.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u142.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u143.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u144.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u145.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u146.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u147.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u148.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u149.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u150.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u151.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u152.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u153.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u154.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u155.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u156.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u157.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u158.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u159.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u160.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u161.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u162.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u163.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u164.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u165.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u166.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u167.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u168.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u169.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u170.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u171.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u172.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u173.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u174.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u175.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u176.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u177.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u178.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u179.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u180.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u181.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u182.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u183.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u184.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u185.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u186.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u187.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u188.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u189.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u190.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u191.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u192.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u193.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u194.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u195.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u196.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u197.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u198.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u199.bin"
+   ],
+   "expected": "yjs-merge/corpus-perf-50k-late-first.bin"
+  },
+  {
+   "name": "corpus-perf-50k-snapshot-and-log",
+   "payloads": [
+    "yjs-merge/corpus-perf-50k/early.state.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u098.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u099.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u100.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u101.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u102.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u103.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u104.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u105.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u106.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u107.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u108.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u109.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u110.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u111.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u112.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u113.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u114.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u115.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u116.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u117.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u118.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u119.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u120.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u121.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u122.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u123.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u124.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u125.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u126.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u127.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u128.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u129.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u130.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u131.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u132.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u133.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u134.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u135.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u136.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u137.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u138.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u139.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u140.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u141.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u142.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u143.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u144.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u145.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u146.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u147.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u148.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u149.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u150.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u151.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u152.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u153.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u154.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u155.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u156.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u157.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u158.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u159.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u160.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u161.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u162.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u163.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u164.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u165.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u166.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u167.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u168.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u169.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u170.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u171.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u172.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u173.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u174.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u175.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u176.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u177.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u178.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u179.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u180.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u181.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u182.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u183.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u184.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u185.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u186.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u187.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u188.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u189.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u190.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u191.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u192.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u193.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u194.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u195.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u196.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u197.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u198.bin",
+    "yjs-materializer/../yjs-corpus/perf/50k/u199.bin"
+   ],
+   "expected": "yjs-merge/corpus-perf-50k-snapshot-and-log.bin"
+  }
+ ]
+}

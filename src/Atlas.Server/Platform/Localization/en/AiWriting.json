@@ -1,0 +1,11 @@
+{
+  "Neznámá verze katalogu.": "Unknown catalog version.",
+  "Neznámá úprava textu.": "Unknown text edit.",
+  "Vlastní pokyn patří jen k vlastní úpravě.": "A custom instruction belongs only to a custom edit.",
+  "Neplatná délka textu.": "Invalid text length.",
+  "Text obsahuje nepodporovanou komponentu nebo citlivý údaj.": "The text contains an unsupported component or sensitive data.",
+  "Komponenty musí zůstat beze změny.": "Components must remain unchanged.",
+  "Stránka se změnila.": "The page has changed.",
+  "Podklady osnovy se změnily.": "The outline sources have changed.",
+  "Návrh se nepodařilo připravit.": "The proposal could not be prepared."
+}

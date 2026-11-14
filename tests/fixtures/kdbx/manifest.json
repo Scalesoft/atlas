@@ -1,0 +1,280 @@
+{
+    "generator":  "KeePass 2.61.1.0",
+    "generated":  "2026-09-26",
+    "fixtures":  [
+                     {
+                         "file":  "argon2d-aes-gzip.kdbx",
+                         "password":  "Atlas fixture password",
+                         "version":  "00040001",
+                         "kdf":  "argon2d",
+                         "cipher":  "aes",
+                         "compression":  "gzip",
+                         "rootGroupUuid":  "07CCC7068B5E28428286C7C55394A3F0",
+                         "recycleBinUuid":  "460C31D35403874E8D4802225646F0B4",
+                         "entries":  [
+                                         {
+                                             "uuid":  "5FFA4CBE2E682F488709E757751C3016",
+                                             "title":  "Unicode ✓ Záznam",
+                                             "groupPath":  [
+
+                                                           ],
+                                             "userName":  "uživatel",
+                                             "password":  "příliš žluťoučký ☃",
+                                             "url":  "",
+                                             "notesLength":  8,
+                                             "notesSha256":  "9A635FD5C38779AFDB824A74B176A85CDF00EBB4B3AECD9F12354418958583AC",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         },
+                                         {
+                                             "uuid":  "B39B17B8CA075B4695E2AB27DE54B0B1",
+                                             "title":  "GitHub",
+                                             "groupPath":  [
+                                                               "Internet"
+                                                           ],
+                                             "userName":  "octocat",
+                                             "password":  "gh-current-7Q",
+                                             "url":  "https://github.com",
+                                             "notesLength":  15,
+                                             "notesSha256":  "1DB543C9447DE3C1F9EE113AB06646EF896A662DE71E3D6883D248C20FE83DBD",
+                                             "historyCount":  3,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         },
+                                         {
+                                             "uuid":  "31FCA72E7BA76E4EBDD95D2EB6DBA5C4",
+                                             "title":  "Mail",
+                                             "groupPath":  [
+                                                               "Internet"
+                                                           ],
+                                             "userName":  "atlas@example.test",
+                                             "password":  "mail-after-history",
+                                             "url":  "https://mail.example.test",
+                                             "notesLength":  0,
+                                             "notesSha256":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         },
+                                         {
+                                             "uuid":  "6C3EB0A2F721A14E9FCBC26B6BE7D704",
+                                             "title":  "Router",
+                                             "groupPath":  [
+                                                               "Servers",
+                                                               "Linux"
+                                                           ],
+                                             "userName":  "admin",
+                                             "password":  "r0uter-pw",
+                                             "url":  "ssh://10.0.0.1",
+                                             "notesLength":  21,
+                                             "notesSha256":  "832159F4FB7DE88D4377E8FC10CD4C84830CF5E8EF8C20794D3D4691255C6784",
+                                             "historyCount":  1,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         },
+                                         {
+                                             "uuid":  "17C2B5BD63588E46BEA5CA14E5795B60",
+                                             "title":  "Old VPN",
+                                             "groupPath":  [
+                                                               "Recycle Bin"
+                                                           ],
+                                             "userName":  "vpn",
+                                             "password":  "deleted-secret",
+                                             "url":  "",
+                                             "notesLength":  0,
+                                             "notesSha256":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  true,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         }
+                                     ]
+                     },
+                     {
+                         "file":  "argon2id-chacha20-none.kdbx",
+                         "password":  "Heslo žluťoučký kůň ✓",
+                         "version":  "00040001",
+                         "kdf":  "argon2id",
+                         "cipher":  "chacha20",
+                         "compression":  "none",
+                         "rootGroupUuid":  "215564E479ADED4C89D78E4BC46BBE06",
+                         "recycleBinUuid":  "00000000000000000000000000000000",
+                         "entries":  [
+                                         {
+                                             "uuid":  "CB0223006B165543967314CE8C9C7BB7",
+                                             "title":  "Jenkins",
+                                             "groupPath":  [
+                                                               "Tools"
+                                                           ],
+                                             "userName":  "ci",
+                                             "password":  "jenkins-now",
+                                             "url":  "https://ci.example.test",
+                                             "notesLength":  9,
+                                             "notesSha256":  "6ED258655932C387014671F9D2009F15629599C9CA2DA26ABC205EA0A699F36A",
+                                             "historyCount":  1,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         },
+                                         {
+                                             "uuid":  "419B7CFBC5F22046B27284F0E4BBB68D",
+                                             "title":  "Nexus",
+                                             "groupPath":  [
+                                                               "Tools"
+                                                           ],
+                                             "userName":  "deploy",
+                                             "password":  "nexus-pw",
+                                             "url":  "https://nexus.example.test",
+                                             "notesLength":  0,
+                                             "notesSha256":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         }
+                                     ]
+                     },
+                     {
+                         "file":  "aeskdf-aes-none.kdbx",
+                         "password":  "Atlas fixture password",
+                         "version":  "00040000",
+                         "kdf":  "aeskdf",
+                         "cipher":  "aes",
+                         "compression":  "none",
+                         "rootGroupUuid":  "F6981908EA98AF42A1BB5AF9B72AFAEA",
+                         "recycleBinUuid":  "00000000000000000000000000000000",
+                         "entries":  [
+                                         {
+                                             "uuid":  "1B8BCCDC8671EA448E31CD7683A429F8",
+                                             "title":  "Database",
+                                             "groupPath":  [
+
+                                                           ],
+                                             "userName":  "sa",
+                                             "password":  "aes-kdf-aes",
+                                             "url":  "mssql://db.example.test",
+                                             "notesLength":  0,
+                                             "notesSha256":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         }
+                                     ]
+                     },
+                     {
+                         "file":  "aeskdf-chacha20-gzip.kdbx",
+                         "password":  "Atlas fixture password",
+                         "version":  "00040000",
+                         "kdf":  "aeskdf",
+                         "cipher":  "chacha20",
+                         "compression":  "gzip",
+                         "rootGroupUuid":  "DFDA66D86648814A8AFDED5ED349EA07",
+                         "recycleBinUuid":  "00000000000000000000000000000000",
+                         "entries":  [
+                                         {
+                                             "uuid":  "7B8C3A18C7AE944C8D8A3F5EFB02F757",
+                                             "title":  "Storage",
+                                             "groupPath":  [
+
+                                                           ],
+                                             "userName":  "backup",
+                                             "password":  "aes-kdf-chacha",
+                                             "url":  "smb://nas.example.test/share",
+                                             "notesLength":  3,
+                                             "notesSha256":  "EF0D1931F1FEB8D8EA5E7466FD70443125B064632C80D570048C2D2B6F1ED501",
+                                             "historyCount":  1,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:12Z"
+                                         }
+                                     ]
+                     },
+                     {
+                         "file":  "big-notes.kdbx",
+                         "password":  "Atlas fixture password",
+                         "version":  "00040000",
+                         "kdf":  "argon2id",
+                         "cipher":  "aes",
+                         "compression":  "gzip",
+                         "rootGroupUuid":  "CAB61D8B293A0C4C9732FDDB0B814C33",
+                         "recycleBinUuid":  "00000000000000000000000000000000",
+                         "entries":  [
+                                         {
+                                             "uuid":  "918B4166D15AB34B811C7FC04B2EF0BD",
+                                             "title":  "Runbook",
+                                             "groupPath":  [
+
+                                                           ],
+                                             "userName":  "ops",
+                                             "password":  "big-notes-pw",
+                                             "url":  "",
+                                             "notesLength":  716800,
+                                             "notesSha256":  "676AF79EABA5643AAE028020D551A42530DF0F8D0E280568F0964C473B30DE76",
+                                             "historyCount":  1,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:13Z"
+                                         },
+                                         {
+                                             "uuid":  "44994710FFCACE46AC1BADAF7CE66092",
+                                             "title":  "After runbook",
+                                             "groupPath":  [
+
+                                                           ],
+                                             "userName":  "ops2",
+                                             "password":  "after-big-notes",
+                                             "url":  "",
+                                             "notesLength":  0,
+                                             "notesSha256":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:13Z"
+                                         }
+                                     ]
+                     },
+                     {
+                         "file":  "changed-key.kdbx",
+                         "password":  "Atlas fixture password",
+                         "version":  "00040000",
+                         "kdf":  "argon2id",
+                         "cipher":  "aes",
+                         "compression":  "gzip",
+                         "rootGroupUuid":  "6D880D5A7B931546AED4E6B513C5AB86",
+                         "recycleBinUuid":  "00000000000000000000000000000000",
+                         "entries":  [
+                                         {
+                                             "uuid":  "F201638316CD44489CAC3CF18B645988",
+                                             "title":  "Share",
+                                             "groupPath":  [
+
+                                                           ],
+                                             "userName":  "user",
+                                             "password":  "share-pw",
+                                             "url":  "",
+                                             "notesLength":  0,
+                                             "notesSha256":  "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+                                             "historyCount":  0,
+                                             "inRecycleBin":  false,
+                                             "lastModificationTime":  "2026-09-26T18:33:13Z"
+                                         }
+                                     ],
+                         "previousPassword":  "previous master password"
+                     },
+                     {
+                         "file":  "bomb.kdbx",
+                         "password":  "Atlas fixture password",
+                         "decompressedAtLeast":  83886080
+                     },
+                     {
+                         "file":  "deep-groups.kdbx",
+                         "password":  "Atlas fixture password",
+                         "groupDepth":  70
+                     },
+                     {
+                         "file":  "kdbx31.kdbx",
+                         "password":  "Atlas fixture password",
+                         "version":  "00030001"
+                     },
+                     {
+                         "file":  "keyfile.kdbx",
+                         "password":  "Atlas fixture password",
+                         "keyFile":  true
+                     }
+                 ]
+}

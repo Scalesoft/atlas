@@ -1,0 +1,2 @@
+.atlas .workspace-content { display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%; }
+.atlas .profile-launch[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }

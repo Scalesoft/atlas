@@ -1,0 +1,13 @@
+.md-toc-head { position: relative; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+/* The same box for a reader and an editor: editing only adds the pointer and the hover. */
+.md-toc-title, .md-toc-title-input { font: inherit; font-weight: 600; color: inherit; border: 1px solid transparent; border-radius: 6px; padding: 1px 6px; margin-inline-start: -6px; background: transparent; transition: background-color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease); }
+.md-toc-title[role="button"] { cursor: text; }
+.md-toc-title[role="button"]:hover { background: var(--bg-3, #e2eef0); }
+/* The field takes the title's own box (its border and padding) while it is edited. */
+.md-toc-title > .md-toc-title-input { margin: -2px -7px; }
+.md-toc-title-input { border-color: var(--accent, #58a9b9); background: var(--paper, #ffffff); min-width: 12ch; }
+/* Laid over the end of the header: the chip adds no height or width to it. */
+.md-toc-range-wrap { position: absolute; inset-inline-end: 0; inset-block-start: 50%; transform: translateY(-50%); }
+.md-toc-range { font: 600 11px/1.4 var(--font-sans, sans-serif); color: var(--text-dim, #49676e); border: 1px solid var(--line, #d4e4e7); border-radius: 999px; padding: 1px 8px; background: transparent; cursor: pointer; transition: background-color var(--md-motion-fast) var(--md-motion-ease); }
+.md-toc-range:hover { background: var(--bg-3, #e2eef0); }
+.md-toc-head button:focus-visible, .md-toc-title[role="button"]:focus-visible, .md-toc-title-input:focus-visible { outline: 2px solid var(--accent, #58a9b9); outline-offset: 1px; }

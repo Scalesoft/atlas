@@ -1,0 +1,38 @@
+/* The block, its head and the disclosure under it, shared by AppearancePicker (icons) and AppearanceColorPicker (colours); loaded scoped by both. */
+.appearance-block { display: grid; gap: 10px; min-width: 0; }
+.appearance-block-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; min-height: 32px; }
+.appearance-block-head h4 { flex: 1; margin: 0; font-size: 14px; font-weight: 600; }
+/* A toggle and its panel are one item of the block: a closed panel (no height) used to add one more row gap under the toggle
+   (28 px instead of 18 px to the next block, and 10 px before the cover). The 10 px between the toggle and the panel is the panel's own
+   lead, so opening grows it together with the height (nothing flips when the animation starts). */
+.appearance-more { display: grid; min-width: 0; }
+.appearance-more > :deep(.inline-reveal-root > .inline-reveal > .inline-reveal-inner) { padding-top: 10px; }
+.appearance-disclosure {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 6px;
+  height: 30px;
+  margin-left: -8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .appearance-disclosure:hover:not(:disabled) { background: var(--hover); }
+}
+.appearance-disclosure:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Turns in step with its panel (InlineReveal: slow open, base close, the same curve). */
+.appearance-disclosure-chevron { rotate: -90deg; transition: rotate var(--atlas-motion-base) var(--atlas-ease-out); }
+.appearance-disclosure[aria-expanded="true"] .appearance-disclosure-chevron { rotate: 0deg; transition-duration: var(--atlas-motion-slow); }
+/* Reduced motion: the arrow does not turn in front of the reader, like the tree's arrow (motion.css). */
+@media (prefers-reduced-motion: reduce) { .appearance-disclosure-chevron { transition-property: opacity; } }
+:global([data-atlas-reduced-motion] .appearance-disclosure-chevron) { transition-property: opacity; }
+.appearance-disclosure:disabled { cursor: not-allowed; }

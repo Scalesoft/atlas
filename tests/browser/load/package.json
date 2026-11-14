@@ -1,0 +1,18 @@
+{
+  "name": "atlas-collab-load",
+  "private": true,
+  "type": "module",
+  "description": "Manual multi-user collaboration load test (boards, documents, board sources). Not part of CI; see README.md.",
+  "scripts": {
+    "setup": "node setup-users.mjs",
+    "board": "node board-load.mjs",
+    "document": "node document-load.mjs",
+    "sources": "node sources-load.mjs"
+  },
+  "dependencies": {
+    "@microsoft/signalr": "11.0.0",
+    "@playwright/test": "1.64.1",
+    "y-protocols": "1.0.7",
+    "yjs": "13.6.33"
+  }
+}

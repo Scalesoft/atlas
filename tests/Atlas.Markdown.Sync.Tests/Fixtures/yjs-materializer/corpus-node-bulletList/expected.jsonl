@@ -1,0 +1,4 @@
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"bulletList","attrs":{"tight":true},"content":[{"type":"listItem","content":[{"type":"paragraph","attrs":{"textAlign":null}}]}]},{"type":"paragraph","attrs":{"textAlign":null}}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"bulletList","attrs":{"tight":false},"content":[{"type":"listItem","content":[{"type":"paragraph","attrs":{"textAlign":null}}]}]},{"type":"paragraph","attrs":{"textAlign":null}}]}
+{"type":"doc","content":[{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Hello world"}]},{"type":"paragraph","attrs":{"textAlign":null}}]}

@@ -1,0 +1,3 @@
+[
+  { "element": "PageTree rename", "check": "P1.start", "reason": "Řádek stromu je odkaz: první klik stránku otevře (jako se na tabuli prvek nejdřív vybere, D1); přejmenování na místě začíná F2, dvojklikem nebo „Přejmenovat“ v nabídce řádku. Kontrola klikne jednou na neotevřený řádek", "ref": "C#7" }
+]

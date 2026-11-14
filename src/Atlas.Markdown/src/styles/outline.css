@@ -1,0 +1,73 @@
+.md-outline-layout { position: relative; display: grid; container-type: inline-size; min-width: 0; }
+.md-outline-document { grid-area: 1 / 1; min-width: 0; }
+.md-outline-layout.is-docked > .md-outline-document { margin-right: 244px; }
+.md-outline-navigation { position: sticky; top: 12px; grid-area: 1 / 1; align-self: start; height: 0; width: 100%; z-index: 5; pointer-events: none; }
+.md-outline-wave-enter-active, .md-outline-wave-leave-active { transition: opacity var(--md-motion-base) var(--md-motion-ease), transform var(--md-motion-base) var(--md-motion-ease); }
+.md-outline-wave-enter-from, .md-outline-wave-leave-to { opacity: 0; transform: translateY(-6px); }
+.md-outline-pop-enter-active, .md-outline-pop-leave-active { transition: opacity var(--md-motion-target) var(--md-motion-ease), transform var(--md-motion-target) var(--md-motion-ease); }
+.md-outline-pop-enter-from, .md-outline-pop-leave-to { opacity: 0; transform: translateX(8px); }
+.md-outline-sticky { position: relative; height: 0; width: 100%; pointer-events: none; }
+.md-outline-controls { pointer-events: auto; }
+.md-outline-controls > .md-outline-trigger { position: absolute; top: 8px; right: 12px; background: var(--paper); }
+/* Keep the full horizontal wave inside stable buttons, including its translated edge. */
+.md-outline-rail { position: absolute; right: 12px; top: 48px; width: 64px; overflow: visible; pointer-events: auto; padding: 18px 0; }
+.md-outline-rail::-webkit-scrollbar { display: none; }
+.md-outline-rail > button { display: flex; width: 100%; height: var(--outline-pitch, 12px); min-height: 0; padding: 0 4px 0 0; align-items: center; justify-content: flex-end; border: 0; background: transparent; cursor: pointer; color: var(--text); }
+.md-outline-mark { display: flex; align-items: center; justify-content: center; width: var(--outline-width, 20px); height: var(--outline-height, 2px); border-radius: 9px; background: currentColor; transform: translate(var(--outline-x, 0px),var(--outline-y, 0px)); pointer-events: auto; flex-shrink: 0; overflow: hidden; }
+.md-outline-mark > span { color: var(--outline-label-color, #fff); font: 500 9px/1 var(--font-sans, sans-serif); opacity: var(--outline-label, 0); flex-shrink: 0; }
+.md-outline-rail > button[data-level="1"] { color: var(--outline-h1, #20242a); }
+.md-outline-rail > button[data-level="2"] { color: var(--outline-h2, #3f5878); }
+.md-outline-rail > button[data-level="3"] { color: var(--outline-h3, #527eae); }
+.md-outline-rail > button:is([data-level="4"],[data-level="5"],[data-level="6"]) { color: var(--outline-h4, #5b83ae); }
+.md-outline-panel.md-context-popover { position: absolute; top: 48px; right: 82px; width: min(220px, calc(100% - 98px)); padding: 6px; pointer-events: auto; background: var(--paper); transition: box-shadow var(--md-motion-slow) var(--md-motion-ease); }
+.md-outline-panel.is-docked { top: 8px; right: 12px; box-shadow: 0 -2px 0 var(--accent-line), var(--shadow-2); }
+.md-outline-panel[data-positioned] { animation: none; overflow: hidden; background: var(--outline-surface, var(--bg-1, #fff)); }
+.md-outline-panel-controls { position: absolute; top: 6px; right: 6px; z-index: 1; display: flex; justify-content: flex-end; height: 28px; }
+.md-outline-pin svg { transform: rotate(35deg); transition: transform var(--md-motion-base) var(--md-motion-ease); }
+.md-outline-pin[aria-pressed="true"] svg { transform: rotate(0); }
+.md-outline-list { max-height: min(260px, 35dvh); overflow: auto; overscroll-behavior: contain; }
+.md-outline-list > .md-outline-entry { box-sizing: border-box; display: flex; width: 100%; min-height: 28px; padding: 5px 8px; font: 500 12px/1.45 var(--font-sans, sans-serif); letter-spacing: -.005em; color: var(--text-dim); }
+.md-outline-list > .md-outline-entry:first-child { width: calc(100% - 34px); min-height: 28px; }
+.md-outline-list > .md-outline-entry[data-level="1"] { font-size: 12.5px; font-weight: 600; color: var(--outline-h1, var(--text)); }
+.md-outline-list > .md-outline-entry[data-level="2"] { padding-left: 17px; font-size: 12.25px; font-weight: 550; color: color-mix(in srgb, var(--outline-h2, #3f5878) 78%, var(--text, #102f36)); }
+.md-outline-list > .md-outline-entry[data-level="3"] { padding-left: 26px; font-size: 12px; font-weight: 500; color: color-mix(in srgb, var(--outline-h3, #527eae) 66%, var(--text, #102f36)); }
+.md-outline-list > .md-outline-entry[data-level="4"] { padding-left: 35px; font-size: 11.75px; font-weight: 480; color: color-mix(in srgb, var(--outline-h4, #5b83ae) 58%, var(--text, #102f36)); }
+.md-outline-list > .md-outline-entry[data-level="5"] { padding-left: 44px; font-size: 11.75px; font-weight: 470; color: color-mix(in srgb, var(--outline-h4, #5b83ae) 48%, var(--text-dim, #49676e)); }
+.md-outline-list > .md-outline-entry[data-level="6"] { padding-left: 53px; font-size: 11.75px; font-weight: 460; color: color-mix(in srgb, var(--outline-h4, #5b83ae) 38%, var(--text-dim, #49676e)); }
+.md-outline-entry[data-level="1"]:not(:first-child) { margin-top: 4px; }
+.md-outline-entry > span { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+.md-outline-entry.is-previewed { background: var(--accent-soft); }
+.md-outline-list > .md-outline-entry[aria-current="location"] { color: var(--accent); }
+.md-outline-empty { box-sizing: border-box; min-height: 28px; margin: 0 34px 0 8px; padding-block: 4px; font-size: 12px; color: var(--text-dim); }
+.md-outline-preview { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 10px; height: 154px; overflow: hidden; pointer-events: none; user-select: none; mask-image: linear-gradient(to bottom,#000 80%,transparent); }
+.md-outline-preview > .editor-body { padding: 0 !important; overflow: visible; }
+.md-outline-preview .ProseMirror.md-outline-preview-content { box-sizing: border-box; padding: 0 4px; min-height: 0; pointer-events: none; font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; }
+.md-outline-preview .ProseMirror.md-outline-preview-content :is(h1,h2,h3,h4,h5,h6) { font-size: 14px; line-height: 1.45; font-weight: 500; letter-spacing: normal; margin: 12px 0 8px; overflow-wrap: anywhere; }
+.md-outline-preview .ProseMirror.md-outline-preview-content p { font-size: 12px; line-height: 1.65; margin: 8px 0; }
+.md-outline-preview .ProseMirror.md-outline-preview-content :is(ul,ol) { margin-block: 8px; padding-left: 18px; }
+.md-outline-preview .ProseMirror.md-outline-preview-content blockquote { margin: 8px 0; padding-left: 10px; }
+.md-outline-preview .ProseMirror.md-outline-preview-content img { max-width: 100%; height: auto; }
+.md-outline-preview-content > :first-child { margin-top: 0 !important; }
+.md-outline-preview-content :is(input, a, summary) { pointer-events: none; }
+.md-outline-preview-content .tableWrapper { overflow: visible !important; margin-block: 8px !important; }
+/* The washed background is local view state. One uninterrupted transition; no
+   segmented keyframes, text movement, document transaction or collaborative edit. */
+.md-outline-document .ProseMirror :is(h1,h2,h3,h4,h5,h6) { position: relative; isolation: isolate; scroll-margin-top: 40px; }
+.md-outline-document .ProseMirror :is(h1,h2,h3,h4,h5,h6)::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 8px; pointer-events: none; background: linear-gradient(270deg,color-mix(in srgb,var(--accent) 24%,transparent),color-mix(in srgb,var(--accent) 12%,transparent)); opacity: 0; transform: scaleX(.035); transform-origin: right center; transition: opacity var(--md-motion-slow) var(--md-motion-ease),transform var(--md-motion-slow) var(--md-motion-ease); }
+.md-outline-document .ProseMirror :is(h1,h2,h3,h4,h5,h6)::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: 8px; background: linear-gradient(270deg,color-mix(in srgb,var(--accent) 20%,transparent),transparent 15%); opacity: 0; transition: opacity var(--md-motion-slow); }
+.md-outline-document .ProseMirror [data-md-outline-target]::before { opacity: 1; transform: scaleX(1); transition: opacity var(--md-motion-fast) var(--md-motion-ease),transform var(--md-motion-glow) var(--md-motion-ease); }
+.md-outline-document .ProseMirror [data-md-outline-target]::after { opacity: 1; transition-duration: var(--md-motion-fast); }
+@container (max-width: 650px) {
+  .md-outline-layout.is-docked > .md-outline-document { margin-right: 0; padding-top: var(--outline-panel-height, 380px); }
+}
+@media (pointer: coarse) {
+  /* Dense rail is an overview; the trigger and list provide 44px touch targets. */
+  .md-outline-list > .md-outline-entry { min-height: 44px; }
+  .md-outline-controls > button.bb { min-width: 44px; height: 44px; }
+  .md-outline-panel-controls { height: 44px; }
+  .md-outline-list > .md-outline-entry:first-child { width: calc(100% - 50px); min-height: 44px; }
+  .md-outline-empty { min-height: 44px; margin-right: 50px; }
+  .md-outline-rail { top: 60px; }
+}
+
+.md-outline-preview-caption { font-size: 10px; color: var(--text-dim); margin: 0 4px 10px; }

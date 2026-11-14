@@ -1,0 +1,66 @@
+import { translate } from ".";
+
+/** Žádosti o přístup (settings/requests: AccessRequestList, AccessRequestsPage, AccessRequestsPanel, MyAccessRequests). The Czech source. */
+const cs = {
+  list: {
+    label: "Žádosti o přístup",
+    secret: (title: string) => `Heslo ${title}`,
+    vault: (name: string) => `Celý trezor ${name}`,
+    describe: (title: string, date: string) => `${title} · ${date}`,
+    describeWithVault: (title: string, vault: string, date: string) => `${title} · trezor ${vault} · ${date}`,
+    wantsRead: "Chce Čte",
+    waiting: "Čeká",
+    approve: "Schválit",
+    reject: "Zamítnout",
+    reason: "Důvod:",
+    validity: "Jak dlouho má přístup platit?",
+    noEndReason: "Schválení žádosti je vždy časově omezené; trvalý přístup dejte v Přístupech.",
+    approveTitle: "Schválit žádost",
+    approveText: (name: string, what: string, validity: string) => `${name} dostane úroveň Čte: ${what}. ${validity}. Schválení se zapíše do auditu.`,
+    approveConfirm: "Schválit žádost",
+    cancel: "Zrušit",
+    note: "Poznámka pro žadatele",
+    optional: "nepovinné",
+    rejectNote: "Zamítnutí nic neodebírá: přístup, který má jinou cestou, zůstává.",
+    reauthTitle: "Zamítnutí vyžaduje nové přihlášení",
+    rejectConfirm: "Zamítnout žádost",
+    emptyTitle: "Žádné čekající žádosti",
+    emptyText: "Když někdo požádá o přístup k heslu, objeví se tady hned, bez obnovení stránky.",
+  },
+  page: {
+    title: "Žádosti o přístup",
+    spaceDescription: "Kdo žádá o úroveň Čte k heslům a trezorům tohoto prostoru. Schválení dá přístup na dobu určitou.",
+    wikiDescription: "Kdo žádá o úroveň Čte k heslům a trezorům napříč prostory. Schválení dá přístup na dobu určitou.",
+    pending: "Čekající žádosti",
+  },
+  panel: {
+    conflict: "Žádost mezitím vyřídil někdo jiný nebo ji žadatel zrušil. Seznam je aktuální.",
+    loadFailed: "Žádosti se nepodařilo načíst",
+    loading: "Načítání žádostí…",
+    note: "Nové žádosti se objeví samy. Schválení dá úroveň Čte jen k tomu, o co žadatel požádal, a nikdy na déle, než máte vlastní oprávnění.",
+    approved: (name: string, date?: string) => `${name} má úroveň Čte${date ? ` do ${date}` : ""}. Schválení je v auditu.`,
+    rejected: (name: string) => `Žádost od ${name} je zamítnutá.`,
+  },
+  mine: {
+    states: { pending: "Čeká na schválení", approved: "Schváleno", rejected: "Zamítnuto", cancelled: "Zrušeno" },
+    wholeVault: (name: string) => `celý trezor ${name}`,
+    admin: "správce",
+    approvedBy: (by: string, date?: string) => `Schválil(a) ${by}${date ? `, platí do ${date}` : ""}.`,
+    rejectedBy: (by: string, note?: string | null) => `Zamítl(a) ${by}${note ? `: „${note}“` : "."}`,
+    cancelled: "Žádost jste zrušili.",
+    sent: (date: string, reason: string) => `Odesláno ${date}. Důvod: ${reason}`,
+    loadFailed: "Žádosti se nepodařilo načíst",
+    loading: "Načítání žádostí…",
+    pending: "Čekající",
+    pendingLabel: "Čekající žádosti",
+    cancel: "Zrušit žádost",
+    nothingWaits: "Nic nečeká",
+    nothingWaitsText: "O přístup k heslu požádáte přímo u odkazu na heslo ve stránce.",
+    decided: "Vyřízené",
+    decidedLabel: "Vyřízené žádosti",
+    note: "Rozhodnutí se tu objeví samo, bez obnovení stránky.",
+  },
+};
+export type SettingsRequestsMessages = typeof cs;
+
+export default translate(cs, { en: () => import("./settings-requests.en") });

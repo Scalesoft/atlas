@@ -1,0 +1,37 @@
+{
+  "format": "atlas-rich",
+  "version": 1,
+  "document": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2,
+          "headingId": "import-444e818c9b2c3612d9b1ad90"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Rollback"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Undo."
+          }
+        ]
+      }
+    ]
+  },
+  "plugins": [
+    {
+      "id": "heading-anchors",
+      "version": 1
+    }
+  ]
+}

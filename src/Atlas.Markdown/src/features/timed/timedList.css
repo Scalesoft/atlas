@@ -1,0 +1,10 @@
+/* A timed item's day and time (timedList.ts): a muted stamp „1. 11. 2026 · 23:40“, the text after it stays plain. Loaded with the
+   editor styles (styles/editor.css), so the static rendering (decorateStaticTimedLists) shows it too. */
+:is(.tt-timed-date, .tt-timed-time) {
+  padding-block: .0625rem; background: color-mix(in srgb, var(--text, #102f36) 6%, transparent); color: var(--muted, var(--text-dim, #49676e));
+  font-size: .9em; font-variant-numeric: tabular-nums;
+}
+.tt-timed-date { padding-inline: .3125rem 0; border-radius: 4px 0 0 4px; }
+.tt-timed-date:not(:has(+ .tt-timed-time)) { padding-right: .3125rem; border-radius: 4px; }
+.tt-timed-time { padding-right: .3125rem; border-radius: 0 4px 4px 0; }
+.tt-timed-time::before { content: "\00a0·"; }

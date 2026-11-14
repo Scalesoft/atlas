@@ -1,0 +1,295 @@
+/* Eight calm accents (profile.ts themeAccents); reading surfaces remain solid in both modes.
+   Light mode pairs the accent with coloured navigation and white paper. Dark mode is one
+   graphite scale gently tinted toward the accent's hue (--atlas-hue) with a soft accent
+   glow (Atlas 2.5, board 15). Status colours keep the same meaning across every accent. */
+:root:not([data-mode="dark"]),
+.atlas[data-mode="light"] {
+  color-scheme: light;
+  /* Keep selection a little stronger than hover, including on tinted sidebars. */
+  --navigation-selected-bg: color-mix(in srgb, var(--accent) 8%, var(--accent-soft));
+  --error: #b42345;
+  --error-bg: #ffe5eb;
+  --success: #13734d;
+  --success-bg: #d8f5e6;
+  /* Amber for "needs attention", distinct from --error (settings plan 2026-09-27). */
+  --warning: #885000;
+  --warning-bg: #ffedbe;
+  --info: #245cc0;
+  --info-bg: #e0ebff;
+  --space-blue-bg: #dce9ff;
+  --space-blue-fg: #285bc4;
+  --space-coral-bg: #ffdfda;
+  --space-coral-fg: #ad3d40;
+}
+:root[data-accent="blue"][data-mode="light"],
+.atlas[data-accent="blue"][data-mode="light"] {
+  --canvas: #f2f5ff;
+  --surface: #ffffff;
+  --sidebar: #e5edff;
+  --text: #202f49;
+  --muted: #52647e;
+  --line: #ccd7e7;
+  --input-line: #7b8faa;
+  --hover: #dce7ff;
+  --accent: #285ad3;
+  --accent-soft: #dce7ff;
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, #ddeaff 0%, #eae5ff 60%, #e0f3fa 100%);
+}
+:root[data-accent="green"][data-mode="light"],
+.atlas[data-accent="green"][data-mode="light"] {
+  --canvas: #f1f9f5;
+  --surface: #ffffff;
+  --sidebar: #ddf3e8;
+  --text: #203b2c;
+  --muted: #506c5a;
+  --line: #c8ddce;
+  --input-line: #769b82;
+  --hover: #d3f0df;
+  --accent: #087749;
+  --accent-soft: #cef1dd;
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, #d7f3e4 0%, #e6f3d7 60%, #d9f2ef 100%);
+}
+:root[data-accent="red"][data-mode="light"],
+.atlas[data-accent="red"][data-mode="light"] {
+  --canvas: #fff4f6;
+  --surface: #ffffff;
+  --sidebar: #ffe5eb;
+  --text: #482c30;
+  --muted: #7c5b60;
+  --line: #e5cecf;
+  --input-line: #b1878b;
+  --hover: #ffdae5;
+  --accent: #ba3054;
+  --accent-soft: #ffdae5;
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, #ffdee8 0%, #ffe8de 60%, #f2e5fa 100%);
+}
+:root[data-accent="ocean"][data-mode="light"],
+.atlas[data-accent="ocean"][data-mode="light"] {
+  --canvas: #f0f9fb;
+  --surface: #ffffff;
+  --sidebar: #dbf2f5;
+  --text: #142f3b;
+  --muted: #4e6874;
+  --line: #c5dade;
+  --input-line: #72959f;
+  --hover: #cceef1;
+  --accent: #006f84;
+  --accent-soft: #cceef1;
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, #d5ebff 0%, #d2f3ef 60%, #e8f5dc 100%);
+}
+:root[data-accent="sunset"][data-mode="light"],
+.atlas[data-accent="sunset"][data-mode="light"] {
+  --canvas: #fff7f0;
+  --surface: #ffffff;
+  --sidebar: #ffeadb;
+  --text: #493129;
+  --muted: #7b6053;
+  --line: #e4d1c4;
+  --input-line: #af8b75;
+  --hover: #ffe1cb;
+  --accent: #ac401f;
+  --accent-soft: #ffe1cb;
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, #ffdde6 0%, #ffe6d2 60%, #fff1ce 100%);
+}
+
+:root[data-accent="indigo"][data-mode="light"],
+.atlas[data-accent="indigo"][data-mode="light"] {
+  --canvas: oklch(97.3% 0.013 285);
+  --surface: #ffffff;
+  --sidebar: oklch(94.5% 0.026 285);
+  --text: oklch(29% 0.055 282);
+  --muted: oklch(49% 0.05 282);
+  --line: oklch(87.5% 0.026 282);
+  --input-line: oklch(64% 0.05 282);
+  --hover: oklch(92.5% 0.038 285);
+  --accent: oklch(49% 0.165 280);
+  --accent-soft: oklch(92.5% 0.038 285);
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, oklch(93.5% 0.035 268) 0%, oklch(93.5% 0.036 298) 60%, oklch(95% 0.022 245) 100%);
+}
+:root[data-accent="violet"][data-mode="light"],
+.atlas[data-accent="violet"][data-mode="light"] {
+  --canvas: oklch(97.4% 0.013 312);
+  --surface: #ffffff;
+  --sidebar: oklch(94.6% 0.026 312);
+  --text: oklch(29.5% 0.055 312);
+  --muted: oklch(49% 0.05 312);
+  --line: oklch(87.5% 0.026 312);
+  --input-line: oklch(64% 0.05 312);
+  --hover: oklch(92.7% 0.038 312);
+  --accent: oklch(48% 0.155 308);
+  --accent-soft: oklch(92.7% 0.038 312);
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, oklch(93.5% 0.035 292) 0%, oklch(93.8% 0.035 330) 60%, oklch(95% 0.022 272) 100%);
+}
+:root[data-accent="amber"][data-mode="light"],
+.atlas[data-accent="amber"][data-mode="light"] {
+  --canvas: oklch(97.9% 0.014 85);
+  --surface: #ffffff;
+  --sidebar: oklch(95.2% 0.03 85);
+  --text: oklch(31% 0.045 65);
+  --muted: oklch(49.5% 0.05 65);
+  --line: oklch(88% 0.03 80);
+  --input-line: oklch(65% 0.055 75);
+  --hover: oklch(93.2% 0.045 85);
+  --accent: oklch(51% 0.105 68);
+  --accent-soft: oklch(93.2% 0.045 85);
+  --on-accent: #ffffff;
+  --sidebar-fill: linear-gradient(160deg, oklch(94.2% 0.04 95) 0%, oklch(94.6% 0.04 70) 60%, oklch(95.6% 0.03 120) 100%);
+}
+
+/* The hue each accent leans to. The dark scale below is drawn in it; light mode uses it only
+   for glows. Keep in step with profile.ts themeAccents. */
+:root { --atlas-hue: 205; }
+:root[data-accent="ocean"], .atlas[data-accent="ocean"] { --atlas-hue: 205; }
+:root[data-accent="blue"], .atlas[data-accent="blue"] { --atlas-hue: 255; }
+:root[data-accent="indigo"], .atlas[data-accent="indigo"] { --atlas-hue: 278; }
+:root[data-accent="violet"], .atlas[data-accent="violet"] { --atlas-hue: 305; }
+:root[data-accent="red"], .atlas[data-accent="red"] { --atlas-hue: 8; }
+:root[data-accent="sunset"], .atlas[data-accent="sunset"] { --atlas-hue: 42; }
+:root[data-accent="amber"], .atlas[data-accent="amber"] { --atlas-hue: 75; }
+:root[data-accent="green"], .atlas[data-accent="green"] { --atlas-hue: 158; }
+
+/* Keep colour in the light navigation instead of whitening it with the paper
+   surface. Menus retain a solid fill; only the surrounding rail has a gradient. */
+[data-mode="light"] .atlas .sidebar:not(.md-editor):not(.md-editor *),
+.atlas[data-mode="light"] .sidebar:not(.md-editor):not(.md-editor *) {
+  --navigation-surface: var(--sidebar);
+  background: var(--sidebar-fill);
+}
+
+/* Dark mode is one calm grey scale with a whisper of the accent's hue (board 15; lifted out of
+   near-black in 3.6): canvas < sidebar < paper < popover < hover, surfaces at chroma 0.004-0.006, the accent itself is a light tone for links, selection and filled
+   actions, and the shell gets a soft glow of it (--atlas-glow, refresh-theme.css). Text stays
+   above WCAG AA on every surface. These tokens also reach body-level menus through :root. */
+:root[data-mode="dark"],
+.atlas[data-mode="dark"] {
+  color-scheme: dark;
+  --canvas: oklch(22% 0.004 var(--atlas-hue));
+  --surface: oklch(26.5% 0.005 var(--atlas-hue));
+  --sidebar: oklch(24.5% 0.006 var(--atlas-hue));
+  --raised: oklch(30% 0.006 var(--atlas-hue));
+  --text: oklch(94% 0.005 var(--atlas-hue));
+  --muted: oklch(75% 0.012 var(--atlas-hue));
+  --line: oklch(36% 0.007 var(--atlas-hue));
+  --input-line: oklch(55% 0.01 var(--atlas-hue));
+  --hover: oklch(34% 0.008 var(--atlas-hue));
+  --accent: oklch(82% 0.1 var(--atlas-hue));
+  --accent-soft: oklch(35% 0.04 var(--atlas-hue));
+  /* The editor's contact initials and links (contacts plugin): its light fallback is unreadable on --accent-soft here. */
+  --accent-strong: oklch(84% 0.09 var(--atlas-hue));
+  --navigation-selected-bg: oklch(37% 0.05 var(--atlas-hue));
+  --on-accent: oklch(20% 0.05 var(--atlas-hue));
+  /* A filled action is a calmer, slightly deeper tone of the accent: a large light fill must not glare. */
+  --action: oklch(76% 0.095 var(--atlas-hue));
+  --on-action: oklch(19% 0.045 var(--atlas-hue));
+  --sidebar-fill: radial-gradient(360px 260px at 0% 0%, oklch(62% 0.12 var(--atlas-hue) / 0.07), transparent 70%), var(--sidebar);
+  /* The glow behind the top of the workspace and on active elements. */
+  --atlas-glow: radial-gradient(1000px 420px at 50% -60px, oklch(62% 0.12 var(--atlas-hue) / 0.1), transparent 70%);
+  --atlas-glow-ring: 0 0 0 1px oklch(80% 0.12 var(--atlas-hue) / 0.14), 0 0 18px -6px oklch(70% 0.13 var(--atlas-hue) / 0.45);
+  --shadow: 0 1px 3px rgb(0 0 0 / 0.18);
+  --shadow-menu: 0 8px 24px rgb(0 0 0 / 0.32);
+  --shadow-modal: 0 20px 64px rgb(0 0 0 / 0.48);
+  --backdrop: oklch(14% 0.004 var(--atlas-hue) / 0.6);
+  --error: #df9ba4;
+  --error-bg: oklch(35% 0.045 10);
+  --success: #9bc4ac;
+  --success-bg: oklch(35% 0.035 160);
+  --warning: #d9b877;
+  --warning-bg: oklch(36% 0.04 80);
+  --info: #9fbbdb;
+  --info-bg: oklch(35% 0.035 250);
+  --space-blue-bg: oklch(36% 0.035 250);
+  --space-blue-fg: #a0b9d5;
+  --space-coral-bg: oklch(36% 0.035 25);
+  --space-coral-fg: #d2a29a;
+}
+
+/* Filled actions take the light accent with dark ink (board 15) and glow softly when pointed at. */
+[data-mode="dark"] [data-slot="button"]:is([data-variant="default"], :not([data-variant])) {
+  background: var(--action);
+  color: var(--on-action);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-mode="dark"] [data-slot="button"]:is([data-variant="default"], :not([data-variant])):hover {
+    background: color-mix(in oklab, var(--action) 90%, white);
+    box-shadow: var(--atlas-glow-ring);
+  }
+}
+[data-mode="dark"] [data-slot="button"][data-variant="outline"] {
+  background: var(--surface);
+  border-color: var(--input-line);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-mode="dark"] [data-slot="button"][data-variant="outline"]:hover {
+    background: var(--hover);
+  }
+}
+[data-mode="dark"] .atlas :is([data-slot="input"], [data-slot="textarea"], select):not(.md-editor):not(.md-editor *) {
+  background: var(--canvas);
+}
+[data-mode="dark"] :is([data-slot="dropdown-menu-content"], [data-slot="popover-content"]) {
+  background: var(--raised);
+  box-shadow: var(--shadow-menu);
+}
+/* The editor's bubble and its popovers float on the same raised surface as the host's menus, not on the paper below them. */
+[data-mode="dark"] :is(.md-editor .bubble-menu, .md-context-toolbar, .md-editor .bb-popover, .md-editor .link-popover, .md-context-popover) {
+  background: var(--raised);
+}
+[data-mode="dark"] .atlas .search-launch:not(.md-editor):not(.md-editor *) {
+  border-color: var(--line);
+  box-shadow: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-mode="dark"] .atlas .search-launch:hover:not(.md-editor):not(.md-editor *) {
+    border-color: var(--input-line);
+    background: var(--hover);
+  }
+}
+
+/* Use the editor's public theme tokens, including those copied to its portals.
+   Its document, toolbar and table surfaces should belong to the same palette. */
+[data-mode="dark"] .atlas-document-editor.md-editor.md-theme-midnight {
+  --bg-1: var(--canvas);
+  --bg-2: var(--surface);
+  --bg-3: var(--hover);
+  --paper: var(--surface);
+  --paper-line: var(--line);
+  --paper-shadow: none;
+  --text: inherit;
+  --text-dim: var(--muted);
+  --text-dimmer: var(--muted);
+  --text-muted: var(--muted);
+  --line: inherit;
+  --line-2: var(--input-line);
+  --border: var(--line);
+  --accent: inherit;
+  --accent-ink: var(--text);
+  --accent-line: var(--accent);
+  --accent-soft: inherit;
+  --error: inherit;
+  --danger: var(--error);
+  --chip-accent-fg: var(--accent);
+  --tt-th-bg: var(--hover);
+  --tt-cell-bg: var(--surface);
+  --tt-selected-bg: var(--accent-soft);
+}
+
+/* The editor also uses accent-ink on dark table/choice surfaces. Give its
+   filled controls the action pair instead of making that shared ink dark. */
+[data-mode="dark"] .md-btn-primary,
+[data-mode="dark"] .md-image-panel-actions .md-image-panel-apply,
+[data-mode="dark"] .atlas-document-editor.md-editor .find-and-replace-result-current {
+  background: var(--action);
+  color: var(--on-action);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-mode="dark"] .md-btn-primary:hover:not(:disabled), [data-mode="dark"] .md-image-panel-actions .md-image-panel-apply:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--action) 92%, white);
+  }
+}

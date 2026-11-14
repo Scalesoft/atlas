@@ -1,0 +1,29 @@
+/*
+ * The pieces the cards of a board share: page, YouTrack issue, contact. Class prefix bcard-: the canvas has styles of its own
+ * (a scoped rule of the parent also reaches the root of a child), so nothing here shares a name with them.
+ * A card fills the node it is drawn in (any size, resizable): what does not fit is clipped, never grown.
+ */
+.bcard { box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; width: 100%; height: 100%; min-width: 0; padding: 12px 14px; overflow: hidden; color: var(--text); font-size: 13px; line-height: 1.45; text-align: left; }
+.bcard-head { display: flex; align-items: center; gap: 10px; flex: none; min-width: 0; }
+.bcard-icon { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: var(--atlas-radius-sm); color: var(--accent); background: var(--accent-soft); }
+.bcard-icon[data-tone="neutral"] { color: var(--muted); background: var(--hover); }
+.bcard-heading { display: grid; min-width: 0; }
+.bcard-title { overflow: hidden; font-size: 14px; font-weight: 650; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.bcard-muted { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+/* What the node's height leaves for running text: the last line fades out instead of being cut through. */
+.bcard-fade { flex: 1 1 0; min-height: 0; margin: 0; overflow: hidden; overflow-wrap: anywhere; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.6em), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 1.6em), transparent); }
+.bcard-locked { flex-direction: row; align-items: center; gap: 10px; color: var(--muted); }
+.bcard-locked .bcard-heading { gap: 1px; }
+/* The placeholder of a card that is still resolving (CardSwap shows it after --atlas-motion-defer and cross-fades it to the content). */
+.bcard-bar { display: block; width: 55%; height: 10px; border-radius: 5px; background: var(--hover); }
+.bcard-bar-wide { width: 85%; }
+.bcard-link { display: inline-flex; flex: none; align-items: center; gap: 4px; align-self: flex-start; color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; transition: scale var(--atlas-motion-fast) var(--atlas-ease-out); }
+.bcard-link:active { scale: var(--atlas-press); }
+.bcard-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (hover: hover) and (pointer: fine) { .bcard-link:hover { text-decoration: underline; } }
+/* D5: a finger reaches „Otevřít“ and „Obnovit“ through the shared target size; the link looks the same. */
+@media (pointer: coarse) {
+  .bcard-link { position: relative; }
+  .bcard-link::after { content: ""; position: absolute; top: 50%; left: 50%; width: max(100%, var(--touch-target, 44px)); height: max(100%, var(--touch-target, 44px)); translate: -50% -50%; }
+}
+.bcard-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

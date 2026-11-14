@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="220" viewBox="0 0 640 220">
+<rect width="640" height="220" fill="#ffffff"/>
+<path d="M40 22c60 30 140 30 200 0" fill="none" stroke="#9a9a9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M70 32l12 0-6 15z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M106 38l12 0-6 15z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M142 39l12 0-6 15z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M178 36l12 0-6 15z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M210 30l12 0-6 15z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="70" y="90" width="8" height="8" rx="2" fill="#9a9a9a" transform="rotate(20 74 94)"/>
+<rect x="140" y="130" width="8" height="8" rx="2" fill="#5a5a5a" transform="rotate(-15 144 134)"/>
+<rect x="200" y="80" width="8" height="8" rx="2" fill="#bdbdbd" transform="rotate(40 204 84)"/>
+<rect x="96" y="150" width="8" height="8" rx="2" fill="#bdbdbd" transform="rotate(10 100 154)"/>
+<rect x="230" y="150" width="8" height="8" rx="2" fill="#9a9a9a" transform="rotate(-30 234 154)"/>
+<circle cx="170" cy="104" r="4" fill="#5a5a5a"/>
+<circle cx="60" cy="130" r="4" fill="#bdbdbd"/>
+<rect x="260" y="60" width="140" height="120" rx="10" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/>
+<path d="M260 88V72a12 12 0 0 1 12-12h116a12 12 0 0 1 12 12v16z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<polygon points="330,102 337.9,121.1 358.5,122.7 342.8,136.2 347.6,156.3 330,145.5 312.4,156.3 317.2,136.2 301.5,122.7 322.1,121.1" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linejoin="round"/>
+<path d="M480 102c-6 30 10 50 0 90M530 120c4 26-14 44-6 72M440 134c0 24 16 36 14 58" fill="none" stroke="#9a9a9a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="440" cy="100" rx="24" ry="30" fill="#ffffff" stroke="#3a3a3a" stroke-width="2"/><path d="M435 137l5-7 5 7z" fill="#ffffff" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="530" cy="84" rx="26" ry="32" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2"/><path d="M525 123l5-7 5 7z" fill="#f2f2f2" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="480" cy="62" rx="28" ry="36" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2"/><path d="M475 105l5-7 5 7z" fill="#5a5a5a" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

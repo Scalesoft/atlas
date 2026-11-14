@@ -1,0 +1,6 @@
+{
+  "set": "test",
+  "status": "template",
+  "description": "Oddělená testovací (held-out) sada agenta. Čeká na reálné úlohy vlastníka, viz README.md. Při ladění se nepoužívá.",
+  "cases": []
+}

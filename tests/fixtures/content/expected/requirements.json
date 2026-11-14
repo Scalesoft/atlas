@@ -1,0 +1,1171 @@
+[
+  {
+    "name": "deployment page",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Portál"
+              }
+            ]
+          },
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000001",
+              "kind": "requirements"
+            }
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000002",
+              "key": "portal.ssl",
+              "direction": "inbound",
+              "state": "done",
+              "date": "2026-09-10",
+              "party": "IT KBN",
+              "where": "Keepass › KBN",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "SSL certifikát"
+                  }
+                ]
+              },
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Poznámka pod požadavkem…"
+                  }
+                ]
+              },
+              {
+                "type": "requirement",
+                "attrs": {
+                  "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000003",
+                  "key": "portal.orders.tested",
+                  "direction": "internal",
+                  "state": "planned",
+                  "date": "",
+                  "party": "",
+                  "where": "",
+                  "requires": "portal.orders"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Otestováno"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000004",
+              "key": "portal.sms",
+              "direction": "inbound",
+              "state": "waiting_for_input",
+              "stateLabel": "čeká na podpis",
+              "date": "",
+              "party": "IT KBN",
+              "where": "",
+              "system": "NIA",
+              "requires": "portal.ssl,portal.orders"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "SMS brána"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Volný text stránky."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        }
+      ]
+    },
+    "markdown": "## Portál\n\n**Stav nasazení:** 33 % hotovo (1 z 3) · čeká na: SMS brána (IT KBN) · nedodané vstupy: SMS brána (IT KBN) · lze nasadit: Otestováno · čeká na vstup: SMS brána\n\n- [x] **SSL certifikát** — hotovo 10. 9. 2026 · vstup · od: IT KBN · uloženo: Keepass › KBN · klíč: portal.ssl\n  Poznámka pod požadavkem…\n  - [ ] **Otestováno** — neřešeno · naše práce · klíč: portal.orders.tested · závisí na: portal.orders\n\n- [ ] **SMS brána** — čeká na podpis · vstup · od: IT KBN · služba: NIA · klíč: portal.sms · závisí na: SSL certifikát, portal.orders\n\nVolný text stránky."
+  },
+  {
+    "name": "edge cases",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "requirement",
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000005",
+              "key": "docs",
+              "direction": "outbound",
+              "state": "not_applicable",
+              "date": "2026-10-01",
+              "party": "Jan *Novák*",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Předat "
+                  },
+                  {
+                    "type": "text",
+                    "text": "dokumentaci",
+                    "marks": [
+                      {
+                        "type": "italic"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " a "
+                  },
+                  {
+                    "type": "text",
+                    "text": "odkaz",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://example.com/docs"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " [x] _a_"
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "bod"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "heading",
+                "attrs": {
+                  "level": 3
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Nadpis v bloku"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Seznam"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "requirement",
+                    "attrs": {
+                      "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000006",
+                      "key": "in-list",
+                      "direction": "internal",
+                      "state": "in_progress",
+                      "date": "",
+                      "party": "",
+                      "where": "",
+                      "requires": ""
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "V seznamu"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000007",
+              "kind": "requirements"
+            }
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        }
+      ]
+    },
+    "markdown": "- [ ] neřešeno · naše práce\n\n- [-] **Předat *dokumentaci* a [odkaz](https://example.com/docs) \\[x\\] \\_a\\_** — netýká se 1. 10. 2026 · předání · komu: Jan \\*Novák\\* · klíč: docs\n  - bod\n  ### Nadpis v bloku\n\n- Seznam\n\n  - [ ] **V seznamu** — rozpracováno · naše práce · klíč: in-list\n\n**Stav nasazení:** 0 % hotovo (0 z 2) · lze nasadit: bez názvu, V seznamu"
+  },
+  {
+    "name": "nesting, containers and special characters",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000011",
+              "key": "a"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Úroveň 1"
+                  }
+                ]
+              },
+              {
+                "type": "requirement",
+                "attrs": {
+                  "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000012",
+                  "key": "a.b",
+                  "state": "done"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Úroveň 2"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Poznámka úrovně 2"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "requirement",
+                    "attrs": {
+                      "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000013",
+                      "key": "a.b.c"
+                    },
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Úroveň 3"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "requirement",
+                        "attrs": {
+                          "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000014",
+                          "key": "a.b.c.d",
+                          "requires": "a,a.b"
+                        },
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Úroveň 4"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "blockquote",
+            "content": [
+              {
+                "type": "requirement",
+                "attrs": {
+                  "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000015",
+                  "key": "in-quote",
+                  "direction": "inbound"
+                },
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "V citaci"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Poznámka v citaci"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "table",
+            "content": [
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableHeader",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Krok"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableHeader",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Stav"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "tableRow",
+                "content": [
+                  {
+                    "type": "tableCell",
+                    "content": [
+                      {
+                        "type": "requirement",
+                        "attrs": {
+                          "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000016",
+                          "key": "in-cell"
+                        },
+                        "content": [
+                          {
+                            "type": "paragraph",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "V buňce"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "tableCell",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "x | y"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000017",
+              "key": "odd",
+              "direction": "inbound",
+              "state": "blocked",
+              "party": "A | B <c> *d* \uD83D\uDE00",
+              "where": "Trezor › |x| _y_ [z]"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Brána | *SMS* <b> \uD83D\uDE00 [x] # 1."
+                  },
+                  {
+                    "type": "hardBreak"
+                  },
+                  {
+                    "type": "text",
+                    "text": "druhý řádek "
+                  },
+                  {
+                    "type": "emoji",
+                    "attrs": {
+                      "name": "rocket"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000018",
+              "kind": "requirements"
+            }
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        },
+        {
+          "id": "emoji",
+          "version": 1
+        }
+      ]
+    },
+    "markdown": "- [ ] **Úroveň 1** — neřešeno · naše práce · klíč: a\n  - [x] **Úroveň 2** — hotovo · naše práce · klíč: a.b\n    Poznámka úrovně 2\n    - [ ] **Úroveň 3** — neřešeno · naše práce · klíč: a.b.c\n      - [ ] **Úroveň 4** — neřešeno · naše práce · klíč: a.b.c.d · závisí na: Úroveň 1, Úroveň 2\n\n> - [ ] **V citaci** — neřešeno · vstup · klíč: in-quote\n>   Poznámka v citaci\n\n```a-table\n- cells:\n    - header: true\n      content: Krok\n    - header: true\n      content: Stav\n- cells:\n    - content: \"- [ ] **V buňce** — neřešeno · naše práce · klíč: in-cell\"\n    - content: x | y\n```\n\n- [ ] **Brána | \\*SMS\\* &lt;b&gt; \uD83D\uDE00 \\[x\\] # 1.\\\n  druhý řádek \uD83D\uDE80** — blokováno · vstup · od: A | B &lt;c&gt; \\*d\\* \uD83D\uDE00 · uloženo: Trezor › |x| \\_y\\_ \\[z\\] · klíč: odd\n\n**Stav nasazení:** 14 % hotovo (1 z 7) · nedodané vstupy: V citaci, Brána | \\*SMS\\* &lt;b&gt; \uD83D\uDE00 \\[x\\] # 1. druhý řádek (A | B &lt;c&gt; \\*d\\* \uD83D\uDE00) · lze nasadit: Úroveň 1, Úroveň 3, V buňce · čeká na dodání: V citaci · čeká na 1 prerekvizitu: Úroveň 4 · blokováno: Brána | \\*SMS\\* &lt;b&gt; \uD83D\uDE00 \\[x\\] # 1. druhý řádek"
+  },
+  {
+    "name": "summary without requirements",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000021",
+              "kind": "requirements"
+            }
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Zatím bez požadavků."
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        }
+      ]
+    },
+    "markdown": "**Stav nasazení:** 0 % hotovo (0 z 0)\n\nZatím bez požadavků."
+  },
+  {
+    "name": "dependencies by title",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000031",
+              "key": "t1",
+              "state": "waiting_for_input"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Test"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000032",
+              "key": "t2",
+              "direction": "outbound",
+              "state": "done"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Test"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000033",
+              "key": "e"
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000034",
+              "key": "dep",
+              "state": "in_progress",
+              "requires": "t1,t2,e,missing"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Závislý"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000035",
+              "kind": "requirements"
+            }
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        }
+      ]
+    },
+    "markdown": "- [ ] **Test** — čeká na vstup · naše práce · klíč: t1\n\n- [x] **Test** — hotovo · předání · klíč: t2\n\n- [ ] neřešeno · naše práce · klíč: e\n\n- [ ] **Závislý** — rozpracováno · naše práce · klíč: dep · závisí na: Test (t1), Test (t2), e, missing\n\n**Stav nasazení:** 25 % hotovo (1 z 4) · čeká na: Test · lze nasadit: e · čeká na vstup: Test · čeká na 2 prerekvizity: Závislý"
+  },
+  {
+    "name": "code block and ordered lists in a block",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000041",
+              "key": "vpn",
+              "direction": "inbound",
+              "state": "in_progress"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "VPN přístup"
+                  }
+                ]
+              },
+              {
+                "type": "codeBlock",
+                "attrs": {
+                  "language": "bash"
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "openvpn --config kbn.ovpn\n# 1. krok *ne* seznam"
+                  }
+                ]
+              },
+              {
+                "type": "orderedList",
+                "attrs": {
+                  "tight": true,
+                  "start": 1
+                },
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "požádat IT"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "nainstalovat klienta"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "orderedList",
+                "attrs": {
+                  "tight": false,
+                  "start": 3
+                },
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "ověřit"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "druhý odstavec"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "zapsat do trezoru"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "codeBlock",
+                "attrs": {
+                  "language": null
+                },
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "bez jazyka"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000042",
+              "kind": "requirements"
+            }
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        }
+      ]
+    },
+    "markdown": "- [ ] **VPN přístup** — rozpracováno · vstup · klíč: vpn\n  ```bash\n  openvpn --config kbn.ovpn\n  # 1. krok *ne* seznam\n  ```\n  1. požádat IT\n  2. nainstalovat klienta\n  3) ověřit\n\n     druhý odstavec\n\n  4) zapsat do trezoru\n  ```\n  bez jazyka\n  ```\n\n**Stav nasazení:** 0 % hotovo (0 z 1) · nedodané vstupy: VPN přístup · čeká na dodání: VPN přístup"
+  },
+  {
+    "name": "readiness by direction",
+    "content": {
+      "format": "atlas-rich",
+      "version": 1,
+      "document": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "overview",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000050",
+              "kind": "requirements"
+            }
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000051",
+              "key": "a",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Modul A"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000052",
+              "key": "b",
+              "direction": "internal",
+              "state": "in_progress",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Modul B"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000053",
+              "key": "c",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000054",
+              "key": "d",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Modul D"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000055",
+              "key": "e",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Modul E"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000056",
+              "key": "f",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Modul F"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000057",
+              "key": "g",
+              "direction": "outbound",
+              "state": "planned",
+              "date": "",
+              "party": "KBN",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Předávací protokol"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000058",
+              "key": "h",
+              "direction": "inbound",
+              "state": "planned",
+              "date": "",
+              "party": "IT KBN",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Certifikát"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000059",
+              "key": "i",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": "h,i,missing"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Nasazení SSL"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000060",
+              "key": "j",
+              "direction": "outbound",
+              "state": "blocked",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": "h"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Blokované předání"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000061",
+              "key": "k",
+              "direction": "inbound",
+              "state": "done",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Dodaný vstup"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000062",
+              "key": "l",
+              "direction": "internal",
+              "state": "planned",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": "k,m"
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Po dodaném vstupu"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "requirement",
+            "attrs": {
+              "id": "6f1c1d3e-8a4b-4c55-9d1e-000000000063",
+              "key": "m",
+              "direction": "internal",
+              "state": "not_applicable",
+              "date": "",
+              "party": "",
+              "where": "",
+              "requires": ""
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Netýká se"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "plugins": [
+        {
+          "id": "atlas-requirements",
+          "version": 4
+        }
+      ]
+    },
+    "markdown": "**Stav nasazení:** 8 % hotovo (1 z 12) · nedodané vstupy: Certifikát (IT KBN) · lze nasadit: Modul A, Modul B, c, Modul D, Modul E +2 · lze předat: Předávací protokol · čeká na dodání: Certifikát · čeká na 1 prerekvizitu: Nasazení SSL · blokováno: Blokované předání\n\n- [ ] **Modul A** — neřešeno · naše práce · klíč: a\n\n- [ ] **Modul B** — rozpracováno · naše práce · klíč: b\n\n- [ ] neřešeno · naše práce · klíč: c\n\n- [ ] **Modul D** — neřešeno · naše práce · klíč: d\n\n- [ ] **Modul E** — neřešeno · naše práce · klíč: e\n\n- [ ] **Modul F** — neřešeno · naše práce · klíč: f\n\n- [ ] **Předávací protokol** — neřešeno · předání · komu: KBN · klíč: g\n\n- [ ] **Certifikát** — neřešeno · vstup · od: IT KBN · klíč: h\n\n- [ ] **Nasazení SSL** — neřešeno · naše práce · klíč: i · závisí na: Certifikát, Nasazení SSL, missing\n\n- [ ] **Blokované předání** — blokováno · předání · klíč: j · závisí na: Certifikát\n\n- [x] **Dodaný vstup** — hotovo · vstup · klíč: k\n\n- [ ] **Po dodaném vstupu** — neřešeno · naše práce · klíč: l · závisí na: Dodaný vstup, Netýká se\n\n- [-] **Netýká se** — netýká se · naše práce · klíč: m"
+  }
+]

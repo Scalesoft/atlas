@@ -1,0 +1,46 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,md,props,targets,csproj,slnx}]
+indent_size = 2
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = false
+csharp_new_line_before_open_brace = all
+dotnet_sort_system_directives_first = true
+
+# private fields: m_camelCase
+dotnet_naming_rule.private_fields_m_prefix.symbols = private_fields
+dotnet_naming_rule.private_fields_m_prefix.style = m_prefix_camel_case
+dotnet_naming_rule.private_fields_m_prefix.severity = warning
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_fields.required_modifiers =
+dotnet_naming_style.m_prefix_camel_case.required_prefix = m_
+dotnet_naming_style.m_prefix_camel_case.capitalization = camel_case
+
+# private static readonly / const stay PascalCase
+dotnet_naming_rule.private_constants_pascal.symbols = private_constants
+dotnet_naming_rule.private_constants_pascal.style = pascal_case
+dotnet_naming_rule.private_constants_pascal.severity = warning
+dotnet_naming_symbols.private_constants.applicable_kinds = field
+dotnet_naming_symbols.private_constants.applicable_accessibilities = private
+dotnet_naming_symbols.private_constants.required_modifiers = const
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Formatting (one statement per line, braces on their own line) is reported as IDE0055.
+# Pinned to suggestion, not warning: with csharp_new_line_before_open_brace = all the analyzer also
+# demands a new line before every auto-property accessor list, and it reports spacing and indentation
+# inside the compressed test fixtures. A full rebuild reports 2554-2799 findings depending on the brace
+# setting, so making it an error would block the build on formatting alone. The naming and namespace
+# rules below stay warning; IDE0055 is for a separate dotnet format pass.
+dotnet_diagnostic.IDE0055.severity = suggestion

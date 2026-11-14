@@ -1,0 +1,77 @@
+import { plural } from ".";
+import type { AssistantMessages } from "./assistant";
+
+const en: AssistantMessages = {
+  title: "Assistant",
+  intents: { ask: "Ask", explain: "Explain", summarize: "Summarize", rewrite: "Rewrite", translate: "Translate", complete: "Complete", links: "Suggest links and contacts" },
+  scope: {
+    page: "This page",
+    space: (name) => name ? `Space ${name}` : "This space",
+    spaceDefault: "This space",
+    wiki: "The whole available wiki",
+    wikiShort: "Whole wiki",
+    pageTitled: (title) => `Page “${title}”`,
+    changed: (label) => `Scope changed to: ${label}`,
+  },
+  notice: {
+    secretQuery: "The question looks like it contains a password. Remove it before sending.",
+    toolsOnly: "Answers from the wiki aren't available right now. Turn on “With tools” and the assistant will read the pages itself.",
+    outdated: "This conversation uses a previous setting.",
+    unavailableConversation: "Conversation not available",
+    loadFailed: "Couldn't load the conversation.",
+    deleteFailed: "Couldn't delete the conversation.",
+    deleteAllFailed: "Couldn't delete the conversations.",
+    listFailed: "Couldn't load the conversations.",
+  },
+  agent: {
+    verbs: {
+      atlas_search: "Searching",
+      atlas_get_page: "Reading page",
+      atlas_get_space_tree: "Browsing the space tree",
+      atlas_find_mentions: "Searching mentions",
+      atlas_explain_access: "Checking access",
+      atlas_list_spaces: "Browsing spaces",
+      atlas_list_pages: "Browsing pages",
+      atlas_get_labels: "Reading icon and tags",
+      atlas_list_appearance: "Browsing icons",
+      atlas_find_pages_by_tag: "Searching pages with tag",
+      atlas_suggest_tags: "Searching tags",
+      atlas_get_backlinks: "Searching links",
+      atlas_get_history: "Reading history",
+      atlas_list_attachments: "Browsing attachments",
+      atlas_get_attachment: "Reading attachment",
+      atlas_apply_labels: "Preparing a proposal",
+      atlas_create_draft: "Suggesting a new page",
+      atlas_update_section: "Suggesting a change to the page",
+      atlas_insert_section: "Suggesting a change to the page",
+      atlas_replace_page: "Suggesting a change to the page",
+      atlas_rename_page: "Suggesting a change to the page",
+    },
+    fallbackVerb: "Looking things up",
+    interrupted: "The assistant's answer was interrupted.",
+    failed: "The assistant's answer failed.",
+  },
+  tasks: {
+    contacts: "Turn contact details into contacts",
+    pageLabels: "Fill in the page icon and tags",
+    spaceIcons: "Add icons to the space's pages",
+    spaceTags: "Tag the space's pages",
+    spaceMenu: "Arrange the space's left menu",
+  },
+  entry: {
+    assistant: "Assistant",
+    assistantDetail: "Ask about the wiki's content",
+    askPage: "Ask about this page",
+    currentPage: "Current page",
+    taskDetail: (where) => `Assistant · ${where}`,
+    selection: "Selection",
+  },
+  board: {
+    board: "Board",
+    item: "Board item",
+    items: (count) => plural(count, { one: "# board item", other: "# board items" }),
+  },
+  launcher: { sidebar: "Assistant", askPage: "Ask about this page" },
+};
+
+export default en;

@@ -1,0 +1,33 @@
+/* Shared content-picker primitives. Anchored panels reuse the context-popover body;
+   standalone dialog fallback receives the same tokens via copyMarkdownOverlayTheme. */
+.md-context-popover.md-youtrack-picker { width: min(344px, calc(100vw - 24px)); }
+.md-picker-content { min-width: 0; line-height: 1.5; }
+.md-picker {
+  width: 344px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 32px);
+  padding: 10px;
+  color: var(--text, #102f36);
+  font-size: 13px; line-height: 1.5;
+  overflow: auto;
+}
+.md-picker::backdrop {
+  background: var(--backdrop, rgb(16 28 48 / .56));
+  animation: md-picker-backdrop-enter var(--md-motion-menu) var(--md-motion-ease) both;
+}
+.md-picker-heading { margin: 0 0 16px; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.md-picker-close { width: var(--control-h-sm, 32px); height: var(--control-h-sm, 32px); padding: 0; border: 0; background: transparent; color: var(--text-dim, #49676e); }
+.md-picker-close:hover { background: var(--bg-3, #e2eef0); color: var(--text, #102f36); }
+.md-picker-label { display: block; color: var(--text-dim, #49676e); font-size: 12px; }
+.md-picker-input { display: block; margin-top: 6px; }
+.md-picker-input::placeholder { color: var(--text-dimmer, #71878c); opacity: 1; }
+.md-picker-status { margin: 10px 0; color: var(--text-dim, #49676e); font-size: 12px; }
+.md-picker-status[role="alert"] { color: var(--red, #b83e46); }
+.md-picker-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+@keyframes md-picker-backdrop-enter { from { opacity: 0; } to { opacity: 1; } }
+
+/* Saved issue snapshots are the shared inline chip (features/chips/chip.css, a tag); state is neutral because tracker
+   workflows define their own state meanings. These spans do not add persisted data. */
+/* Over the shared chip label's shrink: the key is the issue's name, the title gives way. */
+.md-chip > .md-chip-label.md-youtrack-issue-key, .md-youtrack-issue-key { flex: none; max-width: min(16ch, 50%); color: var(--chip-accent-fg, #164f5a); font-family: var(--font-mono, "SFMono-Regular", Consolas, "Liberation Mono", monospace); font-weight: 600; line-height: 1; }
+.md-youtrack-issue-title { flex: 1 1 auto; max-width: 36ch; }

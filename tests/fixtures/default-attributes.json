@@ -1,0 +1,27 @@
+{
+  "description": "Parity of the stored document form: 'saved' is what the editor's toJSON writes (every attribute), 'stored' the same document without attributes at their schema default, as the web editor (storedDocument.ts) and the server (RichDocument.WithoutDefaultAttributes) write it. Asserted by src/Atlas.Web/src/storedDocument.test.ts and tests/Atlas.Server.Tests/Content/RichDocumentDefaultsTests.cs.",
+  "saved": {"type":"doc","content":[
+    {"type":"heading","attrs":{"headingId":"h-plan","aliases":"","textAlign":null,"state":null,"stateLabel":"","direction":"internal","system":"","party":"","partyContactId":"","from":"","level":2},"content":[{"type":"text","text":"Plán"}]},
+    {"type":"heading","attrs":{"headingId":"h-krok","aliases":"","textAlign":null,"state":"planned","stateLabel":"","direction":"inbound","system":"","party":"","partyContactId":"","from":"","level":3},"content":[{"type":"text","text":"Krok"}]},
+    {"type":"paragraph","attrs":{"textAlign":"center","dependencies":false},"content":[{"type":"text","text":"Odkaz","marks":[{"type":"link","attrs":{"href":"https://example.cz","target":"_blank","rel":"noopener noreferrer","class":null}}]}]},
+    {"type":"orderedList","attrs":{"tight":true,"start":1,"type":null},"content":[{"type":"listItem","content":[{"type":"paragraph","attrs":{"textAlign":null,"dependencies":false},"content":[{"type":"text","text":"Jedna"}]}]}]},
+    {"type":"table","attrs":{"chartRef":null},"content":[
+      {"type":"tableRow","attrs":{"height":null,"chartRef":null},"content":[
+        {"type":"tableHeader","attrs":{"textAlign":null,"backgroundColor":null,"chartRef":null,"colspan":2,"rowspan":1,"colwidth":null,"align":null},"content":[{"type":"paragraph","attrs":{"textAlign":null,"dependencies":false},"content":[{"type":"text","text":"A"}]}]}]},
+      {"type":"tableRow","attrs":{"height":null,"chartRef":null},"content":[
+        {"type":"tableCell","attrs":{"textAlign":null,"backgroundColor":null,"chartRef":null,"colspan":1,"rowspan":1,"colwidth":null,"align":null},"content":[{"type":"paragraph","attrs":{"textAlign":null,"dependencies":false},"content":[{"type":"text","text":"1"}]}]},
+        {"type":"tableCell","attrs":{"textAlign":null,"backgroundColor":null,"chartRef":null,"colspan":1,"rowspan":1,"colwidth":null,"align":null},"content":[{"type":"paragraph","attrs":{"textAlign":null,"dependencies":false},"content":[{"type":"text","text":"2"}]}]}]}]}
+  ]},
+  "stored": {"type":"doc","content":[
+    {"type":"heading","attrs":{"headingId":"h-plan","level":2},"content":[{"type":"text","text":"Plán"}]},
+    {"type":"heading","attrs":{"headingId":"h-krok","state":"planned","direction":"inbound","level":3},"content":[{"type":"text","text":"Krok"}]},
+    {"type":"paragraph","attrs":{"textAlign":"center"},"content":[{"type":"text","text":"Odkaz","marks":[{"type":"link","attrs":{"href":"https://example.cz"}}]}]},
+    {"type":"orderedList","content":[{"type":"listItem","content":[{"type":"paragraph","content":[{"type":"text","text":"Jedna"}]}]}]},
+    {"type":"table","content":[
+      {"type":"tableRow","content":[
+        {"type":"tableHeader","attrs":{"colspan":2},"content":[{"type":"paragraph","content":[{"type":"text","text":"A"}]}]}]},
+      {"type":"tableRow","content":[
+        {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"1"}]}]},
+        {"type":"tableCell","content":[{"type":"paragraph","content":[{"type":"text","text":"2"}]}]}]}]}
+  ]}
+}

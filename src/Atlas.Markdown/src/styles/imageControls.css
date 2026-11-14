@@ -1,0 +1,80 @@
+.md-image-view { padding: 0; border-radius: 0; }
+.md-image-view[data-crop-mode=true] { user-select: none; }
+.md-image-view.ProseMirror-selectednode { outline: none; }
+.md-image-view .md-image-viewport { border-radius: 6px; transition: box-shadow var(--md-motion-fast); }
+.md-image-view .md-image-crop { border-radius: inherit; }
+.md-image-view .md-image-viewport.md-component-selected,
+.md-image-view.ProseMirror-selectednode:not(.md-image-readonly) .md-image-viewport,
+.md-image-view.md-image-resizing .md-image-viewport { outline: 2px solid var(--accent, #58a9b9); outline-offset: var(--focus-offset, 2px); }
+.md-image-view .md-image-resize {
+  position: absolute; z-index: 2; top: 50%; transform: translateY(-50%); width: 9px; height: 34px;
+  padding: 0; border: 2px solid var(--bg-2, #edf5f6); border-radius: 8px; background: var(--accent, #58a9b9);
+  box-shadow: 0 1px 5px #14274430; opacity: 0; cursor: ew-resize; touch-action: none;
+  transition: opacity var(--md-motion-fast);
+}
+.md-image-view .md-image-resize-right { right: -5px; }
+.md-image-view .md-image-resize-left { left: -5px; }
+.md-image-view:hover .md-image-resize,
+.md-image-view:focus-within .md-image-resize,
+.md-image-view.ProseMirror-selectednode .md-image-resize,
+.md-image-view .md-component-selected .md-image-resize,
+.md-image-view.md-image-resizing .md-image-resize { opacity: 1; }
+.md-image-view .md-image-resize[hidden] { display: none; }
+.md-image-status { display: block; text-align: center; font-size: 12px; color: var(--text-dim, #49676e); }
+.md-image-status:empty { display: none; }
+.md-image-resizing .md-image-status { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); padding: 3px 8px; border-radius: 5px; color: #fff; background: #152336cc; pointer-events: none; }
+.md-image-panel { width: 310px; max-width: calc(100vw - 24px); }
+.md-image-panel-form { display: grid; gap: 15px; }
+.md-image-panel-form fieldset { min-width: 0; border: 0; margin: 0; padding: 0; }
+.md-image-panel-form legend { float: none; padding: 0; margin-bottom: 8px; font-size: 11px; font-weight: 650; color: var(--text-dim, #49676e); }
+.md-image-choice-group { display: flex; flex-wrap: wrap; gap: 5px; }
+.md-image-choice-group legend { width: 100%; }
+.md-image-choice {
+  flex: 1; border: 1px solid var(--line, #d4e4e7); border-radius: 6px; padding: 7px 8px;
+  color: inherit; background: var(--bg-2, #edf5f6); font: inherit; font-size: 12px; cursor: pointer;
+}
+.md-image-choice[aria-pressed=true] { border-color: var(--accent, #58a9b9); background: color-mix(in srgb, var(--accent, #58a9b9) 10%, transparent); color: var(--accent, #58a9b9); }
+.md-image-choice:hover:not(:disabled) { border-color: var(--accent, #58a9b9); }
+.md-image-choice:disabled { opacity: .5; cursor: default; }
+.md-image-filters { display: flex; gap: 8px; }
+.md-image-filters .md-image-choice { min-width: 0; padding: 4px 4px 7px; }
+.md-image-filters img { display: block; width: 100%; height: 49px; object-fit: cover; border-radius: 3px; margin-bottom: 6px; }
+.md-image-range { display: grid; grid-template-columns: 1fr auto; gap: 6px; margin-bottom: 10px; font-size: 12px; }
+.md-image-range:last-child { margin-bottom: 0; }
+.md-image-range output { color: var(--text-dim, #49676e); font-variant-numeric: tabular-nums; }
+.md-image-range input[type=range] { grid-column: 1 / -1; display: block; width: 100%; padding: 0; margin: 0; height: 16px; accent-color: var(--accent, #58a9b9); cursor: pointer; }
+.md-image-text-field { display: grid; gap: 7px; font-size: 12px; }
+.md-image-text-field input,.md-image-text-field textarea { box-sizing: border-box; width: 100%; padding: 8px 10px; border: 1px solid var(--line, #d4e4e7); border-radius: 6px; background: var(--bg-2, #edf5f6); color: inherit; font: inherit; resize: vertical; }
+/* The shared :focus-visible ring (tokens.css) already outlines this field for keyboard
+   users; this only adds the border tint every pointer/keyboard focus gets. */
+.md-image-text-field input:focus,.md-image-text-field textarea:focus { border-color: var(--accent, #58a9b9); }
+.md-image-panel-hint { margin: -5px 0 0; font-size: 11px; line-height: 1.5; color: var(--text-dim, #49676e); }
+.md-image-panel-actions { display: flex; justify-content: flex-end; gap: 7px; padding-top: 12px; border-top: 1px solid var(--line, #d4e4e7); }
+.md-image-panel-actions button { padding: 7px 12px; border: 1px solid var(--line, #d4e4e7); border-radius: 6px; font: inherit; font-size: 12px; color: inherit; background: var(--bg-2, #edf5f6); cursor: pointer; }
+.md-image-panel-actions .md-image-panel-apply { color: #fff; background: var(--accent-ink, #246979); border-color: transparent; }
+.md-image-panel-error { color: var(--red, #b83e46); font-size: 12px; margin: 0; }
+.md-image-panel-error:empty { display: none; }
+.md-image-crop-mask { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.md-image-crop-selection { position: absolute; border: 1px solid #fff; box-shadow: 0 0 0 100vmax #10192888; background: linear-gradient(to right, transparent 33.1%, #ffffff55 33.1%, #ffffff55 33.4%, transparent 33.4%, transparent 66.4%, #ffffff55 66.4%, #ffffff55 66.7%, transparent 66.7%), linear-gradient(to bottom, transparent 33.1%, #ffffff55 33.1%, #ffffff55 33.4%, transparent 33.4%, transparent 66.4%, #ffffff55 66.4%, #ffffff55 66.7%, transparent 66.7%); }
+.md-image-view .md-image-crop-handle { position: absolute; z-index: 2; width: 28px; height: 28px; transform: translate(-50%, -50%); padding: 0; border: 0; background: transparent; touch-action: none; cursor: nwse-resize; }
+.md-image-crop-handle::after { content: ''; position: absolute; inset: 6px; border: 3px solid #fff; filter: drop-shadow(0 1px 2px #101928bb); }
+.md-image-crop-handle[data-corner=nw]::after { border-right: 0; border-bottom: 0; }
+.md-image-crop-handle[data-corner=ne]::after { border-left: 0; border-bottom: 0; }
+.md-image-crop-handle[data-corner=sw]::after { border-right: 0; border-top: 0; }
+.md-image-crop-handle[data-corner=se]::after { border-left: 0; border-top: 0; }
+.md-image-view .md-image-crop-handle[data-corner=ne], .md-image-view .md-image-crop-handle[data-corner=sw] { cursor: nesw-resize; }
+.md-image-crop-handle:focus-visible { border-radius: 3px; }
+.md-image-crop-handle:hover::after, .md-image-crop-handle:focus-visible::after { border-color: var(--accent, #58a9b9); }
+.md-image-crop-mask[hidden], .md-image-crop-handle[hidden] { display: none; }
+.md-image-more { width: 244px; }
+.md-image-more .md-context-popover-body { padding: 5px; }
+.md-image-more .md-image-menu-action { width: 100%; }
+.md-image-menu-action svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); flex-shrink: 0; color: var(--text-dim, #49676e); }
+.md-image-menu-separator { height: 1px; margin: 5px 9px; background: var(--line, #d4e4e7); }
+.md-image-menu-action.danger svg { color: inherit; }
+.md-image-menu-action.danger:hover { background: color-mix(in srgb, var(--red, #b83e46) 8%, transparent); }
+.md-image-more .md-image-menu-action.danger { color: var(--red, #b83e46); }
+.md-image-panel-crop .md-context-popover-body { padding: 8px 12px; }
+.md-image-panel-crop .md-image-panel-form { gap: 8px; }
+.md-image-panel-crop .md-image-panel-actions { position: sticky; bottom: -8px; padding: 8px 0; background: var(--bg-2, #edf5f6); }
+.md-image-zoom-close { display: block; margin: 0 0 12px auto; padding: 6px 11px; border: 1px solid var(--line, #d4e4e7); border-radius: 6px; font: inherit; color: inherit; background: var(--bg-2, #edf5f6); cursor: pointer; }

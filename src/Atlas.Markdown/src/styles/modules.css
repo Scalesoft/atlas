@@ -1,0 +1,110 @@
+.md-module { display: block; position: relative; margin: 1.15rem 0; padding: 12px; border: 1px solid transparent; border-radius: 10px; color: var(--md-text, #233044); transition: border-color var(--md-motion-fast) var(--md-motion-ease), box-shadow var(--md-motion-fast) var(--md-motion-ease), background-color var(--md-motion-fast) var(--md-motion-ease); }
+/* Contact cards read as one list: several blocks in a row stand close together. */
+.md-module[data-md-module=contactCard] { margin: .35rem 0; padding: 4px 12px; }
+span.md-module { display: inline-flex; align-items: center; gap: .25rem; margin: 0 .1rem; padding: 0 2px; vertical-align: baseline; border-radius: 5px; max-width: calc(100% - .2rem); box-sizing: border-box; }
+/* At most the line (P17, 375 px): an inline element's chip ellipsizes inside it instead of running past the page. */
+span.md-module > * { min-width: 0; }
+.ProseMirror[contenteditable=true] .md-module:hover { border-color: var(--line, #dce2e8); }
+/* A click on the block opens its edit (block.ts), so it reads as clickable. */
+.ProseMirror[contenteditable=true] .md-module-editable:hover { cursor: pointer; background: color-mix(in srgb, var(--accent-soft, #e3f4f7) 14%, transparent); }
+.md-module.ProseMirror-selectednode { outline: 2px solid var(--accent, #58a9b9); outline-offset: var(--focus-offset, 2px); background: color-mix(in srgb, var(--accent-soft, #e3f4f7) 22%, transparent); }
+.md-module h3, .md-module p { margin: .3rem 0 .6rem; }
+/* A chip (a contact mention is a button) keeps its own look (chip.css); :where keeps this rule's weight for every other button. */
+.md-module button:where(:not(.md-chip)), .md-module-dialog button { font: inherit; cursor: pointer; border: 1px solid var(--md-border, #dce2e8); border-radius: 6px; background: var(--md-surface, #fff); color: inherit; padding: .4rem .65rem; }
+.md-module [hidden] { display: none; }
+.md-module table { width: 100%; border-collapse: collapse; }
+.md-module td, .md-module th { padding: .4rem .6rem; border-bottom: 1px solid var(--md-border, #dce2e8); text-align: start; }
+.md-module details > summary { font-size: 12px; color: var(--text-dim, #49676e); cursor: pointer; padding: 4px 0; }
+.md-module[data-md-module=tableOfContents] { padding: 12px 16px; border-inline-start: 2px solid var(--line, #dce2e8); border-radius: 0 8px 8px 0; }
+.md-module[data-md-module=tableOfContents] nav strong { display: block; font-size: 11px; font-weight: 600; color: var(--text-dim, #49676e); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 6px; }
+.md-module[data-md-module=tableOfContents] nav ul { list-style: none; padding: 0; margin: 0; }
+.md-module[data-md-module=tableOfContents] nav button { background: transparent; border: 0; font-size: 13px; padding: 4px 0; text-align: left; color: var(--text, #233044); }
+.md-module[data-md-module=tableOfContents] nav button:hover { color: var(--accent-ink, #164f5a); text-decoration: underline; }
+.md-module .md-diagram { margin: 0; }
+.md-module .md-diagram figcaption { color: var(--text-dim, #49676e); font-size: 12px; margin-top: 10px; }
+.md-module-dialog { width: min(560px, calc(100vw - 32px)); max-height: 85vh; box-sizing: border-box; overflow: auto; border: 1px solid var(--md-border, #dce2e8); border-radius: var(--radius-lg, 12px); padding: 24px; background: var(--paper, var(--md-surface, #fff)); color: var(--md-text, #233044); box-shadow: var(--shadow-modal, 0 20px 90px rgb(16 32 57 / .2)); }
+.md-module-dialog::backdrop { background: var(--backdrop, rgb(16 28 48 / .56)); }
+.md-module-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.md-module-dialog-header h3 { margin: 0; }
+.md-module-dialog label { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; font: inherit; }
+.md-module-dialog input, .md-module-dialog select, .md-module-dialog textarea { padding: .6rem; font: inherit; border: 1px solid var(--md-border, #dce2e8); border-radius: var(--radius-sm, 6px); color: inherit; background: inherit; min-width: 0; }
+.md-module-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.md-module-dialog [role=alert] { color: #ad3030; }
+.md-image-view { position: relative; margin: 1rem 0; padding: 8px; border-radius: 10px; }
+.md-image-view.ProseMirror-selectednode { outline: 2px solid var(--md-accent, #4675bf); }
+.md-image-view figcaption { text-align: center; font-size: .85em; margin-top: .6rem; color: var(--md-text-muted, #667085); }
+.md-image-resize { cursor: ew-resize !important; touch-action: none; }
+.md-image-zoom { border: 0; border-radius: 12px; width: min(1000px, 85vw); max-height: 85vh; overflow: auto; }
+.md-image-zoom::backdrop { background: #101928bb; }
+.md-callout { margin: 1rem 0; padding: 1rem 1.2rem; border-inline-start: 4px solid #5684c4; border-radius: 8px; background: color-mix(in srgb, #5684c4 9%, transparent); }
+.md-callout[data-variant=tip] { border-color: #33836b; background: color-mix(in srgb, #33836b 9%, transparent); }
+.md-callout[data-variant=warning] { border-color: #b47d1b; background: color-mix(in srgb, #b47d1b 9%, transparent); }
+.md-callout[data-variant=important] { border-color: #7b5bb6; background: color-mix(in srgb, #7b5bb6 9%, transparent); }
+/* Caution is the danger tone of the theme, distinct from Důležité. */
+.md-callout[data-variant=caution] { border-color: var(--red, #c2413b); background: color-mix(in srgb, var(--red, #c2413b) 9%, transparent); }
+.md-module, .md-module-dialog, .md-image-view, .md-image-zoom {
+  --md-border: var(--line, #dce2e8);
+  --md-surface: var(--bg-2, #fff);
+  --md-surface-hover: var(--bg-3, #eef3fa);
+  --md-text: var(--text, #233044);
+  --md-text-muted: var(--text-dim, #667085);
+  --md-accent: var(--accent, #4675bf);
+}
+.md-callout-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 650; letter-spacing: .015em; cursor: pointer; color: var(--text-dim, #49676e); padding: 2px 0 5px; }
+/* Read mode: the same header, but nothing to select. */
+.md-callout-label[data-callout-label] { cursor: default; }
+/* One column: each variant shows its icon, its colour swatch and its name, so the reader can
+   tell what a variant looks like before choosing it instead of only after. */
+.md-context-choices { display: grid; grid-template-columns: 1fr; gap: 1px; padding: 4px; }
+.md-context-choices button {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--control-h, 36px);
+  padding: 6px 10px; border: none; border-radius: var(--radius-sm, 6px); background: transparent;
+  color: var(--text, #102f36); font-size: 13px; text-align: left; cursor: pointer;
+}
+.md-context-choices button:hover { background: var(--bg-3, #e2eef0); }
+.md-context-choices button[aria-checked=true] { background: var(--accent-soft, #e3f4f7); color: var(--accent-ink, #164f5a); }
+.md-context-choices .md-context-choice-swatch { flex: 0 0 10px; width: 10px; height: 10px; border-radius: 50%; }
+.md-context-choices button[data-variant=note] .md-context-choice-swatch { background: #5684c4; }
+.md-context-choices button[data-variant=tip] .md-context-choice-swatch { background: #33836b; }
+.md-context-choices button[data-variant=warning] .md-context-choice-swatch { background: #b47d1b; }
+.md-context-choices button[data-variant=important] .md-context-choice-swatch { background: #7b5bb6; }
+.md-context-choices button[data-variant=caution] .md-context-choice-swatch { background: var(--red, #c2413b); }
+.md-context-choices button svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); flex: 0 0 auto; color: var(--text-dim, #49676e); }
+
+/* What everyone may do with a block (readActions.ts): at the end of its first line, the same for a reader and a writer. */
+.md-read-actions { position: absolute; top: 0; right: 0; display: flex; gap: 4px; opacity: 0; transition: opacity var(--md-motion-fast) var(--md-motion-ease); }
+.md-module:hover .md-read-actions, .md-module:focus-within .md-read-actions, .md-module.ProseMirror-selectednode .md-read-actions { opacity: 1; }
+.md-read-action {
+  display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 1px solid var(--line, #d4e4e7); border-radius: 6px;
+  background: var(--bg-2, #fff); color: var(--text-dim, #667085); cursor: pointer; transition: color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease);
+}
+.md-read-action:hover { color: var(--text, #233044); border-color: var(--accent, #58a9b9); }
+.md-read-action[data-state=copied] { color: var(--accent, #2f7f90); }
+@media (hover: none) { .md-read-actions { opacity: 1; } .md-read-action { width: 44px; height: 44px; } }
+.md-block-zoom-body { display: flex; justify-content: center; align-items: center; min-height: 40vh; }
+.md-block-zoom-body > svg, .md-block-zoom-body > img { width: 100%; height: auto; max-height: 80vh; object-fit: contain; }
+.md-block-zoom-body .md-chart-visual { width: 100%; min-height: 60vh; }
+
+/* The loading stub of a block (block.ts): a quiet skeleton over the content being drawn, which is shown when it is ready (J8.3). The text inside
+   stays for assistive technology; nothing moves, the box already has the size of the finished block (J8.1). */
+.md-module > div:first-child { position: relative; }
+.md-module-stub { position: absolute; inset: 0; z-index: 1; border-radius: 8px; overflow: hidden; }
+.md-module-stub > *, .md-module-stub-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.md-module-stub::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; background: color-mix(in oklab, var(--line, #d4e4e7) 45%, transparent);
+  animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards;
+}
+/* The pulse only while it is being drawn (nothing moves outside the view or once it waits for the viewport). */
+.md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before {
+  animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards,
+    md-module-stub-pulse var(--md-motion-loop) ease-in-out calc(var(--atlas-motion-defer, var(--md-motion-fast)) + var(--atlas-motion-fast, var(--md-motion-fast))) infinite;
+}
+.md-module-stub ~ [data-module-runtime] { opacity: 0; }
+[data-module-runtime] { transition: opacity var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out); }
+@keyframes md-module-stub-in { from { opacity: 0; } }
+@keyframes md-module-stub-pulse { 50% { opacity: .55; } }
+/* Reduced motion keeps the defer (nothing flashes for a fast load) and drops the pulse. */
+@media (prefers-reduced-motion: reduce) { .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before { animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) linear var(--atlas-motion-defer, var(--md-motion-fast)) backwards; } [data-module-runtime] { transition: none; } }
+/* The user's own reduced-motion switch (Atlas's appearance setting) acts like the system's. */
+[data-atlas-reduced-motion] .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before { animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) linear var(--atlas-motion-defer, var(--md-motion-fast)) backwards; }
+[data-atlas-reduced-motion] [data-module-runtime] { transition: none; }

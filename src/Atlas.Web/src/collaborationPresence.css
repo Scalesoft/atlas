@@ -1,0 +1,42 @@
+.collaboration-presence-active .collaboration-carets__caret { opacity: 0 !important; }
+
+.collaboration-presence {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.collaboration-presence__cursor {
+  --collaboration-color: #64748b;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 1.35em;
+  background: var(--collaboration-color);
+  transition: transform var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+
+.collaboration-presence__label {
+  position: absolute;
+  top: -1.35rem;
+  left: 0;
+  max-width: 10rem;
+  overflow: hidden;
+  padding: 2px 5px;
+  border-radius: 4px 4px 4px 0;
+  background: var(--collaboration-color);
+  color: white;
+  font: 600 11px/1.25 system-ui, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collaboration-presence.is-layout-moving .collaboration-presence__cursor,
+.collaboration-presence.is-reduced-motion .collaboration-presence__cursor,
+[data-atlas-reduced-motion] .collaboration-presence__cursor {
+  transition: none;
+}
+

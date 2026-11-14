@@ -1,0 +1,67 @@
+/* The legacy requirement block's static look (renderHTML: a stored document or its history before the server converts it), the
+   states' tone map and the icon masks of the views that remain. */
+.atlas-requirement {
+  margin: 0.5rem 0;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  border-left: 2px solid var(--line);
+}
+
+.atlas-requirement__meta,
+.atlas-overview {
+  color: var(--muted);
+  font-size: 0.875em;
+  user-select: none;
+}
+
+.atlas-requirement__content > :first-child {
+  font-weight: 600;
+}
+
+/* The states' one tone map (C4-12) on every view that colours by state: the blocks and their lists, the overview card
+   (RequirementSummaryCard.vue), the space's deployment overview and the board's deployment cards. `data-tone` takes its tone as --tone. */
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) {
+  --rq-tone-done: var(--success, #2f855a); --rq-tone-in_progress: var(--accent); --rq-tone-waiting_for_input: var(--warning, #975a16);
+  --rq-tone-blocked: var(--error, #c53030); --rq-tone-planned: color-mix(in srgb, var(--text) 18%, transparent);
+  --rq-tone-not_applicable: color-mix(in srgb, var(--text) 10%, transparent);
+}
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) :where([data-tone]) { --tone: var(--rq-tone-planned); }
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) :where([data-tone="done"]) { --tone: var(--rq-tone-done); }
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) :where([data-tone="in_progress"]) { --tone: var(--rq-tone-in_progress); }
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) :where([data-tone="waiting_for_input"]) { --tone: var(--rq-tone-waiting_for_input); }
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) :where([data-tone="blocked"]) { --tone: var(--rq-tone-blocked); }
+:where(.atlas-requirement-view, .atlas-requirement-summary-view, .deployment-overview, .rqcard, .rq-chips) :where([data-tone="not_applicable"]) { --tone: var(--rq-tone-not_applicable); }
+
+/* Icons as masks over the text colour (requirementIcons.ts). */
+.rq-i { display: inline-flex; align-items: center; gap: .25rem; }
+.rq-i::before {
+  content: ""; flex: none; width: var(--rq-size, 12px); height: var(--rq-size, 12px); background: currentColor;
+  -webkit-mask: var(--rq-icon) center / contain no-repeat; mask: var(--rq-icon) center / contain no-repeat;
+}
+
+/* The automatic overview at the top of a page (requirementAutoOverview.ts) is a page's: a board's block never shows one. */
+.board-block .atlas-requirement-auto-overview { display: none; }
+
+/* The panels' fields read as Atlas's own fields (Input.vue): a white field with a visible border, not the editor's grey fill. */
+.md-context-popover.atlas-requirement-popover input.md-input {
+  border: 1px solid var(--input-line, var(--line)); border-radius: var(--atlas-radius-md, 8px); background: var(--surface, #fff); color: var(--text); caret-color: var(--text);
+  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), box-shadow var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.md-context-popover.atlas-requirement-popover input.md-input:focus-visible { outline: var(--state-focus-ring); outline-offset: var(--state-focus-offset); }
+/* The account's „Omezit animace“ (data-atlas-reduced-motion on <html>) is not the system preference the editor zeroes its geometry
+   for, so md-popover-enter would still rise and scale: the requirements' popovers only fade (motion.css maps the time to
+   ≤ 160 ms and the curve to linear). Scoped to them; the editor's own popovers keep the editor's rule. */
+[data-atlas-reduced-motion] .atlas-requirement-popover { --md-motion-rise: 0px; --md-motion-pop-from: 1; }
+/* The wide panels: the catalog's lists of long names (owner, 3.5 C: „dialog vyhledávání je úzký“), „Moduly produktu“ two panes wide. */
+.md-context-popover.atlas-requirement-popover.is-wide { width: min(920px, calc(100vw - 24px)); }
+/* A phone: the panel keeps inside the screen and scrolls itself (the editor's popover has no bottom sheet). */
+@media (max-width: 480px) {
+  .atlas-requirement-popover { max-width: calc(100vw - 16px); max-height: calc(100dvh - 24px); overflow: auto; overscroll-behavior: contain; }
+}
+
+/* The reader's view of the page (requirementViewMode.ts): the state filter and the level NONE as classes on every top-level block of a section
+   they hide (a requirement heading and what follows it, model §2); the order is only the Přehled card's list, the document keeps its own. */
+.ProseMirror > .is-filtered-out { display: none; }
+/* The section worked in that the filter would hide stays (model D1), a quiet stripe at its left edge; a shadow, so each block keeps its box. */
+.ProseMirror > .is-pinned { box-shadow: inset 2px 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+/* A heading a reader's jump focused (navigateToHeading: tabindex -1) shows where the focus is. */
+.ProseMirror > :is(h1, h2, h3, h4, h5, h6)[tabindex="-1"]:focus-visible { outline: var(--state-focus-ring); outline-offset: var(--state-focus-offset); border-radius: 4px; }

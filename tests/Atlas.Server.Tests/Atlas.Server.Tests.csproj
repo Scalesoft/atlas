@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net11.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable></PropertyGroup>
+  <!-- Dozens of in-process web hosts allocate in parallel; with the default workstation GC one collector thread
+       serializes them (4.5 min vs 1.6 min for the suite on 64 threads). -->
+  <PropertyGroup><ServerGarbageCollection>true</ServerGarbageCollection></PropertyGroup>
+  <!-- Hang detection for plain `dotnet test`: see test.runsettings. -->
+  <PropertyGroup><RunSettingsFilePath>$(MSBuildThisFileDirectory)test.runsettings</RunSettingsFilePath></PropertyGroup>
+  <!-- Pin: OpenIddict.Client.DataProtection 7.6.1 resolves vulnerable Cryptography.Xml/Pkcs 10.0.10 here; drop once OpenIddict requires a patched release. -->
+  <ItemGroup><PackageReference Include="System.Security.Cryptography.Xml" Version="11.0.0" /><PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" /><PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="11.0.0" /><PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="11.0.0" /><PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" /><PackageReference Include="Microsoft.Playwright" Version="1.64.1" /><PackageReference Include="xunit" Version="2.9.3" /><PackageReference Include="xunit.runner.visualstudio" Version="4.0.1" PrivateAssets="all" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../src/Atlas.Server/Atlas.Server.csproj" /></ItemGroup>
+  <ItemGroup><None Update="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../fixtures/host-document-schema.json" Link="fixtures/host-document-schema.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../fixtures/default-attributes.json" Link="fixtures/default-attributes.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../fixtures/wiki-import/**" Link="fixtures/wiki-import/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../fixtures/content/**" Link="fixtures/content/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../fixtures/fake-ai-vectors.json" Link="fixtures/fake-ai-vectors.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../../docs/backup-format-v7.md" Link="docs/backup-format-v7.md" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../fixtures/kdbx/**" Link="fixtures/kdbx/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><None Include="../ai-eval/answer/*.json" Link="ai-eval/answer/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup><Compile Include="../ai-eval/AnswerEvalSet.cs" Link="Assistant/AnswerEvalSet.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../ai-eval/AgentEvalSet.cs" Link="Assistant/AgentEvalSet.cs" /></ItemGroup>
+  <ItemGroup><None Include="../ai-eval/agent/*.json" Link="ai-eval/agent/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
+  <ItemGroup>
+    <Using Include="Atlas.Server.Platform.Persistence" />
+    <Using Include="Atlas.Server.Platform.Identity" />
+    <Using Include="Atlas.Server.Platform.Validation" />
+    <Using Include="Atlas.Server.Platform.Hosting" />
+    <Using Include="Atlas.Server.Features.Spaces.Domain" />
+    <Using Include="Atlas.Server.Features.Pages.Domain" />
+    <Using Include="Atlas.Server.Features.Setup.Domain" />
+    <Using Include="Atlas.Server.Features.Collaboration.Domain" />
+    <Using Include="Atlas.Server.Features.Collaboration.Contracts" />
+    <Using Include="Atlas.Server.Features.Pages.Contracts" />
+    <Using Include="Atlas.Server.Features.PageHistory.Contracts" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,372 @@
+{
+ "fragment": "default",
+ "nodes": [
+  {
+   "name": "paragraph",
+   "inline": false,
+   "attrs": [
+    "textAlign"
+   ]
+  },
+  {
+   "name": "blockquote",
+   "inline": false,
+   "attrs": []
+  },
+  {
+   "name": "bulletList",
+   "inline": false,
+   "attrs": [
+    "tight"
+   ]
+  },
+  {
+   "name": "codeBlock",
+   "inline": false,
+   "attrs": [
+    "language"
+   ]
+  },
+  {
+   "name": "doc",
+   "inline": false,
+   "attrs": []
+  },
+  {
+   "name": "hardBreak",
+   "inline": true,
+   "attrs": []
+  },
+  {
+   "name": "heading",
+   "inline": false,
+   "attrs": [
+    "headingId",
+    "textAlign",
+    "level"
+   ]
+  },
+  {
+   "name": "horizontalRule",
+   "inline": false,
+   "attrs": []
+  },
+  {
+   "name": "listItem",
+   "inline": false,
+   "attrs": []
+  },
+  {
+   "name": "orderedList",
+   "inline": false,
+   "attrs": [
+    "tight",
+    "start",
+    "type"
+   ]
+  },
+  {
+   "name": "text",
+   "inline": true,
+   "attrs": []
+  },
+  {
+   "name": "image",
+   "inline": false,
+   "attrs": [
+    "src",
+    "alt",
+    "title",
+    "width",
+    "height",
+    "presentation"
+   ]
+  },
+  {
+   "name": "table",
+   "inline": false,
+   "attrs": [
+    "chartRef"
+   ]
+  },
+  {
+   "name": "tableRow",
+   "inline": false,
+   "attrs": [
+    "height",
+    "chartRef"
+   ]
+  },
+  {
+   "name": "tableHeader",
+   "inline": false,
+   "attrs": [
+    "textAlign",
+    "backgroundColor",
+    "chartRef",
+    "colspan",
+    "rowspan",
+    "colwidth",
+    "align"
+   ]
+  },
+  {
+   "name": "tableCell",
+   "inline": false,
+   "attrs": [
+    "textAlign",
+    "backgroundColor",
+    "chartRef",
+    "colspan",
+    "rowspan",
+    "colwidth",
+    "align"
+   ]
+  },
+  {
+   "name": "taskList",
+   "inline": false,
+   "attrs": []
+  },
+  {
+   "name": "taskItem",
+   "inline": false,
+   "attrs": [
+    "checked"
+   ]
+  },
+  {
+   "name": "callout",
+   "inline": false,
+   "attrs": [
+    "variant"
+   ]
+  },
+  {
+   "name": "disclosure",
+   "inline": false,
+   "attrs": [
+    "title"
+   ]
+  },
+  {
+   "name": "youtrackIssue",
+   "inline": true,
+   "attrs": [
+    "id",
+    "key",
+    "title",
+    "url",
+    "state"
+   ]
+  },
+  {
+   "name": "contactCard",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "contactInline",
+   "inline": true,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "attachment",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "chart",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "openapi",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "diagram",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "mathBlock",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "mathInline",
+   "inline": true,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "tableOfContents",
+   "inline": false,
+   "attrs": [
+    "data"
+   ]
+  },
+  {
+   "name": "emoji",
+   "inline": true,
+   "attrs": [
+    "name"
+   ]
+  },
+  {
+   "name": "pageReference",
+   "inline": true,
+   "attrs": [
+    "id",
+    "title",
+    "url"
+   ]
+  },
+  {
+   "name": "concealedContent",
+   "inline": false,
+   "attrs": [
+    "reveal"
+   ]
+  },
+  {
+   "name": "secretReference",
+   "inline": false,
+   "attrs": [
+    "secretId",
+    "field",
+    "fields",
+    "showCopy",
+    "showDetails",
+    "autoHideSeconds"
+   ]
+  },
+  {
+   "name": "secretInlineReference",
+   "inline": true,
+   "attrs": [
+    "secretId",
+    "field",
+    "fields",
+    "showCopy",
+    "showDetails",
+    "autoHideSeconds"
+   ]
+  }
+ ],
+ "marks": [
+  {
+   "name": "link",
+   "attrs": [
+    "href",
+    "target",
+    "rel",
+    "class",
+    "title"
+   ]
+  },
+  {
+   "name": "bold",
+   "attrs": []
+  },
+  {
+   "name": "code",
+   "attrs": []
+  },
+  {
+   "name": "italic",
+   "attrs": []
+  },
+  {
+   "name": "strike",
+   "attrs": []
+  },
+  {
+   "name": "highlight",
+   "attrs": []
+  },
+  {
+   "name": "underline",
+   "attrs": []
+  }
+ ],
+ "reserved": [
+  "secretReference",
+  "secretInlineReference"
+ ],
+ "documentSchema": {
+  "version": 2,
+  "profile": "rich",
+  "plugins": [
+   {
+    "id": "attachments",
+    "version": 1
+   },
+   {
+    "id": "concealed",
+    "version": 1
+   },
+   {
+    "id": "contacts",
+    "version": 2
+   },
+   {
+    "id": "diagrams",
+    "version": 2
+   },
+   {
+    "id": "emoji",
+    "version": 1
+   },
+   {
+    "id": "heading-anchors",
+    "version": 1
+   },
+   {
+    "id": "charts",
+    "version": 1
+   },
+   {
+    "id": "math",
+    "version": 1
+   },
+   {
+    "id": "openapi",
+    "version": 1
+   },
+   {
+    "id": "pages",
+    "version": 1
+   },
+   {
+    "id": "secrets",
+    "version": 4
+   },
+   {
+    "id": "toc",
+    "version": 1
+   },
+   {
+    "id": "youtrack",
+    "version": 1
+   }
+  ]
+ }
+}

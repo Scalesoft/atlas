@@ -1,0 +1,22 @@
+{
+  "Entita s tímto identityKey nebyla nalezena.": "The entity with this identityKey was not found.",
+  "Tabule patří ke své stránce a přesouvá se s ní.": "A board belongs to its page and moves with it.",
+  "Tabule patří ke své stránce; obnovit ji jde jen pod ni.": "A board belongs to its page; it can be restored only under it.",
+  "Stránka tabule je v koši; obnovte nejdřív ji.": "The board's page is in the trash; restore it first.",
+  "Tabuli stránky obnovuje jen ten, kdo smí stránku upravovat.": "A page's board can be restored only by someone who may edit the page.",
+  "Stránka už má novější tabuli; starou z koše obnovit nejde.": "The page already has a newer board; the old one cannot be restored from the trash.",
+  "Tabuli z koše obnovuje a trvale maže správce prostoru.": "A board is restored from the trash and permanently deleted by a space admin.",
+  "Stránka už svou tabuli má.": "The page already has its board.",
+  "Tabule stránky potřebuje svou stránku (parentPageId).": "A page board needs its page (parentPageId).",
+  "Tabule nebyla nalezena.": "Board not found.",
+  "K úpravám tabule potřebujete v prostoru oprávnění k zápisu.": "You need write permission in the space to edit the board.",
+  "Prvek s tímto identifikátorem už existuje.": "An element with this identifier already exists.",
+  "Prvek na tabuli neexistuje.": "The board element does not exist.",
+  "Prvek byl smazán; obnovte ho, nebo změnu zahoďte.": "The element was deleted; restore it or discard the change.",
+  "Změna tabule není platná.": "The board change is not valid.",
+  "Operace s tímto identifikátorem už proběhla s jinými změnami.": "An operation with this identifier has already run with different changes.",
+  "Od známé verze přibylo příliš mnoho změn; načtěte tabuli znovu.": "Too many changes have accumulated since the known version; load the board again.",
+  "Parametr after musí být nezáporné číslo.": "The after parameter must be a non-negative number.",
+  "Odebrané prvky vidí jen ten, kdo smí tabuli upravovat.": "Removed elements are visible only to someone who may edit the board.",
+  "Tabule může mít jen účel {pagePurpose}.": "A board can have only the purpose {pagePurpose}."
+}

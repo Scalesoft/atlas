@@ -1,0 +1,322 @@
+/* Atlas 2.5 UI refresh – article
+   Článek, editor (hlavička, lišta, kontrola před publikací), boční panel stránky, propojení „Odtud dál“.
+   Pohyb jen přes tokeny z motion.css; žádné doslovné délky ani křivky (motionLiterals.guard.test.ts).
+   Boards 03 (Článek + Obsah), 04 (úpravy), 13 (mobil), 15 (tmavé schéma), 16 (pohyb). Colours come from the palette
+   tokens, so every accent and the dark mode follow; the editor keeps its own tokens and only its document layout
+   (measure, rhythm, blocks) is set here, scoped to the page's document section. */
+
+/* ---------- A. Reading column: 720 px of text, title and body share the left edge ---------- */
+.atlas {
+  --article-measure: 720px;
+  --article-gutter: 40px;
+  --article-soft-line: var(--refresh-soft-line, color-mix(in srgb, var(--line) 55%, transparent));
+  --article-code-bg: color-mix(in srgb, var(--hover) 38%, var(--surface));
+}
+[data-mode="dark"] .atlas, .atlas[data-mode="dark"] { --article-code-bg: color-mix(in srgb, var(--canvas, #0d1214) 55%, var(--surface)); }
+
+.atlas[data-reading-width="comfortable"] .workspace-content > .document-header :is(h1, .document-title-input, .document-meta, .document-outline):not(.md-editor *) {
+  width: calc(100% - 2 * var(--article-gutter));
+  max-width: var(--article-measure);
+  margin-left: auto;
+  margin-right: auto;
+}
+.atlas[data-reading-width="comfortable"] .document-body .md-editor.paper .paper-inner {
+  max-width: calc(var(--article-measure) + 2 * var(--article-gutter));
+}
+/* „Široký dokument“ follows the room like every other page frame: it is centred and capped by --atlas-page-max, so a
+   table or a line of text does not run across a 3440 px monitor. Below the cap nothing changes. */
+.atlas[data-reading-width="wide"][data-document-open="true"] .workspace-content > :is(.document-header, .document-body):not(.md-editor):not(.md-editor *) {
+  max-width: var(--atlas-page-max);
+  margin-inline: auto;
+}
+/* The wide header shares both edges of the text (the 56 px that once kept the editor's outline rail clear went with the
+   rail), and the outline row is inset like the title instead of touching the workspace's edges. The max-width also holds
+   the editing title, a flex item of 100 % basis below, which otherwise ran 40 px past the text and into the page dock. */
+@media (min-width: 681px) {
+  .atlas[data-reading-width="wide"][data-document-open="true"] .workspace-content > .document-header :is(h1, .document-title-input, .document-meta, .document-outline):not(.md-editor *) {
+    width: calc(100% - 2 * var(--article-gutter));
+    max-width: calc(100% - 2 * var(--article-gutter));
+    margin-left: var(--article-gutter);
+    margin-right: var(--article-gutter);
+  }
+}
+.atlas .document-body .md-editor.paper .paper-inner { padding-top: 18px; padding-inline: var(--article-gutter); }
+/* The page's skeleton (arrival and editor) starts where the text will: under the paper's own top padding, so the content never jumps on arrival. */
+.atlas .document-body > .loading-skeleton,
+.atlas .document-body > .document-editor-surface > .loading-skeleton { padding-top: 18px; }
+/* The editor's 32 px gutter for the block grip and its "+" at every width, read too: the first click into a page rewraps no line (3.6). */
+.atlas .document-body .md-editor.paper .paper-inner { padding-left: max(var(--article-gutter), 32px); }
+/* An empty line is a line read too, as the editor's trailing break makes it. */
+.atlas .document-body .md-editor .ProseMirror p:empty { min-height: 1lh; }
+/* The first block sits on the reading line under the metadata, whatever it is. */
+.atlas .document-body .md-editor.paper .ProseMirror > :first-child { margin-top: 0; }
+
+/* ---------- B. Page header: title 34 px, one metadata row with the state chip and the tags ---------- */
+/* 48 px: the formatting row (44 px and its line) lies over this padding while the editor takes input, so the title never moves. */
+.atlas[data-document-open="true"] .workspace-content > .document-header:not(.md-editor *) { padding-top: 48px; padding-bottom: 0; }
+.atlas .document-header h1.document-title:not(.md-editor *),
+.atlas .document-header .document-title-input:not(.md-editor *) {
+  margin: 0 auto 14px;
+  font-size: 34px;
+  line-height: 1.18;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+.atlas .document-header .document-meta:not(.md-editor *) {
+  margin-inline: auto;
+  align-items: center;
+  gap: 6px 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.atlas .document-header .document-meta > *:not(.inline-reveal-root):not(.md-editor *) { flex: none; }
+/* The revision state is a small chip with a dot (Publikováno green, Koncept / Nepublikované změny amber). */
+.atlas .document-meta .document-status[data-state]:not(.md-editor *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: auto;
+  min-height: 22px;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  font-weight: 600;
+}
+.atlas .document-meta .document-status[data-state="published"]:not(.md-editor *) { background: var(--success-bg); color: var(--success); }
+/* While reading, shell.css (`min-height: 1.55em`, two rules of higher rank) overrode the chip's own height, so the state
+   was a 20 px chip between 24 px tags in one row. It takes the tags' 24 px. */
+.atlas[data-document-open="true"] .document-header .document-meta .document-status[data-state]:not(.md-editor *) { min-height: 24px; }/* A new state of the page (saving, saved, draft) arrives with a short fade, and the chip changes colour instead of snapping. */
+.atlas .document-status .document-status-text:not(.md-editor *) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.atlas .document-meta .document-status[data-state]:not(.md-editor *) { transition: background-color var(--atlas-motion-base) var(--atlas-ease-out), color var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas .document-meta .document-status[data-state]::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* A connection notice sits on the row's centre line. */
+.atlas .document-meta .document-status:not([data-state]):not(.md-editor *) { display: inline-flex; align-items: center; }
+.atlas .document-meta .document-updated:not(.md-editor *) { align-self: center; font-size: 13px; }
+.atlas .document-meta .document-updated:not(.md-editor *)::before { content: none; }
+.atlas .document-meta .document-updated > svg { display: none; }
+/* Tags read as quiet neutral chips in the row; their colours stay in the tag editor. */
+.atlas .document-meta > .page-tags:not(.md-editor *) { margin: 0; gap: 6px; }
+/* While reading the chips are items of the row itself: they follow „Upraveno“ and wrap one by one under it, at any
+   number and length (board 03). The writer's quiet actions come last, so the hidden „Přidat ikonu“ leaves no hole
+   between the date and the first tag, and a long row can never push the page sideways. */
+.atlas .document-header .document-meta > .page-tags:not(.md-editor *),
+.atlas .document-header .document-meta > .page-tags > .tag-chip-list:not(.md-editor *) { display: contents; }
+.atlas .document-header .document-meta > .page-icon-edit:not(.md-editor *) { order: 1; }
+/* The save state ends the row (after the writer's quiet actions) in a slot as wide as „Ukládám…“, there from the first frame: a
+   state arriving neither moves nor wraps the row (F1: the badge wrapped and the text dropped 28 px on every save). */
+.atlas .document-header .document-meta > .document-save-state:not(.md-editor *) { order: 2; display: inline-flex; align-items: center; min-width: 88px; min-height: 24px; }
+/* Only the chips of the row: the tag editor's dialog sits inside .page-tags, and its chips keep their tone, border and
+   hash (page-tags.css) instead of vanishing into the field's own background. */
+.atlas .document-meta .tags-ui .tag-chip-list > .tag-chip:not(.md-editor *) {
+  min-height: 24px;
+  padding: 1px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--hover);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+}
+@media (hover: hover) and (pointer: fine) { .atlas .document-meta .tags-ui .tag-chip-list > button.tag-chip:hover:not(.md-editor *) { background: var(--accent-soft); color: var(--accent); } }
+.atlas .document-meta .tags-ui .tag-chip-list > .tag-chip > svg { display: none; }
+/* Icon and tag editing stay in the row for writers, as quiet text actions. */
+.atlas .document-meta :is(.page-icon-edit, .page-tags .edit-page-tags):not(.md-editor *) {
+  min-height: 24px;
+  padding: 1px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .document-meta :is(.page-icon-edit, .page-tags .edit-page-tags):hover:not(.md-editor *) { background: var(--hover); color: var(--text); } }
+/* „Na této stránce“ without the dock: one row under the metadata (board 13). */
+.atlas .document-header .document-outline:not(.md-editor *) { margin: 18px auto 0; }
+
+/* ---------- C. Body: 16 px text, calm heading rhythm, clean blocks ---------- */
+.atlas .document-body .md-editor.paper .editor-body { font-size: 16px; line-height: 1.7; letter-spacing: 0; }
+.atlas .document-body .md-editor.paper .editor-body .ProseMirror > p { margin: 14px 0; }
+.atlas .document-body .md-editor.paper .editor-body h1 { margin: 36px 0 14px; font-size: 28px; line-height: 1.22; font-weight: 650; letter-spacing: -0.015em; }
+.atlas .document-body .md-editor.paper .editor-body h2 { margin: 32px 0 12px; font-size: 22px; line-height: 1.3; font-weight: 650; letter-spacing: -0.01em; }
+.atlas .document-body .md-editor.paper .editor-body h3 { margin: 26px 0 10px; font-size: 18px; line-height: 1.35; font-weight: 650; }
+.atlas .document-body .md-editor.paper .editor-body h4 { margin: 22px 0 8px; font-size: 16px; line-height: 1.4; font-weight: 650; }
+.atlas .document-body .md-editor.paper .editor-body h5 { margin: 20px 0 6px; font-size: 15px; line-height: 1.45; font-weight: 650; }
+.atlas .document-body .md-editor.paper .editor-body h6 { margin: 18px 0 6px; font-size: 14px; line-height: 1.45; font-weight: 650; color: var(--muted); }
+.atlas .document-body .md-editor.paper .editor-body :is(ul, ol) { margin: 12px 0; }
+.atlas .document-body .md-editor.paper .editor-body li > p { margin: 4px 0; }
+/* A task's checkbox sits on the centre of its first line: the paragraph keeps the list's 4 px (the package's 8 px left
+   the box 6.6 px above the text) and the box is lowered by what the line has over the 16 px box (its UA margin is
+   3 px: 4 px of the paragraph − 3 px = 1 px). */
+.atlas .document-body .md-editor.paper .editor-body li.tt-task-item > div > p { margin: 4px 0; }
+.atlas .document-body .md-editor.paper .editor-body li.tt-task-item > label { display: flex; margin-top: calc(1px + (1lh - 16px) / 2); }
+/* A chip is not a link to colour (P14: its ink comes from --md-chip-ink, as on a board). */
+.atlas .document-body .md-editor.paper .editor-body a:not(.md-chip) { color: var(--accent); text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); text-underline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .atlas .document-body .md-editor.paper .editor-body a:not(.md-chip):hover { text-decoration-color: currentColor; } }
+
+/* Code: a quiet framed block, 13 px mono (board 03). */
+.atlas .document-body .md-editor.paper .editor-body pre {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--article-code-bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+}
+/* While reading a code block carries its language and „Kopírovat“ (codeCopyPlugin), pinned while the code scrolls sideways. */
+.atlas .document-body pre > .atlas-code-head {
+  position: sticky;
+  left: -16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  margin: -14px -16px 12px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--article-soft-line);
+  color: var(--muted);
+  font-family: var(--font-sans, "DM Sans", system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1;
+  white-space: normal;
+  user-select: none;
+}
+.atlas .document-body .atlas-code-language { flex: 1; min-width: 0; overflow: hidden; font-weight: 600; letter-spacing: 0.04em; text-overflow: ellipsis; text-transform: uppercase; }
+.atlas .document-body .atlas-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .document-body .atlas-code-copy:hover { background: var(--hover); color: var(--text); } }
+.atlas .document-body .atlas-code-copy[data-state="copied"] { color: var(--success); }
+/* The copy icon answers a successful copy with the pop of the other copy confirmations (CopyField, the link of the top bar). */
+.atlas .document-body .atlas-code-copy[data-state="copied"] svg { animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out); }
+.atlas .document-body .atlas-code-copy[data-state="failed"] { color: var(--error); }
+.atlas .document-body .atlas-code-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The status line after a copy is for assistive technology. Inside the document the shared .visually-hidden of
+   shell.css does not apply (it keeps out of .md-editor), so „Kód zkopírován“ showed as a second text beside the
+   button and pushed it about 100 px to the left for the whole confirmation. */
+.atlas .document-body .atlas-code-head > .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.atlas .document-body .md-editor.paper .editor-body :not(pre) > code {
+  padding: 1px 5px;
+  border: 1px solid var(--article-soft-line);
+  border-radius: 5px;
+  background: var(--article-code-bg);
+  font-size: 0.86em;
+}
+
+/* Callouts: a tinted card with a thin outline of its own colour, no stripe at the left edge (board 15). */
+.atlas .document-body .md-callout {
+  --callout-ink: var(--accent);
+  margin: 18px 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--callout-ink) 30%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--callout-ink) 8%, var(--surface));
+}
+.atlas .document-body .md-callout[data-variant="tip"] { --callout-ink: var(--success); }
+.atlas .document-body .md-callout[data-variant="warning"] { --callout-ink: var(--warning); }
+.atlas .document-body .md-callout[data-variant="important"] { --callout-ink: var(--space-violet-fg, #7b5bb6); }
+.atlas .document-body .md-callout[data-variant="caution"] { --callout-ink: var(--error); }
+.atlas .document-body .md-callout .md-callout-label { color: var(--callout-ink); }
+/* Quotes keep the typographic rule, in the neutral line colour. */
+.atlas .document-body .md-editor.paper .editor-body blockquote { margin: 18px 0; padding: 2px 0 2px 16px; border-left: 3px solid var(--line); color: var(--muted); font-style: normal; }
+.atlas .document-body .md-editor.paper .editor-body hr { margin: 28px 0; }
+
+/* Tables of a page: an outlined card, a tinted header row and horizontal rules only. */
+/* A table wider than the text scrolls inside its own box, never the page. A soft shadow on the side where more columns
+   wait says so (the covers travel with the table, the shadows stay with the box; the header row lets them through).
+   The writer's table looks the same (`[contenteditable]`: either value, the weight to win over tables.css), so a change of the right
+   to write changes nothing (J7.1). */
+.atlas .document-body .ProseMirror[contenteditable] .tableWrapper {
+  overscroll-behavior-x: contain;
+  background:
+    linear-gradient(to right, var(--surface) 40%, transparent) 0 0 / 28px 100% no-repeat local,
+    linear-gradient(to left, var(--surface) 40%, transparent) 100% 0 / 28px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, color-mix(in srgb, var(--text) 18%, transparent), transparent) 0 0 / 10px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, color-mix(in srgb, var(--text) 18%, transparent), transparent) 100% 0 / 10px 100% no-repeat scroll;
+}
+.atlas .document-body .ProseMirror[contenteditable] table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: none;
+}
+.atlas .document-body .ProseMirror[contenteditable] :is(td, th) {
+  border-right-color: transparent;
+  border-bottom: 1px solid var(--article-soft-line);
+}
+.atlas .document-body .ProseMirror[contenteditable] tr:last-child > :is(td, th) { border-bottom: 0; }
+
+/* ---------- D. Footer „Odtud dál“ ---------- */
+.atlas .workspace-content > .page-connections:not(.md-editor *) { max-width: var(--article-measure); padding-inline: 0; }
+/* „Komentáře“ under the article (comments spec §5), on the article's edges (its measure inside the gutters); on a phone the page's 16 px gutter. */
+.atlas .workspace-content > .page-comments:not(.md-editor *) { box-sizing: border-box; width: 100%; max-width: min(var(--article-measure), calc(100% - 2 * var(--article-gutter))); margin: 32px auto 48px; }
+@container workspace-content (max-width: 680px) { .atlas .workspace-content > .page-comments:not(.md-editor *) { max-width: none; padding-inline: 16px; } }
+
+/* ---------- E. The workspace row: the view and the side panel under the top bar (boards 03, 18) ---------- */
+.atlas .workspace-body:not(.md-editor *) {
+  --workspace-panel-top: var(--atlas-workspace-bar-height, var(--atlas-topbar-height, 52px));
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  min-width: 0;
+}
+.atlas .workspace-body > :not(.workspace-panel):not(.md-editor *) { flex: 1 1 0%; min-width: 0; }
+.atlas .workspace-content { container: workspace-content / inline-size; }
+.atlas .workspace-body > .workspace-panel:not(.md-editor *) { --dock-bg: color-mix(in srgb, var(--surface) 82%, var(--hover)); }
+[data-mode="dark"] .atlas .workspace-body > .workspace-panel:not(.md-editor *) { --dock-bg: color-mix(in srgb, var(--surface) 70%, var(--canvas, var(--surface))); }
+
+/* ---------- F. Page actions in the top bar (board 03) ---------- */
+.atlas .document-actions .page-dock-toggle[aria-pressed="true"]:not(.md-editor *) { background: var(--accent-soft); color: var(--accent); }
+
+/* ---------- G. Narrow and phone (board 13) ---------- */
+@media (max-width: 760px) {
+  /* The dock covers the screen there; the outline row, the ⋯ menu and the bottom bar carry its parts. */
+  .atlas .document-actions .page-dock-toggle:not(.md-editor *) { display: none; }
+}
+@media (max-width: 680px) {
+  .atlas { --article-gutter: 20px; }
+  /* The shell insets the header items by 20 px; the header itself has no side padding. */
+  .atlas[data-document-open="true"] .workspace-content > .document-header:not(.md-editor *) { padding: 20px 0 0; }
+  .atlas[data-document-open="true"] .document-header :is(h1.document-title, .document-title-input):not(.md-editor *) { margin-bottom: 12px; font-size: 27px; line-height: 1.2; letter-spacing: -0.01em; }
+  .atlas[data-document-open="true"] .document-header .document-meta:not(.md-editor *) { gap: 6px; }
+  .atlas[data-document-open="true"] .document-header .document-status:not(.md-editor *) { flex: none; }
+  .atlas[data-document-open="true"] .document-header .document-outline:not(.md-editor *) { width: calc(100% - 40px); margin-top: 14px; }
+  .atlas .document-body .md-editor.paper .paper-inner { padding-top: 12px; }
+  .atlas .document-body > .loading-skeleton,
+  .atlas .document-body > .document-editor-surface > .loading-skeleton { padding-top: 12px; }
+  .atlas .document-body .md-editor.paper .editor-body { font-size: 15px; line-height: 1.65; }
+  .atlas .document-body .md-editor.paper .editor-body h2 { margin-top: 24px; font-size: 20px; }
+  .atlas .document-body .md-editor.paper .editor-body pre { padding: 12px 14px; border-radius: 10px; font-size: 12px; }
+  /* On a phone sharing lives in the ⋯ menu, and the lock and Upravit in the bottom bar (board 13); a locked page keeps
+     its „Jen pro čtení“ badge (as the icon) in the top bar, so the state still shows at a glance. */
+  .atlas .document-actions :is(.page-link-control, .page-access-button, .edit-lock:not(.is-locked), .edit-unlock):not(.md-editor *) { display: none; }
+  /* A board has no bottom bar: its lock and Upravit stay in the top bar (F21). */
+  .atlas .document-actions[data-board-actions] :is(.edit-lock, .edit-unlock):not(.md-editor *) { display: inline-flex; }
+  /* The icon and tag editors show on a phone while the editor takes input; otherwise the header keeps one meta row. */
+  .atlas:not([data-editor-active="true"]) .document-header :is(.page-icon-edit, .edit-page-tags):not(.md-editor *) { display: none; }
+}
