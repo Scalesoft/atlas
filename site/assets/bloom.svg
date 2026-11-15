@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" class="bloom-logo bl-intro" role="img" aria-label="Atlas">
+<title>Atlas — Bloom</title><desc>Čtyři lístky tvoří otevřenou knihu. Po úvodním vykreslení následuje velmi jemný pomalý pohyb a střídající se světelné přejezdy.</desc>
+<defs><linearGradient id="bloom-ink" x1="8" y1="13" x2="57" y2="53" gradientUnits="userSpaceOnUse"><stop stop-color="#7058de"/><stop offset=".52" stop-color="#4c78e5"/><stop offset="1" stop-color="#159daa"/></linearGradient></defs>
+<style>
+.bloom-logo .bl-line{fill:none;stroke:url(#bloom-ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bloom-logo .bl-enter,.bloom-logo .bl-idle{transform-origin:32px 51px}
+.bloom-logo .bl-glint{stroke:#fff;stroke-width:2.8;stroke-dasharray:5 95;opacity:0;filter:drop-shadow(0 0 .65px #ffffffb3)}
+.bloom-logo .bl-idle{animation:bl-sway 29s ease-in-out 2s infinite}
+.bloom-logo .bl-p2 .bl-idle{animation-duration:37s;animation-direction:reverse}
+.bloom-logo .bl-p3 .bl-idle{animation-duration:31s}
+.bloom-logo .bl-p4 .bl-idle{animation-duration:43s;animation-direction:reverse}
+.bloom-logo .bl-glint{animation:bl-pass 24s linear 2.4s infinite}
+.bloom-logo .bl-p2 .bl-glint{animation-delay:14.4s}
+.bloom-logo .bl-p3 .bl-glint{animation-delay:8.4s}
+.bloom-logo .bl-p4 .bl-glint{animation-delay:20.4s}
+@keyframes bl-sway{0%,100%{transform:rotate(0deg)}33%{transform:rotate(.55deg)}72%{transform:rotate(-.35deg)}}
+@keyframes bl-pass{0%{stroke-dashoffset:0;opacity:0}3%,17%{opacity:.9}20%,100%{stroke-dashoffset:-100;opacity:0}}
+.bloom-logo.bl-intro .bl-enter{animation:bl-open 1.8s cubic-bezier(.16,1,.3,1) both}
+.bloom-logo.bl-intro .bl-base{stroke-dasharray:100;animation:bl-ink 1.65s cubic-bezier(.22,1,.36,1) both}
+.bloom-logo.bl-intro .bl-p1{--bl-fold:16deg}
+.bloom-logo.bl-intro .bl-p2{--bl-fold:7deg}
+.bloom-logo.bl-intro .bl-p3{--bl-fold:-7deg}
+.bloom-logo.bl-intro .bl-p4{--bl-fold:-16deg}
+.bloom-logo.bl-intro .bl-p2 .bl-base,.bloom-logo.bl-intro .bl-p2 .bl-enter{animation-delay:.1s}
+.bloom-logo.bl-intro .bl-p3 .bl-base,.bloom-logo.bl-intro .bl-p3 .bl-enter{animation-delay:.2s}
+.bloom-logo.bl-intro .bl-p4 .bl-base,.bloom-logo.bl-intro .bl-p4 .bl-enter{animation-delay:.3s}
+@keyframes bl-open{from{transform:translateY(2px) rotate(var(--bl-fold,0deg)) scale(.96)}to{transform:translateY(0) rotate(0deg) scale(1)}}
+@keyframes bl-ink{0%{stroke-dashoffset:100;opacity:0}12%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
+@media(prefers-reduced-motion:reduce){.bloom-logo .bl-enter,.bloom-logo .bl-idle,.bloom-logo .bl-line{animation:none!important;transform:none;stroke-dasharray:none;stroke-dashoffset:0;opacity:1}.bloom-logo.bl-intro .bl-base{stroke-dasharray:none}.bloom-logo .bl-glint{display:none}}
+</style>
+<g class="bl-p1"><g class="bl-enter"><g class="bl-idle"><path class="bl-line bl-base" pathLength="100" d="M32 51C21 43 10 43 6 44V20C18 20 30 34 32 51Z"/><path class="bl-line bl-glint" pathLength="100" d="M32 51C21 43 10 43 6 44V20C18 20 30 34 32 51Z"/></g></g></g>
+<g class="bl-p2"><g class="bl-enter"><g class="bl-idle"><path class="bl-line bl-base" pathLength="100" d="M32 51C18 39 15 19 23 9C35 17 40 36 32 51Z"/><path class="bl-line bl-glint" pathLength="100" d="M32 51C18 39 15 19 23 9C35 17 40 36 32 51Z"/></g></g></g>
+<g class="bl-p3"><g class="bl-enter"><g class="bl-idle"><path class="bl-line bl-base" pathLength="100" d="M32 51C25 35 32 16 42 9C50 21 46 41 32 51Z"/><path class="bl-line bl-glint" pathLength="100" d="M32 51C25 35 32 16 42 9C50 21 46 41 32 51Z"/></g></g></g>
+<g class="bl-p4"><g class="bl-enter"><g class="bl-idle"><path class="bl-line bl-base" pathLength="100" d="M32 51C34 34 47 21 58 20V44C48 43 39 46 32 51Z"/><path class="bl-line bl-glint" pathLength="100" d="M32 51C34 34 47 21 58 20V44C48 43 39 46 32 51Z"/></g></g></g>
+</svg>

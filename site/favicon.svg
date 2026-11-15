@@ -1,0 +1,8 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Atlas">
+<title>Atlas — Bloom</title><desc>Čtyři lístky květu vytvářejí stránky rozevřené knihy.</desc>
+<style>svg{color:#5868d9}@media(prefers-color-scheme:dark){svg{color:#b9caff}}</style>
+<path d="M32 51C21 43 10 43 6 44V20C18 20 30 34 32 51Z"/>
+<path d="M32 51C18 39 15 19 23 9C35 17 40 36 32 51Z"/>
+<path d="M32 51C25 35 32 16 42 9C50 21 46 41 32 51Z"/>
+<path d="M32 51C34 34 47 21 58 20V44C48 43 39 46 32 51Z"/>
+</svg>

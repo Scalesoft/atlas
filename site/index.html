@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas — Documentation, reimagined</title>
+<meta name="description" content="Atlas is an open-source, self-hosted wiki where your team and your AI write together. Live collaboration, diagrams and boards, MCP and a built-in AI, wired into your development pipeline. MIT licensed.">
+<meta name="theme-color" content="#060b1f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Atlas — Documentation, reimagined">
+<meta property="og:description" content="The boring parts automated. The rest, together. An open-source wiki for teams and their AI.">
+<meta property="og:url" content="https://scalesoft.github.io/atlas/">
+<meta property="og:image" content="https://scalesoft.github.io/atlas/assets/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/dm-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-latin-wght-normal.woff2') format('woff2'); font-weight: 100 1000; font-display: swap; }
+@font-face { font-family: 'DM Sans'; src: url('assets/fonts/dm-sans-latin-ext-wght-normal.woff2') format('woff2'); font-weight: 100 1000; font-display: swap; unicode-range: U+0100-024F, U+1E00-1EFF; }
+@font-face { font-family: 'Fraunces'; src: url('assets/fonts/fraunces-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+
+:root {
+  --bg: #060b1f; --bg2: #0b1533; --ink: #eef2ff; --muted: #a7b1d6; --dim: #6f7aa6;
+  --line: rgba(160, 175, 255, .16); --glass: rgba(255, 255, 255, .045);
+  --violet: #bd9cff; --blue: #89b5ff; --teal: #63dfd3; --neon: #8f9cff;
+  --jane: #b08cff; --anna: #ff6fb0; --emma: #5fa2ff; --martin: #ffb547;
+  --grad: linear-gradient(90deg, var(--violet), var(--blue) 50%, var(--teal));
+  --mono: ui-monospace, 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  --r: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 17px/1.6 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+/* the film's world: a deep-blue room, a faint grid, coloured light in the corners */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(60vw 50vh at 12% 8%, rgba(112, 88, 222, .28), transparent 70%),
+    radial-gradient(55vw 50vh at 92% 30%, rgba(21, 157, 170, .18), transparent 70%),
+    radial-gradient(70vw 60vh at 50% 110%, rgba(63, 125, 255, .22), transparent 70%),
+    var(--bg);
+}
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .55;
+  background-image: linear-gradient(rgba(130, 150, 255, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(130, 150, 255, .07) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%);
+}
+a { color: inherit; }
+img { max-width: 100%; display: block; }
+.wrap { width: min(1160px, 100% - 32px); margin-inline: auto; }
+.grad { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+
+/* glass with neon in its edge (the film's tablets) */
+.glass {
+  position: relative; border-radius: var(--r);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .02) 40%, rgba(255, 255, 255, .03));
+  -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 0 0 1px rgba(255, 255, 255, .05), 0 24px 70px rgba(0, 0, 0, .45), 0 0 50px rgba(110, 130, 255, .10);
+}
+.glass::before {                       /* the neon rim */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(189, 156, 255, .75), rgba(137, 181, 255, .25) 35%, rgba(99, 223, 211, .15) 65%, rgba(99, 223, 211, .7));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+}
+
+/* ---------- nav ---------- */
+.nav { position: sticky; top: 0; z-index: 20; border-bottom: 1px solid transparent; transition: background .3s, border-color .3s; }
+.nav.solid { background: rgba(6, 11, 31, .72); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-color: var(--line); }
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 600 24px/1 'Fraunces', serif; letter-spacing: .01em; }
+.brand img { width: 30px; height: 30px; }
+.nav nav { display: flex; gap: 22px; margin-left: auto; font-size: 15px; color: var(--muted); }
+.nav nav a { text-decoration: none; } .nav nav a:hover { color: var(--ink); }
+.btn {
+  display: inline-flex; align-items: center; gap: 9px; padding: 12px 20px; border-radius: 999px; text-decoration: none;
+  font-weight: 600; font-size: 15px; white-space: nowrap; transition: transform .2s, box-shadow .2s, background .2s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn.primary { color: #0b1030; background: var(--grad); box-shadow: 0 0 0 1px rgba(255, 255, 255, .25) inset, 0 8px 30px rgba(137, 181, 255, .35); }
+.btn.primary:hover { box-shadow: 0 0 0 1px rgba(255, 255, 255, .35) inset, 0 10px 40px rgba(137, 181, 255, .5); }
+.btn.ghost { color: var(--ink); background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px var(--line); }
+.btn.ghost:hover { background: rgba(255, 255, 255, .1); }
+.btn svg { width: 18px; height: 18px; }
+.nav .btn { padding: 9px 16px; }
+
+/* ---------- hero ---------- */
+.hero { position: relative; padding: 88px 0 40px; text-align: center; isolation: isolate; }
+.backword {                             /* the giant word behind the window */
+  position: absolute; left: 50%; transform: translateX(-50%); z-index: -1; pointer-events: none; user-select: none;
+  font: 600 clamp(140px, 26vw, 360px)/.8 'Fraunces', serif; letter-spacing: -.02em; white-space: nowrap;
+  background: linear-gradient(180deg, rgba(200, 210, 255, .18), rgba(200, 210, 255, 0) 80%); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.film .backword { top: auto; bottom: 58%; background: linear-gradient(180deg, rgba(200, 210, 255, .3), rgba(200, 210, 255, 0) 75%); -webkit-background-clip: text; background-clip: text; font-size: clamp(120px, 22vw, 300px); }   /* half hidden behind the glass frame */
+.film .frame { position: relative; z-index: 1; }
+.kicker {
+  display: inline-flex; gap: 10px; align-items: center; padding: 7px 14px; border-radius: 999px; font-size: 13.5px; color: var(--muted);
+  background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--line);
+}
+.kicker b { color: var(--teal); font-weight: 600; }
+.kicker i { width: 4px; height: 4px; border-radius: 50%; background: var(--dim); }
+h1 { margin: 22px auto 0; max-width: 15ch; font: 700 clamp(44px, 7.4vw, 92px)/1.02 'DM Sans', sans-serif; letter-spacing: -.035em; }
+.lead { margin: 22px auto 0; max-width: 40ch; font-size: clamp(19px, 2.2vw, 23px); color: var(--ink); }
+.sub { margin: 12px auto 0; max-width: 58ch; color: var(--muted); }
+.ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+
+/* light columns (NeuraFlow) */
+.columns { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.columns span {
+  position: absolute; top: -10%; bottom: -10%; width: 2px; background: linear-gradient(180deg, transparent, #9fc0ff 30%, #cfe0ff 50%, #9fc0ff 70%, transparent);
+  box-shadow: 0 0 18px 4px rgba(90, 134, 240, .55), 0 0 80px 18px rgba(90, 134, 240, .22); opacity: .7; animation: breathe 6s ease-in-out infinite;
+}
+.columns span:nth-child(1) { left: 14%; animation-delay: -1s; }
+.columns span:nth-child(2) { left: 50%; opacity: .45; animation-delay: -3s; }
+.columns span:nth-child(3) { right: 14%; animation-delay: -4.5s; }
+@keyframes breathe { 50% { opacity: .35; } }
+
+/* the film */
+.film { position: relative; margin: 56px auto 0; max-width: 1000px; }
+.film .frame { padding: 10px; }
+.film button {
+  position: relative; display: block; width: 100%; padding: 0; border: 0; border-radius: 12px; overflow: hidden; cursor: pointer;
+  aspect-ratio: 16 / 9; background: #0b1533 center / cover no-repeat;
+}
+.film button img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s, filter .6s; }
+.film button:hover img { transform: scale(1.015); filter: brightness(1.08); }
+.film .play {
+  position: absolute; left: 50%; top: 50%; width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(255, 255, 255, .14); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 40px rgba(137, 181, 255, .55); transition: transform .25s;
+}
+.film button:hover .play { transform: scale(1.06); }
+.film .play svg { width: 30px; height: 30px; margin-left: 4px; fill: #fff; }
+.film .soon { position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); color: var(--ink); font-size: 15px; white-space: nowrap; padding: 10px 18px; border-radius: 999px; font-weight: 600; background: rgba(6, 11, 31, .6); box-shadow: inset 0 0 0 1px var(--line); }
+.film iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; }
+.film figcaption { margin-top: 14px; color: var(--dim); font-size: 14px; }
+
+/* dimension lines: the exact, engineered feel */
+.dim { position: absolute; display: flex; align-items: center; gap: 8px; color: var(--dim); font: 500 11px/1 var(--mono); letter-spacing: .08em; pointer-events: none; }
+.dim::before, .dim::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(167, 177, 214, .5), rgba(167, 177, 214, .5)); }
+.dim.h { left: 10px; right: 10px; top: -22px; }
+.dim.h::before { box-shadow: -1px 0 0 0 rgba(167, 177, 214, .7); border-left: 1px solid rgba(167, 177, 214, .7); height: 9px; background: linear-gradient(rgba(167, 177, 214, .5), rgba(167, 177, 214, .5)) center / 100% 1px no-repeat; }
+.dim.h::after { border-right: 1px solid rgba(167, 177, 214, .7); height: 9px; background: linear-gradient(rgba(167, 177, 214, .5), rgba(167, 177, 214, .5)) center / 100% 1px no-repeat; }
+.dim.v { top: 10px; bottom: 10px; right: -30px; flex-direction: column; writing-mode: vertical-rl; }
+.dim.v::before, .dim.v::after { width: 9px; height: auto; flex: 1; background: linear-gradient(rgba(167, 177, 214, .5), rgba(167, 177, 214, .5)) center / 1px 100% no-repeat; }
+.dim.v::before { border-top: 1px solid rgba(167, 177, 214, .7); }
+.dim.v::after { border-bottom: 1px solid rgba(167, 177, 214, .7); }
+.corner { position: absolute; width: 14px; height: 14px; border-color: rgba(167, 177, 214, .55); border-style: solid; border-width: 0; pointer-events: none; }
+.corner.tl { left: -8px; top: -8px; border-left-width: 1px; border-top-width: 1px; }
+.corner.br { right: -8px; bottom: -8px; border-right-width: 1px; border-bottom-width: 1px; }
+
+/* ---------- sections ---------- */
+section { position: relative; }
+.sec { padding: 120px 0 0; }
+.eyebrow { font: 600 13px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--teal); }
+h2 { margin: 14px 0 0; font: 700 clamp(32px, 4.6vw, 56px)/1.08 'DM Sans', sans-serif; letter-spacing: -.03em; max-width: 22ch; }
+.intro { margin-top: 18px; max-width: 62ch; color: var(--muted); font-size: 18px; }
+
+/* the story: four questions, four answers */
+.steps { display: grid; gap: 28px; margin-top: 56px; }
+.step { display: grid; grid-template-columns: 1fr 1.25fr; gap: 40px; align-items: center; padding: 28px; }
+.step:nth-child(even) { grid-template-columns: 1.25fr 1fr; }
+.step:nth-child(even) .txt { order: 2; }
+.step .n { font: 500 12px/1 var(--mono); color: var(--dim); letter-spacing: .1em; }
+.ask {
+  display: inline-flex; align-items: center; margin-top: 14px; padding: 9px 16px; border-radius: 12px; font-weight: 700; font-size: 20px;
+  background: rgba(10, 16, 44, .7); box-shadow: inset 0 0 0 1px var(--line), 0 0 24px rgba(143, 156, 255, .15);
+}
+.ask::after { content: ''; width: 2px; height: 1.1em; margin-left: 4px; background: var(--c, var(--jane)); animation: caret 1.05s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+.answer { margin: 16px 0 0; font: 700 clamp(28px, 3.4vw, 40px)/1.1 'DM Sans', sans-serif; letter-spacing: -.025em; }
+.step p { color: var(--muted); margin: 12px 0 0; }
+.shot { position: relative; border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 20px 50px rgba(0, 0, 0, .5); }
+.shot img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+.step.turn { background: radial-gradient(120% 140% at 80% 50%, rgba(47, 230, 210, .10), transparent 60%); }
+
+/* features */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 56px; }
+.card { padding: 26px; }
+.card .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(143, 156, 255, .12); box-shadow: inset 0 0 0 1px rgba(143, 156, 255, .35), 0 0 22px rgba(143, 156, 255, .2); }
+.card .ic svg { width: 22px; height: 22px; stroke: #cdd5ff; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card h3 { margin: 18px 0 0; font-size: 20px; letter-spacing: -.01em; }
+.card p { margin: 8px 0 0; color: var(--muted); font-size: 16px; }
+.wide { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+.wide figure { margin: 0; padding: 14px; }
+.wide figcaption { padding: 16px 8px 6px; }
+.wide figcaption b { display: block; font-size: 19px; letter-spacing: -.01em; }
+.wide figcaption span { color: var(--muted); font-size: 15.5px; }
+.who { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 26px; }
+.who span { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 6px; border-radius: 999px; font-size: 13.5px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--line); }
+.who span::before { content: ''; width: 16px; height: 16px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+
+/* AI-native */
+.ai-two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 56px; }
+.ai-two .card { padding: 30px; overflow: hidden; }
+.ai-two .card::after {                                  /* a soft light from the corner, local teal, remote violet */
+  content: ''; position: absolute; width: 340px; height: 340px; right: -120px; top: -140px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, var(--glow), transparent); opacity: .35;
+}
+.ai-two .local { --glow: #2fe6d2; } .ai-two .remote { --glow: #8b6cff; }
+.badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font: 600 12.5px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--glow); box-shadow: 0 0 10px var(--glow); }
+.local .badge { color: #9ff3e8; background: rgba(47, 230, 210, .1); box-shadow: inset 0 0 0 1px rgba(47, 230, 210, .35); }
+.remote .badge { color: #d3c4ff; background: rgba(139, 108, 255, .12); box-shadow: inset 0 0 0 1px rgba(139, 108, 255, .4); }
+.ai-two h3 { margin: 18px 0 0; font-size: 26px; letter-spacing: -.02em; }
+.ai-two p { margin: 10px 0 0; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.chips span { padding: 6px 12px; border-radius: 10px; font-size: 14px; background: rgba(255, 255, 255, .05); box-shadow: inset 0 0 0 1px var(--line); }
+.ai-two ul { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.ai-two li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; color: var(--muted); font-size: 15.5px; }
+.ai-two li::before { content: ''; width: 8px; height: 8px; margin-top: 8px; border-radius: 2px; background: var(--glow); box-shadow: 0 0 8px var(--glow); }
+.does { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 20px; }
+.does > div { padding: 24px 26px; border-top: 1px solid var(--line); }
+.does > div:nth-child(3n + 2), .does > div:nth-child(3n + 3) { border-left: 1px solid var(--line); }
+.does > div:nth-child(-n + 3) { border-top: 0; }
+.does h4 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 10px; }
+.does h4 kbd { font: 600 12px/1 var(--mono); padding: 4px 7px; border-radius: 6px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px var(--line); color: #dfe5ff; }
+.does p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+
+/* developers */
+.dev { display: grid; grid-template-columns: 1fr 1.15fr; gap: 40px; margin-top: 56px; align-items: start; }
+.dev ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 18px; }
+.dev li { display: grid; grid-template-columns: 22px 1fr; gap: 12px; color: var(--muted); }
+.dev li::before { content: ''; width: 10px; height: 10px; margin-top: 8px; border-radius: 3px; background: var(--grad); box-shadow: 0 0 12px rgba(137, 181, 255, .7); }
+.dev li b { color: var(--ink); font-weight: 600; }
+pre code { padding: 0; background: none; font-size: inherit; border-radius: 0; }
+code { font-family: var(--mono); font-size: .9em; padding: .1em .35em; border-radius: 6px; background: rgba(255, 255, 255, .07); color: #dfe5ff; }
+.term { overflow: hidden; }
+.tabs { display: flex; gap: 4px; padding: 10px 10px 0; border-bottom: 1px solid var(--line); }
+.tabs button {
+  border: 0; background: none; color: var(--muted); font: 600 14px 'DM Sans', sans-serif; padding: 10px 14px; border-radius: 10px 10px 0 0; cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--teal); background: rgba(255, 255, 255, .04); }
+.tabs .dots { margin-right: 8px; display: flex; gap: 6px; align-items: center; padding-left: 4px; }
+.tabs .dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, .18); }
+pre {
+  position: relative; margin: 0; padding: 22px 84px 24px 22px; overflow-x: auto; font: 14px/1.7 var(--mono); color: #dfe5ff; tab-size: 2;
+  white-space: pre-wrap; overflow-wrap: anywhere;                       /* long commands wrap instead of scrolling */
+  scrollbar-width: thin; scrollbar-color: rgba(160, 175, 255, .35) transparent;
+}
+pre::-webkit-scrollbar { height: 6px; }
+pre::-webkit-scrollbar-track { background: transparent; }
+pre::-webkit-scrollbar-thumb { background: rgba(160, 175, 255, .3); border-radius: 6px; }
+pre .c { color: #7d89b8; } pre .k { color: var(--teal); } pre .s { color: #ffd38a; } pre .p { color: var(--violet); }
+.copy {
+  position: absolute; top: 12px; right: 12px; border: 0; cursor: pointer; padding: 6px 11px; border-radius: 8px; font: 600 12px 'DM Sans', sans-serif;
+  color: var(--muted); background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px var(--line);
+}
+.copy:hover { color: var(--ink); }
+.panel[hidden] { display: none; }
+.note { font-size: 13.5px; color: var(--dim); padding: 0 22px 18px; margin: -6px 0 0; }
+
+/* deploy */
+.deploy { display: grid; grid-template-columns: 1.6fr 1fr; gap: 28px; margin-top: 56px; align-items: start; }
+.ol { counter-reset: s; display: grid; gap: 16px; }
+.ol > div { counter-increment: s; position: relative; padding: 22px 22px 22px 70px; }
+.ol > div::after {
+  content: counter(s, decimal-leading-zero); position: absolute; left: 22px; top: 22px; font: 600 14px/1 var(--mono); color: var(--teal);
+  width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: rgba(99, 223, 211, .1); box-shadow: inset 0 0 0 1px rgba(99, 223, 211, .35);
+}
+.ol h3 { margin: 4px 0 0; font-size: 18px; }
+.ol p { margin: 6px 0 10px; color: var(--muted); font-size: 15.5px; }
+.ol pre { padding: 14px 64px 14px 16px; margin-top: 10px; border-radius: 10px; background: rgba(4, 8, 24, .6); box-shadow: inset 0 0 0 1px var(--line); font-size: 13px; }
+.ol pre .copy { top: 8px; right: 8px; }
+.side { display: grid; gap: 16px; position: sticky; top: 84px; }
+.side .card h3 { margin-top: 0; }
+.side ul { margin: 12px 0 0; padding-left: 18px; color: var(--muted); font-size: 15.5px; }
+.side li { margin: 6px 0; }
+.spec { display: grid; grid-template-columns: auto 1fr; gap: 8px 18px; margin-top: 12px; font-size: 15px; }
+.spec dt { color: var(--dim); } .spec dd { margin: 0; }
+
+/* finale */
+.finale { position: relative; text-align: center; padding: 160px 0 230px; margin-top: 80px; isolation: isolate; overflow: hidden; }
+.finale .backword { top: 40px; }
+.finale h2 { margin-inline: auto; font-size: clamp(42px, 7vw, 84px); max-width: none; }
+.finale p { color: var(--muted); font-size: 20px; margin: 16px 0 0; }
+.horizon { position: absolute; left: -10%; right: -10%; bottom: -60vw; height: 70vw; border-radius: 50%; z-index: -1;
+  background: radial-gradient(closest-side, #0c1a46, #081233 90%, transparent 100%);
+  box-shadow: 0 -2px 0 rgba(160, 200, 255, .9), 0 -12px 40px rgba(63, 160, 255, .6), 0 -40px 120px rgba(63, 125, 255, .35); }
+.finale .ctas { margin-top: 36px; }
+footer { border-top: 1px solid var(--line); padding: 36px 0 48px; color: var(--dim); font-size: 14.5px; }
+footer .wrap { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+footer img.flower { width: 54px; height: auto; }
+footer .slogan { color: var(--muted); }
+footer nav { margin-left: auto; display: flex; gap: 18px; }
+footer nav a { text-decoration: none; } footer nav a:hover { color: var(--ink); }
+
+/* grid/flex children must be allowed to shrink, or long code lines widen the page */
+.step > *, .dev > *, .deploy > *, .ol > div, .wide > *, .grid > *, .ai-two > *, .does > *, .term { min-width: 0; }
+
+/* reveal on scroll */
+.rv { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .8s ease; }
+.rv.in { opacity: 1; transform: none; }
+
+@media (max-width: 980px) {
+  .grid { grid-template-columns: 1fr 1fr; }
+  .step, .step:nth-child(even) { grid-template-columns: 1fr; gap: 22px; }
+  .step:nth-child(even) .txt { order: 0; }
+  .dev, .deploy, .wide, .ai-two { grid-template-columns: 1fr; }
+  .does { grid-template-columns: 1fr 1fr; }
+  .does > div { border-left: 0 !important; border-top: 1px solid var(--line) !important; }
+  .does > div:nth-child(-n + 2) { border-top: 0 !important; }
+  .does > div:nth-child(even) { border-left: 1px solid var(--line) !important; }
+  .side { position: static; }
+  .dim.v { display: none; }
+}
+@media (max-width: 680px) {
+  body { font-size: 16px; }
+  pre, .ol pre { padding-top: 46px; padding-right: 16px; }
+  .nav nav { display: none; }
+  .nav .wrap { gap: 12px; } .nav .btn { margin-left: auto; }
+  .grid, .does { grid-template-columns: 1fr; }
+  .does > div { border-left: 0 !important; }
+  .does > div:nth-child(2) { border-top: 1px solid var(--line) !important; }
+  .hero { padding-top: 56px; }
+  .step { padding: 18px; }
+  .ol > div { padding: 18px 16px 18px 58px; }
+  .ol > div::after { left: 14px; top: 18px; }
+  .film .play { width: 64px; height: 64px; margin: -32px 0 0 -32px; }
+  footer nav { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  .rv { opacity: 1; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="nav" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Atlas, back to top"><img src="assets/bloom.svg" alt="" width="30" height="30">Atlas</a>
+    <nav aria-label="Sections">
+      <a href="#story">Story</a><a href="#ai">AI</a><a href="#features">Features</a><a href="#developers">Developers</a><a href="#deploy">Deploy</a>
+    </nav>
+    <a class="btn ghost" href="https://github.com/Scalesoft/atlas">
+      <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<main>
+<!-- ================= hero ================= -->
+<section class="hero">
+  <div class="columns" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="wrap">
+    <span class="kicker"><b>Open source</b><i></i>AI-native<i></i>Self-hosted<i></i>MIT</span>
+    <h1>Documentation, <span class="grad">reimagined.</span></h1>
+    <p class="lead">The boring parts automated. The rest, together.</p>
+    <p class="sub">Atlas is an AI-native wiki: your team and your AI write side by side, with a local model on your own servers or the best models in the cloud. Your development pipeline writes to it, and your business reads from it.</p>
+    <div class="ctas">
+      <a class="btn primary" href="#deploy">Deploy in minutes <span aria-hidden="true">→</span></a>
+      <a class="btn ghost" href="https://github.com/Scalesoft/atlas">View on GitHub</a>
+    </div>
+
+    <figure class="film rv">
+      <div class="backword" aria-hidden="true">Atlas</div>
+      <span class="dim h" aria-hidden="true">1920 × 1080</span>
+      <span class="dim v" aria-hidden="true">16 : 9</span>
+      <span class="corner tl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
+      <div class="frame glass">
+        <!-- Paste the YouTube video id into data-youtube (e.g. data-youtube="dQw4w9WgXcQ"). Empty = "coming soon". -->
+        <div id="film" data-youtube="-06EcCSzJwk">
+          <button type="button" aria-label="Play the Atlas film">
+            <img src="assets/img/poster.webp" alt="The Atlas logo in a glass tile above a glowing horizon" width="1920" height="1080" fetchpriority="high">
+            <span class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg></span>
+          </button>
+        </div>
+      </div>
+      <figcaption>The film: a 3-minute story about docs nobody likes writing, and how Atlas changes that.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= story ================= -->
+<section class="sec" id="story">
+  <div class="wrap">
+    <div class="eyebrow">The story</div>
+    <h2>Every company that builds software runs on docs <span class="grad">nobody likes writing.</span></h2>
+    <p class="intro">Every process has to be written down. It starts with one person and an empty page, and it only grows from there.</p>
+
+    <div class="steps">
+      <article class="step glass rv">
+        <div class="txt">
+          <div class="n">01 · TEXT</div>
+          <div class="ask" style="--c: var(--jane)">Text isn't enough?</div>
+          <div class="answer">Draw it.</div>
+          <p>Type <code>/diagram</code> and the flow draws itself in the page. Charts, tables and checklists live right next to the words, and smart guides snap everything into place.</p>
+        </div>
+        <div class="shot"><img src="assets/img/ai-page.webp" alt="An Atlas page with an onboarding diagram, a chart and a checklist" width="1600" height="900" loading="lazy"></div>
+      </article>
+
+      <article class="step glass rv">
+        <div class="txt">
+          <div class="n">02 · TEAM</div>
+          <div class="ask" style="--c: var(--anna)">Too much for one person?</div>
+          <div class="answer">Bring the team.</div>
+          <p>Live cursors, mentions and comments. Three people type in the same page at once, and nobody overwrites anybody.</p>
+        </div>
+        <div class="shot"><img src="assets/img/tracker.webp" alt="A plan in Atlas with people and AI moving items through a tracker" width="1600" height="900" loading="lazy"></div>
+      </article>
+
+      <article class="step glass rv">
+        <div class="txt">
+          <div class="n">03 · BOARD</div>
+          <div class="ask" style="--c: var(--emma)">One page isn't enough?</div>
+          <div class="answer">Open a board.</div>
+          <p>Cards, frames, connectors and the pages themselves on one infinite board, with the whole team live on it.</p>
+        </div>
+        <div class="shot"><img src="assets/img/board.webp" alt="An Atlas board full of cards, frames and live cursors" width="1600" height="900" loading="lazy"></div>
+      </article>
+
+      <article class="step glass turn rv">
+        <div class="txt">
+          <div class="n">04 · AI</div>
+          <div class="ask" style="--c: #2fe6d2">Still writing it all by hand?</div>
+          <div class="answer">Now <span class="grad">AI</span> takes the boring parts.</div>
+          <p>Claude, Codex or the AI built into Atlas write with you, on the same page, with their own cursors. They draft, you decide.</p>
+          <div class="who" aria-label="People and AI on one page">
+            <span style="--c: var(--jane)">Jane</span><span style="--c: var(--anna)">Anna</span><span style="--c: var(--emma)">Emma</span>
+            <span style="--c: #2fe6d2">Lumen (AI) · built-in</span><span style="--c: #38c8f0">Nexus (AI) · MCP</span>
+          </div>
+        </div>
+        <div class="shot"><img src="assets/img/collab.webp" alt="A dark Atlas board with human and AI cursors working together" width="1600" height="900" loading="lazy"></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AI-native ================= -->
+<section class="sec" id="ai">
+  <div class="wrap">
+    <div class="eyebrow">AI-native</div>
+    <h2>AI-native documentation. <span class="grad">AI-native cooperation.</span></h2>
+    <p class="intro">AI isn't a chat box bolted onto the side. It reads, writes and answers inside the wiki, next to the people, with the same permissions and the same history.</p>
+
+    <div class="ai-two">
+      <div class="card glass local rv">
+        <span class="badge">Local · on your servers</span>
+        <h3>Your own model. Your data stays home.</h3>
+        <p>Run the built-in assistant on any OpenAI-compatible server inside your company. No commercial AI needed.</p>
+        <div class="chips"><span>vLLM</span><span>LM Studio</span><span>Your own <code>/v1</code> endpoint</span></div>
+        <ul>
+          <li><span>Every AI profile says whether its model runs in your company or in the cloud.</span></li>
+          <li><span>Sending draft text to a cloud model needs its own switch, and it is off by default.</span></li>
+          <li><span>Turn AI on or off per space. Finance can stay out while Product is in.</span></li>
+        </ul>
+      </div>
+      <div class="card glass remote rv">
+        <span class="badge">Remote · state of the art</span>
+        <h3>The best models, and agents as teammates.</h3>
+        <p>Use Claude or OpenAI models for the built-in assistant, and let coding agents join the team over MCP.</p>
+        <div class="chips"><span>Claude</span><span>OpenAI</span><span>Claude Code</span><span>Codex</span><span>Any MCP client</span></div>
+        <ul>
+          <li><span>Agents search, read, draft, attach, tag and organise pages with a personal token, under your name and rights.</span></li>
+          <li><span>They write drafts. Publishing waits for your confirmation in Atlas.</span></li>
+          <li><span>Every change carries a "via MCP" label and the token's name in the history and audit log.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="does glass rv">
+      <div><h4>Ask your wiki <kbd>Ctrl K</kbd></h4><p>Answers built from verified sentences, each with numbered sources you can open, taken only from pages you may read.</p></div>
+      <div><h4>Summarise &amp; explain</h4><p>A short summary of a long page, with citations. Select any text to have it explained or to find where else it appears.</p></div>
+      <div><h4>Write with suggestions</h4><p>Fix, shorten, rephrase, translate or give your own instruction. You see a preview first, Apply it, and one Undo takes it back.</p></div>
+      <div><h4>From blank page to published</h4><p>An outline for an empty page; before publishing, spelling notes, a change description and suggested tags.</p></div>
+      <div><h4>Cursors for people and AI</h4><p>AI works in the same live page and on the same boards, with its own cursor, so you can see who is writing what.</p></div>
+      <div><h4>Guardrails built in</h4><p>Recognised secrets are never sent to a model. Admins see usage and quality, and everything still works with AI switched off.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= features ================= -->
+<section class="sec" id="features">
+  <div class="wrap">
+    <div class="eyebrow">For the whole team</div>
+    <h2>Docs people want to write, and <span class="grad">want to follow.</span></h2>
+    <p class="intro">Snappy enough to write in, trustworthy enough to run your work by.</p>
+
+    <div class="grid">
+      <div class="card glass rv">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M5 3.5v14l4-3.5 2.5 6 2.5-1-2.5-6H17z"/></svg></div>
+        <h3>Live, together.</h3>
+        <p>Live cursors, presence, comments and @mentions. Several people write in the same page at once and nobody overwrites anybody.</p>
+      </div>
+      <div class="card glass rv">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="7" height="6" rx="1.5"/><rect x="13.5" y="14" width="7" height="6" rx="1.5"/><path d="M10.5 7h3a2 2 0 0 1 2 2v5"/></svg></div>
+        <h3>Diagrams, charts, boards.</h3>
+        <p>Mermaid and drawn diagrams, live charts, checklists and infinite boards with cards, frames and connectors.</p>
+      </div>
+      <div class="card glass rv">
+        <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></div>
+        <h3>Drafts, review, history.</h3>
+        <p>Write in a draft, review, then publish. Every version is kept with who changed what and when, and any of them can be restored.</p>
+      </div>
+      <div class="card glass rv">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="10" rx="1.5"/><rect x="15.5" y="4" width="5" height="13" rx="1.5"/></svg></div>
+        <h3>Plans become work.</h3>
+        <p>Checklists turn into trackers that people and AI move forward together, linked back to the page they came from.</p>
+      </div>
+      <div class="card glass rv">
+        <div class="ic"><svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>The right people only.</h3>
+        <p>Permissions per space and page, private drafts and secrets that only the right people can see.</p>
+      </div>
+      <div class="card glass rv">
+        <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg></div>
+        <h3>Your company sign-in.</h3>
+        <p>Single sign-on with your identity provider over OpenID Connect. Local accounts stay available until you switch them off.</p>
+      </div>
+    </div>
+
+    <div class="wide">
+      <figure class="glass rv">
+        <div class="shot"><img src="assets/img/pipeline.webp" alt="Atlas at the centre of the development pipeline: coding agents, CI, git and requirements write in; dashboards read out" width="1600" height="900" loading="lazy"></div>
+        <figcaption><b>Your dev pipeline writes to it. The business reads the same truth.</b><span>Coding agents, CI and requirements write into Atlas through the API and MCP. Managers and business apps read from the same pages.</span></figcaption>
+      </figure>
+      <figure class="glass rv">
+        <div class="shot"><img src="assets/img/own-ai.webp" alt="The AI built into Atlas answering a question from the company's own spaces, with public AI services disconnected" width="1600" height="900" loading="lazy"></div>
+        <figcaption><b>No commercial AI? Use the one built into Atlas.</b><span>Point it at a model on your own servers. It answers from your spaces, with sources, and your data stays inside the company.</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= developers ================= -->
+<section class="sec" id="developers">
+  <div class="wrap">
+    <div class="eyebrow">For developers</div>
+    <h2>Built by a developer. <span class="grad">For developers.</span></h2>
+    <p class="intro">Atlas plugs into the way you build software. Script it, deploy it and wire it into your pipeline.</p>
+
+    <div class="dev">
+      <ul class="rv">
+        <li><span><b>Self-hosted, one process.</b> A single .NET server plus PostgreSQL 18 with pgvector, shipped as Docker images with a Compose file.</span></li>
+        <li><span><b>REST API.</b> <code>/api/v1</code> with personal tokens (read, or read and write). The OpenAPI document is served at <code>/api/v1/openapi.json</code>.</span></li>
+        <li><span><b>MCP server.</b> <code>/mcp</code> for Claude Code and other agents. They write drafts, and publishing waits for your confirmation in Atlas.</span></li>
+        <li><span><b>OpenAPI blocks in pages.</b> API references rendered with Scalar right in the wiki, so anyone can try an endpoint from the docs.</span></li>
+        <li><span><b>Diagrams as code.</b> Mermaid diagrams, Markdown in and out, ZIP export, Git backup and a Wiki.js importer.</span></li>
+      </ul>
+
+      <div class="term glass rv">
+        <div class="tabs" role="tablist" aria-label="Examples">
+          <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <button role="tab" id="t-mcp" aria-controls="p-mcp" aria-selected="true">MCP</button>
+          <button role="tab" id="t-api" aria-controls="p-api" aria-selected="false" tabindex="-1">REST API</button>
+        </div>
+        <div class="panel" role="tabpanel" id="p-mcp" aria-labelledby="t-mcp">
+<pre><code><span class="c"># Profile → API: create a personal token, then</span>
+<span class="k">export</span> ATLAS_TOKEN=<span class="s">'…'</span>
+claude mcp add --transport http --scope user atlas \
+  https://atlas.example.com/mcp \
+  --header <span class="s">"Authorization: Bearer $ATLAS_TOKEN"</span>
+
+<span class="c"># in Claude Code: /mcp → atlas is connected</span>
+<span class="p">&gt;</span> Find our VPN setup guide and draft a summary page.</code></pre>
+        </div>
+        <div class="panel" role="tabpanel" id="p-api" aria-labelledby="t-api" hidden>
+<pre><code><span class="c"># an admin enables the API for your account first</span>
+curl --header <span class="s">"Authorization: Bearer $ATLAS_TOKEN"</span> \
+  <span class="s">"https://atlas.example.com/api/v1/spaces?limit=50"</span>
+
+<span class="c"># search published pages</span>
+curl --header <span class="s">"Authorization: Bearer $ATLAS_TOKEN"</span> \
+  <span class="s">"https://atlas.example.com/api/v1/search?q=onboarding"</span>
+
+<span class="c"># the whole API, as OpenAPI</span>
+curl --header <span class="s">"Authorization: Bearer $ATLAS_TOKEN"</span> \
+  <span class="s">"https://atlas.example.com/api/v1/openapi.json"</span></code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="wide">
+      <figure class="glass rv">
+        <div class="shot"><img src="assets/img/devops.webp" alt="An Atlas page called Billing API with an OpenAPI block: GET /invoices was sent and returned 200 OK with JSON" width="1600" height="900" loading="lazy"></div>
+        <figcaption><b>API docs in your wiki. Anyone can try them.</b><span>An OpenAPI block renders a live API reference. Product owners and business people can open an endpoint and send a request without leaving the page.</span></figcaption>
+      </figure>
+      <figure class="glass rv">
+        <div class="shot"><img src="assets/img/spaces.webp" alt="Atlas administration: AI and knowledge settings per space, with built-in AI and MCP toggles" width="1600" height="900" loading="lazy"></div>
+        <figcaption><b>Every space has its own rules.</b><span>Choose per space whether the built-in AI and MCP clients may read it. Finance can stay out while Product and Support are in.</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ================= deploy ================= -->
+<section class="sec" id="deploy">
+  <div class="wrap">
+    <div class="eyebrow">Deploy</div>
+    <h2>Up and running <span class="grad">in minutes.</span></h2>
+    <p class="intro">Two Docker images and one Compose file. That is the whole install.</p>
+
+    <div class="deploy">
+      <div class="ol">
+        <div class="glass rv">
+          <h3>Get the Compose file</h3>
+          <p>Atlas and PostgreSQL 18 with pgvector, as two ready-made images.</p>
+<pre><code>mkdir atlas &amp;&amp; cd atlas
+curl -fsSLO \
+  https://github.com/Scalesoft/atlas/raw/main/docker-compose.yml</code></pre>
+        </div>
+        <div class="glass rv">
+          <h3>Start it</h3>
+<p>Pick the images once in <code>.env</code>; every later <code>docker compose</code> command uses them too.</p>
+<pre><code>cat &gt; .env &lt;&lt;'EOF'
+ATLAS_IMAGE=ghcr.io/scalesoft/atlas:latest
+ATLAS_POSTGRES_IMAGE=ghcr.io/scalesoft/atlas-postgres:latest
+EOF
+docker compose up -d</code></pre>
+        </div>
+        <div class="glass rv">
+          <h3>Finish the setup wizard</h3>
+          <p>Open <code>http://localhost:8080</code>. The first installation is protected by a one-time token, printed in the server log, so a random visitor can never become the admin.</p>
+<pre><code>docker compose logs atlas | grep "first installation token"</code></pre>
+          <p>Then, all optional: connect your company sign-in (OIDC), YouTrack, or import from Wiki.js. Each step can be done later under wiki administration.</p>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="card glass rv">
+          <h3>Before production</h3>
+          <ul>
+            <li>Change the database password in <code>docker-compose.yml</code>, in both places.</li>
+            <li>Put Atlas behind an HTTPS reverse proxy and add the proxy under Security, Networks and proxies.</li>
+            <li>Back up the <code>wiki-db-data</code> and <code>atlas-data</code> volumes. Git backup and ZIP export are built in.</li>
+            <li>Optionally set your own <code>Setup__BootstrapToken</code> (at least 32 random characters).</li>
+          </ul>
+        </div>
+        <div class="card glass rv">
+          <h3>Requirements</h3>
+          <dl class="spec">
+            <dt>Runtime</dt><dd>Docker with Compose v2</dd>
+            <dt>Database</dt><dd>PostgreSQL 18 + pgvector (its own image)</dd>
+            <dt>Memory</dt><dd>about 2 GB (Atlas is capped at 1.5 GB)</dd>
+            <dt>Platform</dt><dd>linux/amd64 is what we run in production</dd>
+            <dt>Licence</dt><dd>MIT</dd>
+          </dl>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= finale ================= -->
+<section class="finale">
+  <div class="columns" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="backword" aria-hidden="true">Atlas</div>
+  <div class="wrap">
+    <h2 class="rv">Go write <span class="grad">something.</span></h2>
+    <p class="rv">With your team. And your AI.</p>
+    <div class="ctas rv">
+      <a class="btn primary" href="#deploy">Deploy Atlas <span aria-hidden="true">→</span></a>
+      <a class="btn ghost" href="https://github.com/Scalesoft/atlas">Star it on GitHub</a>
+    </div>
+  </div>
+  <div class="horizon" aria-hidden="true"></div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="assets/bloom.svg" alt="" width="30" height="30">Atlas</a>
+    <span class="slogan">Built by a developer. For developers.</span>
+    <img class="flower" src="assets/img/flower.webp" alt="" width="300" height="280" loading="lazy">
+    <nav aria-label="Footer">
+      <a href="https://github.com/Scalesoft/atlas">GitHub</a>
+      <a href="https://github.com/Scalesoft/atlas/blob/main/LICENSE">MIT licence</a>
+      <a href="#deploy">Deploy</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+// sticky nav gets its glass once you scroll
+const nav = document.querySelector('.nav');
+addEventListener('scroll', () => nav.classList.toggle('solid', scrollY > 10), { passive: true });
+
+// the film: a poster until clicked, then the privacy-friendly YouTube player
+const film = document.getElementById('film'), id = film.dataset.youtube.trim();
+if (!id) {
+  film.querySelector('.play').remove();
+  film.querySelector('button').insertAdjacentHTML('beforeend', '<span class="soon">Film coming soon</span>');
+  film.querySelector('button').disabled = true;
+} else {
+  film.querySelector('button').addEventListener('click', () => {
+    film.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0" title="Atlas film" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  });
+}
+
+// tabs with arrow-key support
+const tabs = [...document.querySelectorAll('[role=tab]')];
+function show(t) {
+  tabs.forEach(b => { const on = b === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; document.getElementById(b.getAttribute('aria-controls')).hidden = !on; });
+}
+tabs.forEach((t, i) => {
+  t.addEventListener('click', () => show(t));
+  t.addEventListener('keydown', e => {
+    const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+    if (d) { const n = tabs[(i + d + tabs.length) % tabs.length]; show(n); n.focus(); }
+  });
+});
+
+// copy buttons on every code block
+document.querySelectorAll('pre').forEach(pre => {
+  const b = document.createElement('button');
+  b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy';
+  b.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(pre.querySelector('code').innerText); b.textContent = 'Copied'; }
+    catch { b.textContent = 'Select & copy'; }
+    setTimeout(() => (b.textContent = 'Copy'), 1600);
+  });
+  pre.appendChild(b);
+});
+
+// reveal on scroll
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+document.querySelectorAll('.rv').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
