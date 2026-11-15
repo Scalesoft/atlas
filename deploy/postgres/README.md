@@ -16,7 +16,7 @@ Tag se skládá z výchozích hodnot `ARG` v `Dockerfile`: `<POSTGRES_VERSION>-p
 
 ## Sestavení a ověření
 
-Image v registru `ghcr.io/scalesoft/atlas-postgres:<tag>` publikuje krok „Database image“ v [`.github/workflows/release.yml`](../../.github/workflows/release.yml) při každém vydání, pro `linux/amd64`. Na hostiteli jiné architektury se varianta překládá a ověřuje v emulaci; jde o krátký překlad C, ne o .NET SDK (AGENTS.md). Ověření (`verify.sh`) pro zvolenou platformu kontroluje OS a architekturu, verze PostgreSQL a pgvectoru, `CREATE EXTENSION vector`, kosinovou vzdálenost, HNSW index s `hnsw.iterative_scan` (`verify.sql`) a shodné řazení textu se základním image (`collation.sql`).
+Image v registru `ghcr.io/scalesoft/atlas-postgres:<tag>` publikuje krok „Database image“ ve workflow vydání při každém vydání, pro `linux/amd64`. Na hostiteli jiné architektury se varianta překládá a ověřuje v emulaci; jde o krátký překlad C, ne o .NET SDK (AGENTS.md). Ověření (`verify.sh`) pro zvolenou platformu kontroluje OS a architekturu, verze PostgreSQL a pgvectoru, `CREATE EXTENSION vector`, kosinovou vzdálenost, HNSW index s `hnsw.iterative_scan` (`verify.sql`) a shodné řazení textu se základním image (`collation.sql`).
 
 Místně (Podman, výsledek `localhost/atlas-postgres:<tag>`; e2e a test upgradu ho staví samy):
 
