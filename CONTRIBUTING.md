@@ -5,7 +5,7 @@ Thanks for helping. Issues and pull requests are welcome in English or Czech.
 ## Before you start
 
 - For anything larger than a fix, open an issue first so we can agree on the approach.
-- Build and run the project as described in the [README](README.md#vývoj).
+- Build and run the project as described in the [README](README.md#development).
 - [AGENTS.md](AGENTS.md) holds the detailed rules (UI, motion, testing, releases, editor); they apply to people and coding agents alike.
 
 ## How changes are accepted
