@@ -13,6 +13,7 @@ internal sealed class Peer
     public long AccessRevalidation { get; set; }
     public int ProtocolVersion { get; init; } = 1;
     public long? AwarenessClientId { get; set; }
+    public long AwarenessClock { get; set; }
     public long AwarenessWindow { get; set; }
     public int AwarenessCount { get; set; }
     public long UpdateWindow { get; set; }

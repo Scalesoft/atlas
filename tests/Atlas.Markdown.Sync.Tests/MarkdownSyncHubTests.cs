@@ -1101,4 +1101,26 @@ public class MarkdownSyncHubTests
         Assert.Contains("\"user\":{\"id\":\"alice\",\"name\":\"alice\"", json);
         Assert.DoesNotContain("Bob", json);
     }
+
+    [Fact]
+    public async Task A_connection_that_goes_without_its_own_removal_is_removed_from_the_others_presence()
+    {
+        await using var host = await HubTestHost.StartAsync();
+        await using var a = host.Connection("alice");
+        var b = host.Connection("bob");
+        await a.StartAsync();
+        await b.StartAsync();
+        var awareness = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
+        a.On<string, byte[]>("ReceiveAwareness", (_, payload) => awareness.Enqueue(payload));
+        await SeedAsync(a, "doc1");
+        await b.InvokeAsync<JoinResult>("JoinDocument", "doc1");
+        await b.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("{}", client: 7, clock: 3));
+        await WaitUntil(() => awareness.Count == 1, Timeout);
+
+        // The tab closes, or its own removal is cancelled with the connection it was sent on: the server removes it for the others.
+        await b.DisposeAsync();
+
+        await WaitUntil(() => awareness.Count == 2, Timeout);
+        Assert.Equal(AuthorityAwarenessTests.Frame("null", client: 7, clock: 4), awareness.Last());
+    }
 }

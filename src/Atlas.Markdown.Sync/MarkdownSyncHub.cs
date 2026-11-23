@@ -495,6 +495,7 @@ public sealed partial class MarkdownSyncHub(
             if (peer.AwarenessClientId is { } bound && bound != validated.ClientId) return;
             if (doc.Peers.Values.Any(other => other != peer && other.AwarenessClientId == validated.ClientId)) return;
             peer.AwarenessClientId = validated.ClientId;
+            peer.AwarenessClock = validated.Clock;
             payload = validated.Payload;
         }
         finally { doc.Gate.Release(); }
@@ -759,10 +760,11 @@ public sealed partial class MarkdownSyncHub(
 
         string? newSnapshotter = null;
         var lastLeft = false;
+        Peer? left;
         await doc.Gate.WaitAsync().ConfigureAwait(false);
         try
         {
-            if (!doc.Peers.TryRemove(Context.ConnectionId, out _)) return;
+            if (!doc.Peers.TryRemove(Context.ConnectionId, out left)) return;
 
             if (doc.SeedInProgress && doc.SnapshotterConnId == Context.ConnectionId)
             {
@@ -805,6 +807,18 @@ public sealed partial class MarkdownSyncHub(
         finally
         {
             doc.Gate.Release();
+        }
+
+        // The client's own removal is best-effort and often lost: sent as its connection stops, it is cancelled with it (COL2-13).
+        // Without this the others kept its avatar, without a caret, until their 30 s timeout: one more per page visit it ended.
+        if (left?.AwarenessClientId is { } awarenessClient)
+        {
+            try
+            {
+                await accessCoordinator.SendToReadersAsync(doc, ReceiveAwareness,
+                    [documentId, AuthorityAwareness.Removal(awarenessClient, left.AwarenessClock + 1)]).ConfigureAwait(false);
+            }
+            catch (Exception error) { log.LogInformation(error, "Collab doc {DocumentId}: a leaving peer's presence could not be removed", documentId); }
         }
 
         if (lastLeft)

@@ -5,7 +5,7 @@ namespace Atlas.Markdown.Sync;
 
 internal static class AuthorityAwareness
 {
-    internal sealed record Validated(long ClientId, byte[] Payload);
+    internal sealed record Validated(long ClientId, long Clock, byte[] Payload);
     /// <param name="presenceOnly">A read-only participant (a reader of a live page): only its identity goes out, no cursor or selection.</param>
     internal static Validated Validate(byte[] payload, CollabUser user, int maxBytes, bool presenceOnly = false)
     {
@@ -52,8 +52,15 @@ internal static class AuthorityAwareness
             using var framed = new MemoryStream();
             Write(framed, 1); Write(framed, client); Write(framed, clock); Write(framed, json.Length); framed.Write(json);
             if (framed.Length > maxBytes) throw new InvalidDataException("Verified awareness exceeds its byte budget.");
-            return new Validated(client, framed.ToArray());
+            return new Validated(client, clock, framed.ToArray());
         }
+    }
+    /// <summary>The removal of a client's state, one clock after the last one relayed, as y-protocols' own leave encodes it.</summary>
+    internal static byte[] Removal(long clientId, long clock)
+    {
+        using var framed = new MemoryStream();
+        Write(framed, 1); Write(framed, clientId); Write(framed, clock); Write(framed, 4); framed.Write("null"u8);
+        return framed.ToArray();
     }
     private static string? ClaimedColor(JsonElement state)
         => state.TryGetProperty("user", out var claimed) && claimed.ValueKind == JsonValueKind.Object
