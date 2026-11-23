@@ -478,6 +478,8 @@ public sealed class SqlTextConventionTests
         ["Atlas.Server.Platform.Persistence.AtlasNpgsqlDriver+ForgettingCommand..ctor"] = Kind.OutsideOrm,
         // The rows written with a page, revision, board, tree node or space, inside NHibernate's flush (its listeners cannot query
         // through the session there), and a page's space lock before its insert: the triggers' work until 2026110930.
+        ["Atlas.Server.Platform.Persistence.CollationVersion.ExecuteAsync"] = Kind.OutsideOrm,
+        ["Atlas.Server.Platform.Persistence.CollationVersion.RefreshAsync"] = Kind.OutsideOrm,
         ["Atlas.Server.Platform.Persistence.ContentRowEffects.Command"] = Kind.AtomicWrite,
         ["Atlas.Server.Platform.Persistence.DatabaseStatistics.RefreshAccessAsync"] = Kind.OutsideOrm,
         ["Atlas.Server.Platform.Persistence.DatabaseStatistics.RefreshImportedContentAsync"] = Kind.OutsideOrm,
