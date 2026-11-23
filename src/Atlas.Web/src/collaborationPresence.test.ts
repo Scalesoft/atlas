@@ -6,7 +6,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Plugin } from "@tiptap/pm/state";
-import { yCursorPluginKey } from "@tiptap/y-tiptap";
+import { absolutePositionToRelativePosition, yCursorPluginKey, ySyncPluginKey } from "@tiptap/y-tiptap";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from "y-protocols/awareness";
 import * as Y from "yjs";
@@ -145,6 +145,12 @@ describe("collaboration cursor presentation", () => {
     presence.update([]);
     presence.update([]);
     expect(changes).toHaveLength(2);
+  });
+
+  it("shows an agent writing again and again as one avatar, its latest write's", () => {
+    const agent = (clientId: number): Peer => ({ clientId, id: "ai:jana", name: "Jana · AI (MCP)", color: "#7c3aed" });
+    const { changes } = attach({}, [agent(7), peer(1), agent(8), agent(9)]);
+    expect((changes.at(-1) as { clientId: number }[]).map(entry => entry.clientId)).toEqual([1, 9]);
   });
 
   it("keeps equal names distinct by client id and removes peers that leave", () => {
@@ -456,6 +462,53 @@ describe("co-editor pointers", () => {
     expect(pointerOf(reader.host)!.classList.contains("is-leaving")).toBe(true);
     vi.runAllTimers();
     expect(pointerOf(reader.host)).toBeNull();
+  });
+
+  it("draws 40 co-editors' pointers moving 20 times a second in one paint a frame, writing only their positions (perf guard)", () => {
+    const ydoc = new Y.Doc();
+    const reader = pointerEditor(ydoc);
+    reader.editor.commands.insertContent("Čtyřicet lidí ukazuje na tenhle odstavec najednou.");
+    const sync = ySyncPluginKey.getState(reader.editor.state) as { type: Y.XmlFragment; binding: { mapping: never } };
+    const at = (pos: number) => Y.relativePositionToJSON(absolutePositionToRelativePosition(pos, sync.type, sync.binding.mapping));
+    const peers = Array.from({ length: 40 }, (_, index) => {
+      const peer = new Awareness(new Y.Doc());
+      peer.setLocalState({ user: { id: `u${index}`, name: `Kolega ${index}`, color: "#0284c7" }, pointer: { anchor: at(1 + index % 40), x: 2, y: 3 } });
+      applyAwarenessUpdate(reader.awareness, encodeAwarenessUpdate(peer, [peer.clientID]), "remote");
+      return peer;
+    });
+    reader.presence.update(peers.map((peer, index) => ({ clientId: peer.clientID, id: `u${index}`, name: `Kolega ${index}`, color: "#0284c7" })));
+    frame();
+    const overlay = reader.host.querySelector(".collaboration-presence")!;
+    expect(overlay.querySelectorAll(".collaboration-pointer")).toHaveLength(40);
+    const coords = vi.mocked(reader.editor.view.coordsAtPos);
+    let transactions = 0;
+    reader.editor.on("transaction", () => { transactions++; });
+
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver(found => records.push(...found));
+    observer.observe(overlay, { subtree: true, childList: true, characterData: true, attributes: true });
+    let worst = 0;
+    for (let sample = 0; sample < 20; sample++) {
+      // A frame's worth of samples from everyone, as the server relays them: one paint is waiting.
+      for (const [index, peer] of peers.entries()) {
+        peer.setLocalStateField("pointer", { anchor: at(1 + (index + sample) % 40), x: sample, y: 3 });
+        applyAwarenessUpdate(reader.awareness, encodeAwarenessUpdate(peer, [peer.clientID]), "remote");
+      }
+      expect(frames.size).toBeLessThanOrEqual(2);
+      coords.mockClear();
+      const started = performance.now();
+      frame();
+      worst = Math.max(worst, performance.now() - started);
+      // One measurement per pointer, nothing per sample.
+      expect(coords.mock.calls.length).toBeLessThanOrEqual(40);
+    }
+    records.push(...observer.takeRecords());
+    observer.disconnect();
+    // Nothing but positions: no element, text or colour written for a pointer that only moved.
+    expect(records.filter(record => record.type !== "attributes" || record.attributeName !== "style")).toEqual([]);
+    expect(transactions).toBe(0);
+    console.info(`pointers: 40 co-editors x 20 samples, 20 paints, worst paint ${worst.toFixed(1)} ms, ${records.length} style writes`);
+    peers.forEach(peer => peer.destroy());
   });
 
   it("shows nothing for an anchor that resolves to nothing", () => {
