@@ -50,6 +50,32 @@ public sealed class HybridSearchTests
     }
 
     [PostgreSqlFact]
+    public async Task A_name_found_as_one_phrase_in_a_body_stays_above_pages_found_only_by_meaning()
+    {
+        // „luboš krbec“: the page of his contact card led the lexical preview, then pages near only in meaning (fused above a
+        // body match) pushed it down, off the first page, and his contact with it.
+        await using var f = await HybridSearchFixture.CreateAsync(text =>
+            text.Contains("Vedení", StringComparison.Ordinal) || text.Contains("query: luboš krbec", StringComparison.Ordinal) ? "company leadership and management" : text);
+        for (var i = 0; i < 3; i++)
+        {
+            await f.PublishAsync($"Vedení {i}", $"Vedení společnosti, oddělení {i}.");
+        }
+        var card = await f.PublishAsync("Zaměstnanci", "Kontakty na lidi.\n\nLuboš Krbec, jednatel, ORION s.r.o.");
+        var scattered = await f.PublishAsync("Porada", "Krbec přišel pozdě, Luboš odešel dřív.");
+        await f.IndexAsync();
+
+        var response = await f.FindAsync(f.Reader, "luboš krbec", limit: 3);
+
+        Assert.True(response.Semantic);
+        Assert.Equal(card, response.Items[0].Id);
+        Assert.False(response.Items[0].Semantic);
+        // Only the phrase: the words apart still blend with meaning as before.
+        Assert.DoesNotContain(response.Items, hit => hit.Id == scattered);
+        var lexical = await f.InvokeAsync(f.Reader, "Lubos KRBEC", null);
+        Assert.Equal([card, scattered], lexical.Items.Select(x => x.Id));
+    }
+
+    [PostgreSqlFact]
     public async Task A_paraphrase_found_only_by_meaning_is_semantic_and_carries_its_passage_and_anchor()
     {
         await using var f = await HybridSearchFixture.CreateAsync(RemoteMeaning);
