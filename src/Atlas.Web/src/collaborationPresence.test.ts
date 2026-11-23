@@ -60,10 +60,10 @@ function decorations(doc: Parameters<typeof DecorationSet.create>[0], positions:
 // Cursors are drawn in animation frames; the tests run each frame by hand.
 let frames = new Map<number, FrameRequestCallback>();
 let frameIds = 0;
-const frame = () => {
+const frame = (at = performance.now()) => {
   const due = [...frames.values()];
   frames = new Map();
-  due.forEach(callback => callback(performance.now()));
+  due.forEach(callback => callback(at));
 };
 beforeEach(() => {
   vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(callback => { frames.set(++frameIds, callback); return frameIds; });
@@ -405,6 +405,13 @@ describe("co-editor pointers", () => {
 
     jana.editor.chain().insertContentAt(1, "XY").run();
     frame();
+    // It glides along (pointerGlide.ts), never jumps: part of the way after one frame, all of it once settled.
+    const start = performance.now();
+    frame(start + 16);
+    const halfway = Number(/translate3d\(([\d.]+)px/.exec(pointerOf(reader.host)!.style.transform)![1]);
+    expect(halfway).toBeGreaterThan(135);
+    expect(halfway).toBeLessThan(151);
+    for (let i = 2; i <= 60; i++) frame(start + i * 16);
     expect(pointerOf(reader.host)!.style.transform).toBe("translate3d(151px, 75px, 0px)");
     expect(pointerOf(jana.host)).toBeNull();
   });

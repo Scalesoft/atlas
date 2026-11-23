@@ -50,7 +50,7 @@ onBeforeUnmount(() => clearInterval(pointerTimer));
       <Button @click="confirmation++">Přehrát potvrzení</Button>
     </div>
     <div class="pointer-sample">
-      <p>Ukazatel spolupracovníka je jeden: na nástěnce (BoardPresence) i nad stránkou (collaborationPresence s <code>pointers: true</code>). Na stránce se kotví k nejbližšímu místu v textu, takže ukazuje na stejné slovo při jiné šířce okna i posunu. Čtenář živé stránky ani dotyk ukazatel neposílají; při omezeném pohybu skáče bez plynulého přechodu.</p>
+      <p>Ukazatel spolupracovníka je jeden: na nástěnce (BoardPresence) i nad stránkou (collaborationPresence s <code>pointers: true</code>). Na stránce se kotví k nejbližšímu místu v textu, takže ukazuje na stejné slovo při jiné šířce okna i posunu. Mezi vzorky (20× za sekundu, po síti nepravidelně) ho nese pružina v každém snímku (live/pointerGlide.ts): drží rychlost a u vzorku se nezastaví; stisk tlačítka vyšle kroužek. Čtenář živé stránky ani dotyk ukazatel neposílají; při omezeném pohybu skáče bez plynulého přechodu.</p>
       <BoardPresence :remote="pointers" :viewport="{ x: 0, y: 0, zoom: 1 }" />
     </div>
     <div class="st-actions">

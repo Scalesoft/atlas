@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed, defineComponent, h, onBeforeUnmount, ref, shallowRef, watch, type PropType, type VNode } from "vue";
+import { computed, defineComponent, h, onBeforeUnmount, ref, shallowRef, watch, watchEffect, type PropType, type VNode } from "vue";
 import type { RemoteDrag } from "../../../boards/boardSession";
 import type { Viewport } from "../../../boards/boardViewport";
 import { motionMs } from "../../../motion/aiMotion";
 import { COLLABORATION_POINTER_PATH } from "../../../live/collaborationPointer";
+import { createPointerGlide } from "../../../live/pointerGlide";
 
 /**
  * Other people on the board (spec §3.5): their pointer with their name, and the boxes they drag, in screen space. Each person has
  * the server's colour, the one of their caret in a page (objectPresence.ts `userColor`); the name label is the editor's caret
- * label. Updates arrive at most 20 times a second; a short transition carries each one over, so nothing jumps.
+ * label. Updates arrive at most 20 times a second; a pointer glides between them in board coordinates (pointerGlide.ts), so it
+ * neither jumps nor lags behind the board when the viewport pans or zooms; a dragged box is carried over by a short transition.
  *
  * No TransitionGroup: it measures each of its children on every render, which lays out the whole board (≈ 120–200 ms per drag preview
  * and per start or stop on 300 cards, COL2-1). A mark fades in by its CSS animation, and out (at its last place) for
@@ -41,17 +43,21 @@ watch(live, (next, previous = []) => {
   }, motionMs(root.value ?? document.body, "--atlas-motion-surface"));
   timers.add(timer);
 });
-onBeforeUnmount(() => timers.forEach(clearTimeout));
+const glide = createPointerGlide(() => root.value ?? document.body, (element, x, y) => {
+  const at = screen(x, y);
+  element.style.transform = `translate(${at.x}px, ${at.y}px)`;
+});
+watch(() => [props.viewport.x, props.viewport.y, props.viewport.zoom], () => glide.redraw());
+onBeforeUnmount(() => { timers.forEach(clearTimeout); glide.stop(); });
 const shown = computed(() => [...live.value.map(mark => ({ mark, out: false })), ...[...leaving.value.values()].map(mark => ({ mark, out: true }))]);
 
-interface Look { name?: string; style: Record<string, string> }
+interface Look { name?: string; style: Record<string, string>; at?: { x: number; y: number } }
 /** What a mark draws now, read by the mark itself (props are reactive): a ghost box, or a pointer with the name; null once gone. */
 function lookOf(mark: Mark): Look | null {
   const user = props.remote.find(person => person.userId === mark.userId);
   if (mark.itemId === undefined) {
     if (!user?.cursor) return null;
-    const at = screen(user.cursor.x, user.cursor.y);
-    return { name: user.displayName, style: { "--collaboration-color": user.color, transform: `translate(${at.x}px, ${at.y}px)` } };
+    return { name: user.displayName, style: { "--collaboration-color": user.color }, at: { x: user.cursor.x, y: user.cursor.y } };
   }
   const drag = user?.dragging.find(entry => entry.itemId === mark.itemId);
   if (!user || !drag) return null;
@@ -63,12 +69,18 @@ const PresenceMark = defineComponent({
   props: { mark: { type: Object as PropType<Mark>, required: true }, out: Boolean },
   setup: mark => {
     let last: Look | null = null;
+    const pointer = ref<HTMLElement>();
+    watchEffect(() => {
+      const at = lookOf(mark.mark)?.at;
+      if (at && pointer.value) glide.to(pointer.value, at.x, at.y);
+    }, { flush: "post" });
+    onBeforeUnmount(() => { if (pointer.value) glide.forget(pointer.value); });
     return (): VNode | null => {
       const look = (last = lookOf(mark.mark) ?? last);
       if (!look) return null;
       const leavingClass = mark.out ? " is-leaving" : "";
       return mark.mark.itemId === undefined
-        ? h("div", { class: `collaboration-pointer${leavingClass}`, "data-board-cursor": "", style: look.style }, [
+        ? h("div", { ref: pointer, class: `collaboration-pointer${leavingClass}`, "data-board-cursor": "", style: look.style }, [
           h("svg", { viewBox: "0 0 22 26" }, [h("path", { d: COLLABORATION_POINTER_PATH })]),
           h("span", { class: "collaboration-pointer__name" }, look.name),
         ])

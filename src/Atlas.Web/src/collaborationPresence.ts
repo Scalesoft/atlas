@@ -6,6 +6,7 @@ import type { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
 import { animateAtlas, literalMs, motionMs, PROTOTYPE_MS, scrollBehavior } from "./motion/aiMotion";
 import { COLLABORATION_POINTER_PATH } from "./live/collaborationPointer";
+import { createPointerGlide } from "./live/pointerGlide";
 import "./collaborationPresence.css";
 
 type StatePeer = MarkdownEditorState["peers"][number];
@@ -197,6 +198,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
   const binding = () => (ySyncPluginKey.getState(editor.state) as { binding?: SyncBinding } | undefined)?.binding;
   const peer = (clientId: number) => currentPeers.find(entry => entry.clientId === clientId);
   const leavingPointers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
+  const glide = createPointerGlide(() => overlay, (element, x, y) => { element.style.transform = `translate3d(${x}px, ${y}px, 0)`; });
   function remotePointer(clientId: number) {
     const pointer = awareness?.getStates().get(clientId)?.pointer as Partial<PointerState> | null | undefined;
     const sync = binding();
@@ -215,7 +217,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       if (pointed.has(clientId) || leavingPointers.has(element)) continue;
       // It fades out where it was last, as on a board.
       element.classList.add("is-leaving");
-      leavingPointers.set(element, setTimeout(() => { leavingPointers.delete(element); element.remove(); }, motionMs(overlay, "--atlas-motion-surface")));
+      leavingPointers.set(element, setTimeout(() => { leavingPointers.delete(element); glide.forget(element); element.remove(); }, motionMs(overlay, "--atlas-motion-surface")));
     }
     for (const [clientId, at] of pointed) {
       const person = peer(clientId)!;
@@ -233,7 +235,8 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       }
       element.querySelector(".collaboration-pointer__name")!.textContent = person.name;
       element.style.setProperty("--collaboration-color", safeColor(person.color));
-      element.style.transform = `translate3d(${at.left - originX}px, ${at.top - originY}px, 0)`;
+      // Glued to the text while the page itself moves (scroll anchoring, a dock opening); gliding otherwise.
+      glide.to(element, at.left - originX, at.top - originY, overlay.classList.contains("is-layout-moving"));
       element.classList.toggle("is-pressed", at.down);
     }
   }
@@ -332,6 +335,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       awareness.off("change", onRemotePointers);
     }
     leavingPointers.forEach(timer => clearTimeout(timer));
+    glide.stop();
     signal.removeEventListener("abort", destroy);
     overlay.remove();
     container.classList.remove("collaboration-presence-active");
