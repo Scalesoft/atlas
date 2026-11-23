@@ -18,32 +18,44 @@ public sealed class SkillStore(ISession session)
     /// <summary>A name folded for duplicates: lower case, no diacritics, nothing but letters, digits, # and + („C Sharp“ = „c-sharp“, „C#“ stays).</summary>
     public static string Fold(string expression) => $"regexp_replace(lower(public.unaccent({expression})), '[^a-z0-9#+]+', '', 'g')";
 
-    /// <summary>The account whose own contact each of :contacts is (directoryId), null for a contact of nobody.</summary>
+    /// <summary>The account whose own contact each of :contacts is (its account contact: directoryId, live, not private, as
+    /// <see cref="OwnContactAsync"/>), null for a contact of nobody.</summary>
     private const string Owners = """
         owner AS (
           SELECT c."Id" AS contact, a."Id" AS account FROM "ContentResource" c
-          LEFT JOIN "UserAccount" a ON CAST(a."Id" AS text) = lower(c."Data"->>'directoryId')
+          LEFT JOIN "UserAccount" a ON CAST(a."Id" AS text) = lower(c."Data"->>'directoryId') AND c."TrashedAt" IS NULL AND c."Scope" <> 'private'
           WHERE c."Id" = ANY(:contacts)
         )
         """;
 
-    /// <summary>Tags the reader may know of: on a readable page, or rated in a way the reader may see.</summary>
-    private const string VisibleTags = """
-        visible AS (
-          SELECT pt."TagId" FROM "PageTag" pt JOIN accessible p ON p."Id" = pt."PageId" WHERE pt."ActiveTo" IS NULL
-          UNION SELECT r."TagId" FROM "SkillRating" r WHERE r."Visibility" <> 'private' OR r."RaterId" = :actor
-        ), people AS (
-          SELECT r."TagId", count(DISTINCT r."ContactId") AS n FROM "SkillRating" r WHERE r."Visibility" <> 'private' GROUP BY r."TagId"
-        )
+    /// <summary>A rating of rating row r that others may count: not private, of a live contact that is not somebody's private one (a topic
+    /// rated on a private contact or in the trash names nothing to anybody but its rater).</summary>
+    private const string Counted = """
+        r."Visibility" <> 'private' AND EXISTS (SELECT 1 FROM "ContentResource" rc WHERE rc."Id" = r."ContactId" AND rc."TrashedAt" IS NULL AND rc."Scope" <> 'private')
         """;
 
+    /// <summary>How many people know each topic, counting only <see cref="Counted"/> ratings.</summary>
+    private const string People = $$"""
+        people AS (SELECT r."TagId", count(DISTINCT r."ContactId") AS n FROM "SkillRating" r WHERE {{Counted}} GROUP BY r."TagId")
+        """;
+
+    /// <summary>Tags the reader may know of: on a readable page, or rated in a way the reader may see.</summary>
+    private const string VisibleTags = $$"""
+        visible AS (
+          SELECT pt."TagId" FROM "PageTag" pt JOIN accessible p ON p."Id" = pt."PageId" WHERE pt."ActiveTo" IS NULL
+          UNION SELECT r."TagId" FROM "SkillRating" r WHERE r."RaterId" = :actor OR {{Counted}}
+        ), {{People}}
+        """;
+
+    /// <summary><see cref="Anonymous"/>: how many of <see cref="Peers"/> are shared (not signed) by others than the reader, the ones the
+    /// threshold protects; <see cref="Signed"/> and <see cref="SignedAverage"/> the signed ones (SkillsHandler.View).</summary>
     public sealed record Summary(Guid ContactId, Guid TagId, string Name, int? Self, string? SelfNote, int Peers, double? PeerAverage, int? Mine, string? MyVisibility,
-        string? MyNote, IReadOnlyList<SkillRater> Raters, string? Group = null);
+        string? MyNote, IReadOnlyList<SkillRater> Raters, string? Group = null, int Anonymous = 0, int Signed = 0, double? SignedAverage = null);
 
     /// <summary>The ratings of :contacts (in :tags, or all when null) as <paramref name="actor"/> may see them, one row per contact and topic.</summary>
-    public Task<List<Summary>> SummariesAsync(UserAccount actor, bool admin, Guid[] contacts, Guid[]? tags, CancellationToken ct)
+    public Task<List<Summary>> SummariesAsync(UserAccount actor, bool admin, bool aiScopeOnly, Guid[] contacts, Guid[]? tags, CancellationToken ct)
         => session.ReadRowsAsync($$"""
-            WITH {{Owners}}, rated AS (
+            {{PageTagStore.AccessiblePages}}, {{VisibleTags}}, {{Owners}}, rated AS (
               SELECT r.*, COALESCE(r."RaterId" = o.account, false) AS self, u."DisplayName" AS rater
               FROM "SkillRating" r JOIN owner o ON o.contact = r."ContactId" JOIN "UserAccount" u ON u."Id" = r."RaterId"
               WHERE :alltags OR r."TagId" = ANY(:tags)
@@ -58,16 +70,21 @@ public sealed class SkillStore(ISession session)
               max(r."Note") FILTER (WHERE r."RaterId" = :actor),
               COALESCE(jsonb_agg(jsonb_build_object('name', r.rater, 'level', r."Level", 'visibility', r."Visibility", 'note', r."Note") ORDER BY r."Level" DESC, r.rater)
                 FILTER (WHERE NOT r.self AND r."RaterId" <> :actor AND (r."Visibility" = 'signed' OR :admin AND r."Visibility" = 'shared')), '[]')::text,
-              (SELECT min(g."Name") FROM "TagRelation" k JOIN "Tag" g ON g."Id" = k."ParentId" WHERE k."TagId" = t."Id" AND k."Kind" = 'part_of')
+              (SELECT min(g."Name") FROM "TagRelation" k JOIN "Tag" g ON g."Id" = k."ParentId" WHERE k."TagId" = t."Id" AND k."Kind" = 'part_of'
+                AND g."Id" IN (SELECT "TagId" FROM visible)),
+              count(*) FILTER (WHERE NOT r.self AND r."Visibility" = 'shared' AND r."RaterId" <> :actor),
+              count(*) FILTER (WHERE NOT r.self AND r."Visibility" = 'signed'),
+              avg(r."Level") FILTER (WHERE NOT r.self AND r."Visibility" = 'signed')::float8
             FROM rated r JOIN "Tag" t ON t."Id" = r."TagId"
             GROUP BY r."ContactId", t."Id", t."Name"
             HAVING bool_or(r."Visibility" <> 'private' OR r."RaterId" = :actor)
             """, new Dictionary<string, object>
             {
-                ["contacts"] = contacts, ["tags"] = tags ?? [], ["alltags"] = tags is null, ["actor"] = actor.Id, ["admin"] = admin
+                ["contacts"] = contacts, ["tags"] = tags ?? [], ["alltags"] = tags is null, ["actor"] = actor.Id, ["admin"] = admin,
+                ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly
             }, row => new Summary(row.GetGuid(0), row.GetGuid(1), row.GetString(2), Int(row, 3), Text(row, 4), (int)row.GetInt64(5),
                 row.IsDBNull(6) ? null : row.GetDouble(6), Int(row, 7), Text(row, 8), Text(row, 9),
-                JsonSerializer.Deserialize<SkillRater[]>(row.GetString(10), JsonSerializerOptions.Web) ?? [], Text(row, 11)), ct);
+                JsonSerializer.Deserialize<SkillRater[]>(row.GetString(10), JsonSerializerOptions.Web) ?? [], Text(row, 11), (int)row.GetInt64(12), (int)row.GetInt64(13), row.IsDBNull(14) ? null : row.GetDouble(14)), ct);
 
     public sealed record Evidence(Guid ContactId, Guid TagId, Guid PageId, string Title, string SpaceName, bool InContext);
 
@@ -146,20 +163,21 @@ public sealed class SkillStore(ISession session)
             row => row.GetBoolean(0), ct)).Single();
 
     /// <summary>The topic with its aliases, the broader, narrower (one level) and related topics, each with how many people know it.</summary>
-    public async Task<TopicView?> TopicAsync(Guid tagId, CancellationToken ct)
+    public async Task<TopicView?> TopicAsync(UserAccount actor, bool aiScopeOnly, Guid tagId, CancellationToken ct)
     {
-        var rows = await session.ReadRowsAsync("""
-            WITH people AS (SELECT r."TagId", count(DISTINCT r."ContactId") AS n FROM "SkillRating" r WHERE r."Visibility" <> 'private' GROUP BY r."TagId")
+        // The linked topics the reader may know of only (VisibleTags): a tag of pages the reader cannot read names nothing.
+        var rows = await session.ReadRowsAsync($$"""
+            {{PageTagStore.AccessiblePages}}, {{VisibleTags}}
             SELECT 'topic', t."Id", t."Name", 0 FROM "Tag" t WHERE t."Id" = :tag AND t."MergedIntoId" IS NULL
             UNION ALL SELECT 'alias', a."TagId", a."Name", 0 FROM "TagAlias" a WHERE a."TagId" = :tag
             UNION ALL SELECT 'parent', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r JOIN "Tag" t ON t."Id" = r."ParentId" LEFT JOIN people p ON p."TagId" = t."Id"
-              WHERE r."TagId" = :tag AND r."Kind" = 'part_of'
+              WHERE r."TagId" = :tag AND r."Kind" = 'part_of' AND t."Id" IN (SELECT "TagId" FROM visible)
             UNION ALL SELECT 'child', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r JOIN "Tag" t ON t."Id" = r."TagId" LEFT JOIN people p ON p."TagId" = t."Id"
-              WHERE r."ParentId" = :tag AND r."Kind" = 'part_of'
+              WHERE r."ParentId" = :tag AND r."Kind" = 'part_of' AND t."Id" IN (SELECT "TagId" FROM visible)
             UNION ALL SELECT 'related', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r
               JOIN "Tag" t ON t."Id" = CASE WHEN r."TagId" = :tag THEN r."ParentId" ELSE r."TagId" END LEFT JOIN people p ON p."TagId" = t."Id"
-              WHERE r."Kind" = 'related' AND (r."TagId" = :tag OR r."ParentId" = :tag)
-            """, new Dictionary<string, object> { ["tag"] = tagId }, row => (Kind: row.GetString(0), Id: row.GetGuid(1), Name: row.GetString(2), People: row.GetInt32(3)), ct);
+              WHERE r."Kind" = 'related' AND (r."TagId" = :tag OR r."ParentId" = :tag) AND t."Id" IN (SELECT "TagId" FROM visible)
+            """, new Dictionary<string, object> { ["tag"] = tagId, ["actor"] = actor.Id, ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly }, row => (Kind: row.GetString(0), Id: row.GetGuid(1), Name: row.GetString(2), People: row.GetInt32(3)), ct);
         if (rows.FirstOrDefault(x => x.Kind == "topic") is not { Name: not null } topic)
         {
             return null;
@@ -190,7 +208,8 @@ public sealed class SkillStore(ISession session)
 
     /// <summary>
     /// Merges tag :from into :into: the tags merged into :from and its aliases follow, its name becomes an alias, its ratings move (one rater's
-    /// two ratings of a person keep the higher level), its broader and narrower links move, and its current page assignments close and open
+    /// two ratings of a person keep the higher level and the more private visibility: private &lt; shared &lt; signed, so a private one never
+    /// turns shared), its broader and narrower links move, and its current page assignments close and open
     /// for :into where the page does not carry it yet (the history of :from stays).
     /// </summary>
     public async Task MergeAsync(Guid from, Guid into, Guid actor, CancellationToken ct)
@@ -205,7 +224,7 @@ public sealed class SkillStore(ISession session)
             INSERT INTO "SkillRating"("Id","ContactId","TagId","RaterId","Level","Visibility","Note","UpdatedAt")
               SELECT gen_random_uuid(), r."ContactId", :into, r."RaterId", r."Level", r."Visibility", r."Note", r."UpdatedAt" FROM "SkillRating" r WHERE r."TagId" = :from
               ON CONFLICT ("ContactId","TagId","RaterId") DO UPDATE SET "Level" = GREATEST("SkillRating"."Level", EXCLUDED."Level"),
-                "Note" = COALESCE("SkillRating"."Note", EXCLUDED."Note");
+                "Note" = COALESCE("SkillRating"."Note", EXCLUDED."Note"), "Visibility" = LEAST("SkillRating"."Visibility", EXCLUDED."Visibility");
             DELETE FROM "SkillRating" WHERE "TagId" = :from;
             INSERT INTO "TagRelation"("TagId","ParentId","Kind","CreatedAt","CreatedById")
               SELECT CASE WHEN r."TagId" = :from THEN :into ELSE r."TagId" END, CASE WHEN r."ParentId" = :from THEN :into ELSE r."ParentId" END, r."Kind", r."CreatedAt", r."CreatedById"
@@ -267,13 +286,13 @@ public sealed class SkillStore(ISession session)
             SELECT "TagId", "ParentId", "Kind" FROM "TagRelation" WHERE "TagId" = ANY(:tags) AND "ParentId" = ANY(:tags)
             """, new Dictionary<string, object> { ["tags"] = tags }, row => (row.GetGuid(0), row.GetGuid(1), row.GetString(2)), ct);
 
-    /// <summary>A merged contact's ratings go to the contact it went into (MergeContactsHandler); one rater's two keep the higher level.</summary>
+    /// <summary>A merged contact's ratings go to the contact it went into (MergeContactsHandler); one rater's two keep the higher level and the more private visibility (as <see cref="MergeAsync"/>).</summary>
     public static Task MoveContactAsync(ISession session, Guid from, Guid into, CancellationToken ct)
         => session.CreateSQLQuery("""
             INSERT INTO "SkillRating"("Id","ContactId","TagId","RaterId","Level","Visibility","Note","UpdatedAt")
               SELECT gen_random_uuid(), :into, r."TagId", r."RaterId", r."Level", r."Visibility", r."Note", r."UpdatedAt" FROM "SkillRating" r WHERE r."ContactId" = :from
               ON CONFLICT ("ContactId","TagId","RaterId") DO UPDATE SET "Level" = GREATEST("SkillRating"."Level", EXCLUDED."Level"),
-                "Note" = COALESCE("SkillRating"."Note", EXCLUDED."Note");
+                "Note" = COALESCE("SkillRating"."Note", EXCLUDED."Note"), "Visibility" = LEAST("SkillRating"."Visibility", EXCLUDED."Visibility");
             DELETE FROM "SkillRating" WHERE "ContactId" = :from;
             """).SetParameter("from", from).SetParameter("into", into).ExecuteUpdateAsync(ct);
 
@@ -284,11 +303,23 @@ public sealed class SkillStore(ISession session)
               AND lower(c."Data"->>'directoryId') = CAST(:account AS text) ORDER BY c."Id" LIMIT 1
             """, new Dictionary<string, object> { ["account"] = account }, row => (Guid?)row.GetGuid(0), ct)).SingleOrDefault();
 
-    /// <summary>Whether the contact is the account's own (its directoryId).</summary>
-    public async Task<bool> IsOwnAsync(Guid account, Guid contact, CancellationToken ct)
-        => (await session.ReadRowsAsync("""
-            SELECT EXISTS (SELECT 1 FROM "ContentResource" c WHERE c."Id" = :contact AND lower(c."Data"->>'directoryId') = CAST(:account AS text))
-            """, new Dictionary<string, object> { ["contact"] = contact, ["account"] = account }, row => row.GetBoolean(0), ct)).Single();
+    /// <summary>Whether the contact is the account's own contact (<see cref="OwnContactAsync"/>).</summary>
+    public async Task<bool> IsOwnAsync(Guid account, Guid contact, CancellationToken ct) => await OwnContactAsync(account, ct) == contact;
+
+    /// <summary>Removes a topic from a person for everyone (the person or a wiki admin, SkillsHandler): every rating others may count and
+    /// the remover's own. Others' private ones stay theirs: nobody else sees them.</summary>
+    public Task RemoveTopicAsync(Guid contactId, Guid tagId, Guid actor, CancellationToken ct)
+        => session.CreateSQLQuery("""
+            DELETE FROM "SkillRating" WHERE "ContactId" = :contact AND "TagId" = :tag AND ("Visibility" <> 'private' OR "RaterId" = :actor)
+            """).SetParameter("contact", contactId).SetParameter("tag", tagId).SetParameter("actor", actor).ExecuteUpdateAsync(ct);
+
+    /// <summary>Whether the tag is on a page (now) the reader may not edit, or (MCP) one of a space out of AI: a merge would retag it.</summary>
+    public async Task<bool> TaggedBeyondAsync(UserAccount actor, bool aiScopeOnly, Guid tagId, CancellationToken ct)
+        => (await session.ReadRowsAsync($$"""
+            SELECT EXISTS (SELECT 1 FROM "PageTag" pt JOIN "Page" p ON p."Id" = pt."PageId" WHERE pt."TagId" = :tag AND pt."ActiveTo" IS NULL
+              AND (:ai AND NOT {{AccessSql.SpaceInAi("p.\"SpaceId\"")}}
+                OR NOT EXISTS (SELECT 1 FROM "EffectivePageAccess" e WHERE e."PageId" = pt."PageId" AND e."UserId" = :actor AND e."Role" >= 2)))
+            """, new Dictionary<string, object> { ["tag"] = tagId, ["actor"] = actor.Id, ["ai"] = aiScopeOnly }, row => row.GetBoolean(0), ct)).Single();
 
     /// <summary>Whether the reader is a wiki admin (locally or by a verified Hub group): an admin sees every shared rating with its rater.</summary>
     public async Task<bool> IsWikiAdminAsync(UserAccount actor, CancellationToken ct)

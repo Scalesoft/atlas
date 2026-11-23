@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import t from "../../i18n/contacts-ui";
 import { errorMessage } from "../../api";
 import { foldText } from "../../lib/foldText";
-import { prefersReducedMotion } from "../../motion/aiMotion";
+import { motionMs, prefersReducedMotion } from "../../motion/aiMotion";
 import { topicUrl } from "../../contacts/contactLinking";
 import { skillApi as defaultApi, type SkillApi, type SkillGraph, type SkillNode } from "../../contacts/skillApi";
 import AtlasIcon from "../AtlasIcon.vue";
@@ -15,6 +15,7 @@ import OptionPills from "../settings/OptionPills.vue";
 import SearchField from "../settings/SearchField.vue";
 import ContactCard from "./ContactCard.vue";
 import ContactSkillLine from "./ContactSkillLine.vue";
+import SkillLevelDots from "./SkillLevelDots.vue";
 import "../../page-tags.css";
 
 /**
@@ -22,7 +23,7 @@ import "../../page-tags.css";
  * know (the line's strength the level the reader may see), topics linked as part of or related. Filters: organization (of the people), space
  * (the topics of its pages, asked of the server) and a topic's text (it, its linked topics and their people). A topic opens its dashboard
  * (`#/library/contacts?q=`), a person opens the person's card beneath (ContactCard with the skill bars). Drawn with ECharts as
- * HistoryActivityChart does (loaded with the view; the editor's chart renderer takes a table only). The list is the same graph for the
+ * HistoryActivityChart does, through the charts plugin (loadGraphRenderer: the same ECharts with the graph series). The list is the same graph for the
  * keyboard and narrow rooms: under 680 px of room only the list shows. `api` and `data` are the gallery's.
  */
 const props = defineProps<{ spaces?: readonly { id: string; name: string }[]; api?: Pick<SkillApi, "graph" | "contact" | "rate" | "topics">; data?: SkillGraph }>();
@@ -34,6 +35,8 @@ const selected = ref<SkillNode | null>(null);
 const root = ref<HTMLElement>(), host = ref<HTMLElement>(), probe = ref<HTMLElement>();
 const narrow = ref(false);
 let chart: import("echarts/core").EChartsType | undefined, observer: ResizeObserver | undefined, disposed = false;
+/** The canvas holds a skeleton until ECharts has loaded and drawn. */
+const chartReady = ref(false);
 
 async function load() {
   if (props.data) return;
@@ -93,8 +96,10 @@ function option() {
   const crowded = shown.value.nodes.length > 80;
   const topicInk = (probe.value ? getComputedStyle(probe.value).getPropertyValue("--tag-ink").trim() : "") || "#7859a7";
   return {
-    animation: !prefersReducedMotion(root.value), animationDurationUpdate: 240,
-    tooltip: { formatter: (params: { dataType: string; data: { name: string; detail?: string } }) => params.dataType === "node" ? [params.data.name, params.data.detail].filter(Boolean).join("<br/>") : "" },
+    animation: !prefersReducedMotion(root.value), animationDurationUpdate: root.value ? motionMs(root.value, "--atlas-motion-base") : 0,
+    // Rich text, never HTML: names and topics are anybody's text (as chartRenderer's tooltip).
+    tooltip: { renderMode: "richText", confine: true, backgroundColor: surface, borderColor: line, textStyle: { color: text, fontSize: 12 },
+      formatter: (params: { dataType: string; data: { name: string; detail?: string } }) => params.dataType === "node" ? [params.data.name, params.data.detail].filter(Boolean).join("\n") : "" },
     series: [{
       type: "graph", layout: "force", roam: true, draggable: true, label: { show: true, position: "right", color: text, fontSize: 11 },
       // Hundreds of nodes (§7a): a tighter layout, and people's names on hover only, so the topics stay readable.
@@ -114,15 +119,16 @@ function option() {
 async function draw() {
   if (!showGraph.value || !host.value || disposed) return;
   if (!chart) {
-    const [core, charts, components, renderers] = await Promise.all([import("echarts/core"), import("echarts/charts"), import("echarts/components"), import("echarts/renderers")]);
+    const { loadGraphRenderer } = await import("@atlas/markdown/plugins/charts");
+    const { createGraphChart } = await loadGraphRenderer();
     if (disposed || !host.value) return;
-    core.use([charts.GraphChart, components.TooltipComponent, renderers.SVGRenderer]);
-    chart = core.init(host.value, undefined, { renderer: "svg" });
+    chart = createGraphChart(host.value);
     chart.on("click", event => { const node = (event.data as { node?: SkillNode } | null)?.node; if (event.dataType === "node" && node) open(node); });
   }
   chart.setOption(option(), true);
+  chartReady.value = true;
 }
-watch([shown, showGraph], () => { if (!showGraph.value) { chart?.dispose(); chart = undefined; } else void Promise.resolve().then(draw); }, { flush: "post" });
+watch([shown, showGraph], () => { if (!showGraph.value) { chart?.dispose(); chart = undefined; chartReady.value = false; } else void Promise.resolve().then(draw); }, { flush: "post" });
 onMounted(async () => {
   observer = new ResizeObserver(entries => { narrow.value = (entries[0]?.contentRect.width ?? 1000) < 680; chart?.resize(); });
   if (root.value) observer.observe(root.value);
@@ -146,13 +152,16 @@ const views = computed(() => [{ value: "graph", label: t.skills.viewGraph, icon:
     <LoadingSkeleton v-else-if="loading && !graph" :rows="6" :label="t.skills.graphLoading" />
     <EmptyState v-else-if="graph && !rows.length" icon="users" :title="t.skills.graphEmpty" />
     <template v-else-if="graph">
-      <div v-show="showGraph" ref="host" class="skill-graph-canvas" role="img" :aria-label="t.skills.graphLabel(counts.people, counts.topics)" />
+      <div v-show="showGraph" class="skill-graph-frame">
+        <div ref="host" class="skill-graph-canvas" role="img" :aria-label="t.skills.graphLabel(counts.people, counts.topics)" />
+        <LoadingSkeleton v-if="!chartReady" class="skill-graph-pending" :rows="6" :label="t.skills.graphLoading" />
+      </div>
       <ul v-if="!showGraph" class="skill-graph-list atlas-stagger" :aria-label="t.skills.graphTitle">
         <li v-for="row in rows" :key="row.topic.id">
           <a class="tag-chip" :href="topicUrl(row.topic.name)"><AtlasIcon name="hash" :size="13" />{{ row.topic.name }}</a>
           <span class="skill-graph-people">
             <button v-for="entry in row.people.slice(0, 8)" :key="entry.node.id" type="button" class="skill-graph-person" :aria-pressed="selected?.id === entry.node.id" @click="open(entry.node)">
-              {{ entry.node.name }}<span v-if="entry.level" class="skill-graph-dots" aria-hidden="true"><i v-for="n in 5" :key="n" :class="{ on: n <= Math.round(entry.level) }" /></span>
+              {{ entry.node.name }}<SkillLevelDots v-if="entry.level" :level="entry.level" />
             </button>
             <span v-if="row.people.length > 8" class="skill-graph-more">{{ t.skills.morePeople(row.people.length - 8) }}</span>
           </span>
@@ -171,21 +180,20 @@ const views = computed(() => [{ value: "graph", label: t.skills.viewGraph, icon:
 .skill-graph { display: grid; gap: 12px; min-width: 0; }
 .skill-graph-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .skill-graph-toolbar :deep(.search-field) { flex: 1 1 220px; }
+.skill-graph-frame { position: relative; }
 .skill-graph-canvas { height: min(560px, 70vh); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.skill-graph-pending { position: absolute; inset: 1px; padding: 8px 14px; overflow: hidden; border-radius: 14px; pointer-events: none; }
 .skill-graph-list { display: grid; margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
 .skill-graph-list > li { display: grid; gap: 6px; padding: 10px 14px; content-visibility: auto; contain-intrinsic-size: auto 64px; }
 .skill-graph-more { align-self: center; color: var(--muted); font-size: 12.5px; }
 .skill-graph-list > li + li { border-top: 1px solid color-mix(in srgb, var(--line) 50%, var(--surface)); }
 .skill-graph-list .tag-chip { justify-self: start; text-decoration: none; }
 .skill-graph-people { display: flex; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
-.skill-graph-person { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 6px; border: 0; border-radius: 6px; background: transparent; color: var(--text);
+.skill-graph-person { --skill-dots-ink: var(--accent); display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 2px 6px; border: 0; border-radius: 6px; background: transparent; color: var(--text);
   font: inherit; font-size: 13px; cursor: pointer; transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 .skill-graph-person[aria-pressed="true"] { background: var(--accent-soft); }
 @media (hover: hover) and (pointer: fine) { .skill-graph-person:hover { background: var(--hover); } }
 .skill-graph-person:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.skill-graph-dots { display: inline-flex; gap: 2px; }
-.skill-graph-dots i { width: 5px; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, transparent); }
-.skill-graph-dots i.on { background: var(--accent); }
 .skill-graph-note { margin: 0; color: var(--muted); font-size: 12.5px; }
 .skill-graph-person-card { display: grid; gap: 10px; max-width: 560px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
   box-shadow: var(--refresh-card-shadow); animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }

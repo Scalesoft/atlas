@@ -90,12 +90,39 @@ public sealed class SkillMcpTools(IMessageBus bus)
             JsonSerializer.SerializeToNode(skills, Json)!.AsObject());
     }
 
+    [McpServerTool(Name = "atlas_get_skill_graph", Title = "Mapa znalostí: kdo co umí", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true)]
+    [McpToolScope(ApiScopes.Read)]
+    [AssistantDescription("Přehled celé mapy znalostí: témata, kolik lidí je zná a kdo, a vazby témat (je součástí, souvisí). Volitelně spaceId: jen témata stránek prostoru.")]
+    [Description("Mapa znalostí jako přehled (graf kdo–co z Knihovna → Kontakty): témata, která zná nejvíc lidí (nejvýš 60), u každého lidé s úrovní, kterou smíte " +
+        "vidět, a vazby témat (je součástí, souvisí). spaceId nechá jen témata stránek toho prostoru. Na jedno téma podrobně atlas_find_experts. " + McpText.TrustNotice)]
+    public async Task<CallToolResult> GraphAsync([Description("Volitelně spaceId: jen témata čitelných stránek prostoru.")] string? spaceId = null, CancellationToken ct = default)
+    {
+        var graph = await bus.InvokeAsync<SkillGraph>(new GetSkillGraph(spaceId is null ? null : McpArguments.RequiredId(spaceId, "spaceId"), AiScopeOnly: true), ct);
+        var names = graph.Nodes.ToDictionary(x => x.Id, x => McpText.Line(x.Name, 60));
+        var body = new StringBuilder();
+        foreach (var topic in graph.Nodes.Where(x => x.Kind == "topic"))
+        {
+            var people = graph.Links.Where(x => x.Kind == "skill" && x.Target == topic.Id && names.ContainsKey(x.Source))
+                .OrderByDescending(x => x.Level ?? 0).Select(x => x.Level is { } level ? $"{names[x.Source]} {level.ToString("0.#", CultureInfo.GetCultureInfo("cs-CZ"))}" : names[x.Source]);
+            body.Append("- ").Append(names[topic.Id]).Append(" (tagId ").Append(topic.Id).Append("): ").Append(string.Join(", ", people)).Append('\n');
+        }
+        foreach (var link in graph.Links.Where(x => x.Kind != "skill" && names.ContainsKey(x.Source) && names.ContainsKey(x.Target)))
+        {
+            body.Append(names[link.Source]).Append(link.Kind == "related" ? " souvisí s " : " je součástí ").Append(names[link.Target]).Append('\n');
+        }
+        if (graph.Truncated) body.Append("Ukazují se témata, která zná nejvíc lidí.\n");
+        var topics = graph.Nodes.Count(x => x.Kind == "topic");
+        return McpText.Result(McpText.Wrap($"Mapa znalostí: {topics} témat, {graph.Nodes.Count - topics} lidí.", topics == 0 ? "Zatím nikdo nezapsal, co umí." : body.ToString()),
+            JsonSerializer.SerializeToNode(graph, Json)!.AsObject());
+    }
+
     [McpServerTool(Name = "atlas_rate_skill", Title = "Ohodnotit znalost", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false)]
     [McpToolScope(ApiScopes.Write)]
     [AssistantDescription("Zapíše hodnocení znalosti osoby jménem uživatele: contactId, topic, level 1–5 (null smaže), visibility, note. Jen na pokyn uživatele.")]
     [Description("Ohodnotí osobu (contactId) v tématu jménem vlastníka tokenu: topic textem (existující téma, alias nebo jiný zápis se spojí s ním, jinak vznikne nové), " +
         "level 1–5 (1 základy, 2 pracuje s tím, 3 samostatně, 4 do hloubky, 5 učí ostatní) nebo null hodnocení smaže, visibility private (jen pro vás), " +
         "shared (anonymně do souhrnu, výchozí) nebo signed (s vaším jménem), note jak téma umí (např. „konfiguračně“). Vlastní kontakt = sebehodnocení. " +
+        "S level null a everyone: true odebere téma z osoby pro všechny (hodnocení všech kromě cizích soukromých); smí jen sám člověk nebo správce wiki. " +
         "Zapisujte jen to, co uživatel řekl; nikdy hodnocení neodvozujte sami. Ostatním se změní hned.")]
     public async Task<CallToolResult> RateAsync(
         [Description("contactId osoby.")] string contactId,
@@ -103,10 +130,11 @@ public sealed class SkillMcpTools(IMessageBus bus)
         [Description("Úroveň 1–5, null hodnocení smaže.")] int? level,
         [Description("private, shared (výchozí) nebo signed.")] string? visibility = null,
         [Description("Volitelně jak téma umí, jeden řádek do 200 znaků.")] string? note = null,
+        [Description("S level null: true odebere téma z osoby pro všechny (jen sám člověk nebo správce wiki).")] bool everyone = false,
         CancellationToken ct = default)
     {
-        var skills = await bus.InvokeAsync<ContactSkills>(new RateSkill(McpArguments.RequiredId(contactId, "contactId"), new RateSkillRequest(topic, level, visibility, note)), ct);
-        return McpText.Result(level is null ? "Hodnocení smazáno." : "Hodnocení uloženo.", JsonSerializer.SerializeToNode(skills, Json)!.AsObject());
+        var skills = await bus.InvokeAsync<ContactSkills>(new RateSkill(McpArguments.RequiredId(contactId, "contactId"), new RateSkillRequest(topic, level, visibility, note, everyone)), ct);
+        return McpText.Result(level is not null ? "Hodnocení uloženo." : everyone ? "Téma odebráno pro všechny." : "Hodnocení smazáno.", JsonSerializer.SerializeToNode(skills, Json)!.AsObject());
     }
 
     [McpServerTool(Name = "atlas_merge_topics", Title = "Sloučit témata", Destructive = true, Idempotent = false, OpenWorld = false, ReadOnly = false)]
@@ -160,7 +188,7 @@ public sealed class SkillMcpTools(IMessageBus bus)
         if (skill.Score is { } score) parts.Add($"úroveň {score.ToString("0.#", CultureInfo.GetCultureInfo("cs-CZ"))}/5");
         if (skill.Self is { } self) parts.Add($"vlastní odhad {self}");
         if (skill.Peers > 0) parts.Add($"hodnotili kolegové: {skill.Peers}");
-        else if (skill.FewPeers) parts.Add("hodnotili 1–2 kolegové");
+        else if (skill.FewPeers) parts.Add("hodnotili kolegové, zatím bez průměru");
         if (skill.Mine is { } mine) parts.Add($"vaše hodnocení {mine} ({skill.MyVisibility}){(skill.MyNote is { Length: > 0 } own ? $": {McpText.Line(own, 200)}" : "")}");
         if (skill.SelfNote is { Length: > 0 } note) parts.Add($"jak: {McpText.Line(note, 200)}");
         foreach (var rater in skill.Raters) parts.Add($"{McpText.Line(rater.Name, 100)}: {rater.Level}{(rater.Note is { Length: > 0 } text ? $" ({McpText.Line(text, 200)})" : "")}");

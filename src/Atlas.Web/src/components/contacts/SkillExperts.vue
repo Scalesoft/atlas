@@ -11,12 +11,14 @@ import { rateSkills, topicUrl } from "../../contacts/contactLinking";
 import { useToast } from "../../composables/useToast";
 import { tagTone } from "../../pageTags";
 import AtlasIcon from "../AtlasIcon.vue";
+import LoadingSkeleton from "../LoadingSkeleton.vue";
 import ConfirmDialog from "../settings/ConfirmDialog.vue";
 import InlineReveal from "../settings/InlineReveal.vue";
 import OptionPills from "../settings/OptionPills.vue";
 import SearchableTags from "../settings/SearchableTags.vue";
 import { Button } from "../ui/button";
 import ContactCard from "./ContactCard.vue";
+import SkillLevelDots from "./SkillLevelDots.vue";
 import TopicField from "./TopicField.vue";
 import "../../page-tags.css";
 
@@ -38,10 +40,13 @@ const uid = useId();
 const list = ref<ExpertList | null>(null);
 const pages = ref<TaggedPage[] | null>(null);
 const merging = ref<TopicRef | null>(null), mergeBusy = ref(false), mergeError = ref("");
+/** A topic is being looked up (the debounce and the answer): a sized skeleton holds its place (show fast). */
+const pending = ref(false);
 
 const lookup = createDebouncedLookup<ExpertList | null>({
   find: (text, signal) => api.value.experts(text.trim(), signal),
   onResult: value => {
+    pending.value = false;
     list.value = value;
     emit("found", value?.topic ? value.people.length : 0);
     pages.value = null;
@@ -52,7 +57,7 @@ const lookup = createDebouncedLookup<ExpertList | null>({
   delayMs: 250,
   minLength: 2,
 });
-watch(() => props.query, text => lookup.update(text), { immediate: true });
+watch(() => props.query, text => { pending.value = text.trim().length >= 2; lookup.update(text); }, { immediate: true });
 onBeforeUnmount(lookup.cancel);
 const reload = () => lookup.update(props.query);
 // Hundreds of people: a page of cards at a time.
@@ -138,7 +143,7 @@ async function addPeople() {
   if (!topic.value || !picked.value.length) return;
   addBusy.value = true; addError.value = "";
   try {
-    for (const id of picked.value) await api.value.rate(id, { topic: topic.value.name, level: Number(addLevel.value), visibility: "shared" });
+    for (const id of picked.value) await api.value.rate(id, { topic: topic.value.name, level: Number(addLevel.value), visibility: "signed" });
     toaster.success(t.skills.added(picked.value.length));
     picked.value = []; adding.value = false; reload();
   } catch (failure) { addError.value = errorMessage(failure); }
@@ -178,7 +183,7 @@ const pageUrl = (page: TaggedPage) => buildShellHashEncoded({ view: "page", page
           <li v-for="expert in shownPeople" :key="expert.contactId" class="skill-person" :data-skill-expert="expert.contactId">
             <ContactCard :contact="expert.contact" />
             <div class="skill-person-level">
-              <span v-if="expert.skill && shownLevel(expert.skill)" class="skill-dots" :data-tone="tagTone(topic.name)" aria-hidden="true"><i v-for="n in 5" :key="n" :class="{ on: n <= Math.round(shownLevel(expert.skill) ?? 0) }" /></span>
+              <SkillLevelDots v-if="expert.skill && shownLevel(expert.skill)" :level="shownLevel(expert.skill) ?? 0" :size="8" :data-tone="tagTone(topic.name)" />
               <strong v-if="expert.skill && shownLevel(expert.skill)">{{ t.skills.levels[Math.round(shownLevel(expert.skill) ?? 1) - 1] }}</strong>
               <Button variant="ghost" size="sm" type="button" class="skill-experts-rate" @click="rateSkills(expert.contactId, $event.currentTarget as HTMLElement, props.api, topic.name)">{{ t.skills.rateShort }}</Button>
             </div>
@@ -228,6 +233,7 @@ const pageUrl = (page: TaggedPage) => buildShellHashEncoded({ view: "page", page
       <p>{{ merging && t.skills.mergeConfirm(merging.name, topic.name) }}</p>
     </ConfirmDialog>
   </section>
+  <LoadingSkeleton v-else-if="pending" class="skill-experts-pending" :rows="2" row-height="64px" :label="t.skills.loading" />
 </template>
 
 <style scoped>
@@ -256,9 +262,6 @@ const pageUrl = (page: TaggedPage) => buildShellHashEncoded({ view: "page", page
 .skill-experts-side { display: grid; gap: 10px; min-width: 0; }
 .skill-experts-panel { display: grid; gap: 8px; min-width: 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .skill-experts-panel > h3 { margin: 0; color: var(--muted); font-size: 12px; font-weight: 650; }
-.skill-dots { display: inline-flex; gap: 2px; }
-.skill-dots i { width: 8px; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--tag-ink) 22%, transparent); }
-.skill-dots i.on { background: var(--tag-ink); }
 /* The levels' spread: five columns, their height the share of the most frequent level. */
 .skill-spread { display: grid; grid-template-columns: repeat(5, 1fr); align-items: end; gap: 6px; height: 64px; }
 .skill-spread-column { display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 2px; height: 100%; }

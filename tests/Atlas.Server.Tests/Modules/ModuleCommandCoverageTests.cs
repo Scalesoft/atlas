@@ -28,7 +28,8 @@ public sealed class ModuleCommandCoverageTests
 {
     /// <summary>The command namespaces of V3 modules; add one when a module gets user commands.</summary>
     private static readonly string[] CommandNamespaces = [typeof(SetCatalogPage).Namespace!, typeof(AddTreeReference).Namespace!, typeof(ApplyBoardBatch).Namespace!,
-        typeof(CreateObject).Namespace!, typeof(SetItemGrant).Namespace!, typeof(MarkNotificationsRead).Namespace!, typeof(MergeContacts).Namespace!, typeof(RunJobNow).Namespace!, typeof(NameVersion).Namespace!];
+        typeof(CreateObject).Namespace!, typeof(SetItemGrant).Namespace!, typeof(MarkNotificationsRead).Namespace!, typeof(MergeContacts).Namespace!, typeof(RunJobNow).Namespace!, typeof(NameVersion).Namespace!,
+        typeof(Atlas.Server.Features.Skills.Commands.RateSkill).Namespace!];
 
     /// <summary>3.6 commands of a page from namespaces that also hold the platform's own records (the collaboration relay, the page save).</summary>
     private static readonly Type[] PageCommands = [typeof(UndoRevisionChange), typeof(SetPagePublication), typeof(SortTreeLevel)];
@@ -72,6 +73,10 @@ public sealed class ModuleCommandCoverageTests
         // A page's history (3.6-C, 3.6-H): restore a version, name one, undo one change; and its „Publikace“ (3.6-I).
         [typeof(RestorePage)] = ("atlas_restore_version", "POST /api/v1/pages/{id:guid}/restore"),
         [typeof(NameVersion)] = ("atlas_name_version", "POST /api/v1/pages/{id:guid}/versions"),
+        // Mapa znalostí (skills spec §6): the rating, the merge of two topics and their links.
+        [typeof(Atlas.Server.Features.Skills.Commands.RateSkill)] = ("atlas_rate_skill", "PUT /api/v1/contacts/{id:guid}/skills"),
+        [typeof(Atlas.Server.Features.Skills.Commands.MergeTopics)] = ("atlas_merge_topics", "POST /api/v1/skills/topics/{id:guid}/merge"),
+        [typeof(Atlas.Server.Features.Skills.Commands.LinkTopics)] = ("atlas_link_topics", "PUT /api/v1/skills/topics/{id:guid}/parents"),
         [typeof(UndoRevisionChange)] = ("atlas_undo_change", "POST /api/v1/pages/{id:guid}/history/{revisionId:guid}/undo"),
         [typeof(SetPagePublication)] = ("atlas_set_publication", "PUT /api/v1/pages/{id:guid}/publication"),
         // „Řadit abecedně“ of a tree level (3.6).
