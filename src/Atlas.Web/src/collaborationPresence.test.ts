@@ -124,6 +124,7 @@ describe("collaboration cursor presentation", () => {
     // Its stars write while the text lands, then play „done“ once.
     expect(caret.querySelector("[data-ai-glyph]")!.getAttribute("data-state")).toBe("writing");
     vi.advanceTimersByTime(1600);
+    frame();
     expect(caret.querySelector("[data-ai-glyph]")!.getAttribute("data-state")).toBe("done");
     expect(caret.textContent).toBe("Jana · AI (MCP)");
     // A person's caret goes at once, the agent's fades out first.
@@ -500,5 +501,49 @@ describe("an agent's caret from the server", () => {
     // "abcdef agent" is positions 1–12 of the paragraph: the caret stands at 13, after "agent".
     expect(caret.style.transform).toBe(`translate3d(${100 + 13 * 8}px, 60px, 0px)`);
     server.destroy();
+  });
+});
+
+describe("an agent's write typed in", () => {
+  it("shows the agent's text word by word with its caret on the front, then all of it (live/agentReveal.ts)", () => {
+    let now = 1000;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const ydoc = new Y.Doc();
+    const awareness = new Awareness(ydoc);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
+      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+    vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {} });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); editor.destroy(); host.remove(); awareness.destroy(); });
+    editor.commands.insertContent("abcdef");
+    // The agent shows before it writes, and writes as the Yjs client of its presence (777, LivePageWrites).
+    presence.update([{ clientId: 777, id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" }]);
+    const agentDoc = new Y.Doc();
+    agentDoc.clientID = 777;
+    Y.applyUpdate(agentDoc, Y.encodeStateAsUpdate(ydoc));
+    ((agentDoc.getXmlFragment("default").get(0) as Y.XmlElement).get(0) as Y.XmlText).insert(6, " agent píše dál");
+    Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(agentDoc, Y.encodeStateVector(ydoc)));
+    frame(now);
+    const unwritten = () => [...host.querySelectorAll(".atlas-agent-unwritten")].map(span => span.textContent).join("");
+    const caretX = () => host.querySelector<HTMLElement>('[data-client-id="777"]')?.style.transform;
+    // The text is in the document at once, still invisible; the caret stands where the typing starts, its glyph writing.
+    expect(editor.getText()).toBe("abcdef agent píše dál");
+    expect(unwritten()).toBe(" agent píše dál");
+    expect(caretX()).toBe(`translate3d(${100 + 7 * 8}px, 60px, 0px)`);
+    expect(host.querySelector('[data-client-id="777"] [data-ai-glyph]')!.getAttribute("data-state")).toBe("writing");
+    // 15 letters at the even pace take 300 ms; after 160 ms the front has passed „píše“ (its word is shown whole).
+    now += 160;
+    frame(now);
+    frame(now);
+    expect(unwritten()).toBe(" dál");
+    expect(caretX()).toBe(`translate3d(${100 + 18 * 8}px, 60px, 0px)`);
+    now += 400;
+    frame(now);
+    frame(now);
+    expect(unwritten()).toBe("");
   });
 });

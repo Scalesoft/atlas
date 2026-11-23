@@ -50,6 +50,7 @@
   animation: st-fade-in var(--atlas-motion-surface) var(--atlas-ease-out), atlas-ai-aura var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
   transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out);
 }
+.collaboration-presence__cursor.is-agent.is-typing,
 .collaboration-presence.is-layout-moving .collaboration-presence__cursor.is-agent,
 .collaboration-presence.is-reduced-motion .collaboration-presence__cursor.is-agent,
 [data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent {
@@ -82,3 +83,6 @@
 [data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent .collaboration-presence__label {
   box-shadow: 0 0 10px color-mix(in srgb, var(--ai-aura) 65%, transparent);
 }
+
+/* An agent's text not typed in yet (live/agentReveal.ts): in the document, laid out, invisible until the typing reaches it. */
+.atlas-agent-unwritten { opacity: 0; }

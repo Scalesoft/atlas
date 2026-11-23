@@ -58,7 +58,7 @@ function navigate(peer: CollaborationPeer) {
               <span class="collaborator-avatar-face" :class="{ 'atlas-ai-aura': isAgent(peer) }" aria-hidden="true">
                 {{ initials(peer.name) }}
                 <span v-if="isAgent(peer)" class="collaborator-mode">
-                  <AiGlyph :size="10" :working="!peer.cursorAvailable" :state="peer.cursorAvailable ? 'done' : 'writing'" />
+                  <AiGlyph :size="10" :working="!peer.cursorAvailable || peer.writing" :state="peer.cursorAvailable && !peer.writing ? 'done' : 'writing'" />
                 </span>
                 <span v-else class="collaborator-mode"><AtlasIcon name="pencil" :size="10" /></span>
               </span>
