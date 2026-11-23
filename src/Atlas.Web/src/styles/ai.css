@@ -137,8 +137,10 @@
   /* An AI's presence among the people of a page or board (its caret, pointer and avatar, the promo film's look, owner 2026-11-23):
      the gradient label and arrow, a caret line of its own and an aura that breathes while it is there. People never glow. */
   --ai-gradient: linear-gradient(120deg, #7956d9, #4c78e5 52%, #19c3c5);
-  --ai-gradient-line: linear-gradient(180deg, #8f6dff, #4c78e5 50%, #2fe6d2);
+  --ai-line-from: #8f6dff;
+  --ai-line-via: #4c78e5;
   --ai-aura: #2fe6d2;
+  --ai-gradient-line: linear-gradient(180deg, var(--ai-line-from), var(--ai-line-via) 50%, var(--ai-aura));
 }
 /* The aura of an AI that is present: it breathes in the loop's rhythm; under reduced motion it stands at its middle. */
 .atlas-ai-aura {

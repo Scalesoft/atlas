@@ -5,7 +5,8 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 2;
+  /* In the page, just under the editor shell's own overlays (its messages, layers.css), so floating panels stay above it. */
+  z-index: calc(var(--md-layer-message, 3) - 1);
 }
 
 .collaboration-presence__cursor {
