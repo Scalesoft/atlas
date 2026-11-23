@@ -228,7 +228,7 @@ const plugins: Plugins = {
     skillLevel: (topic, level) => `${topic}, level ${level} of 5`,
     skillsMore: (n) => `+${n}`,
     skillsRate: "Rate",
-    skillsAdd: "Add a skill",
+    skillsAdd: "Add a topic",
     intentionSkills: "Knows…",
     downloadAll: "Download all contacts",
     editContactTitle: "Edit contact",

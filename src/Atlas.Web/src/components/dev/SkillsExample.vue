@@ -6,10 +6,13 @@ import { createContactsPlugin, type LiveContact } from "@atlas/markdown/plugins/
 import { readerSkills, rateSkills } from "../../contacts/contactLinking";
 import type { ContactSkill, ContactSkills, ExpertList, SkillApi, SkillGraph as Graph, TopicRef } from "../../contacts/skillApi";
 import { useEditorTheme } from "../../editor/editorSetup";
+import ContactSkillLine from "../contacts/ContactSkillLine.vue";
 import SkillBars from "../contacts/SkillBars.vue";
 import SkillExperts from "../contacts/SkillExperts.vue";
 import SkillGraph from "../contacts/SkillGraph.vue";
+import SkillLevelDots from "../contacts/SkillLevelDots.vue";
 import SkillRatePanel from "../contacts/SkillRatePanel.vue";
+import TopicField from "../contacts/TopicField.vue";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 import SearchField from "../settings/SearchField.vue";
@@ -23,7 +26,7 @@ const people: Record<string, ContactSkills> = {
     skill("csharp", "C#", 4.6, { peers: 4 }), skill("consent", "Informované souhlasy", 4.2, { peers: 3, selfNote: "vývoj · Orion", evidence: 6 }),
     skill("dotnet", ".NET", 4.5, { peers: 3 }), skill("pg", "PostgreSQL", 4), skill("nh", "NHibernate", 3, { fewPeers: true }), skill("vue", "Vue", 2),
     skill("docker", "Docker", 2), skill("hl7", "HL7", 1)] },
-  [ids.viktor]: { contactId: ids.viktor, name: "Tomáš Kolář", self: true, suggested: [{ id: "k8s", name: "Kubernetes", people: 9 }, { id: "gdpr", name: "GDPR", people: 4 }], skills: [
+  [ids.viktor]: { contactId: ids.viktor, name: "Tomáš Kolář", self: true, moderate: true, suggested: [{ id: "k8s", name: "Kubernetes", people: 9 }, { id: "gdpr", name: "GDPR", people: 4 }], skills: [
     skill("forms", "Formuláře", 5), skill("consent", "Informované souhlasy", 4, { selfNote: "konfiguračně", mine: 4, myVisibility: "shared" })] },
 };
 const delay = <T,>(value: T) => new Promise<T>(resolve => setTimeout(() => resolve(structuredClone(value)), 350));
@@ -97,6 +100,7 @@ const bigApi: Pick<SkillApi, "contact" | "rate" | "topics" | "experts" | "merge"
     similar: [], people: manyPeople.slice(0, 40).map((person, i) => ({ contactId: person.id, contact: { name: person.name, title: ["vývojář", "konzultant", "analytik"][i % 3], organization: person.organization },
       skill: skill("java", "Java", 5 - (i % 5), { peers: i % 4 === 0 ? 3 : 0, fewPeers: i % 4 === 1 }), inContext: false, evidence: (i * 3) % 7, pages: [] })) }) };
 const bigQuery = ref("java");
+const topicText = ref(""), takenTopic = ref("");
 </script>
 
 <template>
@@ -119,6 +123,15 @@ const bigQuery = ref("java");
     <SettingsSection title="SkillBars — znalosti osoby" description="Přehled osoby: pruh na téma, délka je úroveň, seskupeno podle širšího tématu (shluky), skupiny podle nejlepšího tématu. Pruhy místo radaru: čtou se při jakémkoli počtu témat i na 375 px. Ukazuje je detail kontaktu v doku a osoba vybraná v grafu (ContactSkillLine s bars).">
       <div class="skills-example-panel"><SkillBars name="Pavel Horák" :skills="people[ids.martin]!.skills.map(skill => ({ ...skill, group: ['C#', 'NHibernate'].includes(skill.name) ? '.NET' : skill.name === 'Informované souhlasy' ? 'Orion' : null }))" /></div>
     </SettingsSection>
+    <SettingsSection title="ContactSkillLine — Umí v panelu kontaktu a v doku" description="Týž řádek Umí jako v kartě osoby, pro místa, kde Atlas ukazuje osobu ve Vue (panel kontaktu pisatele, detail kontaktu v doku): do odpovědi drží výšku jednoho řádku, pak nejlepších šest témat a +N, Ohodnotit rozbalí hodnocení pod řádkem (InlineReveal, ne druhý popover v panelu). S bars místo štítků pruhy znalostí. Proč ne SkillBars sám: pruhy jsou přehled pro místo, kde je prostor; řádek je jedna řádka karty. Proč ne karta pluginu kontaktů: ta kreslí čtecí kartu ve stránce mimo Vue.">
+      <div class="skills-example-panel"><ContactSkillLine :contact-id="ids.martin" :api="api" /></div>
+    </SettingsSection>
+    <SettingsSection title="TopicField — jedno téma psaním" description="Pole tématu pro hodnocení a vazby témat: existující téma první (i podle aliasu nebo jiného zápisu, „c sharp“ najde C#) a předvybrané, Enter ho vezme; „Nové téma …“ až pod nimi, takže jiný zápis nikdy nezaloží druhé téma. Zkuste „csharp“ a Enter. Proč ne PageTags: ty upravují celou sadu štítků stránky v dialogu; tohle vybere jedno téma na místě.">
+      <div class="skills-example-panel"><TopicField v-model="topicText" label="Téma" :api="api" @take="name => (takenTopic = name)" /><p v-if="takenTopic" class="skills-example-note">Vybráno: {{ takenTopic }}</p></div>
+    </SettingsSection>
+    <SettingsSection title="SkillLevelDots — úroveň 1–5" description="Pět teček v barvě tématu, plné do úrovně: jediná kresba úrovně v řádku Umí, v hodnocení, u lidí tématu i v seznamu grafu. Je jen ozdobou (aria-hidden), úroveň zní slovy vedle. Proč ne tečky pluginu kontaktů: ty kreslí čtecí kartu ve stránce mimo Vue.">
+      <div class="skills-example-dots"><span v-for="n in 5" :key="n">{{ n }} <SkillLevelDots :level="n" /></span></div>
+    </SettingsSection>
     <SettingsSection title="Stovky témat — jak to vypadá, když je toho hodně" description="Zátěžová ukázka (generovaná data): osoba s 240 tématy ve 24 skupinách — v každé skupině 5 nejlepších a Zobrazit další, prvních 6 skupin a zbytek za jedním tlačítkem, od 20 témat filtr. Téma, které umí 40 lidí — 12 karet a Zobrazit další. Wiki s 320 tématy a 90 lidmi — graf drží 60 témat, která zná nejvíc lidí (poznámka pod grafem), zbytek najde filtr nebo seznam; v seznamu u tématu 8 lidí a +N. Skupiny, karty a řádky mimo obraz se nevykreslují (content-visibility).">
       <div class="skills-example-panel skills-example-wide"><SkillBars name="Kolega s 240 tématy" :skills="manySkills" /></div>
       <div class="skills-example-directory"><SkillExperts :query="bigQuery" :api="bigApi" :people="manyPeople" /></div>
@@ -132,4 +145,6 @@ const bigQuery = ref("java");
 .skills-example-panel { max-width: 460px; padding: 16px; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); background: var(--surface); box-shadow: var(--refresh-card-shadow); }
 .skills-example-directory { display: grid; gap: 12px; }
 .skills-example-wide { max-width: none; margin-bottom: 16px; }
+.skills-example-note { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; }
+.skills-example-dots { display: flex; flex-wrap: wrap; gap: 16px; --tag-ink: var(--accent); font-size: 12.5px; }
 </style>

@@ -245,7 +245,7 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
     <ContactDuplicates v-else-if="duplicatesOpen" :api="contacts" @close="closeTrash" @merged="merged" />
     <template v-else>
       <div class="contact-directory-toolbar">
-        <SearchField v-model="query" :label="t.directory.searchLabel" :placeholder="skills ? t.skills.searchPlaceholder : t.directory.searchPlaceholder" wide data-contact-search data-focus-landing @keydown="searchKeys" />
+        <SearchField v-model="query" :label="t.directory.searchLabel" :placeholder="t.skills.searchPlaceholder" wide data-contact-search data-focus-landing @keydown="searchKeys" />
         <Button v-if="canCreate" type="button" aria-controls="contact-directory-new" :aria-expanded="creating" data-contact-create @click="creating = !creating">
           <AtlasIcon name="plus" :size="15" />{{ t.directory.newContact }}
         </Button>

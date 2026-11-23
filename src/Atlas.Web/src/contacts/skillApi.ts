@@ -7,7 +7,7 @@ import type { ContactData } from "./contactData";
  */
 export type SkillVisibility = "private" | "shared" | "signed";
 export interface SkillRater { name: string; level: number; visibility: SkillVisibility; note?: string | null }
-/** One topic of a person; `score` null when the reader may see no number (`fewPeers`: one or two colleagues rated it). */
+/** One topic of a person; `score` null when the reader may see no number (`fewPeers`: colleagues rated it, too few for an average that keeps the anonymous ones anonymous). */
 export interface ContactSkill {
   tagId: string; name: string; score: number | null; self?: number | null; selfNote?: string | null; peers: number; fewPeers: boolean;
   mine?: number | null; myVisibility?: SkillVisibility | null; myNote?: string | null; raters: SkillRater[]; evidence: number;
@@ -15,7 +15,8 @@ export interface ContactSkill {
   group?: string | null;
 }
 export interface TopicRef { id: string; name: string; people: number; matched?: string | null }
-export interface ContactSkills { contactId: string; name: string; self: boolean; skills: ContactSkill[]; suggested: TopicRef[] }
+/** `moderate`: the reader may remove a topic from the person for everyone (the person or a wiki admin). */
+export interface ContactSkills { contactId: string; name: string; self: boolean; skills: ContactSkill[]; suggested: TopicRef[]; moderate?: boolean }
 export interface TopicView { id: string; name: string; aliases: string[]; parents: TopicRef[]; children: TopicRef[]; related?: TopicRef[] | null }
 export type TopicLinkKind = "part_of" | "related";
 /** Who knows what as a graph: people and topics, person–topic links with the level the reader may see, topic links part_of and related. */
@@ -25,7 +26,8 @@ export interface SkillGraph { nodes: SkillNode[]; links: SkillLink[]; truncated:
 export interface TaggedPage { id: string; title: string; spaceName: string }
 export interface Expert { contactId: string; contact: ContactData; skill?: ContactSkill | null; via?: string | null; inContext: boolean; evidence: number; pages: { pageId: string; title: string; spaceName: string }[] }
 export interface ExpertList { topic?: TopicView | null; similar: TopicRef[]; people: Expert[]; selfContactId?: string | null }
-export interface RateSkillRequest { topic: string; level: number | null; visibility?: SkillVisibility; note?: string | null }
+/** `everyone` with level null: the topic goes from the person for everyone (`moderate` only). */
+export interface RateSkillRequest { topic: string; level: number | null; visibility?: SkillVisibility; note?: string | null; everyone?: boolean }
 
 const id = (value: string) => encodeURIComponent(value);
 

@@ -6,9 +6,11 @@ import { foldText } from "../../lib/foldText";
 import { skillApi as defaultApi, shownLevel, type ContactSkill, type ContactSkills, type SkillApi, type SkillVisibility } from "../../contacts/skillApi";
 import AtlasIcon from "../AtlasIcon.vue";
 import LoadingSkeleton from "../LoadingSkeleton.vue";
+import ConfirmDialog from "../settings/ConfirmDialog.vue";
 import OptionPills from "../settings/OptionPills.vue";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import SkillLevelDots from "./SkillLevelDots.vue";
 import TopicField from "./TopicField.vue";
 
 /**
@@ -56,13 +58,17 @@ function edit(skill: ContactSkill) {
   visibility.value = skill.myVisibility ?? "shared";
   how.value = skill.myNote ?? "";
 }
-const mine = computed(() => state.value?.skills.find(skill => foldText(skill.name) === foldText(topic.value.trim()) && skill.mine != null));
+const listed = computed(() => state.value?.skills.find(skill => foldText(skill.name) === foldText(topic.value.trim())));
+const mine = computed(() => (listed.value?.mine != null ? listed.value : undefined));
+/** The person or a wiki admin removes a listed topic for everyone (labels others put on the person), after a confirmation. */
+const removingAll = ref(false);
+async function removeAll() { removingAll.value = false; await save(true, true); }
 
-async function save(remove = false) {
+async function save(remove = false, everyone = false) {
   if (!topic.value.trim() || saving.value) return;
   saving.value = true; error.value = ""; note.value = "";
   try {
-    state.value = await api.value.rate(props.contactId, { topic: topic.value.trim(), level: remove ? null : Number(level.value), visibility: visibility.value, note: how.value.trim() || null });
+    state.value = await api.value.rate(props.contactId, { topic: topic.value.trim(), level: remove ? null : Number(level.value), visibility: visibility.value, note: how.value.trim() || null, ...(everyone ? { everyone } : {}) });
     note.value = t.skills.saved;
     emit("saved", state.value);
     field.value?.set(""); how.value = "";
@@ -80,7 +86,7 @@ async function save(remove = false) {
         <li v-for="skill in state.skills" :key="skill.tagId">
           <button type="button" class="skill-chip skill-rate-chip" :aria-pressed="foldText(skill.name) === foldText(topic)" @click="edit(skill)">
             <AtlasIcon name="hash" :size="13" />{{ skill.name }}
-            <span class="skill-dots" aria-hidden="true"><i v-for="n in 5" :key="n" :class="{ on: n <= Math.round(shownLevel(skill) ?? 0) }" /></span>
+            <SkillLevelDots :level="shownLevel(skill) ?? 0" />
             <small v-if="skill.mine != null">{{ t.skills.yours(skill.mine) }}</small>
           </button>
         </li>
@@ -107,9 +113,13 @@ async function save(remove = false) {
     <p v-if="error" class="skill-rate-error" role="alert">{{ error }}</p>
     <p v-else-if="note" class="skill-rate-hint" role="status">{{ note }}</p>
     <div class="skill-rate-actions">
+      <Button v-if="state?.moderate && listed" type="button" variant="ghost" :disabled="saving" data-skill-remove-all @click="removingAll = true">{{ t.skills.removeAll }}</Button>
       <Button v-if="mine" type="button" variant="ghost" :disabled="saving" @click="save(true)">{{ t.skills.remove }}</Button>
       <Button type="submit" :disabled="saving || !topic.trim()" data-skill-save>{{ t.skills.save }}</Button>
     </div>
+    <ConfirmDialog :open="removingAll" destructive :title="t.skills.removeAll" :confirm-label="t.skills.removeAll" :busy="saving" @confirm="removeAll" @cancel="removingAll = false">
+      <p>{{ listed && t.skills.removeAllConfirm(listed.name) }}</p>
+    </ConfirmDialog>
   </form>
 </template>
 
@@ -124,9 +134,6 @@ async function save(remove = false) {
 .skill-rate-chip[aria-pressed="true"] { border-color: color-mix(in srgb, var(--tag-ink) 60%, transparent); }
 .skill-rate-chip small { color: var(--muted); font-weight: 500; }
 .skill-rate-chip:focus-visible, .skill-rate-suggestion:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.skill-dots { display: inline-flex; gap: 2px; }
-.skill-dots i { width: 5px; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--tag-ink) 22%, transparent); }
-.skill-dots i.on { background: var(--tag-ink); }
 .skill-rate-field { display: grid; gap: 6px; }
 .skill-rate-field > span { font-size: 12.5px; font-weight: 650; color: var(--muted); }
 .skill-rate-suggestion { display: inline-flex; align-items: center; gap: 4px; min-height: 27px; padding: 3px 8px; border: 1px dashed var(--line); border-radius: 7px; background: transparent;
