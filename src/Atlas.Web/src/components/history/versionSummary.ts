@@ -32,11 +32,18 @@ export function sizeBar(changes: RevisionChanges | null | undefined) {
   return n <= 0 ? 0 : Math.max(6, Math.min(100, Math.round(Math.log10(n + 1) / Math.log10(2000) * 100)));
 }
 
-/** Contributors with their share of the version's checkpoints, in percent. */
+/** `total` cut into whole numbers in the proportion of `weights` (cumulative rounding, so the parts add up to `total`). */
+export function apportion(total: number, weights: number[]): number[] {
+  const sum = weights.reduce((a, b) => a + b, 0);
+  let done = 0, given = 0;
+  return weights.map(weight => { done += weight; const upTo = sum ? Math.round(total * done / sum) : 0; const part = upTo - given; given = upTo; return part; });
+}
+
+/** Contributors with their share of the version's checkpoints, in percent (adding up to 100). */
 export function shares(changes: RevisionChanges | null | undefined) {
   const list = changes?.contributors ?? [];
-  const total = list.reduce((sum, c) => sum + c.checkpoints, 0);
-  return list.map(c => ({ ...c, share: total ? Math.round(c.checkpoints / total * 100) : 0 }));
+  const percent = apportion(100, list.map(c => c.checkpoints));
+  return list.map((c, index) => ({ ...c, share: percent[index]! }));
 }
 
 export type HistoryFilter = "all" | "published" | "named" | "ai";
@@ -52,8 +59,8 @@ export function bucketKey(iso: string, hourly: boolean) {
 }
 /** Hours when the loaded range spans at most two days, days otherwise. */
 export function isHourly(items: PageRevisionSummary[]) {
-  if (!items.length) return false;
-  const times = items.map(i => new Date(i.activeFrom).getTime());
+  const times = items.map(i => new Date(i.activeFrom).getTime()).filter(Number.isFinite);
+  if (!times.length) return false;
   return Math.max(...times) - Math.min(...times) <= 2 * 86_400_000;
 }
 export interface ActivityBucket { key: string; people: number; ai: number; published: number; byPerson: Record<string, number> }
@@ -64,6 +71,7 @@ export interface ActivityBucket { key: string; people: number; ai: number; publi
 export function activityBuckets(items: PageRevisionSummary[]): ActivityBucket[] {
   const hourly = isHourly(items), map = new Map<string, ActivityBucket>();
   for (const item of items) {
+    if (Number.isNaN(new Date(item.activeFrom).getTime())) continue; // no time, no bucket
     const key = bucketKey(item.activeFrom, hourly);
     const bucket = map.get(key) ?? { key, people: 0, ai: 0, published: 0, byPerson: {} };
     const size = (item.changes?.added ?? 0) + (item.changes?.removed ?? 0);
@@ -71,9 +79,7 @@ export function activityBuckets(items: PageRevisionSummary[]): ActivityBucket[] 
     else {
       bucket.people += size;
       const list = item.changes?.contributors.length ? item.changes.contributors : [{ id: item.authorId, checkpoints: 1 }];
-      const total = list.reduce((sum, c) => sum + c.checkpoints, 0);
-      let done = 0, given = 0;
-      for (const c of list) { done += c.checkpoints; const upTo = Math.round(size * done / total); bucket.byPerson[c.id] = (bucket.byPerson[c.id] ?? 0) + upTo - given; given = upTo; }
+      apportion(size, list.map(c => c.checkpoints)).forEach((lines, index) => { const id = list[index]!.id; bucket.byPerson[id] = (bucket.byPerson[id] ?? 0) + lines; });
     }
     if (item.isPublished || item.lastPublishedAt) bucket.published++;
     map.set(key, bucket);

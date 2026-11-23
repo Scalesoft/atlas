@@ -68,7 +68,7 @@ function chartOption(host: HTMLElement, data: ChartData, reducedMotion: boolean,
     return data.kind === 'bar'
       ? { ...common, type: 'bar', barMaxWidth: look?.compact ? 22 : 44, stack: look?.stacked ? 'total' : undefined, itemStyle: { ...common.itemStyle, borderRadius: look?.stacked ? 2 : [4, 4, 0, 0] },
           // A strip of bars grows from left to right, one after another.
-          animationDelay: look && !reducedMotion ? (index: number) => index * 40 : undefined }
+          animationDelay: look && !reducedMotion ? (index: number) => Math.min(index * 40, 800) : undefined }
       : { ...common, type: 'line', connectNulls: false, smooth: false, symbol: 'circle', symbolSize: 6, lineStyle: { width: 2.5 }, showSymbol: rows.length <= 30 }
   })
   return {

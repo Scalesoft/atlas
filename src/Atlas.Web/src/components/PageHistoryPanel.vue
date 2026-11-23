@@ -432,11 +432,9 @@ onBeforeUnmount(() => {
 .history-day ol { list-style: none; margin: 0; padding: 0; }
 /* Long histories: rows outside the viewport skip layout and paint; the buttons stay in the DOM for the arrows and the stats observer. */
 .history-day li { content-visibility: auto; contain-intrinsic-size: auto 53px; }
-.history-version { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; width: 100%; min-height: 53px; padding: 9px 18px; border: 0; background: transparent; text-align: left; color: var(--text); border-radius: 0; cursor: pointer; }
+.history-version { display: grid; grid-template-columns: minmax(5ch, max-content) minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; width: 100%; min-height: 53px; padding: 9px 18px; border: 0; background: transparent; text-align: left; color: var(--text); border-radius: 0; cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .history-version:hover { background: var(--hover); } }
 .history-version[aria-current] { background: var(--navigation-selected-bg); }
-/* An English time („10:58 AM“) is wider than „10:58“. */
-:lang(en) .history-version { grid-template-columns: 54px minmax(0, 1fr) auto; }
 .history-version:focus-visible, .history-view-switch button:focus-visible, .history-restore-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .history-preview-channel { margin-top: 6px; font-size: 12px; color: var(--muted); }
 .history-preview-heading .history-preview-summary { margin-top: 8px; font-size: 13px; color: var(--text); overflow-wrap: anywhere; }

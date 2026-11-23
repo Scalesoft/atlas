@@ -47,7 +47,10 @@ function chart(): [ChartData, ChartLook] {
   }];
 }
 
+// The colours are read from the tokens when drawn; a switch of mode or accent redraws them (the observer the editor uses too).
+const themeObserver = new MutationObserver(() => renderer?.update(...chart()));
 onMounted(async () => {
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-mode", "data-accent"] });
   try {
     const { loadChartRenderer } = await import("@atlas/markdown/plugins/charts");
     const { createChartRenderer } = await loadChartRenderer();
@@ -57,7 +60,7 @@ onMounted(async () => {
   ready.value = true;
 });
 watch(() => [buckets.value, props.focus], () => renderer?.update(...chart()));
-onBeforeUnmount(() => { disposed = true; renderer?.destroy(); });
+onBeforeUnmount(() => { disposed = true; themeObserver.disconnect(); renderer?.destroy(); });
 </script>
 
 <template>

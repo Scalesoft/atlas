@@ -936,8 +936,7 @@ const steps: FlowStep[] = [
 <style scoped>
 .gallery-history-versions { max-width: 340px; border: 1px solid var(--line); border-radius: 8px; padding-top: 10px; background: var(--sidebar); }
 .gallery-history-list { list-style: none; margin: 0; padding: 0; }
-.gallery-history-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; padding: 9px 18px; border-top: 1px solid var(--line); }
-:lang(en) .gallery-history-row { grid-template-columns: 54px minmax(0, 1fr) auto; }
+.gallery-history-row { display: grid; grid-template-columns: minmax(5ch, max-content) minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; padding: 9px 18px; border-top: 1px solid var(--line); }
 /* SidebarSpace demo: the sidebar's width and surface. */
 .gallery-sidebar-spaces { width: min(256px, 100%); padding: 10px; border: 1px solid var(--line); border-radius: var(--atlas-radius-lg); background: var(--sidebar); }
 .atlas.gallery.settings-ui { display: block; min-height: 100dvh; color: var(--text); background: var(--surface); font: 14px/1.5 "DM Sans Variable", "DM Sans", sans-serif; }
