@@ -28,7 +28,9 @@ public sealed class SearchExecutionTests
             .ListAsync<string>());
         Assert.DoesNotContain("JIT:", searchPlan, StringComparison.Ordinal);
         await transaction.CommitAsync();
-        Assert.Equal("on", await session.CreateSQLQuery("SELECT current_setting('jit')").UniqueResultAsync<string>());
+        // After the commit the session reads through a fresh pooled connection: the server's own default (off since PostgreSQL 19).
+        Assert.Equal(await session.CreateSQLQuery("SELECT reset_val FROM pg_settings WHERE name = 'jit'").UniqueResultAsync<string>(),
+            await session.CreateSQLQuery("SELECT current_setting('jit')").UniqueResultAsync<string>());
     }
 
     // G2: only the omnisearch full pass flags recordMiss; any other caller or shape of search reaches the recorder never.

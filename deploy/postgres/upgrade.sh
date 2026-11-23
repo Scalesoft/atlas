@@ -3,8 +3,8 @@
 # PostgreSQL 19"). The volume is the database container's /var/lib/postgresql, where each major keeps its cluster in <major>/docker:
 # - the old cluster (18/docker) is only read and stays as it was: switching back to the old image is the rollback;
 # - the new image's pg_dumpall and psql copy every role (with its password), database and row into 19/upgrade;
-# - roles, extensions (in the new major's default version, e.g. contrib btree_gist) and the exact row count of every table are
-#   compared, then ANALYZE runs;
+# - roles, extensions (in the new major's default version, e.g. contrib btree_gist), time zone and locale settings and the exact
+#   row count of every table are compared, then ANALYZE runs;
 # - only a complete, verified and cleanly stopped cluster is renamed to 19/docker, which the new image opens.
 # It refuses to run while a container uses the volume, when 19/docker exists (already upgraded) or without enough free space.
 # An interrupted run leaves only 19/upgrade, which the next run removes. Take a backup first all the same.
@@ -55,7 +55,9 @@ wait_ready() {
 "$engine" volume create "$run-socket" > /dev/null
 "$engine" run -d --name "$run-old" --network none -v "$volume:$root" -v "$run-socket:/run/postgresql" "$old_image" > /dev/null
 wait_ready "$run-old" /run/postgresql
-"$engine" run -d --name "$run-new" --network none -v "$volume:$root" -v "$run-socket:/old" -e PGDATA="$root/$new/upgrade" \
+# initdb writes the time zone of its environment into postgresql.conf; timestamptz text, ::date and date_trunc depend on it.
+timezone=$("$engine" exec "$run-old" psql -X -At -h /run/postgresql -U "$user" -d postgres -c 'SHOW timezone') || fail "cannot read the old server"
+"$engine" run -d --name "$run-new" --network none -v "$volume:$root" -v "$run-socket:/old" -e PGDATA="$root/$new/upgrade" -e TZ="$timezone" \
   -e POSTGRES_USER="$user" -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD="$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')" \
   "$new_image" > /dev/null
 wait_ready "$run-new" 127.0.0.1
@@ -64,7 +66,7 @@ echo "Copying PostgreSQL $old to $new ..."
 # The superuser exists in the new cluster already: its CREATE ROLE fails as pg_dumpall intends, the ALTER ROLE after it applies.
 "$engine" exec -e U="$user" "$run-new" sh -c 'set -o pipefail
   pg_dumpall -h /old -U "$U" | psql -X -q -U "$U" -d postgres 2> /tmp/restore.err > /dev/null
-  status=$?; cat /tmp/restore.err >&2
+  status=$?; grep -vF "ERROR:  role \"$U\" already exists" /tmp/restore.err >&2
   [ "$status" -eq 0 ] && ! grep -E "ERROR|FATAL|PANIC" /tmp/restore.err | grep -qvF "ERROR:  role \"$U\" already exists"' \
   || fail "the copy failed (above); $root/$old/docker is unchanged"
 
@@ -77,6 +79,7 @@ inventory='SELECT format($q$SELECT %L || $s$=$s$ || count(*) FROM %I.%I$q$, n.ns
 SELECT $s$extension $s$ || extname FROM pg_extension ORDER BY 1;'
 compare() {
   "$engine" exec -e U="$user" -e H="$1" -e Q="$inventory" "$run-new" sh -c '
+    psql -X -At -v ON_ERROR_STOP=1 -h "$H" -U "$U" -d postgres -c "SELECT format(\$\$setting %s %s\$\$, name, setting) FROM pg_settings WHERE name IN (\$\$TimeZone\$\$, \$\$log_timezone\$\$, \$\$DateStyle\$\$, \$\$IntervalStyle\$\$, \$\$lc_messages\$\$, \$\$lc_monetary\$\$, \$\$lc_numeric\$\$, \$\$lc_time\$\$, \$\$default_text_search_config\$\$) ORDER BY 1"
     psql -X -At -v ON_ERROR_STOP=1 -h "$H" -U "$U" -d postgres -c "SELECT rolname || md5(row(rolsuper, rolcreaterole, rolcreatedb, rolcanlogin, rolreplication, rolbypassrls, rolpassword)::text) FROM pg_authid WHERE oid = 10 OR oid >= 16384 ORDER BY 1"
     for db in $(psql -X -At -v ON_ERROR_STOP=1 -h "$H" -U "$U" -d postgres -c "SELECT datname FROM pg_database WHERE datallowconn ORDER BY 1"); do
       echo "database $db"; printf "%s\n" "$Q" | psql -X -At -v ON_ERROR_STOP=1 -h "$H" -U "$U" -d "$db"
@@ -84,7 +87,7 @@ compare() {
 }
 before=$(compare /old) after=$(compare /run/postgresql)
 [[ "$before" == "$after" ]] || { diff <(echo "$before") <(echo "$after") >&2 || true; fail "the copy differs (above); $root/$old/docker is unchanged"; }
-echo "$(grep -c '=' <<< "$before") tables with $(awk -F= '{s += $NF} END {print s}' <<< "$before") rows, the roles and extensions match in $(grep -c '^database ' <<< "$before") databases."
+echo "$(grep -c '=' <<< "$before") tables with $(awk -F= '{s += $NF} END {print s}' <<< "$before") rows, the roles, extensions and server settings (time zone, locale) match in $(grep -c '^database ' <<< "$before") databases."
 "$engine" exec "$run-new" vacuumdb -q -U "$user" --all --analyze-only
 
 # Clean shutdowns (the images stop with SIGINT, a fast shutdown), then the new cluster takes its final place.
