@@ -86,10 +86,10 @@ public sealed class ListObjectsHandler
         }
         if (string.Join(' ', SearchText.LookupWords(query.Q)) is { Length: > 0 } typed)
         {
-            // The name typed (or its start) first, diacritics and case aside: „luboš krbec“ finds Luboš Krbec before whoever only mentions him.
+            // The name typed (or its start) first, diacritics and case aside (the database folds both sides, as „ł“ is not a letter with a mark): „luboš krbec“ finds Luboš Krbec before whoever only mentions him.
             const string title = """lower(public.unaccent(btrim({alias}."Title")))""";
-            filter.UnderlyingCriteria.AddOrder(Order.Asc(Projections.Conditional(Expression.Sql(title + " = ?", typed, NHibernateUtil.String), Projections.Constant(0),
-                Projections.Conditional(Expression.Sql(title + " LIKE ?", Escape(typed) + "%", NHibernateUtil.String), Projections.Constant(1), Projections.Constant(2)))));
+            filter.UnderlyingCriteria.AddOrder(Order.Asc(Projections.Conditional(Expression.Sql(title + " = lower(public.unaccent(?))", typed, NHibernateUtil.String), Projections.Constant(ExactName),
+                Projections.Conditional(Expression.Sql(title + " LIKE lower(public.unaccent(?))", Escape(typed) + "%", NHibernateUtil.String), Projections.Constant(NamePrefix), Projections.Constant(OtherName)))));
         }
         var total = await filter.ToRowCountQuery().SingleOrDefaultAsync<int>(ct);
         var rows = total <= (page - 1) * ListObjects.PageSize ? [] : await filter
@@ -116,6 +116,9 @@ public sealed class ListObjectsHandler
             _ => false
         };
     }
+
+    /// <summary>Sort ranks of a typed name (ascending): the name itself, a name starting with it, whatever else matched by its fields; the last changed order within a rank.</summary>
+    private const int ExactName = 0, NamePrefix = 1, OtherName = 2;
 
     // PostgreSQL's ILIKE escapes with a backslash by default.
     private static string Escape(string text) => text.Replace("\\", "\\\\").Replace("%", @"\%").Replace("_", @"\_");

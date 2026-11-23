@@ -34,6 +34,7 @@ export async function drawContactQr(text: string): Promise<ContactQrCode> {
   const paths = [...bands, finder(QUIET_ZONE, QUIET_ZONE) + finder(far, QUIET_ZONE) + finder(QUIET_ZONE, far)]
     .map((d, band) => `<path class="atlas-qr-band" style="--qr-band:${band}" fill-rule="evenodd" d="${d}"/>`).join("");
   const side = size + 2 * QUIET_ZONE, now = Date.now(), again = now - (shown.get(text) ?? -Infinity) < REPLAY_AFTER_MS;
+  if (shown.size >= 200) shown.clear(); // the keys are whole cards: do not keep them all session
   shown.set(text, now);
   return { version, svg: `<svg xmlns="http://www.w3.org/2000/svg" class="atlas-qr"${again ? " data-shown" : ""} viewBox="0 0 ${side} ${side}"><rect width="${side}" height="${side}" fill="white"/><g fill="black">${paths}</g></svg>` };
 }
