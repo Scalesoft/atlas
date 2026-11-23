@@ -90,7 +90,7 @@ dotnet test Atlas.slnx -p:SkipFrontendBuild=true   # the full suite, normally le
 ```
 
 The server tests need PostgreSQL with pgvector; how to start it is described in [AGENTS.md](AGENTS.md#testing-testování)
-and in [docs/operations.md](docs/operations.md#testy). CI runs
+and in [docs/operations.md](docs/operations.md#testy). CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs
 the full suites on every pull request.
 
 The production build is `dotnet publish src/Atlas.Server/Atlas.Server.csproj -c Release -o artifacts/publish`; it builds
