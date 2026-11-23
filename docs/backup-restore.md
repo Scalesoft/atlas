@@ -16,7 +16,7 @@ Záloha obsahuje přihlašovací a obnovovací materiál. Přístup omezte stejn
 
 1. Ověřit identitu skutečného hostu, databáze a absolutní cesty všech dat. Vytvořit nový adresář zálohy; starší zálohu nepřepisovat.
 2. Zastavit tento aplikační host a ověřit, že do instalace nezapisuje další instance. Samotný transakční `pg_dump` nezajistí soulad databáze s právě přibývajícími soubory.
-3. Pomocí klienta PostgreSQL 18 vytvořit vlastní archiv: `pg_dump --format=custom --no-owner --no-privileges --file=database.dump`. Cílovou databázi a přihlášení předat bezpečnou konfigurací PostgreSQL, například prostředím a chráněným password file; heslo nepatří do argumentů příkazu.
+3. Pomocí klienta PostgreSQL 19 (verze serveru nebo novější) vytvořit vlastní archiv: `pg_dump --format=custom --no-owner --no-privileges --file=database.dump`. Cílovou databázi a přihlášení předat bezpečnou konfigurací PostgreSQL, například prostředím a chráněným password file; heslo nepatří do argumentů příkazu.
 4. Zkopírovat uvedené datové adresáře a odpovídající aplikaci. Zkontrolovat návratové kódy a vytvořit manifest SHA-256. Teprve po úplné záloze znovu spustit původní host nebo pokračovat plánovaným upgradem.
 
 ## Ověření obnovy

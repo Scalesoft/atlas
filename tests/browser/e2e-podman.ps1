@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Disposable Atlas browser acceptance in one Podman pod: the production PostgreSQL image (18.6 with pgvector), the published
+    Disposable Atlas browser acceptance in one Podman pod: the production PostgreSQL image (19 with pgvector), the published
     server and the official Playwright image. Everything is removed afterwards.
 
 .DESCRIPTION
@@ -75,7 +75,7 @@ param(
     # ASP.NET environment. Development allows the auth cookie over plain HTTP inside the pod;
     # Production requires HTTPS (CookieSecurePolicy.Always + HTTPS redirection).
     [string]$AspNetEnvironment = 'Development',
-    # Database image. Default: deploy/postgres/Dockerfile (postgres:18.6-alpine with pgvector, as in production) built for
+    # Database image. Default: deploy/postgres/Dockerfile (postgres:19.0-alpine with pgvector, as in production) built for
     # linux/amd64 by deploy/postgres/build.ps1; an image given here is used as-is and needs pgvector (migration 2026100520).
     [string]$PostgresImage = '',
     # Server runtime the publish directory is copied onto. Default: the Dockerfile stage `runtime` (git, OpenSSH), built from
