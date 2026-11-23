@@ -38,7 +38,7 @@ public sealed class SkillStore(ISession session)
         """;
 
     public sealed record Summary(Guid ContactId, Guid TagId, string Name, int? Self, string? SelfNote, int Peers, double? PeerAverage, int? Mine, string? MyVisibility,
-        string? MyNote, IReadOnlyList<SkillRater> Raters);
+        string? MyNote, IReadOnlyList<SkillRater> Raters, string? Group = null);
 
     /// <summary>The ratings of :contacts (in :tags, or all when null) as <paramref name="actor"/> may see them, one row per contact and topic.</summary>
     public Task<List<Summary>> SummariesAsync(UserAccount actor, bool admin, Guid[] contacts, Guid[]? tags, CancellationToken ct)
@@ -57,7 +57,8 @@ public sealed class SkillStore(ISession session)
               max(r."Visibility") FILTER (WHERE r."RaterId" = :actor),
               max(r."Note") FILTER (WHERE r."RaterId" = :actor),
               COALESCE(jsonb_agg(jsonb_build_object('name', r.rater, 'level', r."Level", 'visibility', r."Visibility", 'note', r."Note") ORDER BY r."Level" DESC, r.rater)
-                FILTER (WHERE NOT r.self AND r."RaterId" <> :actor AND (r."Visibility" = 'signed' OR :admin AND r."Visibility" = 'shared')), '[]')::text
+                FILTER (WHERE NOT r.self AND r."RaterId" <> :actor AND (r."Visibility" = 'signed' OR :admin AND r."Visibility" = 'shared')), '[]')::text,
+              (SELECT min(g."Name") FROM "TagRelation" k JOIN "Tag" g ON g."Id" = k."ParentId" WHERE k."TagId" = t."Id" AND k."Kind" = 'part_of')
             FROM rated r JOIN "Tag" t ON t."Id" = r."TagId"
             GROUP BY r."ContactId", t."Id", t."Name"
             HAVING bool_or(r."Visibility" <> 'private' OR r."RaterId" = :actor)
@@ -66,7 +67,7 @@ public sealed class SkillStore(ISession session)
                 ["contacts"] = contacts, ["tags"] = tags ?? [], ["alltags"] = tags is null, ["actor"] = actor.Id, ["admin"] = admin
             }, row => new Summary(row.GetGuid(0), row.GetGuid(1), row.GetString(2), Int(row, 3), Text(row, 4), (int)row.GetInt64(5),
                 row.IsDBNull(6) ? null : row.GetDouble(6), Int(row, 7), Text(row, 8), Text(row, 9),
-                JsonSerializer.Deserialize<SkillRater[]>(row.GetString(10), JsonSerializerOptions.Web) ?? []), ct);
+                JsonSerializer.Deserialize<SkillRater[]>(row.GetString(10), JsonSerializerOptions.Web) ?? [], Text(row, 11)), ct);
 
     public sealed record Evidence(Guid ContactId, Guid TagId, Guid PageId, string Title, string SpaceName, bool InContext);
 
@@ -144,15 +145,20 @@ public sealed class SkillStore(ISession session)
             """, new Dictionary<string, object> { ["actor"] = actor.Id, ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly, ["tag"] = tagId },
             row => row.GetBoolean(0), ct)).Single();
 
-    /// <summary>The topic with its aliases, the broader topics and the narrower ones (one level), each with how many people know it.</summary>
+    /// <summary>The topic with its aliases, the broader, narrower (one level) and related topics, each with how many people know it.</summary>
     public async Task<TopicView?> TopicAsync(Guid tagId, CancellationToken ct)
     {
         var rows = await session.ReadRowsAsync("""
             WITH people AS (SELECT r."TagId", count(DISTINCT r."ContactId") AS n FROM "SkillRating" r WHERE r."Visibility" <> 'private' GROUP BY r."TagId")
             SELECT 'topic', t."Id", t."Name", 0 FROM "Tag" t WHERE t."Id" = :tag AND t."MergedIntoId" IS NULL
             UNION ALL SELECT 'alias', a."TagId", a."Name", 0 FROM "TagAlias" a WHERE a."TagId" = :tag
-            UNION ALL SELECT 'parent', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r JOIN "Tag" t ON t."Id" = r."ParentId" LEFT JOIN people p ON p."TagId" = t."Id" WHERE r."TagId" = :tag
-            UNION ALL SELECT 'child', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r JOIN "Tag" t ON t."Id" = r."TagId" LEFT JOIN people p ON p."TagId" = t."Id" WHERE r."ParentId" = :tag
+            UNION ALL SELECT 'parent', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r JOIN "Tag" t ON t."Id" = r."ParentId" LEFT JOIN people p ON p."TagId" = t."Id"
+              WHERE r."TagId" = :tag AND r."Kind" = 'part_of'
+            UNION ALL SELECT 'child', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r JOIN "Tag" t ON t."Id" = r."TagId" LEFT JOIN people p ON p."TagId" = t."Id"
+              WHERE r."ParentId" = :tag AND r."Kind" = 'part_of'
+            UNION ALL SELECT 'related', t."Id", t."Name", COALESCE(p.n, 0)::int FROM "TagRelation" r
+              JOIN "Tag" t ON t."Id" = CASE WHEN r."TagId" = :tag THEN r."ParentId" ELSE r."TagId" END LEFT JOIN people p ON p."TagId" = t."Id"
+              WHERE r."Kind" = 'related' AND (r."TagId" = :tag OR r."ParentId" = :tag)
             """, new Dictionary<string, object> { ["tag"] = tagId }, row => (Kind: row.GetString(0), Id: row.GetGuid(1), Name: row.GetString(2), People: row.GetInt32(3)), ct);
         if (rows.FirstOrDefault(x => x.Kind == "topic") is not { Name: not null } topic)
         {
@@ -160,7 +166,7 @@ public sealed class SkillStore(ISession session)
         }
         TopicRef[] Of(string kind) => rows.Where(x => x.Kind == kind).OrderBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase).Select(x => new TopicRef(x.Id, x.Name, x.People)).ToArray();
         return new TopicView(topic.Id, topic.Name, rows.Where(x => x.Kind == "alias").Select(x => x.Name).Order(StringComparer.CurrentCultureIgnoreCase).ToArray(),
-            Of("parent"), Of("child"));
+            Of("parent"), Of("child"), Of("related"));
     }
 
     /// <summary>The rater's rating replaced (or removed with a null level).</summary>
@@ -201,8 +207,8 @@ public sealed class SkillStore(ISession session)
               ON CONFLICT ("ContactId","TagId","RaterId") DO UPDATE SET "Level" = GREATEST("SkillRating"."Level", EXCLUDED."Level"),
                 "Note" = COALESCE("SkillRating"."Note", EXCLUDED."Note");
             DELETE FROM "SkillRating" WHERE "TagId" = :from;
-            INSERT INTO "TagRelation"("TagId","ParentId","CreatedAt","CreatedById")
-              SELECT CASE WHEN r."TagId" = :from THEN :into ELSE r."TagId" END, CASE WHEN r."ParentId" = :from THEN :into ELSE r."ParentId" END, r."CreatedAt", r."CreatedById"
+            INSERT INTO "TagRelation"("TagId","ParentId","Kind","CreatedAt","CreatedById")
+              SELECT CASE WHEN r."TagId" = :from THEN :into ELSE r."TagId" END, CASE WHEN r."ParentId" = :from THEN :into ELSE r."ParentId" END, r."Kind", r."CreatedAt", r."CreatedById"
               FROM "TagRelation" r WHERE (r."TagId" = :from OR r."ParentId" = :from)
                 AND (CASE WHEN r."TagId" = :from THEN :into ELSE r."TagId" END) <> (CASE WHEN r."ParentId" = :from THEN :into ELSE r."ParentId" END)
               ON CONFLICT DO NOTHING;
@@ -221,17 +227,45 @@ public sealed class SkillStore(ISession session)
     /// <summary>Whether <paramref name="parent"/> is <paramref name="tag"/> or lies under it (a link would make a cycle).</summary>
     public async Task<bool> WouldCycleAsync(Guid tag, Guid parent, CancellationToken ct)
         => (await session.ReadRowsAsync("""
-            WITH RECURSIVE up AS (SELECT CAST(:parent AS uuid) AS id UNION SELECT r."ParentId" FROM "TagRelation" r JOIN up ON r."TagId" = up.id)
+            WITH RECURSIVE up AS (SELECT CAST(:parent AS uuid) AS id UNION SELECT r."ParentId" FROM "TagRelation" r JOIN up ON r."TagId" = up.id AND r."Kind" = 'part_of')
             SELECT EXISTS (SELECT 1 FROM up WHERE id = :tag)
             """, new Dictionary<string, object> { ["tag"] = tag, ["parent"] = parent }, row => row.GetBoolean(0), ct)).Single();
 
-    public async Task LinkAsync(Guid tag, Guid parent, bool remove, Guid actor, CancellationToken ct)
-        => await (remove
-            ? session.CreateSQLQuery("""DELETE FROM "TagRelation" WHERE "TagId" = :tag AND "ParentId" = :parent""")
+    /// <summary>The link of <paramref name="kind"/> set or removed; a related pair is one row, the smaller id first, so either order finds it.</summary>
+    public async Task LinkAsync(Guid tag, Guid parent, string kind, bool remove, Guid actor, CancellationToken ct)
+    {
+        if (kind == "related" && tag.CompareTo(parent) > 0)
+        {
+            (tag, parent) = (parent, tag);
+        }
+        await (remove
+            ? session.CreateSQLQuery("""DELETE FROM "TagRelation" WHERE "TagId" = :tag AND "ParentId" = :parent AND "Kind" = :kind""")
             : session.CreateSQLQuery("""
-                INSERT INTO "TagRelation"("TagId","ParentId","CreatedAt","CreatedById") VALUES (:tag, :parent, :now, :actor) ON CONFLICT DO NOTHING
+                INSERT INTO "TagRelation"("TagId","ParentId","Kind","CreatedAt","CreatedById") VALUES (:tag, :parent, :kind, :now, :actor)
+                ON CONFLICT ("TagId","ParentId") DO UPDATE SET "Kind" = EXCLUDED."Kind"
                 """).SetParameter("now", DateTime.UtcNow, NHibernateUtil.UtcDateTime).SetParameter("actor", actor))
-            .SetParameter("tag", tag).SetParameter("parent", parent).ExecuteUpdateAsync(ct);
+            .SetParameter("tag", tag).SetParameter("parent", parent).SetParameter("kind", kind).ExecuteUpdateAsync(ct);
+    }
+
+    /// <summary>The person–topic pairs the reader may see a rating of (at most 3000), in topics of readable pages of <paramref name="spaceId"/> when given.</summary>
+    public Task<List<(Guid ContactId, Guid TagId)>> GraphPairsAsync(UserAccount actor, bool aiScopeOnly, Guid? spaceId, CancellationToken ct)
+        => session.ReadRowsAsync($$"""
+            {{PageTagStore.AccessiblePages}}
+            SELECT DISTINCT r."ContactId", r."TagId" FROM "SkillRating" r JOIN "Tag" t ON t."Id" = r."TagId" AND t."MergedIntoId" IS NULL
+            WHERE (r."Visibility" <> 'private' OR r."RaterId" = :actor)
+              AND (NOT :inspace OR EXISTS (SELECT 1 FROM "PageTag" pt JOIN accessible p ON p."Id" = pt."PageId"
+                WHERE pt."TagId" = r."TagId" AND pt."ActiveTo" IS NULL AND p."SpaceId" = :space))
+            LIMIT 3000
+            """, new Dictionary<string, object>
+            {
+                ["actor"] = actor.Id, ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly, ["inspace"] = spaceId is not null, ["space"] = spaceId ?? Guid.Empty
+            }, row => (row.GetGuid(0), row.GetGuid(1)), ct);
+
+    /// <summary>The links among :tags: part_of (narrower → broader) and related.</summary>
+    public Task<List<(Guid TagId, Guid ParentId, string Kind)>> RelationsAmongAsync(Guid[] tags, CancellationToken ct)
+        => session.ReadRowsAsync("""
+            SELECT "TagId", "ParentId", "Kind" FROM "TagRelation" WHERE "TagId" = ANY(:tags) AND "ParentId" = ANY(:tags)
+            """, new Dictionary<string, object> { ["tags"] = tags }, row => (row.GetGuid(0), row.GetGuid(1), row.GetString(2)), ct);
 
     /// <summary>A merged contact's ratings go to the contact it went into (MergeContactsHandler); one rater's two keep the higher level.</summary>
     public static Task MoveContactAsync(ISession session, Guid from, Guid into, CancellationToken ct)

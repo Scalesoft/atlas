@@ -156,12 +156,44 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         {
             throw new ApiException(404, "Téma nebylo nalezeno.", "topic_missing");
         }
-        if (!command.Remove && await store.WouldCycleAsync(command.TagId, command.ParentId, ct))
+        if (command.Kind is not ("part_of" or "related"))
+        {
+            throw new ApiException(400, "Vazba je part_of (je součástí) nebo related (souvisí).", "invalid_argument");
+        }
+        if (command.TagId == command.ParentId)
+        {
+            throw new ApiException(400, "Téma nemůže souviset samo se sebou.", "invalid_argument");
+        }
+        if (!command.Remove && command.Kind == "part_of" && await store.WouldCycleAsync(command.TagId, command.ParentId, ct))
         {
             throw new ApiException(400, "Téma nemůže být součástí sebe ani svého podtématu.", "invalid_argument");
         }
-        await store.LinkAsync(command.TagId, command.ParentId, command.Remove, actor.Id, ct);
+        await store.LinkAsync(command.TagId, command.ParentId, command.Kind, command.Remove, actor.Id, ct);
         return (await store.TopicAsync(command.TagId, ct))!;
+    }
+
+    /// <summary>At most this many topics in the graph: the ones most people know.</summary>
+    private const int GraphTopics = 60;
+
+    public async Task<SkillGraph> Handle(GetSkillGraph query, CancellationToken ct)
+    {
+        var actor = await guard.LockIdentityAsync(null, false, ct);
+        var pairs = await store.GraphPairsAsync(actor, Ai(query.AiScopeOnly), query.SpaceId, ct);
+        var live = await directory.LiveAsync(actor, pairs.Select(x => x.ContactId).Distinct().ToArray(), ct);
+        var people = live.Values.Where(x => x is { State: "ok", ContactId: not null, Contact: not null }).DistinctBy(x => x.ContactId)
+            .ToDictionary(x => x.ContactId!.Value, x => x.Contact!);
+        var admin = await store.IsWikiAdminAsync(actor, ct);
+        var summaries = people.Count == 0 ? [] : await store.SummariesAsync(actor, admin, people.Keys.ToArray(), pairs.Select(x => x.TagId).Distinct().ToArray(), ct);
+        var byTopic = summaries.GroupBy(x => x.TagId).OrderByDescending(x => x.Count()).ThenBy(x => x.First().Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
+        var kept = byTopic.Take(GraphTopics).ToArray();
+        var keptPeople = kept.SelectMany(x => x).Select(x => x.ContactId).ToHashSet();
+        var nodes = new List<SkillNode>();
+        nodes.AddRange(kept.Select(x => new SkillNode(x.Key, "topic", x.First().Name, People: x.Count())));
+        nodes.AddRange(people.Where(x => keptPeople.Contains(x.Key)).Select(x => new SkillNode(x.Key, "person", x.Value["name"]?.ToString() ?? "",
+            x.Value["title"]?.ToString(), x.Value["organization"]?.ToString())));
+        var links = kept.SelectMany(x => x).Select(x => new SkillLink(x.ContactId, x.TagId, "skill", View(x, admin, 0) is var view ? view.Score ?? view.Mine : null)).ToList();
+        links.AddRange((await store.RelationsAmongAsync(kept.Select(x => x.Key).ToArray(), ct)).Select(x => new SkillLink(x.TagId, x.ParentId, x.Kind)));
+        return new SkillGraph(nodes, links, byTopic.Length > kept.Length);
     }
 
     /// <summary>The live contact the reader may read (a merge followed) and whether the reader is a wiki admin; else 404.</summary>
@@ -187,7 +219,7 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
             ? ((x.Self ?? 0) + x.PeerAverage!.Value * x.Peers) / (x.Peers + (x.Self is null ? 0 : 1))
             : x.Self;
         return new SkillView(x.TagId, x.Name, score is { } value ? Math.Round(value, 1) : null, x.Self, x.SelfNote, showPeers ? x.Peers : 0,
-            !showPeers && x.Peers > 0, x.Mine, x.MyVisibility, x.MyNote, x.Raters, evidence);
+            !showPeers && x.Peers > 0, x.Mine, x.MyVisibility, x.MyNote, x.Raters, evidence, x.Group);
     }
 
     /// <summary>The fold of <see cref="SkillStore.Fold"/> for text in memory (role and context against a contact's fields).</summary>

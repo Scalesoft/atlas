@@ -48,9 +48,13 @@ public static class SkillsModule
             .Produces<TopicView>().ProducesProblem(400).ProducesProblem(404)
             .WithSummary("Merge a topic into another: its name becomes an alias, its ratings, links and page tags move. Cannot be undone by a call.");
         var link = group.MapPut("/skills/topics/{id:guid}/parents", async (Guid id, LinkTopicsRequest request, IMessageBus bus, CancellationToken ct)
-                => Results.Ok(await bus.InvokeAsync<TopicView>(new LinkTopics(id, request.ParentId, request.Remove), ct)))
+                => Results.Ok(await bus.InvokeAsync<TopicView>(new LinkTopics(id, request.ParentId, request.Remove, request.Kind ?? "part_of"), ct)))
             .Produces<TopicView>().ProducesProblem(400).ProducesProblem(404)
-            .WithSummary("Make a topic part of a broader one (C# of .NET), or with remove not any more.");
+            .WithSummary("Make a topic part of a broader one (kind part_of, C# of .NET) or related to another (kind related), or with remove not any more.");
+        var graph = group.MapGet("/skills/graph", async (Guid? spaceId, IMessageBus bus, CancellationToken ct)
+                => Results.Ok(await bus.InvokeAsync<SkillGraph>(new GetSkillGraph(spaceId), ct)))
+            .Produces<SkillGraph>().RequireRateLimiting("search")
+            .WithSummary("Who knows what as a graph: people and the topics they know (the level the reader may see), and the topics' part_of and related links; spaceId keeps the topics of that space's pages.");
         if (!personalApi)
         {
             return;
@@ -58,6 +62,7 @@ public static class SkillsModule
         read.WithName("GetContactSkills");
         experts.WithName("FindExperts");
         topics.WithName("SuggestTopics");
+        graph.WithName("GetSkillGraph");
         rate.WithName("RateSkill").RequireAuthorization(PersonalApiEndpoints.WritePolicy).AuditApiWrite(ApiOperations.SkillRate);
         merge.WithName("MergeTopics").RequireAuthorization(PersonalApiEndpoints.WritePolicy).AuditApiWrite(ApiOperations.TopicMerge);
         link.WithName("LinkTopics").RequireAuthorization(PersonalApiEndpoints.WritePolicy).AuditApiWrite(ApiOperations.TopicLink);

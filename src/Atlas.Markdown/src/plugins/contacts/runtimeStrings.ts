@@ -23,7 +23,6 @@ export const contactsStrings: MarkdownStrings['contacts'] = registerMarkdownStri
   skillsMore: count => `+${count}`,
   skillsRate: 'Ohodnotit',
   skillsAdd: 'Přidat znalost',
-  intentionSkills: 'Umí…',
   downloadAll: 'Stáhnout všechny kontakty',
   editContactTitle: 'Upravit kontakt',
   addContactTitle: 'Přidat kontakt',

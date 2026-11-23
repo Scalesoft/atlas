@@ -10,7 +10,7 @@ public sealed record ContactSkills(Guid ContactId, string Name, bool Self, IRead
 /// colleagues counted in it (0 below the threshold, <see cref="FewPeers"/> then says some rated it); <see cref="Raters"/> the signed ratings,
 /// for a wiki admin every shared one; <see cref="Evidence"/> the readable pages of the topic the person wrote or is mentioned on.</summary>
 public sealed record SkillView(Guid TagId, string Name, double? Score, int? Self, string? SelfNote, int Peers, bool FewPeers, int? Mine, string? MyVisibility, string? MyNote,
-    IReadOnlyList<SkillRater> Raters, int Evidence);
+    IReadOnlyList<SkillRater> Raters, int Evidence, string? Group = null);
 
 public sealed record SkillRater(string Name, int Level, string Visibility, string? Note);
 
@@ -21,7 +21,17 @@ public sealed record RateSkillRequest(string Topic, int? Level, string? Visibili
 /// <summary><see cref="SelfContactId"/>: the reader's own contact, for „Přidat sebe“ (null without one).</summary>
 public sealed record ExpertList(TopicView? Topic, IReadOnlyList<TopicRef> Similar, IReadOnlyList<Expert> People, Guid? SelfContactId = null);
 
-public sealed record TopicView(Guid Id, string Name, IReadOnlyList<string> Aliases, IReadOnlyList<TopicRef> Parents, IReadOnlyList<TopicRef> Children);
+public sealed record TopicView(Guid Id, string Name, IReadOnlyList<string> Aliases, IReadOnlyList<TopicRef> Parents, IReadOnlyList<TopicRef> Children, IReadOnlyList<TopicRef>? Related = null);
+
+/// <summary>Who knows what as a graph (skills spec §7): people and topics, person–topic links with the level the reader may see
+/// (<see cref="SkillLink.Level"/> null below the anonymity threshold), topic–topic links part_of and related. <see cref="Truncated"/>: the
+/// wiki has more than the graph shows (the topics most people know are kept).</summary>
+public sealed record SkillGraph(IReadOnlyList<SkillNode> Nodes, IReadOnlyList<SkillLink> Links, bool Truncated);
+
+/// <summary><see cref="Kind"/> person (Id the contact) or topic (Id the tag); <see cref="Organization"/> of a person, for the filter.</summary>
+public sealed record SkillNode(Guid Id, string Kind, string Name, string? Title = null, string? Organization = null, int People = 0);
+
+public sealed record SkillLink(Guid Source, Guid Target, string Kind, double? Level = null);
 
 public sealed record TopicRef(Guid Id, string Name, int People, string? Matched = null);
 
@@ -34,4 +44,4 @@ public sealed record TopicSuggestions(IReadOnlyList<TopicRef> Items);
 
 public sealed record MergeTopicsRequest(Guid IntoId);
 
-public sealed record LinkTopicsRequest(Guid ParentId, bool Remove = false);
+public sealed record LinkTopicsRequest(Guid ParentId, bool Remove = false, string? Kind = null);

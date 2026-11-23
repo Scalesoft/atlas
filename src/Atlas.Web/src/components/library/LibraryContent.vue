@@ -20,6 +20,7 @@ import type { LibraryPart } from "./LibraryPage.vue";
 const SpaceDirectory = lazyComponent(() => import("../SpaceDirectory.vue"), { loading: LoadingSkeleton });
 const PersonalLibraryPanel = lazyComponent(() => import("../PersonalLibraryPanel.vue"), { loading: LoadingSkeleton });
 const ContactDirectory = lazyComponent(() => import("../contacts/ContactDirectory.vue"), { loading: LoadingSkeleton });
+const SkillGraph = lazyComponent(() => import("../contacts/SkillGraph.vue"), { loading: LoadingSkeleton });
 const ContactOverview = lazyComponent(() => import("../contacts/ContactOverview.vue"), { loading: LoadingSkeleton });
 const PersonalItems = lazyComponent(() => import("../personal/PersonalItems.vue"), { loading: LoadingSkeleton });
 const NotificationInbox = lazyComponent(() => import("../notifications/NotificationInbox.vue"), { loading: LoadingSkeleton });
@@ -60,7 +61,8 @@ const listTab = computed<LibraryTab | undefined>(() =>
   <SpaceDirectory v-else-if="view === 'spaces'" :key="`spaces:${userId}`" :spaces="spaces" :can-create="canCreate" :can-manage="canManage" :pending-ids="pendingIds" :limit="limit"
     :storage-key="`atlas:reading:${userId}:library-view`" @open="emit('open', $event)" @pin="(space, pinned) => emit('pin', space, pinned)" @create="emit('create')" />
   <!-- Kontakty: the overview of where people occur, with the directory to edit as its Adresář (UX1-14). -->
-  <ContactOverview v-else-if="view === 'contacts'" :key="`contacts:${userId}`"><template #directory><ContactDirectory :initial-query="query" /></template></ContactOverview>
+  <ContactOverview v-else-if="view === 'contacts'" :key="`contacts:${userId}`" :focus="query"><template #directory><ContactDirectory :initial-query="query" /></template>
+    <template #skills><SkillGraph :spaces="spaces" /></template></ContactOverview>
   <PersonalItems v-else-if="view === 'personal' || view === 'shared'" :key="`${view}:${userId}`" :mode="view === 'personal' ? 'mine' : 'shared'"
     :refresh-key="refreshKey" />
   <NotificationInbox v-else-if="view === 'notifications'" :key="`notifications:${userId}`" :refresh-key="notificationSignal" @unread="emit('unread', $event)" />

@@ -134,16 +134,17 @@ public sealed class SkillMcpTools(IMessageBus bus)
 
     [McpServerTool(Name = "atlas_link_topics", Title = "Téma je součástí", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = false)]
     [McpToolScope(ApiScopes.Write)]
-    [AssistantDescription("Označí téma tagId jako součást širšího parentId (C# součástí .NET); remove: true vazbu zruší.")]
+    [AssistantDescription("Označí téma tagId jako součást širšího parentId (C# součástí .NET), s kind: related jako související; remove: true vazbu zruší.")]
     [Description("Označí téma (tagId) jako součást širšího tématu (parentId), např. C# je součástí .NET: kdo hledá širší téma, najde i lidi s užším. " +
         "remove: true vazbu zruší. Téma nemůže být součástí sebe ani svého podtématu.")]
     public async Task<CallToolResult> LinkAsync(
         [Description("tagId užšího tématu.")] string tagId,
         [Description("tagId širšího tématu.")] string parentId,
         [Description("true vazbu zruší.")] bool remove = false,
+        [Description("part_of (je součástí, výchozí) nebo related (souvisí).")] string kind = "part_of",
         CancellationToken ct = default)
     {
-        var topic = await bus.InvokeAsync<TopicView>(new LinkTopics(McpArguments.RequiredId(tagId, "tagId"), McpArguments.RequiredId(parentId, "parentId"), remove), ct);
+        var topic = await bus.InvokeAsync<TopicView>(new LinkTopics(McpArguments.RequiredId(tagId, "tagId"), McpArguments.RequiredId(parentId, "parentId"), remove, kind), ct);
         return McpText.Result($"Téma {McpText.Line(topic.Name, 60)} je součástí: {(topic.Parents.Count == 0 ? "ničeho" : string.Join(", ", topic.Parents.Select(x => x.Name)))}.",
             JsonSerializer.SerializeToNode(topic, Json)!.AsObject());
     }

@@ -58,7 +58,7 @@ watch(() => [props.row.id, props.row.typeId], async () => {
       <LoadingSkeleton v-if="contact?.status === 'loading'" :rows="3" :label="t.detail.loading" />
       <EmptyState v-else-if="contact?.status === 'missing'" compact icon="lock" :title="t.detail.missingTitle" :text="t.detail.missingText" />
       <EmptyState v-else-if="contact?.status === 'failed'" compact icon="alert" :title="t.detail.failedTitle" :text="contact.error" />
-      <template v-else-if="contact?.status === 'ready'"><ContactCard :contact="contact.data" /><ContactSkillLine :key="row.id" :contact-id="row.id" /></template>
+      <template v-else-if="contact?.status === 'ready'"><ContactCard :contact="contact.data" /><ContactSkillLine :key="row.id" :contact-id="row.id" bars :name="title" /></template>
       <dl class="content-detail-facts">
         <dt>{{ t.detail.kind }}</dt><dd>{{ type.label }}</dd>
         <template v-if="row.path"><dt>{{ t.detail.location }}</dt><dd>{{ row.hostId ? t.detail.belongsTo(row.path) : row.path }}</dd></template>

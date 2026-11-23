@@ -47,6 +47,8 @@ const entry = {
   nameOfferIs: name => `Je to ${name}`,
   nameOfferNo: 'Není to on/ona',
   nameOfferNone: 'Nikdo z nich',
+  // The actions menu's „Umí…“ on a linked person (names.ts contactIntentions), which loads with the entry.
+  intentionSkills: 'Umí…',
 } satisfies Partial<MarkdownStrings['contacts']>
 /** Keys registered here; ./runtimeStrings adds the rest when the lazy runtime loads. */
 export type ContactsEntryKey = keyof typeof entry

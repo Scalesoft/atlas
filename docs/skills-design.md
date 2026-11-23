@@ -33,8 +33,8 @@ Téma je existující štítek. Štítek „.NET“ na stránce a téma „.NET�
   vyšší úroveň a novější poznámka), aktuální přiřazení B ke stránkám se uzavřou a otevřou pro A (historie `PageTag` zůstane).
   B se už nenabízí. Slučovat smí každý přihlášený (komunitní údržba); sloučení nejde vrátit voláním
   — proto ho UI i MCP potvrzují.
-- **Vazby** `TagRelation(TagId, ParentId)`: „je součástí“ (C# je součástí .NET, směrové, bez cyklů). Kdo hledá „.NET“, vidí i lidi
-  s „C#“ (užší témata, jedna úroveň), označené „přes C#“. Vazbu „souvisí“ 5.1 nemá (podobná témata dává § 3).
+- **Vazby** `TagRelation(TagId, ParentId, Kind)`: `part_of` „je součástí“ (C# je součástí .NET, směrové, bez cyklů) a `related`
+  „souvisí“ (jeden řádek, menší id první). Kdo hledá „.NET“, vidí i lidi s „C#“ (užší témata, jedna úroveň), označené „přes C#“.
 
 ### 2.2 Hodnocení osoba–téma
 
@@ -116,32 +116,58 @@ Nástroje respektují vyloučení prostorů z AI (důkazy z nich se nevrací).
 | `atlas_get_skills` (čtení) | `GET /contacts/{contactId}/skills` | co osoba umí (souhrny, vlastní hodnocení, podepsaná hodnocení, důkazy, u sebe návrhy) |
 | `atlas_rate_skill` (zápis) | `PUT /contacts/{contactId}/skills` | hodnocení jménem vlastníka tokenu: téma názvem (založí štítek), úroveň 1–5 nebo `null` = smazat, viditelnost, poznámka |
 | `atlas_merge_topics` (zápis, `confirm`) | `POST /skills/topics/{id}/merge` | sloučení B → A po potvrzení člověkem |
-| `atlas_link_topics` (zápis) | `PUT /skills/topics/{id}/parents` | vazba „je součástí“, i smazání (vazba „souvisí“ v 5.1 není) |
+| `atlas_link_topics` (zápis) | `PUT /skills/topics/{id}/parents` | vazba `kind` part_of (je součástí) nebo related (souvisí), i smazání |
+| — (čtení) | `GET /skills/graph?spaceId` | graf kdo–co: uzly lidé a témata, hrany s úrovní (pod prahem bez čísla) a vazby témat |
 
 Našeptávač témat: `GET /skills/topics?q` (název, alias, podobný zápis; existující první).
 
-## 7. UI — uvnitř karty osoby, žádná nová obrazovka
+## 7. UI — v kartě osoby a v Kontaktech, žádná nová obrazovka
 
-Osoby už Atlas má: **kontakt** je jedna entita sdílená napříč wiki a prostory. Znalosti se proto ukazují tam, kde člověka už vidíte,
-a jen na vyžádání (klik); karta kontaktu ani adresář se nezahlcují.
+Osoby už Atlas má: **kontakt** je jedna entita sdílená napříč wiki a prostory. Znalosti se ukazují tam, kde člověka už vidíte, a téma
+i graf žijí v **Knihovna → Kontakty** (stávající přepínač Adresář / Celá wiki / **Kdo co umí**), takže nepřibyl žádný navigační vzor.
 
-1. **Karta osoby po kliku** (čtecí karta pluginu kontaktů, `readerSkills`): hned pod jménem řádek **Umí** — témata jako štítky s pěti
-   tečkami úrovně, nejlepší první, nejvýš 6 a +N. Karta se ukáže hned, znalosti se dočtou z `GET /contacts/{id}/skills`, místo drží
-   skryté, takže nic neposkočí. Téma vede na „kdo další to umí“ (`#/library/contacts?q=<téma>`). **Ohodnotit** / **Přidat znalost**
-   otevře panel hodnocení u téže osoby (`rateSkills`).
-2. **Panel kontaktu pisatele** (`PageContactEditor`) a **detail kontaktu v doku** (`ContentDetail`): stejný řádek (`ContactSkillLine`);
-   Ohodnotit tu panel rozbalí pod řádkem (InlineReveal), protože druhý popover ukotvený v panelu by se s ním zavřel.
-3. **Panel hodnocení** (`SkillRatePanel`): témata osoby s vaší úrovní (klik je vyplní k úpravě/odebrání), pole tématu — existující téma
-   (i podle aliasu a podobného zápisu) první a předvybrané, Enter ho vezme, „Nové téma …“ až poslední —, úroveň 1–5 (OptionPills),
-   kdo to uvidí (vlastní: Všichni / Jen já; kolega: Anonymně / S mým jménem / Jen já), poznámka „jak“, Uložit. Na vlastní kartě i
-   „Z vaší práce“: témata stránek, které jste psali (jen návrh).
-4. **Kdo umí X** = hledání v **Knihovna → Kontakty** (`SkillExperts`): nad kontakty nalezenými podle údajů stojí lidé, kteří téma umí,
-   seřazení podle skóre, s důvodem (úroveň, kdo to říká, jak, počet stránek). Řádek tématu ukazuje jiné zápisy, širší téma a
-   **Možná totéž → Sloučit** (potvrzovací dialog). Hláška „žádný kontakt“ se nezobrazí, když téma lidi našlo.
-5. **AI**: chat i MCP (`atlas_find_experts`, § 5, 6).
+1. **Karta osoby po kliku** (čtecí karta pluginu kontaktů, `readerSkills`): pod jménem řádek **Umí** — témata jako štítky s pěti tečkami,
+   nejlepší první, nejvýš 6 a +N; dočte se po kartě, místo drží skryté. Téma vede na jeho dashboard (`#/library/contacts?q=<téma>`).
+   **Ohodnotit** / **Přidat znalost** otevře panel hodnocení (`rateSkills`). Menu akcí čipu (Ctrl+. / Ctrl+Space / pravé tlačítko) má **Umí…**.
+2. **Panel kontaktu pisatele** (`PageContactEditor`): stejný řádek (`ContactSkillLine`), Ohodnotit rozbalí panel pod řádkem (InlineReveal).
+   **Detail kontaktu v doku** (`ContentDetail`) ukazuje místo čipů **pruhy znalostí** (`SkillBars`): pruh na téma, délka = úroveň, seskupené
+   podle širšího tématu (shluky, .NET nad C#), zbytek „Další“. Pruhy místo radaru: čtou se při libovolném počtu témat i na 375 px.
+3. **Panel hodnocení** (`SkillRatePanel`, pole tématu `TopicField`): existující téma (i alias a podobný zápis) první a předvybrané, Enter,
+   „Nové téma …“ až pod podobnými; pak 1–5 a Enter uloží. Viditelnost (vlastní: Všichni / Jen já; kolega: Anonymně / S mým jménem / Jen já),
+   poznámka „jak“, na vlastní kartě „Z vaší práce“.
+4. **Dashboard tématu** = hledání tématu v Adresáři (`SkillExperts`): kdo téma umí (seřazeno podle skóre, role, organizace, proč), **rozložení
+   úrovní** (malý sloupcový graf 1–5), **vazby** Je součástí / Části / Souvisí s odebráním a přidáním (+ Vazba: druh a `TopicField`),
+   **stránky k tématu** (výpis štítku stránek), **Přidat sebe** a **Přidat lidi** (víc kontaktů najednou přes `SearchableTags`, lidé
+   organizací tématu první, jedna úroveň), „Možná totéž → Sloučit“. Hláška „žádný kontakt“ se nezobrazí, když téma lidi našlo.
+5. **Graf kdo–co** (`SkillGraph`, třetí volba přepínače v Kontaktech): lidé ↔ témata (síla čáry = úroveň, kterou čtenář smí vidět),
+   témata ↔ témata (je součástí plně, souvisí čárkovaně). Filtry organizace (z lidí grafu), prostor (témata jeho stránek, `GET /skills/graph?spaceId`)
+   a text tématu (téma, jeho sousedé a jejich lidé). Klik na téma otevře jeho dashboard, na osobu její kartu pod grafem (ContactCard + pruhy).
+   ECharts s dynamickým importem jako `HistoryActivityChart` (renderer editoru `a-chart` bere jen tabulku). Graf/Seznam: seznam je týž graf
+   pro klávesnici; pod 680 px místa (telefon) je jen seznam. Graf drží nejvýš 60 témat, která zná nejvíc lidí (poznámka pod ním).
+6. **AI**: chat i MCP (`atlas_find_experts`, `atlas_link_topics` s `kind`, § 5, 6).
 
-Graf kdo–co, dashboard a samostatná obrazovka: **mimo 5.1**. Vzhled z existujících tokenů a štítků stránek; rozložení na 375 px bez
-vodorovného posuvníku (ověřeno), texty cs + en.
+Vzhled z existujících tokenů a štítků stránek (témata fialově jako štítek, světlý i tmavý režim), skeleton s odkladem, stagger, fokus
+viditelný, texty cs + en. Ověřeno na 1440 px (světlý i tmavý) a 375 px, jako správce i jako běžný uživatel bez práv správce.
+
+## 7a. Stovky témat a lidí
+
+Témat budou stovky (u jednoho člověka i desítky až stovky). Nic se proto neukazuje celé najednou; vždy nejdřív to podstatné a zbytek
+na jedno kliknutí nebo přes filtr. Zátěžová ukázka je v galerii (`#/gallery/skills`, „Stovky témat“: 240 témat jedné osoby ve 24 skupinách,
+téma se 40 lidmi, wiki s 320 tématy a 90 lidmi).
+
+| Místo | Co se ukáže | Zbytek |
+|---|---|---|
+| Řádek **Umí** v kartě osoby / panelu kontaktu | 6 nejlepších témat | +N (vede na celý přehled) |
+| **Pruhy znalostí** osoby (dok, osoba v grafu) | prvních 6 skupin (shluky podle „je součástí“), v každé 5 nejlepších | „Zobrazit další (N)“ ve skupině, „Dalších N skupin“, od 20 témat **filtr** (otevře všechny shody) |
+| **Dashboard tématu** | 12 karet lidí (nejlepší první; server vrací nejvýš 50) | „Zobrazit další (N)“ po 12 |
+| **Graf kdo–co** | nejvýš 60 témat, která zná nejvíc lidí, s jejich lidmi; nad 80 uzlů hustší rozložení a jména lidí jen při najetí | filtr tématu, organizace a prostoru; poznámka „Ukazují se témata, která zná nejvíc lidí“; **Seznam** ukáže totéž jako řádky (u tématu 8 lidí a +N) |
+| Našeptávač témat | 5 nejbližších (přesný zápis, alias, začátek, podobný) | psaním dál |
+
+Skupiny, karty a řádky mimo obraz se nevykreslují (`content-visibility`), takže i velký seznam drží rychlost. Proti množení témat
+pomáhá hlavně § 3: jiný zápis se spojí sám, podobné nabídne „Možná totéž → Sloučit“, a vazba „je součástí“ z nich dělá shluky.
+
+**Karty lidí** v dashboardu jsou stejně výrazné jako kontakt na tabuli (rámeček, stín, celá karta kontaktu s fotkou, funkcí a organizací),
+pod nimi úroveň slovy s tečkami, Ohodnotit a proč (kdo to potvrdil, jak, kolik stránek).
 
 ## 8. Migrace
 
@@ -151,6 +177,7 @@ nad existujícími štítky a stránkami a ověří, že nic nezměnila.
 ## 9. Mimo rozsah (5.1)
 
 - AI podobnost témat přes embeddingy (fáze 2, § 3).
+- Samostatná obrazovka nebo trasa pro téma či graf (vše v Kontaktech).
 - Automatické hodnocení z obsahu (záměrně nikdy, jen návrhy).
 - Notifikace „někdo vás ohodnotil“, žádosti o doporučení, historie hodnocení v čase.
 - Import znalostí z HR systémů / LinkedIn.
@@ -158,7 +185,7 @@ nad existujícími štítky a stránkami a ověří, že nic nezměnila.
 
 ## 10. Rozhodnutí vlastníka (2026-11-23)
 
-1. **UI**: žádný dashboard ani rozšířená karta kontaktu („moc to tam cpeš“); znalosti v kartě, která se otevře klikem na osobu, načítané
+1. **UI**: žádná samostatná obrazovka ani rozšířená karta kontaktu („moc to tam cpeš“; dashboard a graf později v Kontaktech, bod 7); znalosti v kartě, která se otevře klikem na osobu, načítané
    postupně. Osoby = kontakty sdílené napříč prostory.
 2. **Hodnocení od kolegů**: ano; průměr až od **3** sdílených hodnocení; **správce wiki vidí všechna** sdílená hodnocení se jmény
    hodnotitelů (soukromá `private` nevidí nikdo kromě autora).
@@ -170,12 +197,14 @@ nad existujícími štítky a stránkami a ověří, že nic nezměnila.
    - **Karta osoby / panel kontaktu / dok** → Ohodnotit (`SkillRatePanel`): jedno pole tématu (existující témata a aliasy první, podobné
      nad „Nové téma …“, takže nové téma vznikne až potvrzením řádku, který jako jediný zbývá), pak 1–5 a Enter.
    - **Čip osoby ve stránce** → menu akcí **Ctrl+.** (sdílené menu záměrů editoru, řádek pluginu kontaktů) → **Umí…** otevře týž panel.
-   - **Kdo umí X** (Kontakty) → **Přidat sebe**, když tam čtenář chybí (panel s předvyplněným tématem, fokus na úrovni); u každého
-     člověka Ohodnotit s předvyplněným tématem. „Přidat lidi“ hromadně: ne (dashboard tématu v 5.1 není); jinou osobu přidá kdokoli
-     z její karty.
+   - **Dashboard tématu** (Kontakty) → **Přidat sebe**, když tam čtenář chybí (panel s předvyplněným tématem, fokus na úrovni), a
+     **Přidat lidi** (víc kontaktů najednou, jedna úroveň); u každého člověka Ohodnotit s předvyplněným tématem.
    - **Návrhy z důkazů**: „Z vaší práce“ v panelu na vlastní kartě, klik/Enter vloží téma, uloží až potvrzení. Nikdy automaticky.
    - **AI a MCP**: `atlas_rate_skill` („zapiš, že Pavel Horák umí informované souhlasy 4/5“; contactId z `atlas_find_experts`
      nebo `atlas_list_entities`), jen na pokyn uživatele.
+
+7. **Před sloučením do 5.1** (týž den): dashboard tématu, graf vazeb kdo–co s filtry a seznamem na telefonu, vizualizace znalostí osoby
+   a vazby „souvisí“ / „je součástí“ nastavitelné z UI — vše v existujících místech (§ 7).
 
 Zbývá k rozhodnutí později: poznámka „jak“ je zatím obyčejné jednořádkové pole (ne inline Markdown editor stránky), audit sloučení témat
 se zapisuje jen u `/api/v1` (`topic.merge`), ne u webu.

@@ -81,6 +81,32 @@ public sealed class SkillTests
     }
 
     [PostgreSqlFact]
+    public async Task Topics_link_as_part_of_or_related_and_the_graph_shows_people_topics_and_the_links()
+    {
+        await using var f = await RelationsFixture.SharedAsync();
+        var own = Guid.NewGuid().ToString("N")[..8];
+        var person = await f.ContactAsync(f.Writer, ObjectScopes.Wiki, $"Lucie {own}", $"lucie-{own}@example.test");
+        var rated = await f.As<ContactSkills>(f.Writer, new RateSkill(person, new RateSkillRequest($"C# {own}", 4, "signed")));
+        rated = await f.As<ContactSkills>(f.Writer, new RateSkill(person, new RateSkillRequest($".NET {own}", 3, "signed")));
+        rated = await f.As<ContactSkills>(f.Writer, new RateSkill(person, new RateSkillRequest($"Azure {own}", 2, "signed")));
+        var id = (string name) => rated.Skills.Single(x => x.Name == $"{name} {own}").TagId;
+        await f.As<TopicView>(f.Reader, new LinkTopics(id("C#"), id(".NET")));
+        // Related either way round is one link; the narrower topic carries its group.
+        await f.As<TopicView>(f.Reader, new LinkTopics(id("Azure"), id(".NET"), Kind: "related"));
+        var dotnet = await f.As<TopicView>(f.Reader, new LinkTopics(id(".NET"), id("Azure"), Kind: "related"));
+        Assert.Equal([$"C# {own}"], dotnet.Children.Select(x => x.Name));
+        Assert.Equal([$"Azure {own}"], dotnet.Related!.Select(x => x.Name));
+        Assert.Equal($".NET {own}", (await f.As<ContactSkills>(f.Reader, new GetContactSkills(person))).Skills.Single(x => x.TagId == id("C#")).Group);
+
+        var graph = await f.As<SkillGraph>(f.Reader, new GetSkillGraph());
+        Assert.Contains(graph.Nodes, x => x.Id == person && x.Kind == "person");
+        Assert.Contains(graph.Links, x => (x.Source, x.Target, x.Kind) == (id("C#"), id(".NET"), "part_of"));
+        Assert.Single(graph.Links, x => x.Kind == "related" && new[] { x.Source, x.Target }.Order().SequenceEqual(new[] { id("Azure"), id(".NET") }.Order()));
+        // One colleague's rating is no number for the reader.
+        Assert.Null(graph.Links.Single(x => (x.Source, x.Target) == (person, id("C#"))).Level);
+    }
+
+    [PostgreSqlFact]
     public async Task The_migration_runs_over_existing_tags_and_again_without_a_change()
     {
         await using var schema = await DisposableSchema.CreateMigratedAsync("atlas_skills_");

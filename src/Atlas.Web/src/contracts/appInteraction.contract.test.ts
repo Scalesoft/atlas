@@ -963,7 +963,9 @@ const sources = new Map(vueFiles.map(file => [file, readFileSync(srcRoot + file,
 
 /** Files that pick from a list or search in one; each is a descriptor's component or here, with the reason it needs none. */
 const notCovered: Record<string, string> = {
-  "components/contacts/SkillRatePanel.vue": "the topic field of a rating: typing preselects the first topic and Enter takes it (or the typed one as new when nothing matches), then 1–5 and Enter save (SkillRatePanel.test)",
+  "components/contacts/TopicField.vue": "one topic by typing: the first topic is preselected and Enter takes it, or the typed one as new when nothing matches (SkillRatePanel.test covers the keys)",
+  "components/contacts/SkillGraph.vue": "filters a graph with SearchField and FilterMenu: they are the descriptors",
+  "components/contacts/SkillBars.vue": "filters a person's topics with SearchField (from 20 topics): SearchField is the descriptor",
   "components/PageCreationFlow.vue": "creation flow that only uses pickOnEnter to create on Enter in the title; its location step embeds PageLocationPicker",
   "components/SimilarPagesSuggestion.vue": "links to existing pages under the creation title, reached by ↓ from it (focusFirst): ↑ ↓ move, Enter is the link's, Esc back to the title; no search or selection of its own (PageCreationFlow.test covers the keys)",
   "components/SearchSuggestions.vue":"the recent-pages listbox under the App search: its rows are driven by the App search descriptor",

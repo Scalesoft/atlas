@@ -16,10 +16,12 @@ CREATE TABLE "TagAlias" (
 );
 CREATE INDEX "IX_TagAlias_TagId" ON "TagAlias"("TagId");
 
--- C# is part of .NET: a topic and the broader one; who looks for .NET also finds the people who know C#.
+-- part_of: C# is part of .NET (TagId the narrower, ParentId the broader one); who looks for .NET also finds the people who know C#.
+-- related: two topics that go together, stored once with the smaller id in TagId.
 CREATE TABLE "TagRelation" (
   "TagId" uuid NOT NULL CONSTRAINT "FK_TagRelation_Tag" REFERENCES "Tag"("Id") ON DELETE CASCADE,
   "ParentId" uuid NOT NULL CONSTRAINT "FK_TagRelation_Parent" REFERENCES "Tag"("Id") ON DELETE CASCADE,
+  "Kind" text NOT NULL DEFAULT 'part_of' CONSTRAINT "CK_TagRelation_Kind" CHECK ("Kind" IN ('part_of','related')),
   "CreatedAt" timestamptz NOT NULL,
   "CreatedById" uuid NOT NULL CONSTRAINT "FK_TagRelation_UserAccount" REFERENCES "UserAccount"("Id") ON DELETE RESTRICT,
   CONSTRAINT "PK_TagRelation" PRIMARY KEY ("TagId","ParentId"),

@@ -47,7 +47,7 @@ import "../settings/settings.css";
  * of one person. `source`, `store` and `contacts` are replaced by the gallery.
  */
 const props = defineProps<{ source?: Pick<ObjectApi, "list" | "create" | "trash" | "trashList" | "restore" | "purge">; store?: LiveObjects; contacts?: Pick<ContactApi, "duplicates" | "merge" | "accountSuggestions" | "resolveAccount">; usage?: Pick<UsageApi, "count">;
-  /** The search from the address (`#/library/contacts?q=C%23`: who knows a topic). */ initialQuery?: string; skills?: Pick<SkillApi, "experts" | "merge" | "contact" | "rate" | "topics"> }>();
+  /** The search from the address (`#/library/contacts?q=C%23`: who knows a topic). */ initialQuery?: string; skills?: Pick<SkillApi, "experts" | "merge" | "contact" | "rate" | "topics" | "link" | "pages"> }>();
 const toaster = useToast();
 const source = computed(() => props.source ?? objectApi);
 const store = computed(() => props.store ?? defaultStore);

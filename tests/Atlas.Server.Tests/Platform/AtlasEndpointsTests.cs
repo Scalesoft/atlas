@@ -154,6 +154,8 @@ public sealed class AtlasEndpointsTests
         "PUT /api/contacts/{id:guid}/skills",
         "PUT /api/v1/contacts/{id:guid}/skills",
         "GET /api/skills/experts",
+        "GET /api/skills/graph",
+        "GET /api/v1/skills/graph",
         "GET /api/v1/skills/experts",
         "GET /api/skills/topics",
         "GET /api/v1/skills/topics",

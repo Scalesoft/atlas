@@ -345,6 +345,8 @@ public sealed class SqlTextConventionTests
         ["Atlas.Server.Features.PageTags.PageTagStore.SuggestAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Features.Skills.SkillStore.CandidatesAsync"] = Kind.ReadRows,
         ["Atlas.Server.Features.Skills.SkillStore.EvidenceAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Skills.SkillStore.GraphPairsAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.Skills.SkillStore.RelationsAmongAsync"] = Kind.ReadRows,
         ["Atlas.Server.Features.Skills.SkillStore.IsOwnAsync"] = Kind.ReadRows,
         ["Atlas.Server.Features.Skills.SkillStore.OwnContactAsync"] = Kind.ReadRows,
         ["Atlas.Server.Features.Skills.SkillStore.IsWikiAdminAsync"] = Kind.ReadRows,
