@@ -5,10 +5,10 @@
  */
 .atlas-qr { display: block; shape-rendering: geometricPrecision; }
 .atlas-qr-band { transform-box: view-box; transform-origin: 50% 50%;
-  animation: atlas-qr-ring var(--atlas-motion-base, 200ms) var(--atlas-ease-out, ease-out) backwards;
-  animation-delay: calc(var(--qr-band) * var(--atlas-motion-fast, 120ms) / 5); }
+  animation: atlas-qr-ring var(--atlas-motion-base) var(--atlas-ease-out) backwards;
+  animation-delay: calc(var(--qr-band) * var(--atlas-motion-fast) / 5); }
 @keyframes atlas-qr-ring { from { opacity: 0; scale: .9; } }
 @keyframes atlas-qr-fade { from { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .atlas-qr-band { animation-name: atlas-qr-fade; animation-delay: 0s; } }
-[data-atlas-reduced-motion] .atlas-qr-band { animation-name: atlas-qr-fade; animation-delay: 0s; }
+@media (prefers-reduced-motion: reduce) { .atlas-qr-band { animation-name: atlas-qr-fade; animation-delay: initial; } }
+[data-atlas-reduced-motion] .atlas-qr-band { animation-name: atlas-qr-fade; animation-delay: initial; }
 [data-still] .atlas-qr-band, .atlas-qr[data-shown] .atlas-qr-band { animation: none; }

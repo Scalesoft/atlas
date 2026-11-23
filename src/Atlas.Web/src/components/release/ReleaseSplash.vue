@@ -1,11 +1,12 @@
 <script setup lang="ts">
 // The release codename's display face, loaded only with the What's new chunk.
 import "@fontsource-variable/fraunces/index.css";
-import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useId, type Component } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useId, type Component } from "vue";
 import { animateAtlas, motionEasing, motionMs, motionScale, prefersReducedMotion, riseIn } from "../../motion/aiMotion";
 import { firstPoint, isMajorRelease, points, type ReleaseNote } from "../../whatsNew/releaseNotes";
 import { releaseLabel } from "../../whatsNew/notice";
 import { releaseDemos } from "../../whatsNew/releaseDemos";
+import { lazyComponent } from "../../lazyComponent";
 import { Button } from "../ui/button";
 import ReleaseCover from "./ReleaseCover.vue";
 import ReleaseMark from "./ReleaseMark.vue";
@@ -53,7 +54,7 @@ const also = computed(() => {
 
 /** The demos' components, each loaded with the first card that shows it. */
 const demos = new Map<string, Component>();
-const demo = (name: string) => demos.get(name) ?? demos.set(name, defineAsyncComponent(releaseDemos[name]!)).get(name)!;
+const demo = (name: string) => demos.get(name) ?? demos.set(name, lazyComponent(releaseDemos[name]!)).get(name)!;
 const staged = !props.patches?.length && props.note.highlights.some(item => item.demo);
 
 const root = ref<HTMLElement>();

@@ -22,6 +22,9 @@ export const MOTION_LITERAL_ALLOWLIST: readonly { file: string; match: string; r
   { file: "src/components/brand/AtlasMotionMark.vue", match: "@keyframes", reason: "Brand signature (plan O2): the approved choreography of the logo, login scene and activity illustrations; its timing is --atlas-brand-* in motion.css, the keyframes shape only the motion itself." },
   { file: "src/components/release/ReleaseSplash.vue", match: "@keyframes", reason: "Brand signature of a major release (owner, 4.0): the halo, ring, aurora and sheen of the splash after the update, slow ambient loops loaded only with the lazy What's new chunk (tokens in the eager motion.css would cost the eager budget); they stand still under reduced motion, the system one and Atlas own." },
   { file: "src/components/release/ReleaseSplash.vue", match: "animation: release-", reason: "Brand signature of a major release (owner, 4.0): the halo, ring, aurora and sheen of the splash after the update, slow ambient loops loaded only with the lazy What's new chunk (tokens in the eager motion.css would cost the eager budget); they stand still under reduced motion, the system one and Atlas own." },
+  // 5.1
+  { file: "src/components/release/demos/graph.vue", match: "@keyframes demo-graph-", reason: "Brand signature of a major release (owner, 5.1): the knowledge-map demo of the splash draws its links, runs a light along them and pops its nodes; loaded only with the lazy demo chunk, timing from the motion tokens, still under reduced motion and [data-still]." },
+  { file: "src/contacts/contactQr.css", match: "@keyframes atlas-qr-", reason: "keep: podpis (owner, 5.1): the QR code of a contact card unfolds ring by ring from its centre; the shape of the motion only, its timing is the motion tokens, a plain fade under reduced motion and none under [data-still]." },
 ];
 
 export const MOTION_LITERAL_BASELINE: string[] = [
