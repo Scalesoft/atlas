@@ -195,6 +195,8 @@ import SpaceHeader from "./components/library/SpaceHeader.vue";
 const ModuleSettingsHost = lazyComponent(() => import("./components/admin/ModuleSettingsHost.vue"), { loading: LoadingSkeleton });
 /** The library tab the address names; `#/` (none) shows Knihovna's first tab. */
 const libraryTab = ref<LibraryView>();
+/** The search a Knihovna address carries (`#/library/contacts?q=C%23`: who knows a topic). */
+const libraryQuery = ref("");
 const whatsNewOpen = ref(false);
 /** After an update: the last release the account had seen, until Co je nového has opened once (its splash); and how to close the notice. */
 let releaseSince: string | undefined;
@@ -2554,8 +2556,8 @@ async function openPageFromSettings(id: string, pdfExport?: boolean) {
 function openPageAccess(id: string, tab: PageAccessTab = "access", fromHistory = false) {
   return openPage(id, false, fromHistory, undefined, tab);
 }
-function openLibrary(tab: LibraryView, fromHistory = false) {
-  if (!guardNavigation(fromHistory, () => openLibrary(tab))) return;
+function openLibrary(tab: LibraryView, fromHistory = false, q = "") {
+  if (!guardNavigation(fromHistory, () => openLibrary(tab, false, q))) return;
   navigationVersion++;
   openingPage.value = false;
   administrationOpen.value = false;
@@ -2566,8 +2568,9 @@ function openLibrary(tab: LibraryView, fromHistory = false) {
   dirty.value = false;
   sidebarOpen.value = false;
   libraryTab.value = tab;
+  libraryQuery.value = q;
   closeSearch();
-  const address = buildShellHash({ view: "library", tab });
+  const address = buildShellHash(q ? { view: "library", tab, q } : { view: "library", tab });
   if (!fromHistory && location.hash !== address) history.pushState(null, "", address);
 }
 /** Whose favourite and visit the shell keeps: the open page's, or the open board's (the same marks, interaction spec §6). */
@@ -4284,7 +4287,7 @@ async function historyNavigation() {
   }
   else if (route.view === "whatsNew") openWhatsNew(true);
   else if (route.view === "board") openBoard(route.boardId, true);
-  else if (route.view === "library") openLibrary(route.tab, true);
+  else if (route.view === "library") openLibrary(route.tab, true, route.q);
   else if (route.view === "spaceCreation") openSpaceCreation(true);
   else if (route.view === "settings") openSettings(location.hash, true);
   else if (route.view === "profile") {
@@ -4868,7 +4871,7 @@ onUnmounted(() => {
         <HomeDashboard v-else-if="homeOpen" @select="openContent" @navigate="openLibrary($event)" @history="openChangeInHistory" />
         <!-- Knihovna: the personal lists and the overview of all spaces. -->
         <LibraryPage v-else-if="libraryView" :view="libraryView" :space-count="spaces.length" :can-create="canCreateSpace && !pending" @navigate="openLibrary($event)" @create="openSpaceCreation()">
-          <LibraryContent :view="libraryView" :user-id="user.id" :spaces="spaces" :can-create="canCreateSpace && !pending" :can-manage="spaces.some(spaceCanManage)" :pending-ids="pinPendingIds" :limit="SPACE_LIST_LIMIT"
+          <LibraryContent :view="libraryView" :query="libraryQuery" :user-id="user.id" :spaces="spaces" :can-create="canCreateSpace && !pending" :can-manage="spaces.some(spaceCanManage)" :pending-ids="pinPendingIds" :limit="SPACE_LIST_LIMIT"
             :refresh-key="libraryRefresh" :personal-refresh-key="personalRefresh" :notification-signal="notificationSignal" :spaces-loaded="spacesLoaded"
             @open="selectSpace($event)" @pin="(space, pinned) => pinSpace(space, pinned)" @create="openSpaceCreation()" @navigate="openLibrary($event)" @select="openContent" @unread="unreadNotifications = $event" />
         </LibraryPage>

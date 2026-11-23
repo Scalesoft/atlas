@@ -104,6 +104,7 @@ import BoardEditorExample from "./BoardEditorExample.vue";
 import BoardAllItemsExample from "./BoardAllItemsExample.vue";
 import boardAllItemsSource from "./BoardAllItemsExample.vue?raw";
 import ContactsExample from "./ContactsExample.vue";
+import SkillsExample from "./SkillsExample.vue";
 import OverviewExample from "./OverviewExample.vue";
 import RequirementsExample from "./RequirementsExample.vue";
 import RequirementsModelExample from "./RequirementsModelExample.vue";
@@ -122,6 +123,7 @@ import editorKeyboardSource from "./EditorKeyboardExample.vue?raw";
 import requirementsSource from "./RequirementsExample.vue?raw";
 import requirementsModelSource from "./RequirementsModelExample.vue?raw";
 import contactsSource from "./ContactsExample.vue?raw";
+import skillsSource from "./SkillsExample.vue?raw";
 import overviewSource from "./OverviewExample.vue?raw";
 import PersonalExample from "./PersonalExample.vue";
 import personalSource from "./PersonalExample.vue?raw";
@@ -367,6 +369,7 @@ const navigation = [
   { path: "boards-all", label: "Tabule: všechny prvky" },
   { path: "contents", label: "Obsah prostoru a vazby" },
   { path: "contacts", label: "Kontakty a adresář" },
+  { path: "skills", label: "Znalosti lidí" },
   { path: "personal", label: "Osobní prostor a sdílení" },
   { path: "requirements", label: "Požadavky ve stránce" },
   { path: "requirements-model", label: "Požadavky: model v jednom editoru" },
@@ -858,6 +861,10 @@ const steps: FlowStep[] = [
       <div v-else-if="page === 'contacts'">
         <ContactsExample />
         <details class="gallery-source"><summary>Zdroj této sestavy</summary><pre class="gallery-example-source"><code>{{ contactsSource }}</code></pre></details>
+      </div>
+      <div v-else-if="page === 'skills'">
+        <SkillsExample />
+        <details class="gallery-source"><summary>Zdroj této sestavy</summary><pre class="gallery-example-source"><code>{{ skillsSource }}</code></pre></details>
       </div>
 
       <div v-else-if="page === 'personal'">

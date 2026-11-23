@@ -22,6 +22,9 @@ public static class ApiOperations
     public const string PageDecorationSet = "page.decoration_set";
     public const string PageTagsSet = "page.tags_set";
     public const string PageTagsChange = "page.tags_change";
+    public const string SkillRate = "skill.rate";
+    public const string TopicMerge = "topic.merge";
+    public const string TopicLink = "topic.link";
     public const string PageEmbedUpdate = "page.embed_update";
     public const string RequirementUpdate = "requirement.update";
     public const string RequirementUpdateBatch = "requirement.update_batch";

@@ -17,6 +17,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import ContactCard from "./ContactCard.vue";
+import ContactSkillLine from "./ContactSkillLine.vue";
 import { uploadContactPhoto } from "../../contacts/contactPhoto";
 
 /**
@@ -100,6 +101,7 @@ const elsewhere = computed(() => (used.value && used.value.total > 1 ? used.valu
     <p v-if="object && !object.available" class="page-contact-note">{{ t.pageEditor.gone }}</p>
     <template v-else-if="object?.data">
       <ContactCard :contact="object.data as unknown as ContactData" :editable="object.canEdit" :upload="file => uploadContactPhoto(id, file)" @change="change" />
+      <ContactSkillLine :contact-id="id" />
       <p v-if="failure" class="page-contact-error" role="alert">{{ failure }}</p>
       <p class="page-contact-note">
         <template v-if="!object.canEdit">{{ t.pageEditor.readOnly }}</template>

@@ -54,6 +54,14 @@ export interface ContactsStrings {
   copyFailed: string
   usedOn: string
   usedOnMore: (count: number) => string
+  /** Reader card: the topics the person knows, a topic's level for assistive technology, the rest and the rating. */
+  skills: string
+  skillLevel: (topic: string, level: number) => string
+  skillsMore: (count: number) => string
+  skillsRate: string
+  skillsAdd: string
+  /** The actions menu (Ctrl+.) on a linked person: rate what they know. */
+  intentionSkills: string
   downloadAll: string
   editContactTitle: string
   /** Also used as the manage-popover "add" button and the toolbar "add contact" button label. */

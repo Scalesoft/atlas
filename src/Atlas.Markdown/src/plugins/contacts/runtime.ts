@@ -131,12 +131,13 @@ function appendRole(parent: HTMLElement, contact: MarkdownContact, unavailable: 
   if (unavailable) { const note = doc.createElement(tag); note.className = 'md-contact-unavailable'; note.textContent = contactsStrings.unavailable; parent.append(note) }
 }
 /** The read-only card of a contact (a reader's click on a chip or a card): the details, each phone and e-mail with a copy button, the directory and where it is used. */
-function fillContactReader(panel: HTMLElement, contact: MarkdownContact, identity: MarkdownInternalContactUser | undefined, unavailable: boolean, options: ContactsPluginOptions, download: (contacts: readonly MarkdownContact[]) => void, signal: AbortSignal): void {
+function fillContactReader(panel: HTMLElement, contact: MarkdownContact, identity: MarkdownInternalContactUser | undefined, unavailable: boolean, options: ContactsPluginOptions, download: (contacts: readonly MarkdownContact[]) => void, signal: AbortSignal, rate?: () => void): void {
   const doc = panel.ownerDocument
   const header = doc.createElement('div'); header.className = 'md-contact-reader-profile'
   header.append(avatar(doc, contact.name, contact.photo ?? identity?.photo))
   const info = doc.createElement('div'), name = doc.createElement('strong'); name.textContent = contact.name; info.append(name)
   const subtitle = doc.createElement('p'); subtitle.textContent = [contact.title, contact.organization, contact.department].filter(Boolean).join(' · '); info.append(subtitle); appendRole(info, contact, unavailable, 'p'); header.append(info); panel.append(header)
+  if (!unavailable && contact.objectId && options.readerSkills) skillsOf(panel, contact.objectId, options, signal, rate)
   const details = doc.createElement('div'); details.className = 'md-contact-details'; panel.append(details)
   const link = (label: string, url: string, parent: HTMLElement = details) => { const element = doc.createElement('a'); element.textContent = label; element.href = url; parent.append(element) }
   // A value and its copy button share a row.
@@ -156,6 +157,41 @@ function fillContactReader(panel: HTMLElement, contact: MarkdownContact, identit
   if (contact.objectId && options.directoryUrl) link(contactsStrings.openInDirectory, options.directoryUrl(contact.objectId))
   if (contact.objectId && options.readerUsage) usedOn(panel, contact.objectId, options, signal)
   const save = button(panel, contactsStrings.downloadCard, () => download([contact])); save.className = 'md-contact-download'; save.setAttribute('aria-label', contactsStrings.downloadCardAriaLabel(contact.name)); save.title = contactsStrings.downloadCardTitle
+}
+/** „Umí“ in the reader card, right under the name, filled when the host answers; hidden until then, nothing for a person without topics. */
+function skillsOf(panel: HTMLElement, objectId: string, options: ContactsPluginOptions, signal: AbortSignal, rate?: () => void): void {
+  const doc = panel.ownerDocument, section = doc.createElement('div'); section.className = 'md-contact-skills'; section.hidden = true; panel.append(section)
+  void Promise.resolve().then(() => options.readerSkills!(objectId, { signal })).then(answer => {
+    if (signal.aborted || !answer || !section.isConnected || !answer.skills.length && !rate) return
+    const head = doc.createElement('div'); head.className = 'md-contact-skills-head'
+    const heading = doc.createElement('strong'); heading.textContent = contactsStrings.skills; head.append(heading)
+    if (rate) {
+      const open = button(head, answer.skills.length ? contactsStrings.skillsRate : contactsStrings.skillsAdd, rate)
+      open.className = 'md-contact-skills-rate'; open.setAttribute('aria-haspopup', 'dialog')
+    }
+    const list = doc.createElement('div'); list.className = 'md-contact-skill-list'
+    for (const skill of answer.skills) {
+      const chip = doc.createElement('a'); chip.className = 'md-contact-skill'; chip.href = skill.url
+      const level = Math.max(0, Math.min(5, Math.round(skill.level ?? 0)))
+      chip.setAttribute('aria-label', skill.level === null ? skill.name : contactsStrings.skillLevel(skill.name, level))
+      if (skill.detail) chip.title = skill.detail
+      const name = doc.createElement('span'); name.textContent = skill.name; chip.append(name)
+      if (skill.level !== null) {
+        const dots = doc.createElement('span'); dots.className = 'md-contact-skill-level'; dots.setAttribute('aria-hidden', 'true')
+        for (let index = 1; index <= 5; index++) { const dot = doc.createElement('i'); if (index <= level) dot.className = 'on'; dots.append(dot) }
+        chip.append(dots)
+      }
+      list.append(chip)
+    }
+    if (answer.more > 0) {
+      const more = doc.createElement(answer.url ? 'a' : 'span'); more.className = 'md-contact-skill-more'; more.textContent = contactsStrings.skillsMore(answer.more)
+      if (answer.url) (more as HTMLAnchorElement).href = answer.url
+      list.append(more)
+    }
+    section.append(head)
+    if (list.childElementCount) section.append(list)
+    section.hidden = false
+  }).catch(() => { /* The card stays without the topics. */ })
 }
 /** „Použito na“ in the reader card: the places that use the contact, filled when the host answers; nothing is shown for an unknown or unreadable one. */
 function usedOn(panel: HTMLElement, objectId: string, options: ContactsPluginOptions, signal: AbortSignal): void {
@@ -178,7 +214,8 @@ function renderInlineContact(context: Context, snapshot: MarkdownContact, parent
     // A writer's click edits the contact (picks the person of an unresolved one); the reader's panel is for reading.
     if (editable(context) && contact.unresolved) { closeReader = chooseUnresolved(context, options, trigger); return }
     if (editable(context)) { closeReader = editContact({ ...context, anchor: trigger }, 0, options); return }
-    closeReader = openContactReader(context, trigger, contactsStrings.readerTitle(contact.name), panel => fillContactReader(panel, contact, identity, unavailable, options, download, context.signal))
+    closeReader = openContactReader(context, trigger, contactsStrings.readerTitle(contact.name), panel => fillContactReader(panel, contact, identity, unavailable, options, download, context.signal,
+      options.rateSkills && contact.objectId ? () => { closeReader?.(); options.rateSkills!(contact.objectId!, { anchor: trigger, signal: context.signal }) } : undefined))
   })
   trigger.className = 'md-contact-name'; trigger.setAttribute('aria-expanded', 'false'); trigger.setAttribute('aria-haspopup', 'dialog'); trigger.setAttribute('aria-label', contactsStrings.contactDetailsAriaLabel(contact.name))
   if (context.editor && context.getPos) context.signal.addEventListener('abort', bindMarkdownChipKeys(trigger, context.editor, context.getPos), { once: true })
@@ -411,7 +448,8 @@ export function createContactsRuntime(options: ContactsPluginOptions, inline = f
           // A reader's click on a card opens its read-only card (copy, directory, where it is used); links and buttons keep their own action.
           card.tabIndex = 0; card.setAttribute('role', 'button'); card.setAttribute('aria-haspopup', 'dialog'); card.setAttribute('aria-label', contactsStrings.contactDetailsAriaLabel(contact.name))
           let closeCard: (() => void) | undefined
-          const openCard = () => { closeCard?.(); closeCard = openContactReader(context, card, contactsStrings.readerTitle(view[index]!.name), panel => fillContactReader(panel, view[index]!, undefined, false, options, download, signal)) }
+          const openCard = () => { closeCard?.(); closeCard = openContactReader(context, card, contactsStrings.readerTitle(view[index]!.name), panel => fillContactReader(panel, view[index]!, undefined, false, options, download, signal,
+            options.rateSkills && view[index]!.objectId ? () => { closeCard?.(); options.rateSkills!(view[index]!.objectId!, { anchor: card, signal }) } : undefined)) }
           card.addEventListener('click', event => { const selection = doc.getSelection(); if (!(event.target as Element).closest('a, button') && !(selection && !selection.isCollapsed && card.contains(selection.anchorNode))) openCard() })
           card.addEventListener('keydown', event => { if (event.target === card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openCard() } })
           cleanups.push(() => closeCard?.())

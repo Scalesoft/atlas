@@ -26,6 +26,8 @@ const NotificationInbox = lazyComponent(() => import("../notifications/Notificat
 
 const props = defineProps<{
   view: LibraryPart;
+  /** The tab's search from the address (`#/library/contacts?q=`). */
+  query?: string;
   userId: string;
   spaces: Space[];
   canCreate: boolean;
@@ -58,7 +60,7 @@ const listTab = computed<LibraryTab | undefined>(() =>
   <SpaceDirectory v-else-if="view === 'spaces'" :key="`spaces:${userId}`" :spaces="spaces" :can-create="canCreate" :can-manage="canManage" :pending-ids="pendingIds" :limit="limit"
     :storage-key="`atlas:reading:${userId}:library-view`" @open="emit('open', $event)" @pin="(space, pinned) => emit('pin', space, pinned)" @create="emit('create')" />
   <!-- Kontakty: the overview of where people occur, with the directory to edit as its Adresář (UX1-14). -->
-  <ContactOverview v-else-if="view === 'contacts'" :key="`contacts:${userId}`"><template #directory><ContactDirectory /></template></ContactOverview>
+  <ContactOverview v-else-if="view === 'contacts'" :key="`contacts:${userId}`"><template #directory><ContactDirectory :initial-query="query" /></template></ContactOverview>
   <PersonalItems v-else-if="view === 'personal' || view === 'shared'" :key="`${view}:${userId}`" :mode="view === 'personal' ? 'mine' : 'shared'"
     :refresh-key="refreshKey" />
   <NotificationInbox v-else-if="view === 'notifications'" :key="`notifications:${userId}`" :refresh-key="notificationSignal" @unread="emit('unread', $event)" />

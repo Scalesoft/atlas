@@ -33,6 +33,7 @@ using Atlas.Server.Features.PersonalApi;
 using Atlas.Server.Features.PersonalLibrary;
 using Atlas.Server.Features.PageLinks;
 using Atlas.Server.Features.PageTags;
+using Atlas.Server.Features.Skills;
 using Atlas.Server.Features.PageDecorations;
 using Atlas.Server.Features.Relations;
 using Atlas.Server.Features.Search;
@@ -145,6 +146,7 @@ public static class AtlasServices
         Atlas.Server.Features.TreeReferences.TreeReferencesModule.AddTreeReferences(builder.Services);
         builder.Services.AddPersonalLibrary();
         builder.Services.AddPageTags();
+        builder.Services.AddSkills();
         builder.Services.AddPageLinks();
         builder.Services.AddPageDecorations();
         builder.Services.AddRelations();

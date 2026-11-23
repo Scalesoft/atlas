@@ -72,6 +72,14 @@ export interface ContactsPluginOptions {
   /** The places a linked contact is used (host: GET /api/usage/{id}), for the read-only card: title, where, and the address to open. Not used without it. */
   readerUsage?: (objectId: string, context: { signal: AbortSignal }) => Promise<{ places: readonly { title: string; detail?: string; url: string }[]; more: number } | null>
   /**
+   * What the person knows, for the read-only card (host: GET /api/contacts/{id}/skills): each topic with its level 0-5 (null: not shown),
+   * a line about it and the address that lists who else knows it; `more` the topics not listed, `url` all of them. Filled when the host
+   * answers, under the person's name; without topics only the rating (`rateSkills`) shows.
+   */
+  readerSkills?: (objectId: string, context: { signal: AbortSignal }) => Promise<{ skills: readonly { name: string; level: number | null; detail?: string; url: string }[]; more: number; url?: string } | null>
+  /** Opens the host's rating of the person's topics, anchored at the reader card's button; the reader card closes. */
+  rateSkills?: (objectId: string, context: { anchor: HTMLElement; signal: AbortSignal }) => void
+  /**
    * Edits a contact that has objectId where the page shows it, in place of the role-and-display form: the host's editor of the directory
    * contact beside the page's own role, username and display, anchored at `anchor`. `save` stores the page's snapshot right after the
    * current event, into the node's current data (also after a re-render), to the contact with this objectId; call it once, when the editor
