@@ -209,7 +209,8 @@ try {
       const session = username === ADMIN ? admin : await Session.login(username);
       const seen = (await session.get("/api/auth/me")).releaseNotesSeen;
       record(`release notice: ${username} is told about ${release} once`, typeof seen === "string" && seen !== release, `seen before: ${seen}`);
-      await session.put("/api/profile/release-notes", { version: release });
+      // A development build ("5.1.0-dev") shows no notice, and the server refuses to mark one seen.
+      if (!release.includes("-")) await session.put("/api/profile/release-notes", { version: release });
       if (session !== admin) await session.dispose();
     }
   } catch (error) { record("release notice", false, error.message); }
