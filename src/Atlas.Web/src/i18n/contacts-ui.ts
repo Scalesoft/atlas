@@ -19,6 +19,11 @@ const cs = {  card: {
     remove: "Odebrat",
     edit: (label: string) => `Upravit: ${label}`,
     listHint: (label: string) => `${label} (jeden na řádek, Ctrl+Enter uloží)`,
+    vcf: "Stáhnout vizitku (.vcf)",
+    qr: "QR kód vizitky",
+    qrHint: "Naskenujte fotoaparátem telefonu a kontakt se nabídne k uložení. Celá vizitka je v kódu, telefon nepotřebuje připojení k wiki.",
+    qrOmitted: (fields: string) => `Aby šel kód přečíst, je bez údajů: ${fields}.`,
+    qrFailed: "QR kód se nepodařilo vytvořit. Stáhněte vizitku.",
   },
   directory: {
     duplicateEmail: "Kontakt s touto e-mailovou adresou už v adresáři je, ukazujeme ho.",

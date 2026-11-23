@@ -96,5 +96,5 @@ export function createContactsPlugin(options: ContactsPluginOptions = {}): Markd
     }
   } }
 }
-export { contactPlace, isContactPlace, normalizeContact, normalizeContacts, normalizeInternalContactUser, serializeVCard } from './data'
-export type { ContactsData, MarkdownContact, MarkdownInternalContactUser, ContactsPluginOptions, ContactDirectoryService, ContactPickRequest, LiveContact } from './data'
+export { contactPlace, contactQr, isContactPlace, normalizeContact, normalizeContacts, normalizeInternalContactUser, serializeVCard } from './data'
+export type { ContactsData, ContactQrCode, MarkdownContact, MarkdownInternalContactUser, ContactsPluginOptions, ContactDirectoryService, ContactPickRequest, LiveContact, VCardOmit } from './data'

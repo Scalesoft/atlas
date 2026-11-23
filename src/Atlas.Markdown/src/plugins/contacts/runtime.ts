@@ -1,11 +1,14 @@
 import { createIconElement, createMarkdownChip, createSuggestionField, downloadMarkdownFile, nameKey, openMarkdownContextPopover, openMarkdownModuleForm, type MarkdownChip, type MarkdownChipPart, type MarkdownModuleContext, type MarkdownModuleRuntime } from '../../core'
 import { contactsStrings } from './runtimeStrings'
-import { contactRole, isContactPlace, linkInserted, normalizeContact, normalizeContacts, normalizeInternalContactUser, serializeVCard, type LiveContact, type ContactsData, type ContactsPluginOptions, type MarkdownContact, type MarkdownInternalContactUser } from './data'
+import { contactQr, contactRole, isContactPlace, linkInserted, normalizeContact, normalizeContacts, normalizeInternalContactUser, serializeVCard, type LiveContact, type ContactsData, type ContactsPluginOptions, type MarkdownContact, type MarkdownInternalContactUser } from './data'
 import styles from './style.css?inline'
 import { bindMarkdownChipKeys, bindMarkdownChipPreview, markdownUserColor } from '../../core'
 import { openContactReader } from './readerPopover'
 import { offerPeople, offerUnresolved, pickPerson, rankNow, unresolvedPeople, type RankedPerson } from './names'
 import { knownOf } from './namesLoader'
+
+/** A pointer resting this long on a person opens their card (the chip preview waits as long); leaving it and the card this long closes it. */
+const HOVER_OPEN_MS = 350, HOVER_CLOSE_MS = 300
 
 /**
  * An unresolved chip's people at the chip (names.ts offerUnresolved), the most likely first; picking one makes the chip that person.
@@ -130,32 +133,75 @@ function appendRole(parent: HTMLElement, contact: MarkdownContact, unavailable: 
   if (shown) { const role = doc.createElement(tag); role.className = 'md-contact-role'; role.textContent = shown; parent.append(role) }
   if (unavailable) { const note = doc.createElement(tag); note.className = 'md-contact-unavailable'; note.textContent = contactsStrings.unavailable; parent.append(note) }
 }
-/** The read-only card of a contact (a reader's click on a chip or a card): the details, each phone and e-mail with a copy button, the directory and where it is used. */
+/**
+ * The card of a contact (a reader's click on a chip or a card, anyone's resting pointer on a chip): the person with their photo, what they
+ * do and where, mail and call at hand, each phone, e-mail, website and address on its own row with a copy button, where it is used, the
+ * business card (the .vcf to download and, with the host's `qrCode`, its QR code unfolded in the card) and the directory.
+ */
 function fillContactReader(panel: HTMLElement, contact: MarkdownContact, identity: MarkdownInternalContactUser | undefined, unavailable: boolean, options: ContactsPluginOptions, download: (contacts: readonly MarkdownContact[]) => void, signal: AbortSignal): void {
   const doc = panel.ownerDocument
   const header = doc.createElement('div'); header.className = 'md-contact-reader-profile'
   header.append(avatar(doc, contact.name, contact.photo ?? identity?.photo))
   const info = doc.createElement('div'), name = doc.createElement('strong'); name.textContent = contact.name; info.append(name)
-  const subtitle = doc.createElement('p'); subtitle.textContent = [contact.title, contact.organization, contact.department].filter(Boolean).join(' · '); info.append(subtitle); appendRole(info, contact, unavailable, 'p'); header.append(info); panel.append(header)
+  const line = (text: string | undefined, className: string) => { if (!text) return; const element = doc.createElement('p'); element.className = className; element.textContent = text; info.append(element) }
+  line(contact.title, 'md-contact-reader-title'); line([contact.organization, contact.department].filter(Boolean).join(' · '), 'md-contact-reader-org')
+  appendRole(info, contact, unavailable, 'p'); header.append(info); panel.append(header)
+  const email = contact.emails?.[0], phone = contact.phones?.[0]
+  const tel = (value: string) => `tel:${value.replace(/[\s().-]/g, '').replace(/#/g, '%23')}`
+  if (!unavailable && (email || phone)) {
+    const quick = doc.createElement('div'); quick.className = 'md-contact-quick'; panel.append(quick)
+    const action = (icon: 'mail' | 'phone', label: string, url: string) => { const element = doc.createElement('a'); element.href = url; element.append(createIconElement(doc, icon, 15), label); quick.append(element) }
+    if (email) action('mail', contactsStrings.sendEmail, `mailto:${encodeURIComponent(email)}`)
+    if (phone) action('phone', contactsStrings.call, tel(phone))
+  }
   const details = doc.createElement('div'); details.className = 'md-contact-details'; panel.append(details)
-  const link = (label: string, url: string, parent: HTMLElement = details) => { const element = doc.createElement('a'); element.textContent = label; element.href = url; parent.append(element) }
-  // A value and its copy button share a row.
-  const row = () => { const line = doc.createElement('span'); line.className = 'md-contact-row'; details.append(line); return line }
+  const link = (label: string, url: string, parent: HTMLElement = details) => { const element = doc.createElement('a'); element.textContent = label; element.href = url; parent.append(element); return element }
+  // A value, its icon and its copy button share a row.
+  const row = (icon: 'phone' | 'mail' | 'globe' | 'map-pin') => { const element = doc.createElement('span'); element.className = 'md-contact-row'; element.append(createIconElement(doc, icon, 15)); details.append(element); return element }
   // Each value can be copied where it is read (a reader's card has nothing else to do with it).
   const copy = (value: string, parent: HTMLElement) => {
     // The label stays; the title says it was copied for a moment.
     const copyButton = button(parent, '', () => { void doc.defaultView?.navigator.clipboard?.writeText(value).then(() => { copyButton.title = contactsStrings.copied; setTimeout(() => { copyButton.title = contactsStrings.copyValue(value) }, 1500) }).catch(() => { copyButton.title = contactsStrings.copyFailed }) })
     copyButton.className = 'md-contact-copy'; copyButton.title = contactsStrings.copyValue(value); copyButton.setAttribute('aria-label', contactsStrings.copyValue(value)); copyButton.append(createIconElement(doc, 'copy', 14))
   }
-  for (const phone of contact.phones ?? []) { const line = row(); link(phone, `tel:${phone.replace(/[\s().-]/g, '').replace(/#/g, '%23')}`, line); copy(phone, line) }
-  for (const email of contact.emails ?? []) { const line = row(); link(email, `mailto:${encodeURIComponent(email)}`, line); copy(email, line) }
+  for (const value of contact.phones ?? []) { const element = row('phone'); link(value, tel(value), element); copy(value, element) }
+  for (const value of contact.emails ?? []) { const element = row('mail'); link(value, `mailto:${encodeURIComponent(value)}`, element); copy(value, element) }
   appendUsername(details, contact)
-  if (contact.website) link(contactsStrings.web, contact.website)
-  if (contact.address) { const address = doc.createElement('span'); address.textContent = contact.address; details.append(address) }
+  if (contact.website) link(contact.website.replace(/^https?:\/\//i, '').replace(/\/$/, ''), contact.website, row('globe')).setAttribute('aria-label', `${contactsStrings.web}: ${contact.website}`)
+  if (contact.address) { const element = row('map-pin'), address = doc.createElement('span'); address.className = 'md-contact-address'; address.textContent = contact.address; element.append(address); copy(contact.address, element) }
   if (unavailable) return
-  if (contact.objectId && options.directoryUrl) link(contactsStrings.openInDirectory, options.directoryUrl(contact.objectId))
   if (contact.objectId && options.readerUsage) usedOn(panel, contact.objectId, options, signal)
-  const save = button(panel, contactsStrings.downloadCard, () => download([contact])); save.className = 'md-contact-download'; save.setAttribute('aria-label', contactsStrings.downloadCardAriaLabel(contact.name)); save.title = contactsStrings.downloadCardTitle
+  businessCard(panel, contact, options, download)
+  if (contact.objectId && options.directoryUrl) { const footer = doc.createElement('div'); footer.className = 'md-contact-reader-footer'; panel.append(footer); link(contactsStrings.openInDirectory, options.directoryUrl(contact.objectId), footer) }
+}
+/**
+ * „Vizitka“: the contact for a phone, two ways side by side: the .vcf to download, or its QR code unfolded right in the card (drawn on the
+ * first unfolding by the host's `qrCode`; contactQr keeps it readable). The code is black on white in any theme: a phone reads nothing else.
+ */
+function businessCard(panel: HTMLElement, contact: MarkdownContact, options: ContactsPluginOptions, download: (contacts: readonly MarkdownContact[]) => void): void {
+  const doc = panel.ownerDocument, actions = doc.createElement('div'); actions.className = 'md-contact-share'; panel.append(actions)
+  const save = button(actions, '', () => download([contact])); save.className = 'md-contact-download'; save.append(createIconElement(doc, 'download', 15), contactsStrings.downloadCard)
+  save.setAttribute('aria-label', contactsStrings.downloadCardAriaLabel(contact.name)); save.title = contactsStrings.downloadCardTitle
+  if (!options.qrCode) return
+  const region = doc.createElement('div'); region.className = 'md-contact-qr'; region.id = `md-contact-qr-${Math.random().toString(36).slice(2, 8)}`; region.inert = true
+  const inner = doc.createElement('div'); inner.className = 'md-contact-qr-inner'; region.append(inner); panel.append(region)
+  const toggle = button(actions, '', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true'
+    toggle.setAttribute('aria-expanded', String(open)); region.dataset.open = String(open); region.inert = !open
+    // The unfolded code is brought into the card's view once it has its height (a card at the bottom of the screen scrolls).
+    if (open) region.addEventListener('transitionend', () => inner.scrollIntoView({ block: 'nearest' }), { once: true })
+    if (!open || inner.childElementCount) return
+    const code = doc.createElement('div'); code.className = 'md-contact-qr-code'; code.setAttribute('role', 'img'); code.setAttribute('aria-label', contactsStrings.qrCodeLabel(contact.name))
+    const hint = doc.createElement('p'); hint.className = 'md-contact-qr-hint'; hint.textContent = contactsStrings.qrHint
+    inner.append(code, hint)
+    void contactQr(contact, options.qrCode!).then(drawn => {
+      // The host's own drawing of the code (rects and a path, no text of the contact in it).
+      code.innerHTML = drawn.svg
+      if (drawn.omitted.length) hint.textContent = `${contactsStrings.qrHint} ${contactsStrings.qrOmitted(drawn.omitted.map(field => (field === 'address' ? contactsStrings.fieldAddress : contactsStrings.web)).join(', '))}`
+    }).catch(() => { hint.textContent = contactsStrings.qrFailed })
+  })
+  toggle.className = 'md-contact-download md-contact-qr-toggle'; toggle.append(createIconElement(doc, 'qr-code', 15), contactsStrings.qrCode)
+  toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-controls', region.id)
 }
 /** „Použito na“ in the reader card: the places that use the contact, filled when the host answers; nothing is shown for an unknown or unreadable one. */
 function usedOn(panel: HTMLElement, objectId: string, options: ContactsPluginOptions, signal: AbortSignal): void {
@@ -171,18 +217,49 @@ function usedOn(panel: HTMLElement, objectId: string, options: ContactsPluginOpt
 function renderInlineContact(context: Context, snapshot: MarkdownContact, parent: HTMLElement, options: ContactsPluginOptions, download: (contacts: readonly MarkdownContact[]) => void): () => void {
   const doc = parent.ownerDocument, card = doc.createElement('span'); card.className = 'md-contact-card'; parent.append(card)
   let contact = snapshot, unavailable = false, identity = contact.internalUser, stopped = false, closeReader: (() => void) | undefined
+  // The hover card (Teams-like): a fine pointer resting on the chip opens the person's card without taking the focus; it stays while the
+  // pointer is on the chip or the card and goes a moment after it leaves both. Using it (a press or the focus inside) or a reader's click
+  // keeps it like a clicked one, until Escape or a click outside; a writer's click closes it and edits. A touch has no hover: a tap opens.
+  let hovered = false, hoverTimer: ReturnType<typeof setTimeout> | undefined
+  const readerCard = (hover: boolean) => openContactReader(context, trigger, contactsStrings.readerTitle(contact.name), panel => {
+    if (hover) {
+      const surface = panel.parentElement!
+      surface.addEventListener('pointerenter', () => clearTimeout(hoverTimer))
+      surface.addEventListener('pointerleave', leave)
+      surface.addEventListener('pointerdown', () => { hovered = false }, true)
+      surface.addEventListener('focusin', () => { hovered = false })
+    }
+    fillContactReader(panel, contact, identity, unavailable, options, download, context.signal)
+    return () => { hovered = false }
+  }, hover)
+  const enter = (event: PointerEvent) => {
+    clearTimeout(hoverTimer)
+    if (hovered || (event.pointerType !== 'mouse' && event.pointerType !== 'pen') || contact.unresolved || isContactPlace(contact)) return
+    // Never over a panel that is open (an edit form, another card): one panel at a time.
+    hoverTimer = setTimeout(() => {
+      if (!trigger.isConnected || stopped || trigger.getAttribute('aria-expanded') === 'true' || doc.querySelector('.md-context-popover')) return
+      hovered = true; closeReader = readerCard(true)
+    }, HOVER_OPEN_MS)
+  }
+  function leave() { clearTimeout(hoverTimer); if (hovered) hoverTimer = setTimeout(() => { if (hovered) closeReader?.() }, HOVER_CLOSE_MS) }
   const trigger = button(card, '', () => {
+    if (hovered) {
+      hovered = false; clearTimeout(hoverTimer)
+      if (!editable(context) || contact.unresolved) return
+      closeReader?.()
+    }
     // A second click closes what it opened. The edit form's goes through the same open again: the shared toggle applies a changed form (D3).
     if (trigger.getAttribute('aria-expanded') === 'true' && !(editable(context) && !contact.unresolved)) { closeReader?.(); return }
     if (context.editor?.isEditable && context.getPos) { const position = context.getPos(); if (position !== undefined) context.editor.commands.setNodeSelection(position) }
     // A writer's click edits the contact (picks the person of an unresolved one); the reader's panel is for reading.
     if (editable(context) && contact.unresolved) { closeReader = chooseUnresolved(context, options, trigger); return }
     if (editable(context)) { closeReader = editContact({ ...context, anchor: trigger }, 0, options); return }
-    closeReader = openContactReader(context, trigger, contactsStrings.readerTitle(contact.name), panel => fillContactReader(panel, contact, identity, unavailable, options, download, context.signal))
+    closeReader = readerCard(false)
   })
+  trigger.addEventListener('pointerenter', enter); trigger.addEventListener('pointerleave', leave)
   trigger.className = 'md-contact-name'; trigger.setAttribute('aria-expanded', 'false'); trigger.setAttribute('aria-haspopup', 'dialog'); trigger.setAttribute('aria-label', contactsStrings.contactDetailsAriaLabel(contact.name))
   if (context.editor && context.getPos) context.signal.addEventListener('abort', bindMarkdownChipKeys(trigger, context.editor, context.getPos), { once: true })
-  context.signal.addEventListener('abort', bindMarkdownChipPreview(trigger, () => ({ title: contact.name, lines: [[contact.title, contact.organization].filter(Boolean).join(' · '), contactRole(contact), unavailable ? contactsStrings.unavailable : ''].filter((line): line is string => !!line) }), context.editor && context.getPos ? { editor: context.editor, getPos: context.getPos } : undefined), { once: true })
+  context.signal.addEventListener('abort', bindMarkdownChipPreview(trigger, () => ({ title: contact.name, lines: [[contact.title, contact.organization].filter(Boolean).join(' · '), contactRole(contact), unavailable ? contactsStrings.unavailable : ''].filter((line): line is string => !!line) }), context.editor && context.getPos ? { editor: context.editor, getPos: context.getPos } : undefined, { pointer: false }), { once: true })
   let chip: MarkdownChip | undefined, detail: MarkdownChipPart[] | undefined, people = 0
   const paint = () => {
     if (contact.objectId) { card.dataset.objectId = contact.objectId; card.dataset.contactName = contact.name }

@@ -7,14 +7,50 @@
 .md-contact-inline [data-contact-kind=unresolved] .md-contact-avatar { background: var(--state-unresolved, #657b80); }
 /* Open: the chip keeps its hover look (its own token, so the unresolved state's dashed frame stays). */
 .md-contact-name.md-chip[aria-expanded=true] { --md-chip-bg: var(--md-chip-hover-bg); }
-.md-contact-reader { width: min(330px, calc(100vw - 24px)); }
-.md-contact-reader-profile { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+/*
+ * The person's card (a reader's click, anyone's resting pointer on a chip): the photo large on a soft accent wash, the name, what they do
+ * and where, mail and call at hand, one row per value with its icon and a copy button, the business card at the bottom (.vcf or its QR
+ * code, unfolded in place) and the directory. Nothing moves on hover: rows and buttons answer with colour only.
+ */
+.md-contact-reader { width: min(340px, calc(100vw - 24px)); }
+.md-contact-reader > .md-context-popover-body { padding: 0 0 14px; }
+.md-contact-reader-profile { display: flex; align-items: center; gap: 14px; padding: 18px 16px 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent-soft, #e5f5f8) 92%, transparent), color-mix(in srgb, var(--accent-soft, #e5f5f8) 0%, transparent)); }
 .md-contact-reader-profile > div { min-width: 0; overflow-wrap: anywhere; }
-.md-contact-reader-profile strong { font-size: 14px; }
-.md-contact-reader-profile p { margin: 4px 0 0; font-size: 12px; color: var(--text-dim, #49676e); line-height: 1.5; }
-.md-contact-reader-profile p:empty { display: none; }
-.md-contact-reader .md-contact-details { display: grid; gap: 7px; }
-.md-contact-reader .md-contact-download { margin-top: 16px; }
+.md-contact-reader-profile .md-contact-avatar { flex: 0 0 60px; width: 60px; height: 60px; font-size: 20px; box-shadow: 0 0 0 3px var(--paper, #fff), 0 4px 14px -6px #0f2a3066; }
+.md-contact-reader-profile strong { display: block; font-size: 16.5px; font-weight: 650; line-height: 1.3; letter-spacing: -.005em; }
+.md-contact-reader-profile p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.45; color: var(--text-dim, #49676e); }
+.md-contact-reader-profile .md-contact-reader-title { color: var(--text, #2f2d29); font-weight: 500; }
+.md-contact-reader-profile p.md-contact-role { display: inline-block; margin-top: 7px; padding: 1px 9px; border: 1px solid var(--line, #d8e7eb); border-radius: 999px; background: var(--paper, #fff); font-size: 11.5px; }
+.md-contact-quick { display: flex; gap: 8px; padding: 0 16px 14px; }
+.md-contact-quick a { flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 0 10px; border-radius: 9px;
+  background: var(--accent-soft, #e5f5f8); color: var(--accent-strong, #26758a); font-size: 12.5px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background-color var(--md-motion-fast) var(--md-motion-ease), color var(--md-motion-fast) var(--md-motion-ease); }
+@media (hover: hover) and (pointer: fine) { .md-contact-quick a:hover { background: color-mix(in srgb, var(--accent, #4f9fb1) 24%, var(--paper, #fff)); } }
+.md-contact-quick a:focus-visible, .md-contact-reader a:focus-visible, .md-contact-reader .md-contact-copy:focus-visible { outline: 2px solid var(--accent, #4f9fb1); outline-offset: 2px; }
+.md-contact-reader .md-contact-details { display: grid; gap: 0; padding: 8px 16px; border-top: 1px solid var(--line, #d8e7eb); white-space: normal; }
+.md-contact-reader .md-contact-row { gap: 10px; min-height: 30px; }
+.md-contact-reader .md-contact-row > svg { flex: none; color: var(--muted, #657b80); }
+.md-contact-reader .md-contact-row > a, .md-contact-address { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.md-contact-address { padding: 5px 0; white-space: pre-line; line-height: 1.45; }
+.md-contact-reader .md-contact-username { padding: 4px 0 4px 25px; }
+.md-context-popover-body .md-contact-row > .md-contact-copy { flex: none; display: inline-grid; place-items: center; min-height: 0; padding: 4px; border: 0; border-radius: 6px; background: transparent; color: var(--muted, #657b80); transition: color var(--md-motion-fast) var(--md-motion-ease), background-color var(--md-motion-fast) var(--md-motion-ease); }
+.md-contact-reader .md-contact-used { margin: 0; padding: 10px 16px 0; border-top: 1px solid var(--line, #d8e7eb); }
+.md-contact-share { display: flex; gap: 8px; margin-top: 10px; padding: 12px 16px 0; border-top: 1px solid var(--line, #d8e7eb); }
+.md-contact-reader .md-contact-share .md-contact-download { flex: 1 1 0; justify-content: center; min-height: 34px; margin: 0; border-radius: 9px; color: var(--text, #2f2d29);
+  transition: background-color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease), color var(--md-motion-fast) var(--md-motion-ease); }
+.md-contact-reader .md-contact-download > svg { flex: none; color: var(--accent-strong, #26758a); }
+.md-contact-reader .md-contact-qr-toggle[aria-expanded=true] { border-color: var(--accent, #4f9fb1); background: var(--accent-soft, #e5f5f8); color: var(--accent-strong, #26758a); }
+/* The QR code unfolds under the two buttons (height and opacity, reversible midway); a phone reads black on white only, in any theme. */
+.md-contact-qr { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--md-motion-base) var(--md-motion-ease), opacity var(--md-motion-base) var(--md-motion-ease); }
+.md-contact-qr[data-open=true] { grid-template-rows: 1fr; opacity: 1; }
+.md-contact-qr-inner { display: grid; justify-items: center; gap: 8px; min-height: 0; overflow: hidden; padding: 0 16px; }
+.md-contact-qr-code { width: 216px; height: 216px; max-width: 100%; margin-top: 12px; border-radius: var(--radius-md, 10px); overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line, #d8e7eb); }
+.md-contact-qr-code > svg { display: block; width: 100%; height: 100%; }
+.md-contact-qr-hint { max-width: 290px; margin: 0; color: var(--text-dim, #49676e); font-size: 12px; line-height: 1.45; text-align: center; }
+.md-contact-reader-footer { padding: 10px 16px 0; font-size: 12.5px; }
+.md-contact-reader-footer a { color: var(--accent-strong, #26758a); text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .md-contact-reader-footer a:hover, .md-contact-reader .md-contact-details a:hover { text-decoration: underline; } }
 .md-contact-list { container: contact-list / inline-size; min-width: 0; }
 .md-contact-body strong { overflow-wrap: anywhere; }
 .md-contact-list .md-contact-download > svg { display: none; flex-shrink: 0; }

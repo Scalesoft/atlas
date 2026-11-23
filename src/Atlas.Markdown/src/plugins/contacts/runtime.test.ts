@@ -100,7 +100,7 @@ describe('contact contextual management', () => {
     trigger.click()
     const panel = document.querySelector<HTMLElement>('.md-contact-reader')!
     expect(panel.getAttribute('role')).toBe('dialog')
-    expect(panel.querySelector('a')!.href).toBe('tel:+420123')
+    expect(panel.querySelector<HTMLAnchorElement>('.md-contact-details a')!.href).toBe('tel:+420123')
     expect(panel.querySelector('.md-contact-download')!.getAttribute('aria-label')).toBe('Stáhnout vizitku <b>Jana</b>')
     expect(panel.querySelector('b')).toBeNull()
     panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
@@ -320,6 +320,31 @@ describe('contact contextual management', () => {
     await createContactsRuntime({}).render(readonly.context)
     expect(readonly.container.querySelector('.md-contact-username')!.textContent).toBe('Uživatelské jméno: jana.n')
     expect(readonly.container.querySelector('.md-contact-username a')).toBeNull()
+  })
+  it('a resting mouse opens the person card without the focus, leaving closes it, a press keeps it; its QR code unfolds in the card', async () => {
+    vi.useFakeTimers()
+    try {
+      const qrCode = vi.fn(async () => ({ svg: '<svg data-qr></svg>', version: 10 }))
+      const { context, container } = mount([{ name: 'Jana Nováková', phones: ['+420 123'] }])
+      delete context.editor; delete context.update
+      await createContactsRuntime({ qrCode }, true).render(context)
+      const trigger = container.querySelector<HTMLButtonElement>('.md-contact-name')!
+      const pointer = (target: EventTarget, type: string) => target.dispatchEvent(Object.assign(new Event(type, { bubbles: type === 'pointerdown' }), { pointerType: 'mouse' }))
+      pointer(trigger, 'pointerenter'); vi.advanceTimersByTime(400)
+      const card = document.querySelector<HTMLElement>('.md-contact-hover')!
+      expect(card.contains(document.activeElement)).toBe(false)
+      pointer(trigger, 'pointerleave'); vi.advanceTimersByTime(400)
+      expect(card.isConnected).toBe(false)
+      pointer(trigger, 'pointerenter'); vi.advanceTimersByTime(400)
+      const kept = document.querySelector<HTMLElement>('.md-contact-hover')!
+      pointer(kept.querySelector('.md-contact-qr-toggle')!, 'pointerdown'); pointer(trigger, 'pointerleave'); vi.advanceTimersByTime(400)
+      expect(kept.isConnected).toBe(true)
+      const toggle = kept.querySelector<HTMLButtonElement>('.md-contact-qr-toggle')!
+      toggle.click(); await vi.runAllTimersAsync()
+      expect(toggle.getAttribute('aria-expanded')).toBe('true')
+      expect(qrCode).toHaveBeenCalledWith(expect.stringContaining('N:Nováková;Jana;;;'))
+      expect(kept.querySelector(`#${toggle.getAttribute('aria-controls')} .md-contact-qr-code svg`)).not.toBeNull()
+    } finally { vi.useRealTimers() }
   })
   it('renders readonly telephone and e-mail actions without edit or directory controls', async () => {
     const { context, container } = mount([{ name: '<b>Jana</b>', phones: ['+420 123 456 789'], emails: ['jana@example.cz'] }])

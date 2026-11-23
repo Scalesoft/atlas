@@ -29,9 +29,10 @@ export function pageContacts(document: OverviewDocument): MarkdownContact[] {
 /** Every e-mail of the people once, in their order: the line to paste into a mail's recipients. */
 export const contactEmails = (contacts: readonly MarkdownContact[]) => [...new Set(contacts.flatMap(contact => contact.emails ?? []))].join(", ");
 
-/** The people as one vCard file (`kontakty.vcf`, one card per person). */
+/** The people as one vCard file (`kontakty.vcf`, one card per person; one person's file has their name, as the editor's card saves it). */
 export function downloadContacts(contacts: readonly MarkdownContact[], ownerDocument: Document = document) {
-  downloadMarkdownFile(ownerDocument, "kontakty.vcf", new Blob([serializeVCard(contacts)], { type: "text/vcard;charset=utf-8" }));
+  const name = contacts.length === 1 ? `${contacts[0]!.name.replace(/[^\p{L}\p{N}_-]/gu, "_")}.vcf` : "kontakty.vcf";
+  downloadMarkdownFile(ownerDocument, name, new Blob([serializeVCard(contacts)], { type: "text/vcard;charset=utf-8" }));
 }
 
 /** The levels of the page's contact cards, less → more (S, M, L); a page starts at today's full card: `data-overview-contacts`, contactOverview.css. */

@@ -16,6 +16,8 @@ export interface MarkdownReaderPopoverOptions {
   readonly title: string
   readonly signal?: AbortSignal
   readonly className?: string
+  /** false: the panel opens without taking the focus (a hover card); it then returns the focus to the anchor only when it had it. Default true. */
+  readonly autoFocus?: boolean
   readonly render: (body: HTMLElement, close: () => void) => void | (() => void)
 }
 
@@ -41,7 +43,7 @@ export function openMarkdownReaderPopover(options: MarkdownReaderPopoverOptions)
   let stopPosition: (() => void) | undefined
   let cleanup: void | (() => void)
   let releaseActive: (() => void) | undefined
-  const close = (focus = true) => {
+  const close = (focus = options.autoFocus !== false || popup.contains(doc.activeElement)) => {
     if (closed) return
     closed = true; revision++; stopPosition?.(); observer?.disconnect(); unregister(); popup.remove()
     doc.removeEventListener('pointerdown', outside, true); doc.removeEventListener('keydown', keyboard, true)
@@ -74,6 +76,6 @@ export function openMarkdownReaderPopover(options: MarkdownReaderPopoverOptions)
   } catch (error) { close(false); throw error }
   if (closed) return () => {}
   stopPosition = autoUpdate(anchor, popup, updatePosition, { elementResize: typeof doc.defaultView?.ResizeObserver === 'function', layoutShift: typeof doc.defaultView?.IntersectionObserver === 'function' })
-  if (!popup.contains(doc.activeElement)) (body.querySelector<HTMLElement>('input,textarea,select,a[href],button') ?? popup).focus({ preventScroll: true })
+  if (options.autoFocus !== false && !popup.contains(doc.activeElement)) (body.querySelector<HTMLElement>('input,textarea,select,a[href],button') ?? popup).focus({ preventScroll: true })
   return () => close()
 }

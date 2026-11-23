@@ -48,6 +48,15 @@ export interface ContactsStrings {
   /** "Stáhnout vizitku {name}" aria-label for the download button. */
   downloadCardAriaLabel: (name: string) => string
   downloadCardTitle: string
+  /** Reader card: the quick actions under the person (the first e-mail and phone). */
+  sendEmail: string
+  call: string
+  /** Reader card: „QR kód“ beside „Stáhnout vizitku“ unfolds the card as a QR code; its accessible name, the hint under it, the fields a dense code left out, a failure. */
+  qrCode: string
+  qrCodeLabel: (name: string) => string
+  qrHint: string
+  qrOmitted: (fields: string) => string
+  qrFailed: string
   /** Reader card: copy a phone or an e-mail, the link to the directory contact, the places it is used. */
   copyValue: (value: string) => string
   copied: string

@@ -19,6 +19,11 @@ const en: ContactsUiMessages = {  card: {
     remove: "Remove",
     edit: (label: string) => `Edit: ${label}`,
     listHint: (label: string) => `${label} (one per line, Ctrl+Enter saves)`,
+    vcf: "Download contact card (.vcf)",
+    qr: "Contact card QR code",
+    qrHint: "Scan it with a phone camera to save the contact. The whole card is inside the code; the phone needs no connection to the wiki.",
+    qrOmitted: (fields: string) => `Left out so the code stays readable: ${fields}.`,
+    qrFailed: "The QR code could not be made. Download the card instead.",
   },
   directory: {
     duplicateEmail: "A contact with this e-mail address is already in the directory, showing it.",

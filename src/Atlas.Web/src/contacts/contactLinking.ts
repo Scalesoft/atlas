@@ -12,6 +12,7 @@ import { openVuePopover } from "../projector/openVuePopover";
 import { buildShellHashEncoded } from "../shellRoute";
 import { contactApi, linkedSnapshot, type ContactCandidate, type ContactConflict, type ContactPlace } from "./contactApi";
 import type { ContactPatch } from "./contactData";
+import { drawContactQr } from "./contactQr";
 
 /**
  * Every person put in a page or on a board is a reference to one directory contact (spec 2026-10-30 §3, §7): a pick is matched first
@@ -164,8 +165,9 @@ export async function usedOn(objectId: string, signal: AbortSignal, api: Pick<Us
 }
 
 /** The contacts plugin's host options (§3, §4, K2): live contacts always; linking and the last-usage question where the document is a place. */
-export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOptions, "live" | "link" | "remove" | "directoryUrl" | "editLinked" | "readerUsage"> {
+export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOptions, "live" | "link" | "remove" | "directoryUrl" | "editLinked" | "readerUsage" | "qrCode"> {
   return {
+    qrCode: drawContactQr,
     live: (objectId, { signal }) => contactApi.live(objectId, { signal }),
     editLinked: (contact, { editor, anchor, signal, save }) =>
       openVuePopover({ editor, anchor, signal, title: `Kontakt ${contact.name}`, variant: "panel", component: PageContactEditor, props: { snapshot: contact, save } }),
