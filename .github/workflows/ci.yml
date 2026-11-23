@@ -85,14 +85,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '26'
-      # The image releases publish (deploy/postgres, the default of docker-compose.yml): PostgreSQL with pgvector on Alpine (musl),
-      # which sorts text differently from a glibc image, so the tests run on exactly this build. Migration 2026100520 requires pgvector.
+      # The database image docker-compose.yml pins (official pgvector, PostgreSQL 19, by digest). Migration 2026100520 requires
+      # pgvector. The test databases sort text with the builtin provider whatever the server's locale (TestDatabases.cs).
       # Readiness over TCP, not the socket: the image's temporary init server listens on the socket only.
       - name: Start PostgreSQL
         run: |
           set -euo pipefail
-          docker build -t atlas-postgres-ci deploy/postgres
-          docker run -d --name atlas-test-pg -p 5432:5432 -e POSTGRES_USER=atlas -e POSTGRES_PASSWORD=atlas-ci -e POSTGRES_DB=atlas_test atlas-postgres-ci
+          image=$(sed -n 's/.*ATLAS_POSTGRES_IMAGE:-\([^}]*\)}.*//p' docker-compose.yml)
+          docker run -d --name atlas-test-pg -p 5432:5432 -e POSTGRES_USER=atlas -e POSTGRES_PASSWORD=atlas-ci -e POSTGRES_DB=atlas_test             -e POSTGRES_INITDB_ARGS='--locale-provider=builtin --builtin-locale=C.UTF-8' "$image"
           for i in $(seq 1 60); do docker exec atlas-test-pg pg_isready -h 127.0.0.1 -U atlas -d atlas_test && exit 0; sleep 2; done
           docker logs atlas-test-pg; exit 1
       # The PDF tests print with the Chromium headless shell of Playwright 1.64 (as the Dockerfile installs).

@@ -29,15 +29,15 @@ The interface is available in **Czech and English**. Most design documents are w
 | `src/Atlas.YouTrack` | YouTrack module (read-only) |
 | `src/Atlas.AppHost` | .NET Aspire host for local development (PostgreSQL in a container) |
 | `tests/` | Server, YouTrack, Yjs and synchronisation tests, and Playwright browser tests |
-| `deploy/postgres` | PostgreSQL + pgvector image used by `docker-compose.yml` ([description](deploy/postgres/README.md)) |
+| `deploy/postgres` | Upgrade of a PostgreSQL 18 database volume to 19 ([description](deploy/postgres/README.md)) |
 | `docs/` | Architecture, operations and feature documentation (in Czech) |
 | `tooling/` | Release and CI tooling, generators of icons, covers and version marks |
 
 ## Quick start with Docker Compose
 
-Every release publishes the images `ghcr.io/scalesoft/atlas:<version>` (and `latest`) and
-`ghcr.io/scalesoft/atlas-postgres:<tag>` (`linux/amd64` only; released versions are listed under
-[Releases](https://github.com/Scalesoft/atlas/releases), the database tag is in [`docker-compose.yml`](docker-compose.yml)).
+Every release publishes the image `ghcr.io/scalesoft/atlas:<version>` (and `latest`; `linux/amd64` only; released versions
+are listed under [Releases](https://github.com/Scalesoft/atlas/releases)). The database is the official
+`pgvector/pgvector` image (PostgreSQL 19) that [`docker-compose.yml`](docker-compose.yml) pins by digest.
 
 ```sh
 docker compose up -d

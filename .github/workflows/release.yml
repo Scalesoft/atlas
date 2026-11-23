@@ -1,7 +1,7 @@
 name: Release
 
 # A push to main is a release: the CI jobs, then the image ghcr.io/<owner>/atlas:<version> (linux/amd64), the Git tag
-# v<version> (version.json) and the GitHub release. The database image has its own workflow (postgres-image.yml).
+# v<version> (version.json) and the GitHub release. The database is the official pgvector image docker-compose.yml pins.
 # Nothing is deployed from here; installations pick a released version themselves.
 on:
   push:
