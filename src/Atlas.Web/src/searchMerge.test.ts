@@ -18,7 +18,11 @@ describe("mergeSearchResults", () => {
     const incoming = [row("n1"), row("c"), row("a")];
     expect(ids(mergeSearchResults([row("a"), row("b")], incoming, undefined, key))).toEqual(["n1", "c", "a"]);
   });
-  it("falls back to the new ranking when the selected row is gone", () => {
-    expect(ids(mergeSearchResults([row("a"), row("b")], [row("c"), row("a")], "b", key))).toEqual(["c", "a"]);
+  it("keeps the row under the cursor when the full pass left it out of its first page", () => {
+    // „luboš krbec“: the preview's contact page must not vanish when pages found only by meaning fill the full pass.
+    expect(ids(mergeSearchResults([row("a"), row("b")], [row("c"), row("a")], "b", key))).toEqual(["a", "b", "c"]);
+  });
+  it("takes the new ranking when nothing shown is under the cursor", () => {
+    expect(ids(mergeSearchResults([row("a"), row("b")], [row("c"), row("a")], "x", key))).toEqual(["c", "a"]);
   });
 });

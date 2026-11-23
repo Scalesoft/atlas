@@ -84,6 +84,13 @@ public sealed class ListObjectsHandler
             filter = filter.And(Expression.Sql($$"""lower(btrim({alias}."Title")) IN ({{string.Join(", ", wanted.Select(_ => "?"))}})""",
                 wanted, wanted.Select(_ => (NHibernate.Type.IType)NHibernateUtil.String).ToArray()));
         }
+        if (string.Join(' ', SearchText.LookupWords(query.Q)) is { Length: > 0 } typed)
+        {
+            // The name typed (or its start) first, diacritics and case aside: „luboš krbec“ finds Luboš Krbec before whoever only mentions him.
+            const string title = """lower(public.unaccent(btrim({alias}."Title")))""";
+            filter.UnderlyingCriteria.AddOrder(Order.Asc(Projections.Conditional(Expression.Sql(title + " = ?", typed, NHibernateUtil.String), Projections.Constant(0),
+                Projections.Conditional(Expression.Sql(title + " LIKE ?", Escape(typed) + "%", NHibernateUtil.String), Projections.Constant(1), Projections.Constant(2)))));
+        }
         var total = await filter.ToRowCountQuery().SingleOrDefaultAsync<int>(ct);
         var rows = total <= (page - 1) * ListObjects.PageSize ? [] : await filter
             .OrderBy(x => x.UpdatedAt).Desc.ThenBy(x => x.Id).Asc

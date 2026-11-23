@@ -3920,6 +3920,7 @@ function scheduleSearch() {
   const abort = new AbortController();
   searchAbort = abort;
   searching.value = true;
+  let previewShown = false;
   async function searchPass(prefixOnly: boolean) {
     try {
       const found = await api<{ items: SearchResult[]; hasMore: boolean; spaces?: typeof searchSpaces.value; resources?: typeof searchResources.value; nextOffset?: number | null; semantic?: boolean; didYouMean?: string; relaxed?: boolean }>(
@@ -3928,8 +3929,12 @@ function scheduleSearch() {
       );
       if (version === searchVersion) {
         searchError.value = "";
-        const selected = searchResultChosen.value ? searchResultKeys.value[searchIndex.value] : undefined;
-        results.value = prefixOnly || !selected ? found.items : mergeSearchResults(results.value, found.items, selected, searchItemKey);
+        // The row under the cursor (the preselected first one too) of this query's preview holds its place, by the page it came from.
+        const under = previewShown ? searchGroups.value.flatMap(group => group.items)[searchIndex.value] : undefined;
+        const anchor = under && /^(page|widget)-/u.test(under.key) ? under : undefined;
+        results.value = prefixOnly || !anchor ? found.items : mergeSearchResults(results.value, found.items, searchItemKey(anchor.result), searchItemKey);
+        if (anchor) searchIndex.value = Math.max(0, searchResultKeys.value.indexOf(anchor.key));
+        previewShown = prefixOnly;
         searchSemantic.value = !prefixOnly && found.semantic === true;
         didYouMean.value = prefixOnly ? "" : found.didYouMean ?? "";
         searchRelaxed.value = !prefixOnly && found.relaxed === true;
@@ -3987,7 +3992,8 @@ function scheduleSearch() {
 const settleArrivals = (animate: boolean) => arrivals.settle(searchResultKeys.value.map((key, index) => [key, () => document.getElementById(`search-result-${index}`)] as [string, () => Element | null]), animate);
 const SEARCH_TYPING_DEBOUNCE_MS = 70;
 let lastSearchScheduleAt = -Infinity;
-const searchItemKey = (result: SearchResult) => `page-${result.id}-${result.isDraft}-${result.headingId ?? ''}`;
+/** A result's page: a contact or heading row of it is the same result. */
+const searchItemKey = (result: Pick<SearchResult, "id" | "isDraft">) => `${result.id}-${result.isDraft}`;
 function acceptDidYouMean() { query.value = didYouMean.value; }
 /** The next page; a call while one loads for the same search waits for it (the scroll observer and a restored view both ask). */
 let moreLoad: { version: number; done: Promise<void> } | undefined;

@@ -14,6 +14,12 @@ namespace Atlas.Server.Features.Search;
 /// </summary>
 public static class SearchQueries
 {
+    /// <summary>A query of several words found as one phrase in the body (a person's name on a contact card, „luboš krbec“): above scattered
+    /// words, and at the hybrid title tier (1500), so pages found only by meaning never push it off the first page.</summary>
+    private static string BodyPhraseOf(string body) => $"""WHEN strpos(:query,' ')>0 AND d."Vector" @@ to_tsquery('simple',:fts) AND strpos({body},:query)>0 THEN 1500""";
+    private static readonly string BodyPhrase = BodyPhraseOf("d.\"NormalizedBody\"");
+    private static readonly string DraftBodyPhrase = BodyPhraseOf("""(SELECT b."NormalizedBody" FROM "WorkingSearchDocument" b WHERE b."PageId"=d."PageId")""");
+
     /// <summary>The published scope (atlas_search_published).</summary>
     public static readonly string Published = $$"""
         WITH {{AccessSql.ActorCte}}, access AS MATERIALIZED (
@@ -38,6 +44,7 @@ public static class SearchQueries
                  WHEN ts_filter(d."Vector",'{a}') @@ to_tsquery('simple',:fts) THEN 3000
                  WHEN d."HeadingVector" @@ to_tsquery('simple',:fts) THEN 2000
                  WHEN d."AliasVector" @@ to_tsquery('simple',:fts) THEN 2500
+                 {{BodyPhrase}}
                  WHEN d."Vector" @@ to_tsquery('simple',:fts) THEN 1000
                  WHEN :query <% d."NormalizedTitle" THEN 500 ELSE 0 END
               + 100 * ts_rank_cd(d."Vector",to_tsquery('simple',:fts),32)
@@ -102,6 +109,7 @@ public static class SearchQueries
                  WHEN ts_filter(d."Vector",'{a}') @@ to_tsquery('simple',:fts) THEN 3000
                  WHEN d."HeadingVector" @@ to_tsquery('simple',:fts) THEN 2000
                  WHEN d."AliasVector" @@ to_tsquery('simple',:fts) THEN 2500
+                 {{BodyPhrase}}
                  WHEN d."Vector" @@ to_tsquery('simple',:fts) THEN 1000
                  WHEN :query <% d."NormalizedTitle" THEN 500 ELSE 0 END
               + 100 * ts_rank_cd(d."Vector",to_tsquery('simple',:fts),32)
@@ -195,6 +203,7 @@ public static class SearchQueries
             CASE WHEN d."NormalizedTitle"=:query THEN 10000 WHEN d."NormalizedTitle" LIKE :prefix THEN 5000
                  WHEN ts_filter(d."Vector",'{a}') @@ to_tsquery('simple',:fts) THEN 3000
                  WHEN d."HeadingVector" @@ to_tsquery('simple',:fts) THEN 2000
+                 {{DraftBodyPhrase}}
                  WHEN d."Vector" @@ to_tsquery('simple',:fts) THEN 1000 ELSE 500 END
               + 100 * ts_rank_cd(d."Vector",to_tsquery('simple',:fts),32)
               + 50 * word_similarity(:query,d."NormalizedTitle") AS score
@@ -316,6 +325,7 @@ public static class SearchQueries
                    WHEN ts_filter(d."Vector",'{a}') @@ to_tsquery('simple',:fts) THEN 3000
                    WHEN d."HeadingVector" @@ to_tsquery('simple',:fts) THEN 2000
                    WHEN d."AliasVector" @@ to_tsquery('simple',:fts) THEN 2500
+                   {{BodyPhrase}}
                    WHEN d."Vector" @@ to_tsquery('simple',:fts) THEN 1000
                    WHEN :query <% d."NormalizedTitle" THEN 500 ELSE 0 END
                 + 100 * ts_rank_cd(d."Vector",to_tsquery('simple',:fts),32)

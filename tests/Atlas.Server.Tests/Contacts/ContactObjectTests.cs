@@ -117,6 +117,22 @@ public sealed class ContactObjectTests
         Assert.Equal("Marek Musil", Assert.Single(found.Items).Title);
     }
 
+    [PostgreSqlFact]
+    public async Task The_directory_lists_the_name_typed_or_its_start_first_whoever_changed_last()
+    {
+        await using var f = await BoardsFixture.SharedAsync();
+        var tag = Tag();
+        var lubos = await f.As<ObjectDto>(f.Writer, Create($$"""{"name":"{{tag}} Luboš Krbec","organization":"ORION"}"""));
+        // Changed later and holding every word in its fields: the old order (the last changed first) put her above him.
+        var jana = await f.As<ObjectDto>(f.Writer, Create($$"""{"name":"{{tag}} Jana","title":"zastupuje Luboše Krbce, luboš krbec"}"""));
+
+        async Task<Guid[]> FindAsync(string q) => (await f.As<ObjectList>(f.Reader, new ListObjects(ContactObjectType.Id, ObjectScopes.Wiki, null, q))).Items.Select(item => item.Id).ToArray();
+        Assert.Equal([lubos.Id, jana.Id], await FindAsync($"{tag} LUBOS krbec"));
+        Assert.Equal([lubos.Id, jana.Id], await FindAsync($"{tag} luboš"));
+        // Neither name is typed: the last changed first, as before.
+        Assert.Equal([jana.Id, lubos.Id], await FindAsync($"krbec {tag}"));
+    }
+
     /// <summary>A token of one test: on the shared host the wiki directory is every test's and refuses a second contact of an address.</summary>
     private static string Tag() => Guid.NewGuid().ToString("N")[..8];
 
