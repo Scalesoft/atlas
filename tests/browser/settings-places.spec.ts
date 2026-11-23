@@ -46,9 +46,9 @@ const visit = (page: Page, hash: string) => page.evaluate((target) => { location
 test('a reader reads about a space and finds nothing of its administration', async ({ page }) => {
   await mockWiki(page, 'Reader');
   await page.goto('/#/spaces/provoz');
-  // Stránky and O prostoru for everyone; Ke schválení belongs to wiki administrators only.
+  // Obsah, Kontakty and O prostoru for everyone; Ke schválení belongs to wiki administrators only.
   const tabs = page.getByRole('tablist', { name: 'Zobrazení prostoru' }).getByRole('tab');
-  await expect(tabs).toHaveText([/^Stránky/, 'O prostoru']);
+  await expect(tabs).toHaveText([/^Obsah/, 'Kontakty', 'O prostoru']);
   await tabs.getByText('O prostoru').click();
   await expect(page).toHaveURL(/#\/spaces\/provoz\/about$/);
   await expect(page.getByRole('tab', { name: 'O prostoru' })).toHaveAttribute('aria-selected', 'true');
@@ -62,7 +62,7 @@ test('a reader reads about a space and finds nothing of its administration', asy
   await expect(page.locator('[data-space-about-admin]')).toHaveCount(0);
   await expect(page.getByText('Správa prostoru', { exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Nastavení prostoru' })).toHaveCount(0);
-  await page.getByRole('tab', { name: /^Stránky/ }).click();
+  await page.getByRole('tab', { name: /^Obsah/ }).click();
   await expect(page).toHaveURL(/#\/spaces\/provoz$/);
   await expect(about).toHaveCount(0);
   // The address of the settings is not a way in: it lands on Knihovna, not on a blank surface.

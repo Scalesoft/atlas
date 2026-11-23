@@ -156,6 +156,9 @@ const routes: [string, RegExp, Handler][] = [
     model.oidc = { ...model.oidc, publicOrigin: body.publicOrigin, version: model.version(), restartRequired: true, providers: body.providers.map((provider: Json) => ({ ...provider, hasSecret: true, callbackUrl: `${body.publicOrigin}/signin-oidc/${provider.id}` })) };
     return model.oidc;
   }],
+  // Saving the providers is a security change: the fresh sign-in is a password (SEC-A-1).
+  ['POST', /^\/api\/security\/reauth$/, () => ({ id: 'proof-1', method: 'password', providerId: null, providerName: null, expiresAt: '2099-01-01T00:00:00Z', redirectUrl: null })],
+  ['POST', /^\/api\/security\/reauth\/proof-1\/password$/, () => ({ id: 'proof-1', operation: 'security', targetKind: 'vault', targetId: null, method: 'password', state: 'verified', failure: null, expiresAt: '2099-01-01T00:00:00Z', proofExpiresAt: '2099-01-01T00:00:00Z' })],
   ['POST', /^\/api\/admin\/modules\/oidc\/test$/, () => ({ ok: true, message: 'Poskytovatel odpovídá, discovery dokument je platný.', checkedAt: now })],
   ['GET', /^\/api\/admin\/integrations\/youtrack\/?$/, () => ({ moduleEnabled: true, enabled: true, baseUrl: 'https://youtrack.example.test', hasToken: true, version: 'y1', status: 'configured', spaces: [{ id: 'provoz', name: 'Provoz' }, { id: 'vyvoj', name: 'Vývoj' }], spaceProjects: [{ spaceId: 'provoz', projectIds: ['OPS'] }] })],
   ['GET', /^\/api\/spaces$/, () => spaces],
@@ -457,6 +460,8 @@ for (const combo of combos) {
       await confirm(page);
       await expect(page.locator('[data-provider]').filter({ hasText: 'Google Workspace' })).toBeVisible();
       await page.locator('[data-save-bar-save]').click();
+      await page.locator('[data-reauth-dialog] input[type="password"]').fill('heslo');
+      await page.locator('[data-reauth-dialog] [data-confirm-reauth]').click();
       await expect(page.locator('[data-oidc-restart]')).toBeVisible();
       const saved = model.calls.find((call) => call.method === 'PUT' && call.path === '/api/admin/modules/oidc')?.body as { providers: { displayName: string }[] };
       expect(saved.providers.map((provider) => provider.displayName)).toEqual(['JetBrains Hub', 'Google Workspace']);
