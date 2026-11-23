@@ -386,7 +386,7 @@ try {
     # A different C library or collation would order text differently and silently break text B-tree indexes; amcheck proves
     # every index is ordered under the new image (after upgrade.sh they were built anew). Text sorts as before: by code point,
     # on musl and with the builtin provider alike (upgrade.sh compares an ordering probe).
-    Add-Result 'database: collation builtin C.UTF-8 (libc-independent)' ((Get-SqlValue "SELECT datlocprovider || ' ' || coalesce(datlocale, '') FROM pg_database WHERE datname = 'atlas';") -eq 'b C.UTF-8') 'pg_database.datlocprovider'
+    Add-Result 'database: collation builtin C.UTF-8 (libc-independent)' ((Get-SqlValue "SELECT datlocprovider::text || ' ' || coalesce(datlocale, '') FROM pg_database WHERE datname = 'atlas';") -eq 'b C.UTF-8') 'pg_database.datlocprovider'
     try {
         $checked = Invoke-Sql @"
 CREATE EXTENSION amcheck;
