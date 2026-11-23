@@ -51,6 +51,8 @@ let agentTimer: ReturnType<typeof setTimeout> | undefined;
 const agentPresence = createCollaborationPresence({ onChange: () => {} });
 const agentAbort = new AbortController();
 const agentPeer = { clientId: 9, id: "ai:gallery", name: "Jana Nováková · AI (MCP)", color: "#7c3aed" };
+// The avatar of the agent: at work (no caret yet) its glyph writes, then it has written (its caret arrives) and plays „done“.
+const agentAvatars = ref<{ clientId: number; id: string; name: string; color: string; cursorAvailable: boolean }[]>([]);
 onMounted(() => {
   const caretAt = Extension.create({
     name: "galleryAgentCaret",
@@ -73,12 +75,17 @@ function playAgentWrite() {
   const editor = agentEditor!;
   clearTimeout(agentTimer);
   editor.commands.setContent("<p>Shrnutí porady: rozpočet schválen.</p>");
-  const end = editor.state.doc.content.size - 1;
-  editor.view.dispatch(editor.state.tr.insertText(" Další krok: objednat licence do pátku.", end));
-  editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, editor.state.doc.content.size - 1));
-  agentPresence.update([agentPeer]);
-  // The server keeps the agent's caret about two seconds (LivePageWrites.CaretLinger), then it fades out.
-  agentTimer = setTimeout(() => agentPresence.update([]), 2000);
+  agentPresence.update([]);
+  agentAvatars.value = [{ ...agentPeer, cursorAvailable: false }];
+  agentTimer = setTimeout(() => {
+    const end = editor.state.doc.content.size - 1;
+    editor.view.dispatch(editor.state.tr.insertText(" Další krok: objednat licence do pátku.", end));
+    editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, editor.state.doc.content.size - 1));
+    agentPresence.update([agentPeer]);
+    agentAvatars.value = [{ ...agentPeer, cursorAvailable: true }];
+    // The server keeps the agent's caret about two seconds (LivePageWrites.CaretLinger), then it fades out.
+    agentTimer = setTimeout(() => { agentPresence.update([]); agentAvatars.value = []; }, 2000);
+  }, 1600);
 }
 onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); agentAbort.abort(); agentEditor?.destroy(); });
 </script>
@@ -104,7 +111,8 @@ onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); a
       <Button variant="outline" :aria-pressed="pointers.length > 0" @click="togglePointers">{{ pointers.length ? "Zastavit ukazatele" : "Přehrát ukazatele" }}</Button>
     </div>
     <div class="pointer-sample agent-sample">
-      <p>Kurzor AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, server pošle po zápisu jeho kurzor hned za text, který napsal. Kurzor má AI inkoust, jemnou záři a AI znak, který jednou přehraje „hotovo“; asi dvě sekundy stojí, kde agent psal, pak zmizí prolnutím. Lidé nezáří. Ukázka kreslí skutečný overlay nad malým editorem.</p>
+      <p>Kurzor AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, server pošle po zápisu jeho kurzor hned za text, který napsal. Kurzor má AI inkoust, jemnou záři a AI znak, který jednou přehraje „hotovo“; asi dvě sekundy stojí, kde agent psal, pak zmizí prolnutím. Lidé nezáří. Avatar agenta nese iniciály člověka, za kterého píše, v AI inkoustu se září a místo tužky AI znak: dokud agent pracuje, znak píše (hvězda pulzuje a kývá se), s kurzorem přehraje „hotovo“. Ukázka kreslí skutečný overlay nad malým editorem a skutečné CollaboratorAvatars.</p>
+      <CollaboratorAvatars class="agent-avatars" :peers="agentAvatars" />
       <div ref="agentHost" class="agent-editor" />
     </div>
     <div class="st-actions">
@@ -119,5 +127,6 @@ onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); a
 .motion-sample { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; min-height: 64px; margin-block: 8px 16px; }
 p { color: var(--muted); font-size: 13px; }
 .agent-editor { padding-top: 22px; font-size: 15px; }
+.agent-avatars { min-height: 36px; }
 .pointer-sample { position: relative; min-height: 140px; margin-block: 8px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); }
 </style>

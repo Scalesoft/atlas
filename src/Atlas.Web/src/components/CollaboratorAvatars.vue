@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import AtlasIcon from "./AtlasIcon.vue";
+import AiGlyph from "./ai/AiGlyph.vue";
 import t from "../i18n/components-a";
 import type { CollaborationPeer } from "../collaborationPresence";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -28,6 +29,8 @@ function peerLabel(peer: CollaborationPeer) {
     ? t.collaborators.goTo(peer.name)
     : t.collaborators.noCursor(peer.name);
 }
+// An agent shows only while it writes (LivePageWrites): without its caret yet it is at work, with it it has just written.
+const isAgent = (peer: CollaborationPeer) => peer.id?.startsWith("ai:") === true;
 function navigate(peer: CollaborationPeer) {
   if (!peer.cursorAvailable) return;
   emit("navigate", peer.clientId);
@@ -45,7 +48,7 @@ function navigate(peer: CollaborationPeer) {
             <button
               type="button"
               class="collaborator-avatar"
-              :class="{ 'is-unavailable': !peer.cursorAvailable && !peer.activity, 'is-elsewhere': !!peer.activity }"
+              :class="{ 'is-unavailable': !peer.cursorAvailable && !peer.activity && !isAgent(peer), 'is-elsewhere': !!peer.activity, 'is-agent': isAgent(peer) }"
               :style="{ '--collaborator-color': peer.color }"
               :data-client-id="peer.clientId"
               :aria-label="peerLabel(peer)"
@@ -54,7 +57,10 @@ function navigate(peer: CollaborationPeer) {
             >
               <span class="collaborator-avatar-face" aria-hidden="true">
                 {{ initials(peer.name) }}
-                <span class="collaborator-mode"><AtlasIcon name="pencil" :size="10" /></span>
+                <span v-if="isAgent(peer)" class="collaborator-mode">
+                  <AiGlyph :size="10" :working="!peer.cursorAvailable" :state="peer.cursorAvailable ? 'done' : 'writing'" />
+                </span>
+                <span v-else class="collaborator-mode"><AtlasIcon name="pencil" :size="10" /></span>
               </span>
             </button>
           </TooltipTrigger>
@@ -131,6 +137,13 @@ function navigate(peer: CollaborationPeer) {
   .collaborator-avatar-slot:hover .collaborator-mode svg { animation: atlas-collaborator-pencil calc(var(--atlas-motion-pop) * 2) var(--atlas-ease-inout); }
 }
 .collaborator-avatar:is(.is-unavailable, .is-elsewhere) { cursor: default; }
+/* An agent writing for a person (3.6-H): the person's initials in the AI ink with a soft glow, and the AI glyph instead of the pencil,
+   at work (writing: the star pulses and sways, the small stars spark) until it has written (done, once). People never glow. */
+.collaborator-avatar.is-agent .collaborator-avatar-face {
+  background: var(--ai-ink);
+  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--ai-ink) 45%, transparent);
+}
+.collaborator-avatar.is-agent .collaborator-mode { color: var(--ai-ink); }
 .collaborator-avatar.is-unavailable .collaborator-avatar-face { opacity: .7; }
 .collaborator-menu-item.is-unavailable { cursor: default; opacity: .7; }
 .collaborator-overflow {

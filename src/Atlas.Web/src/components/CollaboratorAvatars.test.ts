@@ -63,12 +63,18 @@ describe("collaborator avatars", () => {
     expect(wrapper.emitted("navigate")).toBeUndefined();
   });
 
-  it("shows an agent writing for a person with the person's initials and says it writes", () => {
+  it("shows an agent writing for a person with the person's initials and says it writes", async () => {
     const agent: CollaborationPeer = { clientId: 21, id: "ai:0f", name: "Jana Nováková · AI (MCP: laptop)", color: "#7c3aed", cursorAvailable: false };
     wrapper = mount(CollaboratorAvatars, { props: { peers: [agent] }, attachTo: document.body });
 
     const avatar = wrapper.get(".collaborator-avatar");
     expect(avatar.text()).toBe("JN");
     expect(avatar.attributes("aria-label")).toBe("Jana Nováková · AI (MCP: laptop) – zapisuje do stránky");
+    // At work the AI glyph writes in place of the pencil; once its caret arrives (it has written) it plays „done“.
+    expect(avatar.classes()).toContain("is-agent");
+    expect(avatar.get("[data-ai-glyph]").attributes()).toMatchObject({ "data-state": "writing", "data-working": "true" });
+    await wrapper.setProps({ peers: [{ ...agent, cursorAvailable: true }] });
+    expect(wrapper.get("[data-ai-glyph]").attributes("data-state")).toBe("done");
+    expect(wrapper.get("[data-ai-glyph]").attributes("data-working")).toBeUndefined();
   });
 });
