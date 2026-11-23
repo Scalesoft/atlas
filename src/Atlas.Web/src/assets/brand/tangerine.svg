@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" class="wm-tangerine" role="img" aria-label="Atlas 5.1 Tandem Tangerine">
-<title>Atlas 5.1 Tandem Tangerine</title><desc>Mandarinka ve stylu loga Atlasu jako technický výkres: celá se okótuje, praskne a napříč rozkrojené půlky se pomalu oddálí a natočí řezem k divákovi; kóty celkové délky a mezery mezi půlkami přitom napočítávají, dokud se nezastaví na 40,7 a 6. Okótuje se i hloubka obou půlek a průměr řezu Ø 24; pak po slupkách obou řezů občas proběhne světlo, v obou zároveň.</desc>
+<title>Atlas 5.1 Tandem Tangerine</title><desc>Mandarinka ve stylu loga Atlasu jako technický výkres: celá se okótuje, praskne a napříč rozkrojené půlky se pomalu oddálí a natočí řezem k divákovi; kóty celkové délky a mezery mezi půlkami přitom napočítávají, dokud se nezastaví na 40,7 a 6. Okótuje se i hloubka obou půlek a průměr řezu Ø 24. Pak se na pravém řezu rozsvítí jeden dílek a okótuje se jeho úhel 43°, pravá půlka pomalu vybledne do pomocných čar a dílek z ní vyroste jako samostatná rybička s kótou délky 19.</desc>
 <defs><linearGradient id="tangerine-gradient" x1="10" y1="6" x2="54" y2="60" gradientUnits="userSpaceOnUse"><stop stop-color="#7058de"/><stop offset=".52" stop-color="#4c78e5"/><stop offset="1" stop-color="#159daa"/></linearGradient></defs>
 <style>
 .wm-tangerine .wm-line{fill:none;stroke:url(#tangerine-gradient);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
@@ -20,13 +20,19 @@
 .wm-tangerine .wm-inner{stroke-width:.6}
 .wm-tangerine .wm-seg{stroke-width:.5;fill:url(#tangerine-gradient);fill-opacity:.16;animation:tangerine-show .5s ease both}
 .wm-tangerine .wm-pith{stroke-width:.35}
+.wm-tangerine .wm-pick{fill-opacity:.45}
+.wm-tangerine .wm-ghost{opacity:.16;animation:tangerine-ghost 2s ease 5.8s both}
+.wm-tangerine .wm-fish{animation:tangerine-fish 2.6s cubic-bezier(.65,0,.35,1) 5.8s both}
+.wm-tangerine .wm-fishbody{stroke-width:1.2;fill:url(#tangerine-gradient);fill-opacity:.16}
+.wm-tangerine .wm-ridge{stroke-width:.6}
+.wm-tangerine .wm-vein{stroke-width:.35}
 .wm-tangerine .wm-crack{stroke-width:.7;opacity:0;animation:tangerine-crack 1s ease-out 1s}
 .wm-tangerine .wm-dl{stroke-width:.35}
 .wm-tangerine .wm-show{animation:tangerine-show .5s ease both}
 .wm-tangerine .wm-label{font:500 2.6px ui-sans-serif,system-ui,sans-serif;fill:url(#tangerine-gradient)}
 .wm-tangerine .wm-tick{opacity:0;animation-name:tangerine-tick;animation-timing-function:linear}
 .wm-tangerine .wm-hold{animation:tangerine-show 1ms both}
-.wm-tangerine .wm-glint{stroke:#fff;stroke-width:1.8;stroke-dasharray:5 95;opacity:0;fill:none;filter:drop-shadow(0 0 .6px #ffffffb3);animation:tangerine-pass 14s linear 5s infinite}
+.wm-tangerine .wm-glint{stroke:#fff;stroke-width:1.8;stroke-dasharray:5 95;opacity:0;fill:none;filter:drop-shadow(0 0 .6px #ffffffb3);animation:tangerine-pass 14s linear 9s infinite}
 @keyframes tangerine-ink{0%{stroke-dashoffset:100;opacity:0}12%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
 @keyframes tangerine-part-l{0%{transform:translateX(9.88px)}5.36%{transform:translateX(9.28px)}14.29%{transform:translateX(9.28px)}100%{transform:translateX(0px)}}
 @keyframes tangerine-part-r{0%{transform:translateX(-9.88px)}5.36%{transform:translateX(-9.28px)}14.29%{transform:translateX(-9.28px)}100%{transform:translateX(0px)}}
@@ -39,6 +45,8 @@
 @keyframes tangerine-mid-r{0%{transform:translateX(3.44px)}5.36%{transform:translateX(3.23px)}14.29%{transform:translateX(3.23px)}100%{transform:translateX(0px)}}
 @keyframes tangerine-crack{0%{stroke-dashoffset:100;opacity:1}30%{stroke-dashoffset:0;opacity:1}60%,100%{stroke-dashoffset:0;opacity:0}}
 @keyframes tangerine-show{from{opacity:0}}
+@keyframes tangerine-ghost{from{opacity:1}}
+@keyframes tangerine-fish{from{transform:translate(-0.92px,-4.71px) scale(.3);opacity:0}}
 @keyframes tangerine-tick{from,to{opacity:1}}
 @keyframes tangerine-pass{0%{stroke-dashoffset:0;opacity:0}2%,18%{opacity:.9}21%,100%{stroke-dashoffset:-100;opacity:0}}
 @media(prefers-reduced-motion:reduce){.wm-tangerine *{animation:none!important}.wm-tangerine .wm-glint{display:none}}
@@ -46,6 +54,7 @@
 .release-mark[data-variant="icon"] .wm-tangerine .wm-dim{display:none}
 </style>
 <g class="wm-half wm-l">
+<g class="">
 <path class="wm-line wm-dome wm-ink" pathLength="100" d="M21.12 17A10.45 12 0 0 0 21.12 41" style="animation-delay:0s"/>
 <path class="wm-line wm-wire wm-ink" pathLength="100" d="M15.56 18.84A6.31 11 0 0 0 15.56 39.16M10.7 28.03A4.55 7.94 0 0 0 10.7 29.97" style="animation-delay:0.3s"/>
 <g class="wm-show" style="animation-delay:1s"><g class="wm-face" style="transform-origin:21.12px 29px">
@@ -61,8 +70,10 @@
 <path class="wm-line wm-seg" d="M21.93 27.74C21.99 27.85 22.02 27.68 22.64 27.22C23.26 26.76 25.09 25.61 25.64 24.97C26.18 24.33 25.91 23.81 25.89 23.36C25.86 22.91 25.64 22.59 25.47 22.26C25.3 21.94 25.15 21.51 24.89 21.41C24.64 21.31 24.38 20.8 23.95 21.66C23.52 22.52 22.65 25.56 22.31 26.57C21.98 27.59 21.88 27.63 21.93 27.74Z" style="animation-delay:2.09s"/>
 <path class="wm-line wm-seg" d="M21.33 27.14C21.43 27.17 21.44 26.93 21.77 26.01C22.1 25.09 23.12 22.63 23.32 21.64C23.52 20.64 23.15 20.4 22.96 20.06C22.77 19.71 22.46 19.68 22.21 19.59C21.95 19.49 21.65 19.32 21.41 19.51C21.16 19.7 20.76 19.68 20.73 20.72C20.69 21.77 21.08 24.73 21.18 25.8C21.28 26.87 21.23 27.1 21.33 27.14Z" style="animation-delay:2.16s"/>
 <path class="wm-line wm-pith" d="M20.98 28.62Q21.16 27.9 20.98 27.27M20.87 28.89Q20.72 28.15 20.33 27.9M20.88 29.18Q20.5 28.73 20.11 28.94M21.02 29.42Q20.58 29.56 20.38 30.19M21.17 29.44Q20.85 30 20.89 30.71M21.33 29.27Q21.3 30.05 21.6 30.53M21.37 28.98Q21.64 29.62 22.05 29.66M21.29 28.66Q21.73 28.77 22.03 28.29M21.14 28.55Q21.55 28.19 21.63 27.5"/>
+
 <path class="wm-glint" pathLength="100" d="M21.12 17A6.88 12 0 1 1 21.12 41A6.88 12 0 1 1 21.12 17"/>
 </g></g>
+</g>
 <g class="wm-dim">
 <path class="wm-line wm-dl wm-ink" pathLength="100" d="M10.67 27.6L10.67 12.6" style="animation-delay:0.5s"/>
 <path class="wm-line wm-dl wm-show" d="M11.77 14.1L10.67 13.6L11.77 13.1" style="animation-delay:0.9s"/>
@@ -107,6 +118,7 @@
 </g>
 </g>
 <g class="wm-half wm-r">
+<g class="wm-ghost">
 <path class="wm-line wm-dome wm-ink" pathLength="100" d="M40.88 17A10.45 12 0 0 1 40.88 41" style="animation-delay:0s"/>
 <path class="wm-line wm-wire wm-ink" pathLength="100" d="M46.44 18.84A6.31 11 0 0 1 46.44 39.16M51.3 28.03A4.55 7.94 0 0 1 51.3 29.97" style="animation-delay:0.3s"/>
 <g class="wm-show" style="animation-delay:1s"><g class="wm-face" style="transform-origin:40.88px 29px">
@@ -122,8 +134,10 @@
 <path class="wm-line wm-seg" d="M39.83 28.52C39.8 28.68 39.68 28.58 39.06 28.67C38.44 28.77 36.72 29.24 36.12 29.1C35.52 28.97 35.56 28.31 35.47 27.89C35.37 27.47 35.49 27 35.55 26.58C35.61 26.16 35.64 25.65 35.84 25.36C36.04 25.08 36.19 24.46 36.75 24.86C37.31 25.25 38.69 27.12 39.2 27.73C39.71 28.34 39.85 28.36 39.83 28.52Z" style="animation-delay:2.09s"/>
 <path class="wm-line wm-seg" d="M40.25 27.45C40.15 27.57 40.12 27.43 39.54 26.82C38.97 26.2 37.26 24.59 36.8 23.77C36.34 22.95 36.69 22.43 36.8 21.92C36.92 21.42 37.25 21.07 37.52 20.74C37.78 20.41 38.08 19.99 38.39 19.96C38.7 19.93 39.1 19.54 39.39 20.56C39.68 21.58 40 24.92 40.14 26.07C40.28 27.22 40.35 27.33 40.25 27.45Z" style="animation-delay:2.16s"/>
 <path class="wm-line wm-pith" d="M40.93 28.56Q40.61 28.01 40.64 27.3M41.08 28.7Q41.01 27.92 41.29 27.4M41.14 29.02Q41.41 28.38 41.81 28.34M41.08 29.28Q41.51 29.04 41.86 29.42M40.92 29.44Q41.33 29.77 41.44 30.46M40.73 29.36Q40.89 30.1 40.69 30.72M40.64 29.15Q40.53 29.91 40.16 30.22M40.64 28.84Q40.28 29.3 39.88 29.12M40.75 28.62Q40.29 28.6 40.04 28.04"/>
+<path class="wm-line wm-seg wm-pick" d="M40.25 27.45C40.15 27.57 40.12 27.43 39.54 26.82C38.97 26.2 37.26 24.59 36.8 23.77C36.34 22.95 36.69 22.43 36.8 21.92C36.92 21.42 37.25 21.07 37.52 20.74C37.78 20.41 38.08 19.99 38.39 19.96C38.7 19.93 39.1 19.54 39.39 20.56C39.68 21.58 40 24.92 40.14 26.07C40.28 27.22 40.35 27.33 40.25 27.45Z" style="animation-delay:4.3s"/>
 <path class="wm-glint" pathLength="100" d="M40.88 17A6.88 12 0 1 1 40.88 41A6.88 12 0 1 1 40.88 17"/>
 </g></g>
+</g>
 <g class="wm-dim">
 <path class="wm-line wm-dl wm-ink" pathLength="100" d="M51.33 27.6L51.33 12.6" style="animation-delay:0.5s"/>
 <path class="wm-line wm-dl wm-show" d="M50.23 13.1L51.33 13.6L50.23 14.1" style="animation-delay:0.9s"/>
@@ -244,5 +258,69 @@
 <path class="wm-line wm-dl wm-ink" pathLength="100" d="M55.73 17L55.73 41" style="animation-delay:4.15s"/>
 <path class="wm-line wm-dl wm-show" d="M55.23 18.1L55.73 17L56.23 18.1M56.23 39.9L55.73 41L55.23 39.9" style="animation-delay:4.4s"/>
 <text class="wm-label wm-show" x="54.73" y="29" transform="rotate(-90 54.73 29)" text-anchor="middle" style="animation-delay:4.5s">Ø 24</text>
+<path class="wm-line wm-dl wm-ink" pathLength="100" d="M34.84 22.1L33.4 20.46" style="animation-delay:4.5s"/>
+<path class="wm-line wm-dl wm-ink" pathLength="100" d="M39.13 16.77L38.72 13.86" style="animation-delay:4.5s"/>
+<path class="wm-line wm-dl wm-ink" pathLength="100" d="M33.97 21.12A8.26 14.4 0 0 1 38.88 15.03" style="animation-delay:4.7s"/>
+<path class="wm-line wm-dl wm-show" d="M34.83 20.26L33.97 21.12L33.89 19.91M37.68 15.01L38.88 15.03L38.08 15.92" style="animation-delay:5.6s"/>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.12s;animation-delay:4.7s">0°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:4.82s">1°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:4.88s">3°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:4.94s">6°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5s">11°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.06s">17°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.12s">23°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.18s">28°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.24s">32°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.3s">36°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.36s">38°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.42s">40°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.06s;animation-delay:5.48s">41°</text>
+<text class="wm-label wm-tick" x="35.23" y="16.04" text-anchor="middle" style="animation-duration:0.12s;animation-delay:5.54s">42°</text>
+<text class="wm-label wm-hold" x="35.23" y="16.04" text-anchor="middle" style="animation-delay:5.66s">43°</text>
+</g>
+<g class="wm-fish" style="transform-origin:39.88px 29px">
+<path class="wm-line wm-fishbody" d="M38.88 19.5C48.88 21 48.88 37 38.88 38.5C41.48 36 41.48 22 38.88 19.5Z"/>
+<path class="wm-line wm-ridge" d="M38.88 19.5C44.48 21 44.48 37 38.88 38.5"/>
+<path class="wm-line wm-vein" d="M38.88 19.5C46.46 21 46.46 37 38.88 38.5M38.88 19.5C47.78 21 47.78 37 38.88 38.5"/>
+<g class="wm-dim">
+<path class="wm-line wm-dl" d="M41.08 19.5L50.98 19.5M41.08 38.5L50.98 38.5M50.08 19.5L50.08 38.5M49.58 20.6L50.08 19.5L50.58 20.6M50.58 37.4L50.08 38.5L49.58 37.4"/>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.18s;animation-delay:5.8s">5,7</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.12s;animation-delay:5.98s">5,8</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.12s;animation-delay:6.1s">5,9</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.22s">6</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.28s">6,2</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.34s">6,3</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.4s">6,5</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.46s">6,7</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.52s">6,9</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.58s">7,2</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.64s">7,5</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.7s">7,9</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.76s">8,3</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.82s">8,9</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.88s">9,5</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:6.94s">10,2</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7s">10,9</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.06s">11,8</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.12s">12,6</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.18s">13,5</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.24s">14,3</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.3s">15</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.36s">15,6</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.42s">16,2</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.48s">16,7</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.54s">17,1</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.6s">17,4</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.66s">17,7</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.72s">17,9</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.78s">18,2</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.84s">18,3</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.9s">18,5</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:7.96s">18,6</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:8.02s">18,7</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.06s;animation-delay:8.08s">18,8</text>
+<text class="wm-label wm-tick" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-duration:0.12s;animation-delay:8.14s">18,9</text>
+<text class="wm-label wm-hold" x="49.08" y="29" transform="rotate(-90 49.08 29)" text-anchor="middle" style="animation-delay:8.26s">19</text>
+</g>
 </g>
 </svg>
