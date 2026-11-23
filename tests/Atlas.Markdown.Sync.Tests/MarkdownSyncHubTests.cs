@@ -1157,6 +1157,47 @@ public class MarkdownSyncHubTests
         Assert.Equal(TextAt(7), Assert.Single(updates));
     }
 
+    /// <summary>
+    /// A quick reconnect: the client keeps its awareness client id on a new connection while the server has not yet noticed that the old
+    /// one is gone. The new connection shows at once (it was dropped until the old peer left, whose removal then hid the person until the
+    /// next heartbeat), and the old one's late leave removes nothing. Another person still cannot take that client id.
+    /// </summary>
+    [Fact]
+    public async Task A_quick_reconnect_shows_at_once_and_the_old_connections_late_leave_hides_nothing()
+    {
+        await using var host = await HubTestHost.StartAsync();
+        await using var carol = host.Connection("carol");
+        await using var bob = host.Connection("bob");
+        var alice = host.Connection("alice");
+        await using var again = host.Connection("alice");
+        foreach (var connection in new[] { carol, bob, alice, again }) await connection.StartAsync();
+        var awareness = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
+        bob.On<string, byte[]>("ReceiveAwareness", (_, payload) => awareness.Enqueue(payload));
+        await SeedAsync(carol, "doc1");
+        await bob.InvokeAsync<JoinResult>("JoinDocument", "doc1");
+        await alice.InvokeAsync<JoinResult>("JoinDocument", "doc1");
+        await alice.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("{}", client: 7, clock: 3));
+        await WaitUntil(() => awareness.Count == 1, Timeout);
+
+        // The same tab on a new connection, the old one not yet gone: its null/live pair of announceJoin goes out at once.
+        await again.InvokeAsync<JoinResult>("JoinDocument", "doc1");
+        await again.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("null", client: 7, clock: 4));
+        await again.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("{}", client: 7, clock: 5));
+        await WaitUntil(() => awareness.Count == 3, Timeout);
+        // Nobody else takes it, the old connection included.
+        await carol.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("null", client: 7, clock: 9));
+        await alice.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("null", client: 7, clock: 9));
+
+        // The old connection's disconnect is noticed late: no removal of the client id the new connection has.
+        await alice.DisposeAsync();
+        await WaitUntil(() => host.Registry.TryGet("doc1")!.Peers.Count == 3, Timeout);
+        await again.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("{}", client: 7, clock: 6));
+        await WaitUntil(() => awareness.Count == 4, Timeout);
+        // Bob saw client 7 as shown, the reconnect's pair, and its next state: no state of anyone else's, no removal after it.
+        Assert.Equal(["7:3:shown", "7:4:null", "7:5:shown", "7:6:shown"],
+            awareness.Select(payload => $"{payload[1]}:{payload[2]}:{(payload.AsSpan().EndsWith("null"u8) ? "null" : "shown")}"));
+    }
+
     /// <summary>A Yjs update of one struct of <paramref name="client"/> (clock 0): "x" in the root type "t".</summary>
     private static byte[] TextAt(int client)
     {

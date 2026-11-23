@@ -14,6 +14,8 @@ internal sealed class Peer
     public int ProtocolVersion { get; init; } = 1;
     public long? AwarenessClientId { get; set; }
     public long AwarenessClock { get; set; }
+    /// <summary>The same person's new connection took its awareness client id over (a reconnect): this one shows nothing any more.</summary>
+    public bool AwarenessReplaced { get; set; }
     public long AwarenessWindow { get; set; }
     public int AwarenessCount { get; set; }
     public long UpdateWindow { get; set; }

@@ -494,8 +494,13 @@ public sealed partial class MarkdownSyncHub(
             AuthorityAwareness.Validated validated;
             try { validated = AuthorityAwareness.Validate(payload, peer.User, authorityOptions.MaxAwarenessBytes, presenceOnly: !peer.CanWrite); }
             catch (InvalidDataException) { return; }
-            if (peer.AwarenessClientId is { } bound && bound != validated.ClientId) return;
-            if (doc.ServerClients.ContainsKey(validated.ClientId) || doc.Peers.Values.Any(other => other != peer && other.AwarenessClientId == validated.ClientId)) return;
+            if (peer.AwarenessReplaced || peer.AwarenessClientId is { } bound && bound != validated.ClientId) return;
+            // A client reconnecting keeps its awareness client id (the provider keeps its Awareness): the same person's old connection, which
+            // may linger until its disconnect is noticed, gives it up, so the new one shows at once and the old one's leave removes nothing.
+            // Another person's connection never takes it, nor anyone an agent's the server shows.
+            var holder = doc.Peers.Values.FirstOrDefault(other => other != peer && other.AwarenessClientId == validated.ClientId);
+            if (doc.ServerClients.ContainsKey(validated.ClientId) || holder is not null && holder.User.Id != peer.User.Id) return;
+            if (holder is not null) { holder.AwarenessClientId = null; holder.AwarenessReplaced = true; }
             peer.AwarenessClientId = validated.ClientId;
             peer.AwarenessClock = validated.Clock;
             payload = validated.Payload;
