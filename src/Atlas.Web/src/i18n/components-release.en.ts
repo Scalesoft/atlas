@@ -34,5 +34,11 @@ const en: ReleaseMessages = {
     changelog: "Full changelog",
     hint: "Enter continues · Esc closes · click skips the intro",
   },
+  demos: {
+    pointers: { title: "Team meeting", budget: "Budget: ", approved: "approved ✓", launch: "Launch: ", before: "in March", after: "on Friday", next: "Next steps" },
+    agent: { title: "Meeting notes", asked: "Sum up the meeting in one sentence.", summary: "The budget is approved, we launch on Friday.", name: "Assistant" },
+    qr: { mention: "Jana Nováková", role: "Head of operations", scan: "Scan with your phone" },
+    graph: { question: (topic) => `Who knows ${topic}?`, topics: ["PostgreSQL", "Vue", "Accounting"], people: ["Jana", "Anna", "Petr", "Marek"] },
+  },
 };
 export default en;

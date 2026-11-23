@@ -61,6 +61,17 @@ function announce(note = pear, release = note.version, since?: string) {
     <p><Button type="button" variant="outline" data-whats-new-cover-again @click="covers++">Zakrýt znovu</Button></p>
     <WhatsNewPage :key="`c${covers}`" current="4.0.0" since="3.5.2" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" />
 
+    <h3>Živé ukázky v kartách: Atlas 5.1 Tandem Tangerine</h3>
+    <p class="whats-new-example-note">
+      Řádek <code>demos: pointers agent qr graph</code> v popisu verze dá zvýrazněním z oddílu Hlavně postupně živou ukázku
+      (components/release/demos, každá vlastní líný chunk, jen ukázková data); <code>-</code> zvýraznění ukázku nedá. Karty s ukázkou
+      nevyjedou vlnou, ale vyletí z motivu a první z nich je dvakrát širší. Mandarinka se rozkrojí a dva ukazatele spolupracovníků
+      (Jana a Anna) ji spolu roztáhnou. Ukázky: ukazatele, které kloužou na stejné pružině jako na živé stránce, a píšou; kurzor AI;
+      karta osoby a její QR kód, který vyroste po kostičkách; malá mapa znalostí s otázkou „Kdo umí…“. Se sníženým pohybem a pod
+      <code>[data-still]</code> stojí každá jako hotový obrázek. Esc splash zavře kdykoli, i během intra.
+    </p>
+    <WhatsNewPage :key="`t${run}`" current="5.1.0" since="5.0.0" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" />
+
     <h3>Vymyšlená budoucí verze: Atlas 4.2 Witty Watermelon</h3>
     <p class="whats-new-example-note">Stejné komponenty nad jiným popisem verze: jiné kódové jméno, značka, datum, zvýraznění i dvě opravné verze.</p>
     <WhatsNewPage :key="`q${run}`" :notes="[...futurePatches, watermelon]" current="4.2.2" since="4.1.0" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" />

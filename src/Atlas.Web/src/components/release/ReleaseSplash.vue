@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // The release codename's display face, loaded only with the What's new chunk.
 import "@fontsource-variable/fraunces/index.css";
-import { computed, onBeforeUnmount, onMounted, ref, useId } from "vue";
-import { motionMs, motionScale, prefersReducedMotion, riseIn } from "../../motion/aiMotion";
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, useId, type Component } from "vue";
+import { animateAtlas, motionEasing, motionMs, motionScale, prefersReducedMotion, riseIn } from "../../motion/aiMotion";
 import { firstPoint, isMajorRelease, points, type ReleaseNote } from "../../whatsNew/releaseNotes";
 import { releaseLabel } from "../../whatsNew/notice";
+import { releaseDemos } from "../../whatsNew/releaseDemos";
 import { Button } from "../ui/button";
 import ReleaseCover from "./ReleaseCover.vue";
 import ReleaseMark from "./ReleaseMark.vue";
@@ -25,6 +26,9 @@ import t from "../../i18n/components-release";
  * the motif with a ring spreading from it, an aurora drifting slowly in the background, a larger codename with a passing sheen, up to
  * twelve highlights on cards tinted in the release's three colours, and the titles of the other points of its notes as chips
  * („A k tomu 31 dalších novinek“); everything stands still under reduced motion.
+ * Highlights with a live demo (`demos:` in the notes, whatsNew/releaseDemos.ts; owner, 5.1) show it on top of their card, loaded only
+ * then, and their cards fly out of the motif instead of rising, the first of them twice as wide.
+ * Esc closes at any time, the intro too: the splash never holds up work.
  */
 const props = defineProps<{ note: ReleaseNote; since?: string; others: readonly ReleaseNote[]; patches?: readonly ReleaseNote[] }>();
 const emit = defineEmits<{ close: []; changelog: [] }>();
@@ -47,17 +51,37 @@ const also = computed(() => {
   return { range, text: points.length ? `${points.join(". ")}.` : "" };
 });
 
+/** The demos' components, each loaded with the first card that shows it. */
+const demos = new Map<string, Component>();
+const demo = (name: string) => demos.get(name) ?? demos.set(name, defineAsyncComponent(releaseDemos[name]!)).get(name)!;
+const staged = !props.patches?.length && props.note.highlights.some(item => item.demo);
+
 const root = ref<HTMLElement>();
+const hero = ref<HTMLElement>();
 let wave: Animation[] = [];
 function skip() {
   for (const animation of wave) animation.finish();
   wave = [];
   document.removeEventListener("keydown", introKey, true);
 }
-/** During the intro any key shows the texts at once; Enter, Space and Esc do nothing else then. */
+/** During the intro any key shows the texts at once; Enter and Space do nothing else then, Esc closes. */
 function introKey(event: KeyboardEvent) {
   if (["Enter", " ", "Escape"].includes(event.key)) { event.preventDefault(); event.stopPropagation(); }
   skip();
+  if (event.key === "Escape") emit("close");
+}
+/** The demo cards come out of the motif: each starts small at its centre and flies to its place, one after another. */
+function flyOut(el: HTMLElement, delay: number): Animation[] {
+  const from = hero.value!.getBoundingClientRect(), x = from.left + from.width / 2, y = from.top + from.height / 2;
+  const easing = motionEasing(el, "--atlas-ease-out"), duration = motionMs(el, "--atlas-motion-slow") * 2;
+  return [...el.querySelectorAll<HTMLElement>("[data-fly]")].flatMap((card, index) => {
+    const box = card.getBoundingClientRect(), dx = x - (box.left + box.width / 2), dy = y - (box.top + box.height / 2);
+    const at = delay + index * motionMs(el, "--atlas-motion-fast");
+    // Its demo begins once the card stands (demoClock reads it).
+    card.dataset.demoStart = String(performance.now() + at + duration);
+    return animateAtlas(card, [{ opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(.25)` }, { opacity: 1, transform: "none" }],
+      { duration, easing, delay: at, fill: "backwards" }) ?? [];
+  });
 }
 /** A click during the intro only skips it: the buttons are not visible yet. */
 function introClick(event: MouseEvent) {
@@ -78,7 +102,8 @@ onMounted(() => {
   const el = root.value!;
   if (prefersReducedMotion(el)) return;
   // riseIn takes the prototype's milliseconds and slows them with the preview itself; the token is slowed already.
-  wave = riseIn(el.querySelectorAll("[data-wave]"), { delay: motionMs(el, "--atlas-brand-release-intro") / motionScale(el) });
+  const delay = motionMs(el, "--atlas-brand-release-intro");
+  wave = [...riseIn(el.querySelectorAll("[data-wave]"), { delay: delay / motionScale(el) }), ...(staged ? flyOut(el, delay) : [])];
   if (!wave.length) return;
   document.addEventListener("keydown", introKey, true);
   Promise.all(wave.map(animation => animation.finished)).then(skip, () => {});
@@ -87,9 +112,9 @@ onBeforeUnmount(skip);
 </script>
 
 <template>
-  <section ref="root" class="release-splash" :aria-labelledby="titleId" data-release-splash :data-patch="patch ? '' : undefined" :data-major="major ? '' : undefined"
+  <section ref="root" class="release-splash" :aria-labelledby="titleId" data-release-splash :data-patch="patch ? '' : undefined" :data-major="major ? '' : undefined" :data-staged="staged ? '' : undefined"
     @click.capture="introClick" @keydown="key">
-    <div class="release-splash-hero">
+    <div ref="hero" class="release-splash-hero">
       <ReleaseCover v-if="note.mark && covered" :mark="note.mark" :label="t.splash.markLabel(label, note.codename ?? '')" />
       <ReleaseMark v-else-if="note.mark" :mark="note.mark" variant="hero" />
     </div>
@@ -108,7 +133,9 @@ onBeforeUnmount(skip);
       <li v-for="(fix, index) in fixes" :key="index" data-wave>{{ fix }}</li>
     </ul>
     <ul v-else-if="note.highlights.length" class="release-splash-cards" :aria-label="t.splash.mainlyIn(label)">
-      <li v-for="item in note.highlights" :key="item.title" class="release-splash-card" data-wave>
+      <li v-for="item in note.highlights" :key="item.title" class="release-splash-card" :data-wave="staged && item.demo ? undefined : ''" :data-fly="staged && item.demo ? '' : undefined"
+        :data-demo="item.demo">
+        <div v-if="staged && item.demo" class="release-splash-demo"><component :is="demo(item.demo)" /></div>
         <span class="release-splash-card-title">{{ item.title }}<span v-if="item.key" class="release-splash-card-key">{{ item.key }}</span></span>
         <span class="release-splash-card-text">{{ item.text.replace(/\*\*|`/g, "") }}</span>
       </li>
@@ -162,6 +189,12 @@ onBeforeUnmount(skip);
 .release-splash-card-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-weight: 700; }
 .release-splash-card-key { color: var(--release-ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .release-splash-card-text { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+/* A highlight's live demo (`demos:` in the notes) on top of its card; the first such card is twice as wide. */
+.release-splash-demo {
+  height: 150px; margin: -14px -16px 8px; overflow: hidden; border-bottom: 1px solid var(--line); border-radius: var(--st-radius, 14px) var(--st-radius, 14px) 0 0;
+  background: color-mix(in srgb, var(--release-ink-2) 4%, var(--surface));
+}
+.release-splash[data-staged] .release-splash-card[data-demo]:first-child { grid-column: span 2; }
 /* A major release (owner, 4.0: a larger halo): the motif stands on top in the middle, a halo of the release's colours turns and breathes
    behind it and a ring spreads from it; an aurora drifts slowly in the background; the codename is larger with a passing sheen; the
    cards are tinted in the release's three colours; the other points of the notes follow as chips. */
@@ -226,6 +259,7 @@ onBeforeUnmount(skip);
   .release-splash-hero :deep(.release-mark[data-variant]) { width: 168px; }
   .release-splash-hero :deep(.release-cover) { width: 220px; }
   .release-splash-cards { grid-template-columns: minmax(0, 1fr); }
+  .release-splash[data-staged] .release-splash-card[data-demo]:first-child { grid-column: auto; }
   .release-splash-hint { margin-left: 0; }
 }
 @media (min-width: 761px) and (max-width: 980px) { .release-splash-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

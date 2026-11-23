@@ -34,6 +34,13 @@ const cs = {
     changelog: "Celý changelog",
     hint: "Enter pokračuje · Esc zavře · klik intro přeskočí",
   },
+  /** The live demos in the splash's highlight cards (components/release/demos): sample content only. */
+  demos: {
+    pointers: { title: "Porada týmu", budget: "Rozpočet: ", approved: "schválen ✓", launch: "Spuštění: ", before: "v březnu", after: "v pátek", next: "Další kroky" },
+    agent: { title: "Zápis z porady", asked: "Shrň poradu do jedné věty.", summary: "Rozpočet je schválený, spouštíme v pátek.", name: "Asistent" },
+    qr: { mention: "Jana Nováková", role: "Vedoucí provozu", scan: "Naskenujte telefonem" },
+    graph: { question: (topic: string) => `Kdo umí ${topic}?`, topics: ["PostgreSQL", "Vue", "Účetnictví"], people: ["Jana", "Anna", "Petr", "Marek"] },
+  },
 };
 export type ReleaseMessages = typeof cs;
 

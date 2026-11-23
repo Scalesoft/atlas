@@ -15,6 +15,7 @@
  *   codename: Performant Pear
  *   mark: pear
  *   cover: secret      (optional: the splash covers the mark with the invisible ink until scratched away, ReleaseCover)
+ *   demos: pointers qr (optional: a live demo in the splash card of each highlight in turn, `-` for none; whatsNew/releaseDemos.ts)
  *
  *   *2. 11. 2026*
  *
@@ -24,9 +25,14 @@
  */
 import { language, locale, waitForTexts } from "../i18n";
 import { brandMarks } from "./brandMarks";
+import { releaseDemos } from "./releaseDemos";
 import { releaseLine } from "./notice";
 
-export interface Highlight { title: string; text: string; key?: string }
+export interface Highlight {
+  title: string; text: string; key?: string;
+  /** A live demo of it in the splash card (components/release/demos/<demo>.vue), from the notes' `demos:` line. */
+  demo?: string;
+}
 export interface ReleaseNote {
   version: string;
   /** The Markdown shown in the changelog: without the header lines and without `### Hlavně`. */
@@ -36,6 +42,8 @@ export interface ReleaseNote {
   mark?: string;
   /** `secret`: the splash shows the mark covered until the account scratches it away (a fundamental change, 3.6). */
   cover?: string;
+  /** The demos of the highlights in turn (`demos: pointers - qr`); only those bundled are kept on the highlights. */
+  demos?: string;
   /** „2. 11. 2026“, when the notes open with a date. */
   date?: string;
   /** From `### Hlavně`. */
@@ -60,17 +68,17 @@ export function groupReleases(notes: readonly ReleaseNote[]): ReleaseGroup[] {
   return [...lines.values()].map(line => ({ release: line.at(-1)!, patches: line.slice(0, -1) }));
 }
 
-const HEADER = /^(codename|mark|cover): *(.+?) *\r?\n/;
+const HEADER = /^(codename|mark|cover|demos): *(.+?) *\r?\n/;
 const MAIN = /^### (?:Hlavně|Highlights)[ \t]*\r?\n([\s\S]*?)(?=^### |(?![\s\S]))/m;
 const HIGHLIGHT = /^- \*\*(.+?):?\*\*(?: `([^`]+)`)?:? *(.+)$/;
 
 /** A major release (x.0.0): its splash is larger, with a halo and up to twelve highlights (ReleaseSplash). */
 export const isMajorRelease = (version: string) => /^\d+\.0\.0$/.test(version);
 
-export function parseReleaseNote(version: string, raw: string, marks: Record<string, unknown> = brandMarks): ReleaseNote {
+export function parseReleaseNote(version: string, raw: string, marks: Record<string, unknown> = brandMarks, demos: Record<string, unknown> = releaseDemos): ReleaseNote {
   const note: ReleaseNote = { version, text: raw, highlights: [] };
   for (let match; (match = HEADER.exec(note.text));) {
-    note[match[1] as "codename" | "mark" | "cover"] = match[2];
+    note[match[1] as "codename" | "mark" | "cover" | "demos"] = match[2];
     note.text = note.text.slice(match[0].length);
   }
   note.text = note.text.replace(/^\s+/, "");
@@ -84,6 +92,7 @@ export function parseReleaseNote(version: string, raw: string, marks: Record<str
       const item = HIGHLIGHT.exec(line);
       return item ? [{ title: item[1]!, text: item[3]!, ...(item[2] ? { key: item[2] } : {}) }] : [];
     }).slice(0, isMajorRelease(version) ? 12 : 6);
+    note.demos?.split(/\s+/).forEach((demo, index) => { if (demo in demos && note.highlights[index]) note.highlights[index]!.demo = demo; });
     note.text = note.text.replace(main[0], "");
   }
   return note;
