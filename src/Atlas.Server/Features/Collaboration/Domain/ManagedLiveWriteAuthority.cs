@@ -36,13 +36,17 @@ public sealed class ManagedLiveWriteAuthority : ILiveWriteAuthority
 
     public Task<byte[]> WriteAsync(MarkdownDocumentSchema schema, byte[] snapshot, IReadOnlyList<byte[]> updates, JsonElement target, long sequence,
         CancellationToken ct)
+        => WriteAsync(schema, snapshot, updates, target, sequence, null, ct);
+
+    public Task<byte[]> WriteAsync(MarkdownDocumentSchema schema, byte[] snapshot, IReadOnlyList<byte[]> updates, JsonElement target, long sequence,
+        uint? clientId, CancellationToken ct)
         => RunAsync(token =>
         {
             var engine = For(schema, updates);
             // The target as the editor reads it (attribute defaults, joined text, mark order), validated as page content.
             var expected = Validated(engine, engine.Writer.Seed(target), token).Json;
             token.ThrowIfCancellationRequested();
-            var written = engine.Writer.Write(snapshot, updates.Select(update => (ReadOnlyMemory<byte>)update), target);
+            var written = engine.Writer.Write(snapshot, updates.Select(update => (ReadOnlyMemory<byte>)update), target, clientId);
             token.ThrowIfCancellationRequested();
             // The written document must read back as exactly the target, or the update would store something else than was asked.
             if (engine.Reader.Materialize(written.State) != expected)

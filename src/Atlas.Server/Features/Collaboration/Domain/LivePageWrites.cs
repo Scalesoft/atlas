@@ -17,6 +17,11 @@ public interface ILiveWriteAuthority
     /// <summary>The update turning the live document into <paramref name="target"/> (the rich document's <c>doc</c> node).</summary>
     Task<byte[]> WriteAsync(MarkdownDocumentSchema schema, byte[] snapshot, IReadOnlyList<byte[]> updates, JsonElement target, long sequence, CancellationToken ct);
 
+    /// <summary>The same, written as Yjs client <paramref name="clientId"/> when the document has none of its structs: an agent's write
+    /// as the client of its presence, so the editors know its text as it arrives and type it in (agentReveal.ts).</summary>
+    Task<byte[]> WriteAsync(MarkdownDocumentSchema schema, byte[] snapshot, IReadOnlyList<byte[]> updates, JsonElement target, long sequence, uint? clientId,
+        CancellationToken ct) => WriteAsync(schema, snapshot, updates, target, sequence, ct);
+
     /// <summary>The initial live state of a stored document (the rich document's <c>doc</c> node), as the browser's seed builds it (LiveSeeds).</summary>
     Task<DocSnapshot> SeedAsync(MarkdownDocumentSchema schema, JsonElement document, CancellationToken ct);
 }
@@ -70,7 +75,7 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
         try
         {
             var result = await HeldAsync(pageId, documentId, readVersion, wholeDocument, mcp, write, authority, new CollabUser(claimed.ToString(), agent.Name),
-                new UpdateOrigin(current.Code, current.ApiTokenId, current.ConversationId), caret, ct);
+                new UpdateOrigin(current.Code, current.ApiTokenId, current.ConversationId), caret, (uint?)presence, ct);
             // After the gate: the agent's caret where its update ended, so the people see where it wrote (the editors draw it in the AI look).
             if (presence is { } at && caret.Value is { } written)
             {
@@ -90,7 +95,7 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
 
     /// <summary>How long the agent's caret stays where it wrote, so it can be seen at all (a write itself takes milliseconds): its glyph writes
     /// one loop and plays „done“ (collaborationPresence.ts), then it fades.</summary>
-    internal static readonly TimeSpan CaretLinger = TimeSpan.FromSeconds(3.5);
+    internal static readonly TimeSpan CaretLinger = TimeSpan.FromSeconds(5);
 
     private async Task HideLaterAsync(string documentId, long clientId)
     {
@@ -133,7 +138,7 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
     }
 
     private async Task<T> HeldAsync<T>(Guid pageId, string documentId, int? readVersion, bool wholeDocument, bool mcp, Func<Task<T>> write,
-        ILiveWriteAuthority authority, CollabUser author, UpdateOrigin origin, StrongBox<(ulong Client, uint Clock)?> caret, CancellationToken ct)
+        ILiveWriteAuthority authority, CollabUser author, UpdateOrigin origin, StrongBox<(ulong Client, uint Clock)?> caret, uint? writerClient, CancellationToken ct)
     {
         await using var hold = await writer.HoldAsync(documentId, ct);
         var page = hold is null ? null : (await bus.InvokeAsync<LiveWritePageResult>(new GetLiveWritePage(pageId, mcp), ct)).Page;
@@ -168,13 +173,13 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
             if (scope.Written is { } written
                 && (await bus.InvokeAsync<LiveWriteRevision>(new LiveWriteRevisionExists(written.Id), CancellationToken.None)).Exists)
             {
-                await AppendAsync(hold, schema, scope, authority, author, origin, caret);
+                await AppendAsync(hold, schema, scope, authority, author, origin, caret, writerClient);
             }
             throw;
         }
         if (scope.Written is not null)
         {
-            await AppendAsync(hold, schema, scope, authority, author, origin, caret);
+            await AppendAsync(hold, schema, scope, authority, author, origin, caret, writerClient);
         }
         return result;
     }
@@ -224,14 +229,15 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
 
     /// <summary>After the writer's commit: the revision as one update of the live document, or today's reset when that cannot be done.</summary>
     private async Task AppendAsync(LiveDocumentHold hold, MarkdownDocumentSchema schema, LivePageWriteScope scope, ILiveWriteAuthority authority,
-        CollabUser author, UpdateOrigin origin, StrongBox<(ulong Client, uint Clock)?> caret)
+        CollabUser author, UpdateOrigin origin, StrongBox<(ulong Client, uint Clock)?> caret, uint? writerClient)
     {
         var written = scope.Written!.Value;
         try
         {
             using var content = JsonDocument.Parse(written.ContentJson, MarkdownDocumentValidator.JsonOptions);
+            // As the client of the agent's presence: the editors type its text in as it arrives (agentReveal.ts).
             var update = await authority.WriteAsync(schema, hold.Snapshot, hold.Updates, content.RootElement.GetProperty("document"), hold.Sequence + 1,
-                CancellationToken.None);
+                writerClient, CancellationToken.None);
             var sequence = await hold.AppendAsync(author, update, origin, CancellationToken.None);
             // The update is appended: a caret that cannot be read only means none is shown, never a reset.
             try { caret.Value = Atlas.Yjs.YjsCaret.AfterWrite(update, update.Length); }

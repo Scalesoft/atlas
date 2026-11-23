@@ -48,7 +48,7 @@ public sealed class YjsDocumentWriter
     /// updateYFragment of the live document (<paramref name="state"/> and the <paramref name="updates"/> after it, as admitted) towards
     /// <paramref name="target"/>: the update (Y.encodeStateAsUpdate(doc, stateVectorBefore)) and the full state after it.
     /// </summary>
-    /// <param name="clientId">The writing client; when null a random one the document does not know.</param>
+    /// <param name="clientId">The writing client; when null, or one the document already has structs of, a random one it does not know.</param>
     /// <exception cref="YjsWriteException">A payload is malformed or incomplete, the target cannot be written, or a bound is exceeded.</exception>
     public YjsWrite Write(ReadOnlyMemory<byte> state, IEnumerable<ReadOnlyMemory<byte>> updates, JsonElement target, uint? clientId = null)
         => Run(() =>
@@ -64,7 +64,7 @@ public sealed class YjsDocumentWriter
                 bytes += payload.Length;
             }
             var pNode = Target(target);
-            var client = clientId ?? NewClient(tree);
+            var client = clientId is { } chosen && tree.GetState(chosen) == 0 ? chosen : NewClient(tree);
             var y = new YDocument(tree, client);
             YProseMirror.UpdateYFragment(y, y.GetXmlFragment(_root), pNode);
             var update = Bounded(y.EncodeUpdate());

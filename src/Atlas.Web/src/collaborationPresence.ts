@@ -6,6 +6,7 @@ import type { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
 import { animateAtlas, literalMs, motionMs, PROTOTYPE_MS, scrollBehavior } from "./motion/aiMotion";
 import { COLLABORATION_POINTER_PATH } from "./live/collaborationPointer";
+import { createAgentReveal } from "./live/agentReveal";
 import { createPointerGlide } from "./live/pointerGlide";
 import { mountAiGlyph } from "./components/ai/mountAiGlyph";
 import "./collaborationPresence.css";
@@ -16,6 +17,8 @@ export interface CollaborationPeer extends StatePeer {
   readonly cursorAvailable: boolean;
   /** What the person does, said instead of the cursor's state ("Jana upravuje přes stránku Provoz" on a board's card). */
   readonly activity?: string;
+  /** An agent whose text the editor is typing in now (live/agentReveal.ts): its glyph keeps writing. */
+  readonly writing?: boolean;
 }
 
 export interface CollaborationPresence {
@@ -35,6 +38,7 @@ export function createCollaborationPresence(options: {
   const publish = () => options.onChange(peers.map(peer => ({
     ...peer,
     cursorAvailable: attachment?.positions.has(peer.clientId) ?? false,
+    ...(attachment?.writing(peer.clientId) ? { writing: true } : {}),
   })));
 
   return {
@@ -70,6 +74,7 @@ export function createCollaborationPresence(options: {
 
 interface Attachment {
   readonly positions: ReadonlyMap<number, number>;
+  writing(clientId: number): boolean;
   render(peers: readonly StatePeer[]): void;
   navigate(clientId: number): boolean;
   destroy(): void;
@@ -108,10 +113,21 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
   let settleFrame = 0;
   const halos = new Set<Animation>();
   // An agent writing for a person (3.6-H, its user id "ai:…") wears the AI look and the AI glyph, which Vue renders into its label.
-  const glyphs = new Map<HTMLElement, () => void>();
+  // Its text is typed in (live/agentReveal.ts; only where the page is collaborative) and its caret rides the front meanwhile.
+  const reveal = ySyncPluginKey.getState(editor.state) ? createAgentReveal(editor) : undefined;
+  const withFronts = (found: Map<number, number>) => {
+    for (const peer of currentPeers) {
+      const front = reveal?.front(peer.clientId);
+      if (front !== undefined) found.set(peer.clientId, front);
+    }
+    return found;
+  };
+  interface Glyph { unmount(): void; state: "writing" | "done"; settled: boolean; timer: ReturnType<typeof setTimeout> }
+  const glyphs = new Map<HTMLElement, Glyph>();
   const leavingCursors = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
   const dropCursor = (cursor: HTMLElement) => {
-    glyphs.get(cursor)?.();
+    const glyph = glyphs.get(cursor);
+    if (glyph) { clearTimeout(glyph.timer); glyph.unmount(); }
     glyphs.delete(cursor);
     clearTimeout(leavingCursors.get(cursor));
     leavingCursors.delete(cursor);
@@ -128,7 +144,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
 
   let published = "";
   const publishIfChanged = () => {
-    const signature = currentPeers.map(peer => `${peer.clientId}:${positions.has(peer.clientId)}`).join("|");
+    const signature = currentPeers.map(peer => `${peer.clientId}:${positions.has(peer.clientId)}:${reveal?.front(peer.clientId) !== undefined}`).join("|");
     if (signature === published) return;
     published = signature;
     changed();
@@ -140,7 +156,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
   let pendingLayoutMovement = false;
   const draw = (layoutMovement = false) => {
     // Positions come from the cursor decorations, which every transaction maps; cheap and exact for publish and navigate.
-    positions = cursorPositions(editor);
+    positions = withFronts(cursorPositions(editor));
     if (currentPeers.length === 0) {
       cancelAnimationFrame(drawFrame);
       drawFrame = 0;
@@ -159,7 +175,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     if (destroyed || currentPeers.length === 0) return;
     ensurePositioned();
     // The editor may have changed since the request; draw where the latest state puts each cursor.
-    positions = cursorPositions(editor);
+    positions = withFronts(cursorPositions(editor));
     publishIfChanged();
     // All reads first (one layout), then only writes.
     const containerRect = container.getBoundingClientRect();
@@ -209,11 +225,11 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
           const glyph = document.createElement("span");
           glyph.className = "collaboration-presence__glyph";
           label.prepend(glyph);
-          // As the film's AI caret: the stars write (the star pulses and sways, the small ones spark) while the text lands, then
-          // „done“ once (they gather, a pop and a tick) before the caret fades out.
-          const unmount = mountAiGlyph(glyph, { size: 12, state: "writing", working: true });
-          const settle = setTimeout(() => mountAiGlyph(glyph, { size: 12, state: "done" }), motionMs(overlay, "--atlas-motion-loop"));
-          glyphs.set(cursor, () => { clearTimeout(settle); unmount(); });
+          // As the film's AI caret: the stars write (the star pulses and sways, the small ones spark) while its text is typed in, at
+          // least one loop, then „done“ once (they gather, a pop and a tick) before the caret fades out.
+          const entry: Glyph = { unmount: mountAiGlyph(glyph, { size: 12, state: "writing", working: true }), state: "writing", settled: false,
+            timer: setTimeout(() => { entry.settled = true; draw(); }, motionMs(overlay, "--atlas-motion-loop")) };
+          glyphs.set(cursor, entry);
         }
         overlay.append(cursor);
       } else if (leavingCursors.has(cursor)) {
@@ -222,6 +238,15 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
         cursor.classList.remove("is-leaving");
       }
       cursor.querySelector<HTMLElement>(".collaboration-presence__name")!.textContent = peer.name;
+      const glyph = glyphs.get(cursor);
+      const typing = reveal?.front(peer.clientId) !== undefined;
+      // While its text is typed in, the caret stands exactly on the front: it steps with the words instead of trailing them.
+      cursor.classList.toggle("is-typing", typing);
+      const state = glyph && (!glyph.settled || typing) ? "writing" : "done";
+      if (glyph && glyph.state !== state) {
+        glyph.state = state;
+        mountAiGlyph(cursor.querySelector<HTMLElement>(".collaboration-presence__glyph")!, { size: 12, state, working: state === "writing" });
+      }
       // An agent's colour is the AI ink (collaborationPresence.css), not the person's.
       if (!agent) cursor.style.setProperty("--collaboration-color", safeColor(peer.color));
       cursor.style.transform = `translate3d(${coords.left - originX}px, ${coords.top - originY}px, 0)`;
@@ -365,6 +390,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     cancelAnimationFrame(layoutFrame);
     cancelAnimationFrame(settleFrame);
     halos.forEach(halo => halo.cancel());
+    reveal?.destroy();
     [...overlay.querySelectorAll<HTMLElement>(".collaboration-presence__cursor")].forEach(dropCursor);
     if (awareness) {
       hidePointer();
@@ -385,8 +411,10 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
 
   return {
     get positions() { return positions; },
+    writing: clientId => reveal?.front(clientId) !== undefined,
     render(next) {
       currentPeers = next;
+      reveal?.setAgents(new Set(next.filter(peer => peer.id?.startsWith("ai:")).map(peer => peer.clientId)));
       observeLayout(next.length > 0);
       draw();
     },

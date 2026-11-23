@@ -63,5 +63,8 @@ public class YjsDocumentWriterTests
         var deleted = WriterCorpus.Writer.Write(state, [], Json("""{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Ah"}]}]}"""), 8);
         Assert.Equal((7UL, 5U), YjsCaret.AfterWrite(deleted.Update, long.MaxValue));
         Assert.Null(YjsCaret.AfterWrite(WriterCorpus.Writer.Write(state, [], Page, 8).Update, long.MaxValue));
+        // A client the document already has structs of is never written as again: the write takes a new one.
+        var reused = WriterCorpus.Writer.Write(state, [], Json("""{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Ahoj!"}]}]}"""), 7);
+        Assert.NotEqual(7UL, Assert.Single(YjsUpdateDecoder.Decode(reused.Update, long.MaxValue).Clients).Client);
     }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Editor, Extension } from "@tiptap/core";
+import Collaboration from "@tiptap/extension-collaboration";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -7,8 +8,9 @@ import { Plugin } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { yCursorPluginKey } from "@tiptap/y-tiptap";
 import { onBeforeUnmount, onMounted, ref } from "vue";
+import * as Y from "yjs";
 import type { RemoteDrag } from "../../boards/boardSession";
-import { createCollaborationPresence } from "../../collaborationPresence";
+import { createCollaborationPresence, type CollaborationPeer } from "../../collaborationPresence";
 import BoardPresence from "../boards/canvas/BoardPresence.vue";
 import CollaboratorAvatars from "../CollaboratorAvatars.vue";
 import StatusBadge from "../settings/StatusBadge.vue";
@@ -44,52 +46,64 @@ function togglePointers() {
   }, 50);
 }
 
-// An agent's caret over a page: the real overlay (collaborationPresence) on a small editor. In the application the caret comes from the
-// agent's awareness state, which the server sends after an MCP, API or assistant write (LivePageWrites); here a cursor decoration of
-// the y-tiptap key stands in for it, as the collaboration extension would place it.
+// An agent's write into a page, on the real overlay (collaborationPresence) and a real collaborative editor: the agent shows (its stars
+// at work), then its update arrives as one Yjs update of the client of its presence, as LivePageWrites sends it, and the editor types
+// it in word by word with the AI caret on the front (live/agentReveal.ts). Where the typing ends, a cursor decoration of the y-tiptap key
+// stands in for the caret the server's awareness state places there.
 const agentHost = ref<HTMLElement>();
 let agentEditor: Editor | undefined;
+let agentDoc: Y.Doc | undefined;
+let agentAbort: AbortController | undefined;
 let agentTimer: ReturnType<typeof setTimeout> | undefined;
-const agentPresence = createCollaborationPresence({ onChange: () => {} });
-const agentAbort = new AbortController();
+const agentAvatars = ref<CollaborationPeer[]>([]);
+const agentPresence = createCollaborationPresence({ onChange: peers => { agentAvatars.value = peers; } });
 const agentPeer = { clientId: 9, id: "ai:gallery", name: "Jana Nováková · AI (MCP)", color: "#7c3aed" };
-// The avatar of the agent: at work (no caret yet) its glyph writes, then it has written (its caret arrives) and plays „done“.
-const agentAvatars = ref<{ clientId: number; id: string; name: string; color: string; cursorAvailable: boolean }[]>([]);
-onMounted(() => {
-  const caretAt = Extension.create({
-    name: "galleryAgentCaret",
-    addProseMirrorPlugins: () => [new Plugin({
-      key: yCursorPluginKey,
-      state: {
-        init: () => DecorationSet.empty,
-        apply: (transaction, current) => {
-          const at = transaction.getMeta(yCursorPluginKey) as number | null | undefined;
-          if (at === undefined) return current.map(transaction.mapping, transaction.doc);
-          return at === null ? DecorationSet.empty : DecorationSet.create(transaction.doc, [Decoration.widget(at, () => document.createElement("span"), { key: "9" })]);
-        },
+const caretAt = Extension.create({
+  name: "galleryAgentCaret",
+  addProseMirrorPlugins: () => [new Plugin({
+    key: yCursorPluginKey,
+    state: {
+      init: () => DecorationSet.empty,
+      apply: (transaction, current) => {
+        const at = transaction.getMeta(yCursorPluginKey) as number | null | undefined;
+        if (at === undefined) return current.map(transaction.mapping, transaction.doc);
+        return at === null ? DecorationSet.empty : DecorationSet.create(transaction.doc, [Decoration.widget(at, () => document.createElement("span"), { key: "9" })]);
       },
-    })],
-  });
-  agentEditor = new Editor({ element: agentHost.value!, extensions: [Document, Paragraph, Text, caretAt], content: "<p>Shrnutí porady: rozpočet schválen.</p>", editable: false });
-  agentPresence.plugin.create({ profile: "rich", signal: agentAbort.signal }).onAttach!({ editor: agentEditor, controller: {} as never, signal: agentAbort.signal });
+    },
+  })],
 });
-function playAgentWrite() {
-  const editor = agentEditor!;
-  clearTimeout(agentTimer);
-  editor.commands.setContent("<p>Shrnutí porady: rozpočet schválen.</p>");
-  agentPresence.update([]);
-  agentAvatars.value = [{ ...agentPeer, cursorAvailable: false }];
-  agentTimer = setTimeout(() => {
-    const end = editor.state.doc.content.size - 1;
-    editor.view.dispatch(editor.state.tr.insertText(" Další krok: objednat licence do pátku.", end));
-    editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, editor.state.doc.content.size - 1));
-    agentPresence.update([agentPeer]);
-    agentAvatars.value = [{ ...agentPeer, cursorAvailable: true }];
-    // The server keeps the agent's caret 3.5 s (LivePageWrites.CaretLinger): its stars write, play „done“, then it fades out.
-    agentTimer = setTimeout(() => { agentPresence.update([]); agentAvatars.value = []; }, 3500);
-  }, 1600);
+function openAgentEditor() {
+  agentAbort?.abort();
+  agentEditor?.destroy();
+  agentDoc?.destroy();
+  agentDoc = new Y.Doc();
+  agentEditor = new Editor({ element: agentHost.value!, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: agentDoc }), caretAt], editable: false });
+  agentEditor.commands.setContent("<p>Shrnutí porady: rozpočet schválen.</p>");
+  agentAbort = new AbortController();
+  agentPresence.plugin.create({ profile: "rich", signal: agentAbort.signal }).onAttach!({ editor: agentEditor, controller: {} as never, signal: agentAbort.signal });
 }
-onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); agentAbort.abort(); agentEditor?.destroy(); });
+onMounted(openAgentEditor);
+function playAgentWrite() {
+  clearTimeout(agentTimer);
+  agentPresence.update([]);
+  openAgentEditor();
+  agentPresence.update([agentPeer]);
+  agentTimer = setTimeout(() => {
+    const editor = agentEditor!, doc = agentDoc!;
+    // The agent's update: its own Yjs client (the presence's) appends a sentence, as the server's authority writes it.
+    const agent = new Y.Doc();
+    agent.clientID = agentPeer.clientId;
+    Y.applyUpdate(agent, Y.encodeStateAsUpdate(doc));
+    const text = (agent.getXmlFragment("default").get(0) as Y.XmlElement).get(0) as Y.XmlText;
+    text.insert(text.length, " Další krok: objednat licence do pátku a pozvat tým na školení.");
+    Y.applyUpdate(doc, Y.encodeStateAsUpdate(agent, Y.encodeStateVector(doc)));
+    agent.destroy();
+    editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, editor.state.doc.content.size - 1));
+    // The server keeps the agent's caret 5 s (LivePageWrites.CaretLinger): its text is typed in, its stars play „done“, it fades out.
+    agentTimer = setTimeout(() => agentPresence.update([]), 5000);
+  }, 1200);
+}
+onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); agentAbort?.abort(); agentEditor?.destroy(); agentDoc?.destroy(); });
 </script>
 
 <template>
@@ -113,7 +127,7 @@ onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); a
       <Button variant="outline" :aria-pressed="pointers.length > 0" @click="togglePointers">{{ pointers.length ? "Zastavit ukazatele" : "Přehrát ukazatele" }}</Button>
     </div>
     <div class="pointer-sample agent-sample">
-      <p>Kurzor AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, server pošle po zápisu jeho kurzor hned za text, který napsal. Kurzor má AI inkoust, jemnou záři a AI znak, který jednou přehraje „hotovo“; asi tři a půl sekundy stojí, kde agent psal, pak zmizí prolnutím. Lidé nezáří. Avatar agenta nese iniciály člověka, za kterého píše, v AI inkoustu se září a místo tužky AI znak: dokud agent pracuje, znak píše (hvězda pulzuje a kývá se), s kurzorem přehraje „hotovo“. Ukázka kreslí skutečný overlay nad malým editorem a skutečné CollaboratorAvatars.</p>
+      <p>Zápis AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, přijde jeho zápis najednou (server nedrží stránku zamčenou), ale editor ho vepisuje po slovech stálým tempem a AI kurzor jede na čele psaní; text je v dokumentu hned, jen ještě neviditelný, takže se nic nepřeskládá. Kurzor má AI gradient, dýchající záři a AI znak, jehož hvězdičky píšou, dokud text nedoběhne, pak jednou přehrají „hotovo“; kurzor pak zmizí prolnutím. Při omezeném pohybu je text vidět hned. Lidé nezáří. Avatar agenta nese iniciály člověka, za kterého píše, v AI inkoustu se září a místo tužky AI znak: dokud agent pracuje, znak píše (hvězda pulzuje a kývá se), s kurzorem přehraje „hotovo“. Ukázka kreslí skutečný overlay nad malým editorem a skutečné CollaboratorAvatars.</p>
       <CollaboratorAvatars class="agent-avatars" :peers="agentAvatars" />
       <div ref="agentHost" class="agent-editor" />
     </div>
