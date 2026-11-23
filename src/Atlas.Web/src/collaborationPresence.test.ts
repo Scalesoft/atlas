@@ -599,4 +599,54 @@ describe("an agent's write typed in", () => {
     frame(now);
     expect(unwritten()).toBe("");
   });
+
+  it("types a long write in at most one step a frame, within its bounded time, while a person keeps typing (perf guard)", () => {
+    let now = 1000;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const ydoc = new Y.Doc();
+    const awareness = new Awareness(ydoc);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
+      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+    vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {} });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); editor.destroy(); host.remove(); awareness.destroy(); });
+    editor.commands.insertContent("Petr píše.");
+    presence.update([{ clientId: 777, id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" }]);
+    // The agent's write: 40 paragraphs of 20 words (about 6 000 letters) in one update, as LivePageWrites appends it.
+    const agentDoc = new Y.Doc();
+    agentDoc.clientID = 777;
+    Y.applyUpdate(agentDoc, Y.encodeStateAsUpdate(ydoc));
+    const fragment = agentDoc.getXmlFragment("default");
+    fragment.insert(1, Array.from({ length: 40 }, (_, block) => {
+      const paragraph = new Y.XmlElement("paragraph");
+      paragraph.insert(0, [new Y.XmlText(Array.from({ length: 20 }, (_, word) => `slovo${block}x${word}`).join(" "))]);
+      return paragraph;
+    }));
+    Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(agentDoc, Y.encodeStateVector(ydoc)));
+    let transactions = 0;
+    editor.on("transaction", () => { transactions++; });
+    let frameCount = 0;
+    const started = performance.now();
+    let worst = 0;
+    while (host.querySelector(".atlas-agent-unwritten") && frameCount < 600) {
+      now += 16;
+      // The person types on in their own paragraph meanwhile.
+      if (frameCount % 10 === 0) editor.chain().insertContentAt(2, "x").run();
+      const before = Date.now();
+      frame(now);
+      worst = Math.max(worst, Date.now() - before);
+      frameCount++;
+    }
+    // All of it is there within one and a half of the AI's loops, at most one step a frame, the person's letters too.
+    expect(host.querySelector(".atlas-agent-unwritten")).toBeNull();
+    expect(now - started).toBeLessThanOrEqual(1.5 * 1600 + 32);
+    expect(transactions).toBeLessThanOrEqual(frameCount + Math.ceil(frameCount / 10));
+    expect(editor.getText()).toContain("slovo39x19");
+    expect(editor.getText().startsWith("P" + "x".repeat(Math.ceil(frameCount / 10)))).toBe(true);
+    console.info(`agent reveal: 800 words typed in over ${frameCount} frames (${now - started} ms of motion), ${transactions} transactions, worst frame ${worst} ms`);
+  });
 });
