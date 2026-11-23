@@ -24,12 +24,13 @@ import "../settings/settings.css";
  * the directory, each with the places it occurs in (a page opens at its heading, the directory at Knihovna → Kontakty), filtered by any
  * field and exported as CSV or vCard with the same rights. One switch above the search names where it looks, with the same words
  * wherever it is shown (UX1-14): in a space Tento prostor / Celá wiki, in Knihovna Adresář / Celá wiki, where the `directory` slot
- * (ContactDirectory) takes the place of the list. Read-only by design: contacts are changed where they live (ContactDirectory for
+ * (ContactDirectory) takes the place of the list, and Kdo co umí where the `skills` slot gives the graph (SkillGraph). Read-only by design: contacts are changed where they live (ContactDirectory for
  * the directory, the page for a card), so this is no second directory. Rows are ContactCard as the directory shows them. Typing
  * preselects the first person (`data-first`) and Enter opens its first place; the first Esc empties the search. `source`
  * is replaced by the gallery.
  */
-const props = defineProps<{ spaceId?: string; source?: EntityApi }>();
+/** `focus`: a topic named by the address (`#/library/contacts?q=`) shows the directory, where its dashboard is. */
+const props = defineProps<{ spaceId?: string; source?: EntityApi; focus?: string }>();
 const slots = useSlots();
 const uid = useId();
 const source = computed(() => props.source ?? entityApi);
@@ -39,8 +40,11 @@ const scopes = [
   ...(props.spaceId ? [{ value: "space", label: t.overviewView.thisSpace, icon: "book" }] : []),
   ...(slots.directory ? [{ value: "directory", label: t.overviewView.directory, icon: "users" }] : []),
   { value: "instance", label: t.overviewView.wholeWiki, icon: "globe" },
+  // Kdo co umí: the graph of who knows what (SkillGraph), where Knihovna gives it.
+  ...(slots.skills ? [{ value: "skills", label: t.skills.graphScope, icon: "network" }] : []),
 ];
-const listing = computed(() => scope.value !== "directory");
+const listing = computed(() => scope.value !== "directory" && scope.value !== "skills");
+watch(() => props.focus, text => { if (text && slots.directory) scope.value = "directory"; });
 const query = ref("");
 const items = ref<EntityItem[]>([]);
 const total = ref(0), page = ref(1), pageSize = ref(50);
@@ -143,7 +147,8 @@ function openPlace(id: string, typeId: string) {
   <section ref="root" class="contact-overview settings-ui" :aria-labelledby="`${uid}-title`" :aria-busy="listing && loading">
     <h2 :id="`${uid}-title`" class="sr-only">{{ t.overviewView.title }}</h2>
     <OptionPills v-if="scopes.length > 1" v-model="scope" :options="scopes" :label="t.overviewView.show" hide-label data-entity-scope />
-    <slot v-if="!listing" name="directory" />
+    <slot v-if="scope === 'directory'" name="directory" />
+    <slot v-else-if="scope === 'skills'" name="skills" />
     <template v-else>
       <div class="contact-overview-toolbar">
         <SearchField v-model="query" :label="t.overviewView.searchLabel" :placeholder="t.overviewView.searchPlaceholder" wide data-entity-search data-focus-landing @keydown="searchKeys" />

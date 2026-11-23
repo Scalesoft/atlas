@@ -15,6 +15,7 @@ import PluginToolbar from './PluginToolbar.vue'
 import PresenceStack from './PresenceStack.vue'
 import PluginPanels from './PluginPanels.vue'
 import MarkdownSource from './MarkdownSource.vue'
+import { activeMarkdownPopover, onMarkdownPopoverChange } from '../features/modules/popoverInteraction'
 import CollaborationNotice from './CollaborationNotice.vue'
 import ConnectionDot from './ConnectionDot.vue'
 import { FullscreenIcon, FullscreenExitIcon, CloseIcon } from './icons'
@@ -23,6 +24,7 @@ import { surfaceStrings } from './strings/surface'
 import { acquireFullscreenLock, hasActiveEditorOverlay, hasActiveModalDialog } from './fullscreen'
 import '../styles/editor.css'
 import '../styles/motion.css'
+import '../styles/layers.css'
 
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{
@@ -75,6 +77,14 @@ watch([() => state.value.contentRevision, () => state.value.lifecycle, footerVis
     : null
 }, { immediate: true })
 const engine = computed(() => { void state.value; return editorForController(props.controller) })
+/** An editor's floating panel is open (popoverInteraction): the corner card folds into its dot rather than peek out from under it. */
+const panelOpen = ref(false)
+watch(engine, (editor, _previous, onCleanup) => {
+  if (!editor) { panelOpen.value = false; return }
+  const sync = () => { panelOpen.value = !!activeMarkdownPopover(editor) }
+  sync()
+  onCleanup(onMarkdownPopoverChange(editor, sync))
+}, { immediate: true })
 const shell = ref<HTMLElement | null>(null)
 // The page editor shows no frame; focus that arrived by Tab (not mouse, not an Edit button, not typing) gets a quiet bar
 // instead (styles/surface.css, WCAG 2.4.7). :focus-visible cannot tell, it always matches a contenteditable.
@@ -215,15 +225,6 @@ const teleportTarget = computed(() => shell.value?.ownerDocument.body)
           </span>
         </header>
         <!--
-          One overlay column anchored to the shell's top-right corner. It never takes part in the
-          document flow, and stacking the dot, its detail panel and the card in a single column is
-          what keeps them from covering each other. The left gutter stays free for the block handle.
-        -->
-        <div class="md-editor-connection">
-          <ConnectionDot :state="state" />
-          <CollaborationNotice :state="state" :compact="variant === 'compact'" />
-        </div>
-        <!--
           Transient messages float over the surface. A projection failure or a file drop can start
           and stop at any moment, and any of these paragraphs in the document flow would push the
           text down and pull it back for as long as the condition lasts.
@@ -255,6 +256,19 @@ const teleportTarget = computed(() => shell.value?.ownerDocument.body)
           </div>
           <DocumentOutline v-if="engine && outlineEnabled" :editor="engine" :options="outlineOptions" @docked="outlineDocked = $event" />
         </div>
+        <!--
+          One overlay column: the dot, its detail panel and the card stacked, so they never cover each other. It never takes part in
+          the document flow. A compact editor keeps it in its top-right corner; a document keeps it in the bottom-right corner of the
+          part of the shell in view (a zero-height sticky anchor after the content), over the document's foot and never over the lines
+          being read or the component being edited. While a floating panel of the editor is open the card folds into the dot: the panel
+          lives in the body above the page (layers.css) and would otherwise cover it halfway.
+        -->
+        <div class="md-editor-connection-anchor">
+          <div class="md-editor-connection">
+            <ConnectionDot :state="state" />
+            <CollaborationNotice :state="state" :compact="variant === 'compact'" :folded="panelOpen" />
+          </div>
+        </div>
         <slot name="inspector" :controller="controller" :state="state"><PluginPanels :controller="controller" :variant="variant" placement="inspector" /></slot>
         <slot name="status" :controller="controller" :state="state"><PluginPanels :controller="controller" :variant="variant" placement="status" /></slot>
         <footer v-if="footerShown" class="paper-footer">
@@ -275,7 +289,7 @@ const teleportTarget = computed(() => shell.value?.ownerDocument.body)
 <style>
 /* As wide as the shell (`left` too): a notice that comes or goes moves no edge of the column, so it is no layout shift (4.0, CLS). */
 .md-editor-connection {
-  position: absolute; top: 8px; right: 8px; left: 8px; z-index: 4;
+  position: absolute; top: 8px; right: 8px; left: 8px; z-index: var(--md-layer-surface, 4);
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
   max-width: calc(100% - 16px); pointer-events: none;
 }
@@ -285,9 +299,17 @@ const teleportTarget = computed(() => shell.value?.ownerDocument.body)
 .md-editor.has-outline .md-editor-connection { right: 64px; }
 /* Fullscreen puts its own header in the top strip; the column clears it. */
 .md-editor.is-fullscreen .md-editor-connection { top: 52px; }
+/* A compact editor's column is the shell's own (its anchor takes no box); a document's sticks to the bottom of the shell in view. */
+.md-editor-connection-anchor { display: contents; }
+.md-editor:not([data-variant="compact"]) .md-editor-connection-anchor {
+  display: block; position: sticky; bottom: 0; height: 0; z-index: var(--md-layer-surface, 4); pointer-events: none;
+}
+.md-editor:not([data-variant="compact"]) .md-editor-connection { top: auto; bottom: 12px; z-index: auto; }
+/* Clear the 48px document footer wherever one is rendered, as the messages do. */
+.md-editor.paper:not(.readonly) .md-editor-connection { bottom: 56px; }
 /* Anchored to the shell's bottom edge and sized by its content, so the stack grows upward. */
 .md-editor-messages {
-  position: absolute; left: 0; right: 0; bottom: 8px; z-index: 3;
+  position: absolute; left: 0; right: 0; bottom: 8px; z-index: var(--md-layer-message, 3);
   display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
   padding: 0 14px; pointer-events: none;
 }

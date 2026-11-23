@@ -187,6 +187,8 @@ public sealed class MergeContactsHandler(ISession session, IContentAccess access
         {
             moved += await boardWriter.RetargetAsync(board, actor.Id, source.Id, target.Id, ct);
         }
+        // What people know of the source is known of the target (skills spec §2.2).
+        await Skills.SkillStore.MoveContactAsync(session, source.Id, target.Id, ct);
         await trash.Handle(new TrashObject(source.Id), ct);
         var data = JsonNode.Parse(source.Data!)!.AsObject();
         data[ContactDirectory.MergedInto] = target.Id.ToString();

@@ -101,3 +101,26 @@
   .md-contact-reader .md-contact-download { min-height: 44px; box-sizing: border-box; }
   .md-contact-used a { min-height: 44px; display: inline-flex; align-items: center; }
 }
+
+/* „Umí“: the topics the person knows, each with five dots of its level; it fades in under the name when the host answers. */
+.md-contact-skills { display: grid; gap: 6px; margin: -4px 0 14px; animation: md-contact-skills-in var(--md-motion-menu) var(--md-motion-ease) both; }
+.md-contact-skills[hidden] { display: none; }
+.md-contact-skills-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; }
+.md-contact-skills-head > strong { color: var(--text-dim, #49676e); font-size: 12px; }
+.md-contact-skills-rate { padding: 0 4px; border: 0; border-radius: 5px; background: transparent; color: var(--accent-strong, #26758a); font: inherit; font-size: 12px; cursor: pointer; }
+.md-contact-skill-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.md-contact-skill, .md-contact-skill-more { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 100%; padding: 2px 8px; border: 1px solid color-mix(in srgb, var(--accent, #4f9fb1) 22%, transparent);
+  border-radius: 7px; background: color-mix(in srgb, var(--accent, #4f9fb1) 8%, var(--paper, #fff)); color: var(--accent-strong, #26758a); font-size: 12px; font-weight: 600; line-height: 1.5; text-decoration: none;
+  transition: border-color var(--md-motion-fast) var(--md-motion-ease), background-color var(--md-motion-fast) var(--md-motion-ease); }
+.md-contact-skill > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.md-contact-skill-more { border-style: dashed; background: transparent; color: var(--text-dim, #49676e); font-weight: 500; }
+@media (hover: hover) and (pointer: fine) {
+  .md-contact-skill:hover, a.md-contact-skill-more:hover { border-color: color-mix(in srgb, var(--accent, #4f9fb1) 55%, transparent); background: color-mix(in srgb, var(--accent, #4f9fb1) 15%, var(--paper, #fff)); }
+  .md-contact-skills-rate:hover { text-decoration: underline; }
+}
+.md-contact-skill:focus-visible, .md-contact-skill-more:focus-visible, .md-contact-skills-rate:focus-visible { outline: 2px solid var(--accent, #4f9fb1); outline-offset: 2px; }
+.md-contact-skill-level { display: inline-flex; flex: none; gap: 2px; }
+.md-contact-skill-level > i { width: 5px; height: 5px; border-radius: 50%; background: color-mix(in srgb, currentColor 22%, transparent); }
+.md-contact-skill-level > i.on { background: currentColor; }
+@keyframes md-contact-skills-in { from { opacity: 0; } }
+@media (pointer: coarse) { .md-contact-skill, .md-contact-skill-more { min-height: 32px; } }

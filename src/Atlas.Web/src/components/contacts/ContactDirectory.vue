@@ -29,6 +29,8 @@ import { uploadContactPhoto } from "../../contacts/contactPhoto";
 import ContactForm from "./ContactForm.vue";
 import ContactTrash from "./ContactTrash.vue";
 import ContactDuplicates from "./ContactDuplicates.vue";
+import SkillExperts from "./SkillExperts.vue";
+import type { SkillApi } from "../../contacts/skillApi";
 import type { ContactApi } from "../../contacts/contactApi";
 import "../settings/settings.css";
 
@@ -44,12 +46,15 @@ import "../settings/settings.css";
  * (ContactTrash) and back, focus on the Koš button again; Možné duplicity (ContactDuplicates) the same way, for merging two contacts
  * of one person. `source`, `store` and `contacts` are replaced by the gallery.
  */
-const props = defineProps<{ source?: Pick<ObjectApi, "list" | "create" | "trash" | "trashList" | "restore" | "purge">; store?: LiveObjects; contacts?: Pick<ContactApi, "duplicates" | "merge" | "accountSuggestions" | "resolveAccount">; usage?: Pick<UsageApi, "count"> }>();
+const props = defineProps<{ source?: Pick<ObjectApi, "list" | "create" | "trash" | "trashList" | "restore" | "purge">; store?: LiveObjects; contacts?: Pick<ContactApi, "duplicates" | "merge" | "accountSuggestions" | "resolveAccount">; usage?: Pick<UsageApi, "count">;
+  /** The search from the address (`#/library/contacts?q=C%23`: who knows a topic). */ initialQuery?: string; skills?: Pick<SkillApi, "experts" | "merge" | "contact" | "rate" | "topics" | "link" | "pages"> }>();
 const toaster = useToast();
 const source = computed(() => props.source ?? objectApi);
 const store = computed(() => props.store ?? defaultStore);
 
 const query = ref("");
+/** How many people know the topic the search names (SkillExperts): then no contact found by its fields is no empty directory. */
+const experts = ref(0);
 const ids = ref<string[]>([]);
 const total = ref(0), page = ref(1), canCreate = ref(false);
 const loading = ref(true), loaded = ref(false), error = ref("");
@@ -87,6 +92,8 @@ const lookup = createDebouncedLookup<ObjectList | null>({
 });
 let typed = false;
 watch(query, text => { typed = true; loading.value = true; lookup.update(text); });
+// The address's search (`#/library/contacts?q=`) is typed in for the reader, now and when the address changes.
+watch(() => props.initialQuery, text => { if (text) query.value = text; }, { immediate: true });
 const root = ref<HTMLElement>();
 // The whole directory at once, without the typing delay; what is typed meanwhile wins.
 onMounted(async () => {
@@ -253,9 +260,11 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
         <div class="contact-directory-new"><ContactForm v-model="form" :errors="errors" :busy="saving" :submit-label="t.directory.saveToDirectory" @submit="create" /></div>
       </InlineReveal>
       <p v-if="note" class="contact-directory-note" role="status" data-contact-note>{{ note }}</p>
+      <!-- Kdo co umí: the people who know the topic the search names, above the contacts found by their fields. -->
+      <SkillExperts v-if="query.trim()" :query="query" :api="skills" @found="experts = $event" />
       <ErrorState v-if="error && !rows.length" :title="t.directory.loadFailed" :text="error" :retry-label="t.directory.reload" :busy="loading" @retry="lookup.update(query)" />
       <LoadingSkeleton v-else-if="!loaded" :label="t.directory.loading" />
-      <EmptyState v-else-if="!rows.length" icon="users" :title="query.trim() ? t.directory.noMatch : t.directory.emptyDirectory"
+      <EmptyState v-else-if="!rows.length && !(query.trim() && experts)" icon="users" :title="query.trim() ? t.directory.noMatch : t.directory.emptyDirectory"
         :text="query.trim() ? t.directory.noMatchText : canCreate ? t.directory.emptyCanCreate : t.directory.emptyReader" />
       <TransitionGroup v-if="rows.length" tag="ul" name="contact-row" class="contact-directory-items" :aria-label="t.directory.contacts" @before-leave="leaveInPlace" @keydown="rowKeys($event, '[data-contact-row]')">
         <li v-for="(row, index) in rows" :key="row.id" :style="{ '--i': Math.min(index, 8) }" :class="{ 'is-highlighted': highlighted === row.id }" :data-contact-row="row.id"

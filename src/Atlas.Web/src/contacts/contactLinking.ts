@@ -8,7 +8,9 @@ import { useToast } from "../composables/useToast";
 import { lazyComponent } from "../lazyComponent";
 import { objectApi } from "../objects/objectApi";
 import { usageApi, type UsageApi, type UsageCount, type UsagePage } from "../objects/relationsApi";
-import { openVuePopover } from "../projector/openVuePopover";
+import { openVuePopover, openVueReaderPopover } from "../projector/openVuePopover";
+import skillsText from "../i18n/contacts-ui";
+import { shownLevel, skillApi, type ContactSkill } from "./skillApi";
 import { buildShellHashEncoded } from "../shellRoute";
 import { contactApi, linkedSnapshot, type ContactCandidate, type ContactConflict, type ContactPlace } from "./contactApi";
 import type { ContactPatch } from "./contactData";
@@ -151,6 +153,33 @@ export function askAt(insert: { editor: Editor; anchor: () => DOMRect }): Contac
 /** The directory contact's editor on a page; loaded with the first edit (ContactCard brings the board text editor). */
 const PageContactEditor = lazyComponent(() => import("../components/contacts/PageContactEditor.vue"));
 
+/** The rating of a person's topics, loaded with its first use (skills spec §7). */
+const SkillRatePanel = lazyComponent(() => import("../components/contacts/SkillRatePanel.vue"));
+const readerTopics = 6;
+/** Who else knows a topic: the contact directory searched for it (`#/library/contacts?q=`). */
+export const topicUrl = (topic: string) => buildShellHashEncoded({ view: "library", tab: "contacts", q: topic });
+/** One topic in the person's card: the level the reader may see and a line on who says so and how. */
+function readerSkill(skill: ContactSkill) {
+  const t = skillsText.skills;
+  const who = skill.peers ? t.confirmedShort(skill.peers) : skill.fewPeers ? t.fewShort : skill.self != null ? t.selfShort : skill.mine != null ? t.yours(skill.mine) : "";
+  return { name: skill.name, level: shownLevel(skill), detail: [who, skill.selfNote ?? "", skill.myNote ?? "", ...skill.raters.map(rater => `${rater.name}: ${rater.level}${rater.note ? ` (${rater.note})` : ""}`)].filter(Boolean).join(" · "), url: topicUrl(skill.name) };
+}
+/** „Umí“ of the read-only card: the topics the reader may see, the best first; null for a contact the reader may not read. */
+export async function readerSkills(objectId: string, signal: AbortSignal, api: Pick<typeof skillApi, "contact"> = skillApi) {
+  try {
+    const skills = (await api.contact(objectId, signal)).skills;
+    return { skills: skills.slice(0, readerTopics).map(readerSkill), more: Math.max(0, skills.length - readerTopics) };
+  } catch (failure) {
+    if (failure instanceof ApiError && failure.status === 404) return null;
+    throw failure;
+  }
+}
+/** Ohodnotit of the card: the rating panel at the person's chip, a reader's panel, so it works in a read page as in the editor. */
+export function rateSkills(objectId: string, anchor: HTMLElement, api?: Pick<typeof skillApi, "contact" | "rate" | "topics">, topic?: string) {
+  return openVueReaderPopover({ anchor, root: anchor.closest<HTMLElement>(".ProseMirror, [data-md-root]") ?? anchor.ownerDocument.body, title: skillsText.skills.rateTitle(anchor.textContent?.trim() ?? ""),
+    className: "skill-rate-popover", component: SkillRatePanel, props: { contactId: objectId, api, topic } });
+}
+
 const usedOnPlaces = 5;
 /** The places (pages and boards the reader may see) that use a contact, for the read-only card; null when the contact is unreadable. */
 /** `here`: the page being read, which is not listed as a place of its own contact. */
@@ -165,7 +194,7 @@ export async function usedOn(objectId: string, signal: AbortSignal, api: Pick<Us
 }
 
 /** The contacts plugin's host options (§3, §4, K2): live contacts always; linking and the last-usage question where the document is a place. */
-export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOptions, "live" | "link" | "remove" | "directoryUrl" | "editLinked" | "readerUsage" | "qrCode"> {
+export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOptions, "live" | "link" | "remove" | "directoryUrl" | "editLinked" | "readerUsage" | "qrCode" | "readerSkills" | "rateSkills"> {
   return {
     qrCode: drawContactQr,
     live: (objectId, { signal }) => contactApi.live(objectId, { signal }),
@@ -175,6 +204,9 @@ export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOpt
     directoryUrl: () => buildShellHashEncoded({ view: "library", tab: "contacts" }),
     // „Použito na“ of the read-only card: the first few places the reader may see, the rest as a number.
     readerUsage: (objectId, { signal }) => usedOn(objectId, signal, undefined, host?.place()?.id),
+    // „Umí“ of the read-only card and its Ohodnotit (Kdo co umí).
+    readerSkills: (objectId, { signal }) => readerSkills(objectId, signal),
+    rateSkills: (objectId, { anchor }) => { rateSkills(objectId, anchor); },
     ...(host && {
       link: async (contact, { insert }) => {
         // An unresolved name waits for a person to be picked; never resolved or created by itself.

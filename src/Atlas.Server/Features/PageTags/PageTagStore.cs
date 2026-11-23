@@ -11,7 +11,7 @@ public sealed class PageTagStore(ISession session)
 {
     // Page roles from EffectivePageAccess (WP3 S3), filtered by the actor before the join so the view uses its UserId
     // indexes; the same draft rule as PageListing and PersonalPageGuard. No document bodies enter this projection.
-    private static readonly string AccessiblePages = $$"""
+    internal static readonly string AccessiblePages = $$"""
         WITH {{AccessSql.ActorCte}}, accessible AS (
           SELECT p."Id",p."SpaceId",s."Name" AS "SpaceName",p."PublishedRevisionId",
             working."Id" AS "WorkingRevisionId",working."Title" AS "WorkingTitle",
@@ -56,6 +56,21 @@ public sealed class PageTagStore(ISession session)
 
     public async Task<Guid> ResolveAsync(string name, string normalizedName, UserAccount actor, CancellationToken ct)
     {
+        // Another spelling of an existing tag is that tag (skills spec §3): the exact name, an alias, then the folded name or alias
+        // („C Sharp“ = „c-sharp“), a merged tag's the tag it went into.
+        // shortcut: the folded comparison scans the tag catalog (no index); add an expression index once it holds tens of thousands of tags.
+        var known = await session.CreateSQLQuery($"""
+            SELECT id FROM (
+              SELECT COALESCE(t."MergedIntoId", t."Id") AS id, 0 AS rank FROM "Tag" t WHERE t."NormalizedName" = :name
+              UNION ALL SELECT COALESCE(t."MergedIntoId", t."Id"), 1 FROM "TagAlias" a JOIN "Tag" t ON t."Id" = a."TagId" WHERE a."NormalizedName" = :name
+              UNION ALL SELECT COALESCE(t."MergedIntoId", t."Id"), 2 FROM "Tag" t WHERE {Skills.SkillStore.Fold("t.\"NormalizedName\"")} = {Skills.SkillStore.Fold(":name")}
+              UNION ALL SELECT COALESCE(t."MergedIntoId", t."Id"), 3 FROM "TagAlias" a JOIN "Tag" t ON t."Id" = a."TagId" WHERE {Skills.SkillStore.Fold("a.\"NormalizedName\"")} = {Skills.SkillStore.Fold(":name")}
+            ) x WHERE rank < 2 OR {Skills.SkillStore.Fold(":name")} <> '' ORDER BY rank, id LIMIT 1
+            """).AddScalar("id", NHibernateUtil.Guid).SetParameter("name", normalizedName).UniqueResultAsync<Guid?>(ct);
+        if (known is { } existing)
+        {
+            return existing;
+        }
         // Ordered caller acquisition plus ON CONFLICT prevents catalog races across pages/spaces.
         await session.CreateSQLQuery("""
             INSERT INTO "Tag"("Id","Name","NormalizedName","CreatedAt","CreatedById")

@@ -117,7 +117,7 @@ public static class InstallationModules
             "Workspace", "ModuleOnboarding", "Space", "SpaceMetadataRevision", "SpaceOrganization", "SpaceCover", "SpacePin",
             "SpaceExternalSharingPolicy", "ContentResource", "ContactPhoto", "SpaceTrashCleanupSetting"), protection),
         new TableBackup("pages", 1, ["identity", "platform"], [
-            new BackupTable("Page"), ApiChannel("PageRevision"), ApiChannel("PagePublication"), .. Plain("PageOrganizationRevision", "PageAccessModeRevision", "Tag", "PageTag", "PageDecoration",
+            new BackupTable("Page"), ApiChannel("PageRevision"), ApiChannel("PagePublication"), .. Plain("PageOrganizationRevision", "PageAccessModeRevision", "Tag", "TagAlias", "TagRelation", "PageTag", "SkillRating", "PageDecoration",
             "PageFavorite", "TreeReference"),
             // Migration 2026110670 dropped the live state's unread Markdown and plain-text projections.
             new BackupTable("PageCollaboration", Retired: ["ProjectionMarkdown", "ProjectionText"]), .. Plain("CollaborationUpdate", "CollaborationSecretReference",

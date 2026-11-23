@@ -34,6 +34,7 @@ using Atlas.Server.Features.PersonalApi;
 using Atlas.Server.Features.PersonalLibrary;
 using Atlas.Server.Features.PageLinks;
 using Atlas.Server.Features.PageTags;
+using Atlas.Server.Features.Skills;
 using Atlas.Server.Features.PageDecorations;
 using Atlas.Server.Features.Relations;
 using Atlas.Server.Features.PageTemplates;
@@ -101,6 +102,7 @@ public static class AtlasEndpoints
         Atlas.Server.Features.TreeReferences.TreeReferenceEndpoints.MapTreeReferences(app);
         app.MapPersonalLibraryEndpoints();
         app.MapPageTags();
+        app.MapSkills();
         app.MapPageLinks();
         app.MapPageDecorations();
         app.MapPagePublication();

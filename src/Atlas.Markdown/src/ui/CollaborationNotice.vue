@@ -18,7 +18,8 @@ import { connectionPresentation } from './connectionPresentation'
 import { useConnectionCard } from './useConnectionCard'
 import type { MarkdownEditorState } from '../core/types'
 
-const props = defineProps<{ state: MarkdownEditorState; compact?: boolean }>()
+/** `folded`: a floating panel of the editor is open; the card waits behind the dot (the dot keeps the state) until it closes. */
+const props = defineProps<{ state: MarkdownEditorState; compact?: boolean; folded?: boolean }>()
 
 const presentation = computed(() => connectionPresentation(props.state))
 const visible = useConnectionCard(() => presentation.value)
@@ -28,7 +29,7 @@ const tone = computed(() => presentation.value.level === 'failed' ? 'error'
 
 <template>
   <div class="md-collaboration-live" role="status" aria-live="polite" aria-atomic="true">
-    <div v-if="visible" class="md-collaboration-notice" :class="[{ 'is-compact': compact }, `tone-${tone}`]"
+    <div v-if="visible && !folded" class="md-collaboration-notice" :class="[{ 'is-compact': compact }, `tone-${tone}`]"
       :data-state="state.connection" :data-level="presentation.level" data-testid="collaboration-notice">
       <span class="md-collaboration-notice-icon" aria-hidden="true">
         <MarkdownIcon v-if="presentation.busy" class="md-collaboration-spinner" name="loader-circle" :size="18" />

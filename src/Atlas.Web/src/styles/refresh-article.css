@@ -40,10 +40,13 @@
     margin-right: var(--article-gutter);
   }
 }
-.atlas .document-body .md-editor.paper .paper-inner { padding-top: 18px; padding-inline: var(--article-gutter); }
+/* Room above the first line for the toolbar of a component there (42 px and its 6 px gap, contextToolbar.css): it stays inside the
+   editor, under the Dokument/Zdroj switch, never over it. */
+.atlas .document-body { --article-top: 34px; }
+.atlas .document-body .md-editor.paper .paper-inner { padding-top: var(--article-top); padding-inline: var(--article-gutter); }
 /* The page's skeleton (arrival and editor) starts where the text will: under the paper's own top padding, so the content never jumps on arrival. */
 .atlas .document-body > .loading-skeleton,
-.atlas .document-body > .document-editor-surface > .loading-skeleton { padding-top: 18px; }
+.atlas .document-body > .document-editor-surface > .loading-skeleton { padding-top: var(--article-top); }
 /* The editor's 32 px gutter for the block grip and its "+" at every width, read too: the first click into a page rewraps no line (3.6). */
 .atlas .document-body .md-editor.paper .paper-inner { padding-left: max(var(--article-gutter), 32px); }
 /* An empty line is a line read too, as the editor's trailing break makes it. */
@@ -306,9 +309,7 @@
   .atlas[data-document-open="true"] .document-header .document-meta:not(.md-editor *) { gap: 6px; }
   .atlas[data-document-open="true"] .document-header .document-status:not(.md-editor *) { flex: none; }
   .atlas[data-document-open="true"] .document-header .document-outline:not(.md-editor *) { width: calc(100% - 40px); margin-top: 14px; }
-  .atlas .document-body .md-editor.paper .paper-inner { padding-top: 12px; }
-  .atlas .document-body > .loading-skeleton,
-  .atlas .document-body > .document-editor-surface > .loading-skeleton { padding-top: 12px; }
+  .atlas .document-body { --article-top: 28px; }
   .atlas .document-body .md-editor.paper .editor-body { font-size: 15px; line-height: 1.65; }
   .atlas .document-body .md-editor.paper .editor-body h2 { margin-top: 24px; font-size: 20px; }
   .atlas .document-body .md-editor.paper .editor-body pre { padding: 12px 14px; border-radius: 10px; font-size: 12px; }

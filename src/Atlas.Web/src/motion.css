@@ -461,6 +461,9 @@
   to { opacity: 0; transform: translateY(calc(var(--atlas-rise) * -.75)); }
 }
 @keyframes st-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* A bar of a value grows from its start once (skill bars, a spread of levels): along its length, from the left or from the bottom. */
+@keyframes atlas-bar-grow { from { scale: 0 1; } }
+@keyframes atlas-bar-rise { from { scale: 1 0; } }
 @keyframes st-fade-out { from { opacity: 1; } to { opacity: 0; } }
 /* The prototype's popStatus(): .8 → 1.06 → 1 (plan O14); with --st-pop-from 1 (reduced motion) only the fade. */
 @keyframes st-pop {

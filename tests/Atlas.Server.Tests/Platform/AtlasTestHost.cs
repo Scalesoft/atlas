@@ -24,6 +24,7 @@ using Atlas.Server.Features.Pages;
 using Atlas.Server.Features.PersonalLibrary;
 using Atlas.Server.Features.PageLinks;
 using Atlas.Server.Features.PageTags;
+using Atlas.Server.Features.Skills;
 using Atlas.Server.Features.PageDecorations;
 using Atlas.Server.Features.Search;
 using Atlas.Server.Features.SearchGaps;
@@ -170,6 +171,7 @@ internal sealed class AtlasTestHost : IAsyncDisposable
                 services.AddPersonalLibrary();
         services.AddApiActivity();
                 services.AddPageTags();
+                services.AddSkills();
                 services.AddPageLinks();
                 services.AddPageDecorations();
                 services.AddRelations();

@@ -92,7 +92,7 @@ public sealed class McpG5CoverageTests
             ["targetId"] = contact, ["attachmentId"] = attachment, ["tagId"] = tag,
         };
         var note = new { kind = "note", x = 0, y = 0, width = 200, height = 120, z = 1, props = new { } };
-        var reaching = Reaching(page, included, space, board, contact, home, attachment, note);
+        var reaching = Reaching(page, included, space, board, contact, home, attachment, note, tag);
         var tools = f.Site.Services.GetServices<McpServerTool>().Select(tool => tool.ProtocolTool).OrderBy(tool => tool.Name, StringComparer.Ordinal).ToArray();
         Assert.Empty(reaching.Keys.Except(tools.Select(tool => tool.Name)));
         var failures = new List<string>();
@@ -188,7 +188,7 @@ public sealed class McpG5CoverageTests
     /// <summary>The tools whose plain call stops at their own argument check, with arguments that pass it; and the tools that take
     /// two places, called with each of them out of AI.</summary>
     private static Dictionary<string, Dictionary<string, object?>[]> Reaching((string Id, int Version) page, (string Id, int Version) included, string space,
-        string board, string contact, string home, string attachment, object note)
+        string board, string contact, string home, string attachment, object note, string tag)
     {
         var bytes = Encoding.UTF8.GetBytes("x");
         return new(StringComparer.Ordinal)
@@ -212,6 +212,9 @@ public sealed class McpG5CoverageTests
             ["atlas_edit_board"] = [new() { ["boardId"] = board, ["changes"] = new[] { new { type = "create", item = note } } }],
             // sourceId is optional since accountId is its alternative (account contacts); the pair of contacts is the call that reaches G5.
             ["atlas_merge_contacts"] = [new() { ["sourceId"] = contact, ["targetId"] = contact }],
+            // The space's tag by its name, and merged into itself: a topic only that space shows is missing before anything is checked.
+            ["atlas_find_experts"] = [new() { ["topic"] = Marker }],
+            ["atlas_merge_topics"] = [new() { ["tagId"] = tag, ["intoId"] = tag, ["confirm"] = true }],
             ["atlas_add_tree_reference"] =
             [
                 new() { ["spaceId"] = space, ["targetId"] = Guid.NewGuid() },
