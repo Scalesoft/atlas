@@ -609,10 +609,9 @@ curl -fsSLO \
         </div>
         <div class="glass rv">
           <h3>Start it</h3>
-<p>Pick the images once in <code>.env</code>; every later <code>docker compose</code> command uses them too.</p>
+<p>Pick the Atlas image once in <code>.env</code>; every later <code>docker compose</code> command uses it too. The database image is pinned in <code>docker-compose.yml</code>.</p>
 <pre><code>cat &gt; .env &lt;&lt;'EOF'
 ATLAS_IMAGE=ghcr.io/scalesoft/atlas:latest
-ATLAS_POSTGRES_IMAGE=ghcr.io/scalesoft/atlas-postgres:latest
 EOF
 docker compose up -d</code></pre>
         </div>

@@ -3,15 +3,34 @@
 # (never commit it): ATLAS_DB_OWNER_PASSWORD, ATLAS_DB_APP_PASSWORD; no ';' in either. Pin ATLAS_IMAGE to a released version.
 services:
   wiki-db:
-    # postgres:19.0-alpine plus pgvector (deploy/postgres). A volume with PostgreSQL 18 data must be upgraded first
-    # (deploy/postgres/upgrade.sh; docs/operations.md, "Upgrade na PostgreSQL 19"); until then this image refuses to start.
-    image: ${ATLAS_POSTGRES_IMAGE:-ghcr.io/scalesoft/atlas-postgres:19.0-pgvector0.8.7-r1}
+    # The official pgvector image (PostgreSQL 19, Debian), pinned by digest. A volume with PostgreSQL 18 data must be upgraded
+    # first (deploy/postgres/upgrade.sh; docs/operations.md, "Upgrade na PostgreSQL 19").
+    image: ${ATLAS_POSTGRES_IMAGE:-docker.io/pgvector/pgvector:0.8.7-pg19-trixie@sha256:ace863afa68a13560603dc7366fad0adb4f5ddd0a21c8f06418195f32e03fa08}
     restart: unless-stopped
+    # Each major keeps its cluster in <major>/docker on the volume. With only another major's cluster there, the image would
+    # create an empty one beside it and Atlas would offer a fresh installation: refuse to start instead; the data stay as they are.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        if [ ! -s "$$PGDATA/PG_VERSION" ]; then
+          for old in /var/lib/postgresql/*/docker/PG_VERSION; do
+            [ -s "$$old" ] || continue
+            echo "wiki-db: $${old%/PG_VERSION} holds PostgreSQL $$(cat "$$old") data and $$PGDATA is empty; upgrade the volume first (deploy/postgres/upgrade.sh, docs/operations.md)." >&2
+            exit 1
+          done
+        fi
+        exec docker-entrypoint.sh "$$@"
+      - wiki-db
+    command: ["postgres"]
     environment:
       # The schema's owner: migrations and the installation restore. An existing volume keeps the password it was created with.
       POSTGRES_USER: wikiuser
       POSTGRES_PASSWORD: ${ATLAS_DB_OWNER_PASSWORD:-change-me-owner}
       POSTGRES_DB: wikidb
+      # Text sorts by code point with PostgreSQL's own Unicode tables, as on the former Alpine image and whatever C library the
+      # image has; the collation never changes version. Applies when the volume is created (deploy/postgres/upgrade.sh does the same).
+      POSTGRES_INITDB_ARGS: --locale-provider=builtin --builtin-locale=C.UTF-8
     volumes:
       - wiki-db-data:/var/lib/postgresql
     healthcheck:

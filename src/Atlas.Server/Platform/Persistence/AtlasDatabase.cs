@@ -45,6 +45,7 @@ public sealed class AtlasDatabase : IDisposable
             var owner = OwnerConnectionString;
             try
             {
+                await CollationVersion.RefreshAsync(owner, m_logger, ct);
                 await AtlasMigrations.MigrateAsync(owner, ct);
                 if (owner != connectionString)
                 {

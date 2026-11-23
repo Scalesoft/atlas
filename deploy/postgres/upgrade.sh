@@ -2,18 +2,20 @@
 # Moves the database volume of an Atlas installation to a new PostgreSQL major (18 -> 19; docs/operations.md, "Upgrade na
 # PostgreSQL 19"). The volume is the database container's /var/lib/postgresql, where each major keeps its cluster in <major>/docker:
 # - the old cluster (18/docker) is only read and stays as it was: switching back to the old image is the rollback;
-# - the new image's pg_dumpall and psql copy every role (with its password), database and row into 19/upgrade;
+# - the new image's pg_dumpall and psql copy every role (with its password), database and row into 19/upgrade; the cluster and
+#   every database get the builtin C.UTF-8 collation of docker-compose.yml (code point order, as musl sorted; indexes built anew);
 # - roles, extensions (in the new major's default version, e.g. contrib btree_gist), time zone and locale settings and the exact
-#   row count of every table are compared, then ANALYZE runs;
+#   row count of every table are compared, the order of a probe of words in each database too, then ANALYZE runs;
 # - only a complete, verified and cleanly stopped cluster is renamed to 19/docker, which the new image opens.
 # It refuses to run while a container uses the volume, when 19/docker exists (already upgraded) or without enough free space.
 # An interrupted run leaves only 19/upgrade, which the next run removes. Take a backup first all the same.
-#   deploy/postgres/upgrade.sh <volume> <old image> <new image>
-#   e.g. deploy/postgres/upgrade.sh atlas_wiki-db-data ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2 ghcr.io/scalesoft/atlas-postgres:19.0-pgvector0.8.7-r1
+#   deploy/postgres/upgrade.sh <volume> <old image> <new image>   (new image: the one docker-compose.yml pins), e.g.
+#   deploy/postgres/upgrade.sh atlas_wiki-db-data ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2 \
+#     docker.io/pgvector/pgvector:0.8.7-pg19-trixie@sha256:ace863afa68a13560603dc7366fad0adb4f5ddd0a21c8f06418195f32e03fa08
 #   POSTGRES_USER: the superuser of the volume (docker-compose.yml: wikiuser, the default); ENGINE=podman for Podman.
 set -euo pipefail
 export MSYS_NO_PATHCONV=1  # Git Bash on Windows would rewrite the container paths below
-[[ $# -eq 3 ]] || { sed -n '2,13p' "$0" >&2; exit 2; }
+[[ $# -eq 3 ]] || { sed -n '2,16p' "$0" >&2; exit 2; }
 volume=$1 old_image=$2 new_image=$3
 engine=${ENGINE:-docker}
 user=${POSTGRES_USER:-wikiuser}
@@ -59,13 +61,20 @@ wait_ready "$run-old" /run/postgresql
 timezone=$("$engine" exec "$run-old" psql -X -At -h /run/postgresql -U "$user" -d postgres -c 'SHOW timezone') || fail "cannot read the old server"
 "$engine" run -d --name "$run-new" --network none -v "$volume:$root" -v "$run-socket:/old" -e PGDATA="$root/$new/upgrade" -e TZ="$timezone" \
   -e POSTGRES_USER="$user" -e POSTGRES_DB=postgres -e POSTGRES_PASSWORD="$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')" \
-  "$new_image" > /dev/null
+  -e POSTGRES_INITDB_ARGS="--locale-provider=builtin --builtin-locale=C.UTF-8" "$new_image" > /dev/null
 wait_ready "$run-new" 127.0.0.1
 
 echo "Copying PostgreSQL $old to $new ..."
+# A database that sorted with the C library (musl: by code point) gets the builtin provider, which sorts the same way with
+# PostgreSQL's own tables whatever the image's C library. Only CREATE DATABASE statements change, never a row of COPY data.
+# shellcheck disable=SC2016
+to_builtin='copy { if ($0 == "\\.") copy = 0; print; next }
+/^COPY .* FROM stdin;$/ { copy = 1 }
+/^CREATE DATABASE / { sub(/ LOCALE_PROVIDER = libc /, " LOCALE_PROVIDER = builtin BUILTIN_LOCALE = '"'"'C.UTF-8'"'"' ") }
+{ print }'
 # The superuser exists in the new cluster already: its CREATE ROLE fails as pg_dumpall intends, the ALTER ROLE after it applies.
-"$engine" exec -e U="$user" "$run-new" sh -c 'set -o pipefail
-  pg_dumpall -h /old -U "$U" | psql -X -q -U "$U" -d postgres 2> /tmp/restore.err > /dev/null
+"$engine" exec -e U="$user" -e AWK="$to_builtin" "$run-new" sh -c 'set -o pipefail
+  pg_dumpall -h /old -U "$U" | awk "$AWK" | psql -X -q -U "$U" -d postgres 2> /tmp/restore.err > /dev/null
   status=$?; grep -vF "ERROR:  role \"$U\" already exists" /tmp/restore.err >&2
   [ "$status" -eq 0 ] && ! grep -E "ERROR|FATAL|PANIC" /tmp/restore.err | grep -qvF "ERROR:  role \"$U\" already exists"' \
   || fail "the copy failed (above); $root/$old/docker is unchanged"
@@ -87,7 +96,23 @@ compare() {
 }
 before=$(compare /old) after=$(compare /run/postgresql)
 [[ "$before" == "$after" ]] || { diff <(echo "$before") <(echo "$after") >&2 || true; fail "the copy differs (above); $root/$old/docker is unchanged"; }
-echo "$(grep -c '=' <<< "$before") tables with $(awk -F= '{s += $NF} END {print s}' <<< "$before") rows, the roles, extensions and server settings (time zone, locale) match in $(grep -c '^database ' <<< "$before") databases."
+libc=$("$engine" exec "$run-new" psql -X -At -v ON_ERROR_STOP=1 -U "$user" -d postgres -c "SELECT string_agg(datname, ', ') FROM pg_database WHERE datlocprovider = 'c'") \
+  || fail "cannot read the new server"
+[[ -z $libc ]] || fail "databases still sort with the C library: $libc; $root/$old/docker is unchanged"
+# A probe of words in every database: musl sorted by code point like the builtin provider; another C library (glibc) did not.
+# shellcheck disable=SC2016
+probe='SELECT current_database() || $s$: $s$ || string_agg(w, $s$ $s$ ORDER BY w)
+  FROM unnest(string_to_array($s$b B a A c ch h e z Z _x -y 1 10 2$s$, $s$ $s$) || ARRAY[chr(269), chr(268), chr(233), chr(228), chr(223)]) w;'
+orders() {
+  "$engine" exec -e U="$user" -e H="$1" -e Q="$probe" "$run-new" sh -c '
+    for db in $(psql -X -At -v ON_ERROR_STOP=1 -h "$H" -U "$U" -d postgres -c "SELECT datname FROM pg_database WHERE datallowconn ORDER BY 1"); do
+      printf "%s\n" "$Q" | psql -X -At -v ON_ERROR_STOP=1 -h "$H" -U "$U" -d "$db"
+    done'
+}
+order_before=$(orders /old) order_after=$(orders /run/postgresql)
+[[ "$order_before" == "$order_after" ]] || { diff <(echo "$order_before") <(echo "$order_after") >&2 || true
+  echo "upgrade: WARNING: text now sorts by code point (above); the old cluster sorted otherwise (not musl)." >&2; }
+echo "$(grep -c '=' <<< "$before") tables with $(awk -F= '{s += $NF} END {print s}' <<< "$before") rows, the roles, extensions and server settings (time zone, locale) match in $(grep -c '^database ' <<< "$before") databases; text sorts by code point (builtin C.UTF-8)."
 "$engine" exec "$run-new" vacuumdb -q -U "$user" --all --analyze-only
 
 # Clean shutdowns (the images stop with SIGINT, a fast shutdown), then the new cluster takes its final place.

@@ -14,7 +14,7 @@ Toto je hlavní technický dokument Atlas. Obsahuje i dosavadní rozhodnutí o o
 | Persistence | NHibernate; QueryOver jako výchozí dotazovací API, ne povinnost pro každý dotaz |
 | Identity | OIDC / OpenIddict; poskytovatel přihlášení oddělený od oprávnění wiki |
 | Autorizace | Lokální Reader/Writer/Admin na prostor a globální WikiAdmin; úplná pravidla níže |
-| Data | PostgreSQL; NHibernate mappingy a FluentMigrator 8.0.1 v témže hostu |
+| Data | PostgreSQL 19 s pgvectorem (oficiální image, kolace builtin `C.UTF-8`, [Kolace databáze](operations.md#kolace-databáze)); NHibernate mappingy a FluentMigrator 8.0.1 v témže hostu |
 | Asynchronní práce | Outbox a idempotentní zpracování přes Wolverine po ověření NHibernate integrace |
 | Rozšíření | Důvěryhodné serverové moduly sestavené s aplikací a zapínané při startu |
 | Spolupráce | Existující Atlas.Markdown.Sync v témže .NET hostu, protokol V1 relay, PostgreSQL provozní stav; jeden aktivní host |

@@ -276,6 +276,9 @@ public sealed class SearchQueryPostgresTests
             else { Assert.Equal(20, result.Items.Count); Assert.True(result.HasMore); }
             timings.Add(new { query, milliseconds = watch.Elapsed.TotalMilliseconds, count = result.Items.Count });
         }
+        // The fuzzy body test of a word no draft has asks the trigram index (2026112300); testing every draft's body took 620 ms here
+        // and over the 2 s search timeout on a GitHub-hosted runner.
+        Assert.Contains("IX_WorkingSearchDocument_BodyTrigram", await f.ExplainDraftSearch("unmatchedzephyr"));
         if (Environment.GetEnvironmentVariable("ATLAS_DRAFT_PERF_OUTPUT") is { Length: > 0 } output)
         {
             var repeated = new List<object>();

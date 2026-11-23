@@ -9,8 +9,8 @@
        editor sources (ATLAS_EDITOR_MODE=source; src/Atlas.Markdown or -EditorSource). The previous publish is reused when its
        inputs are unchanged (working tree of src/ and the build files, editor mode and, in source mode,
        the editor sources); -Republish forces a new one.
-    2. Creates a pod with a throwaway PostgreSQL (tmpfs; deploy/postgres/Dockerfile built for linux/amd64 as
-       localhost/atlas-postgres:<tag>, exactly the production database image), the server in the Dockerfile stage `runtime`
+    2. Creates a pod with a throwaway PostgreSQL (tmpfs; the image docker-compose.yml pins, with its builtin collation,
+       exactly the production database), the server in the Dockerfile stage `runtime`
        (aspnet with git and OpenSSH, built as localhost/atlas-e2e-runtime; the publish is copied into an image of its own on
        top of it, localhost/atlas-e2e-app:<hash>, as the production image does; data directories on tmpfs), a disposable SSH
        git server (tests/browser/git-server) and
@@ -75,8 +75,8 @@ param(
     # ASP.NET environment. Development allows the auth cookie over plain HTTP inside the pod;
     # Production requires HTTPS (CookieSecurePolicy.Always + HTTPS redirection).
     [string]$AspNetEnvironment = 'Development',
-    # Database image. Default: deploy/postgres/Dockerfile (postgres:19.0-alpine with pgvector, as in production) built for
-    # linux/amd64 by deploy/postgres/build.ps1; an image given here is used as-is and needs pgvector (migration 2026100520).
+    # Database image. Default: the one docker-compose.yml pins (official pgvector, PostgreSQL 19, by digest); an image given
+    # here is used as-is and needs pgvector (migration 2026100520).
     [string]$PostgresImage = '',
     # Server runtime the publish directory is copied onto. Default: the Dockerfile stage `runtime` (git, OpenSSH), built from
     # an empty context as localhost/atlas-e2e-runtime; an image given here is used as-is and must have git and ssh too.
@@ -234,7 +234,8 @@ if (-not $AppImage -and -not $AspNetImage) {
     try { Build-Image $AspNetImage (Join-Path $repo 'Dockerfile') $context @('--target', 'runtime', '--platform', 'linux/amd64') } finally { Remove-Item $context -Recurse -Force -ErrorAction SilentlyContinue }
 }
 if (-not $PostgresImage) {
-    $PostgresImage = @(& (Join-Path $repo 'deploy/postgres/build.ps1') -Platform 'linux/amd64')[-1]
+    $PostgresImage = [regex]::Match((Get-Content (Join-Path $repo 'docker-compose.yml') -Raw), 'ATLAS_POSTGRES_IMAGE:-([^}]+)\}').Groups[1].Value
+    if (-not $PostgresImage) { throw 'docker-compose.yml pins no ATLAS_POSTGRES_IMAGE default.' }
 }
 if (-not $GitServerImage) {
     $GitServerImage = 'localhost/atlas-e2e-git-server:latest'
@@ -374,7 +375,7 @@ try {
     Invoke-Podman pod create @podArguments | Out-Null
 
     Invoke-Podman run -d --pod $run --name "$run-db" `
-        -e POSTGRES_USER=atlas -e POSTGRES_DB=atlas -e "TZ=$timeZone" `
+        -e POSTGRES_USER=atlas -e POSTGRES_DB=atlas -e "TZ=$timeZone" -e 'POSTGRES_INITDB_ARGS=--locale-provider=builtin --builtin-locale=C.UTF-8' `
         --secret "$run-db,type=env,target=POSTGRES_PASSWORD" `
         --tmpfs /var/lib/postgresql:rw `
         $PostgresImage | Out-Null

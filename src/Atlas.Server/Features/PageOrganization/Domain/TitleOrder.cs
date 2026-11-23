@@ -11,7 +11,7 @@ namespace Atlas.Server.Features.PageOrganization.Domain;
 /// (<see cref="Page.SortChildrenByTitle"/>, <see cref="SpaceOrganization.SortRootByTitle"/>) and the tree read orders a pinned level
 /// (<see cref="Arrange"/>), so the web, REST and MCP see one order, and a node created, renamed, restored or moved into the level needs
 /// nothing: its title places it. Titles compare as plain text in Czech (ch after h, diacritics, numbers by value), ignoring case, in
-/// .NET: never by database collation (the production image sorts text differently). A hand move within a pinned level ends the pin
+/// .NET: never by database collation (the database sorts by code point). A hand move within a pinned level ends the pin
 /// (<see cref="HandMoveAsync"/>); a move into it from elsewhere keeps it.
 /// </summary>
 public static class TitleOrder

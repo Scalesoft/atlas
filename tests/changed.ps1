@@ -45,8 +45,8 @@ function Get-WebTests([string]$Pattern) {
 $editorConsumers = Get-WebTests '@atlas/markdown'
 # The tests that read tests/fixtures are not imports of it either.
 $fixtureConsumers = Get-WebTests 'tests/fixtures|fixtures/'
-# The node tests of the release and workflow rules.
-$toolingTests = @('tooling/release-version.test.mjs', 'tooling/release-notes.test.mjs', 'tooling/icon-pack/lib.test.mjs')
+# The node tests of the release and workflow rules: the list CI runs in the workflow.
+$toolingTests = ((Select-String -Path (Join-Path $root '.github/workflows/ci.yml') -Pattern 'run: node --test (.+)$').Matches[0].Groups[1].Value -split ' ')
 
 $mergeBase = git -C $root merge-base HEAD $Base
 if ($LASTEXITCODE) { throw "No merge base with $Base; fetch it first (git fetch origin)." }

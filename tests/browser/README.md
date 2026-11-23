@@ -265,7 +265,7 @@ npm --prefix tests/browser test -- projector-kbn-from-scratch.spec.ts projector-
 ## Podman: jednorázová instance jedním příkazem
 
 `e2e-podman.ps1` spustí celou přejímku v jednom Podman podu a po skončení vše odstraní:
-produkční image databáze z `deploy/postgres/Dockerfile` (PostgreSQL 19 Alpine s pgvectorem, sestavený pro `linux/amd64`; data v tmpfs), publikovaný server v obrazu nad stupněm `runtime` z Dockerfile (`aspnet:11.0-resolute`
+produkční image databáze, který připíná `docker-compose.yml` (oficiální `pgvector/pgvector`, PostgreSQL 19, kolace builtin `C.UTF-8`; data v tmpfs), publikovaný server v obrazu nad stupněm `runtime` z Dockerfile (`aspnet:11.0-resolute`
 s `git` a `openssh-client`; publish ve vrstvě obrazu, adresáře dat v tmpfs), jednorázový SSH git server (`tests/browser/git-server`)
 a testy v oficiálním `mcr.microsoft.com/playwright:v<verze>-noble`, jehož tag
 odpovídá nainstalovanému `@playwright/test` z `package-lock.json`. Browser, fonty a OS jsou tedy

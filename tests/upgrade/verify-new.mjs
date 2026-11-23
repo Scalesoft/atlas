@@ -201,6 +201,21 @@ try {
 
   await projectorConverted("upgrade");
 
+  // --- „Co je nového“: an account from before the upgrade is told about the new release once ------------------
+  // The smoke specs sign in as these accounts next; the notice would cover their clicks, so it is marked seen as closing it does.
+  try {
+    const release = (await admin.get("/api/setup/status")).version.split("+")[0];
+    for (const username of [ADMIN, "browser-reader"]) {
+      const session = username === ADMIN ? admin : await Session.login(username);
+      const seen = (await session.get("/api/auth/me")).releaseNotesSeen;
+      record(`release notice: ${username} is told about ${release} once`, typeof seen === "string" && seen !== release, `seen before: ${seen}`);
+      // A development build ("5.1.0-dev") shows no notice, and the server refuses to mark one seen.
+      if (!release.includes("-")) await session.put("/api/profile/release-notes", { version: release });
+      if (session !== admin) await session.dispose();
+    }
+  } catch (error) { record("release notice", false, error.message); }
+  save();
+
   }
 
   // --- the old backup archive restores into the new build (last: it rewrites content) -------------

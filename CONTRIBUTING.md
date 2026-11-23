@@ -21,7 +21,8 @@ This repository is the only place where Atlas and its editor are developed; the 
 
 `develop` is merged into `main` for a release; the version is bumped on `develop` first (see
 [AGENTS.md](AGENTS.md#branches-and-releases-vydání)). A push to `main` runs CI again, tags `v<version>`, creates the GitHub
-release and publishes the images `ghcr.io/scalesoft/atlas` and `ghcr.io/scalesoft/atlas-postgres`. Nothing is deployed
+release and publishes the image `ghcr.io/scalesoft/atlas` (the database is the official pgvector image `docker-compose.yml`
+pins). Nothing is deployed
 from this repository: every installation upgrades to a released version on its own schedule.
 
 ## Pull requests

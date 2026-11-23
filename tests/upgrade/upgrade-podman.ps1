@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
     Upgrade (data migration) test: data written by the deployed Atlas version must survive the new build.
-    One Podman pod: the old server on its deployed database image (the old ref's deploy/postgres with pgvector since 2.0,
-    postgres:18.6-alpine before), then the production image of this tree (deploy/postgres) and the new server on the same
-    volume, exactly as production upgrades.
+    One Podman pod: the old server on its deployed database image (the one the old ref's docker-compose.yml pins, e.g.
+    ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2 for 5.0.0; postgres:18.6-alpine before 2.0), then the image this
+    tree's docker-compose.yml pins and the new server on the same volume, exactly as production upgrades.
 
 .DESCRIPTION
     1. OLD build: a detached `git worktree` of the explicitly supplied deployed release tag or commit (-OldRef)
@@ -11,9 +11,9 @@
        under artifacts/upgrade-podman/publish-old-<sha>. The main working tree is never checked out, stashed or reset.
     2. NEW build: the current working tree, published in package mode (as tests/browser/e2e-podman.ps1 does).
     3. Pod: -OldPostgresImage with named volumes for the database and for /data (keys, attachments, imports, backups).
-       Default: the old ref's deploy/postgres/Dockerfile built for linux/amd64 by that ref's deploy/postgres/build.ps1 (the
-       -PostgresImage build when the Dockerfile equals the working tree's). A ref without deploy/postgres predates 2.0 and
-       its pgvector requirement (both arrived in one commit) and ran on postgres:18-alpine: postgres:18.6-alpine.
+       Default: the image the old ref's docker-compose.yml pins, pulled as published (built from that ref's deploy/postgres
+       when no registry serves it); a ref without a pin predates 2.0 and its pgvector requirement and ran on
+       postgres:18-alpine: postgres:18.6-alpine.
        Old server -> the old ref's own first-run.spec.ts installs the wiki -> seed-old.mjs seeds realistic data
        through the old public API and a real browser (collaboration) and writes manifest.json.
     4. The old server stops; a table-by-table checksum (old columns only) is taken. The database container is replaced by
@@ -51,11 +51,11 @@ param(
     [int]$HostPort = 0,
     # Leave the pod and volumes for inspection.
     [switch]$Keep,
-    # The database image production runs before the upgrade. Default: the old ref's deploy/postgres image (Atlas 2.0 and later
-    # require pgvector, migration 2026100520), or postgres:18.6-alpine for a ref before 2.0; an image given here is used as-is.
+    # The database image production runs before the upgrade. Default: the image the old ref's docker-compose.yml pins
+    # (5.0.0: ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2), or postgres:18.6-alpine for a ref before 2.0;
+    # an image given here is used as-is.
     [string]$OldPostgresImage = '',
-    # The database image after the upgrade. Default: deploy/postgres/Dockerfile built for linux/amd64 (deploy/postgres/build.ps1),
-    # i.e. the image docker-compose.yml deploys; an image given here is used as-is.
+    # The database image after the upgrade. Default: the one docker-compose.yml pins; an image given here is used as-is.
     [string]$PostgresImage = '',
     [string]$AspNetImage = 'mcr.microsoft.com/dotnet/aspnet:11.0-resolute'
 )
@@ -123,8 +123,11 @@ if ($busy) { Write-Warning "Other Atlas pods are running ($($busy -join ', ')); 
 $timeZone = 'UTC'
 $iana = $null
 if ([TimeZoneInfo]::TryConvertWindowsIdToIanaId([TimeZoneInfo]::Local.Id, [ref]$iana)) { $timeZone = $iana }
-$builtPostgresImage = -not $PostgresImage
-if ($builtPostgresImage) { $PostgresImage = @(& (Join-Path $repo 'deploy/postgres/build.ps1') -Platform 'linux/amd64')[-1] }
+function Get-PinnedPostgresImage([string]$compose) {
+    [regex]::Match($compose, 'ATLAS_POSTGRES_IMAGE:-([^}]+)\}').Groups[1].Value
+}
+if (-not $PostgresImage) { $PostgresImage = Get-PinnedPostgresImage (Get-Content (Join-Path $repo 'docker-compose.yml') -Raw) }
+if (-not $PostgresImage) { throw 'docker-compose.yml pins no ATLAS_POSTGRES_IMAGE default.' }
 
 # --- old and new builds ------------------------------------------------------------------------
 $oldSha = (git -C $repo rev-parse --verify "$OldRef^{commit}" 2>$null)
@@ -145,21 +148,19 @@ $OldWorktree = (Resolve-Path $OldWorktree).Path
 $worktreeSha = (git -C $OldWorktree rev-parse HEAD)
 if ($worktreeSha -ne $oldSha) { throw "$OldWorktree is at $worktreeSha, expected $oldSha" }
 
-# The database the old release ran on: its own deploy/postgres image, which arrived in the same commit as the pgvector
-# requirement; without it the release predates 2.0 and ran on postgres:18-alpine.
+# The database the old release runs on in production: the image its docker-compose.yml pins (5.0.0:
+# ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2), pulled as published; a pin no registry serves is built from the
+# old ref's deploy/postgres (2.0 to 5.0). Before 2.0 (no pin, no pgvector) it was postgres:18-alpine.
 if (-not $OldPostgresImage) {
-    git -C $repo cat-file -e "${oldSha}:deploy/postgres/Dockerfile" 2>$null
-    if ($LASTEXITCODE -ne 0) {
+    $OldPostgresImage = Get-PinnedPostgresImage ((git -C $repo show "${oldSha}:docker-compose.yml" 2>$null) -join "`n")
+    if (-not $OldPostgresImage) {
         $OldPostgresImage = 'docker.io/library/postgres:18.6-alpine'
     } else {
-        git -C $repo diff --quiet $oldSha -- deploy/postgres/Dockerfile
-        $sameDockerfile = $LASTEXITCODE -eq 0
-        if ($sameDockerfile -and $builtPostgresImage) { $OldPostgresImage = $PostgresImage }
-        else {
+        podman pull -q $OldPostgresImage *> $null
+        if ($LASTEXITCODE -ne 0) {
+            git -C $repo cat-file -e "${oldSha}:deploy/postgres/Dockerfile" 2>$null
+            if ($LASTEXITCODE -ne 0) { throw "Cannot pull $OldPostgresImage, which $OldRef pins." }
             $OldPostgresImage = @(& (Join-Path $OldWorktree 'deploy/postgres/build.ps1') -Platform 'linux/amd64')[-1]
-            if (-not $sameDockerfile -and $OldPostgresImage -eq $PostgresImage) {
-                throw "The old and the working-tree deploy/postgres/Dockerfile differ but both build $PostgresImage; bump IMAGE_REVISION (see the Dockerfile header)."
-            }
         }
     }
 }
@@ -260,7 +261,9 @@ function Start-App([string]$label, [string]$publishDir, [string]$appImage = '') 
     return $status
 }
 function Start-Db([string]$image) {
-    Invoke-Podman run -d --pod $run --name "$run-db" -e POSTGRES_USER=atlas -e POSTGRES_DB=atlas -e "TZ=$timeZone" `
+    # A new volume gets the collation of docker-compose.yml with this tree's image; the old image creates it as it did.
+    $initdb = if ($image -eq $PostgresImage) { @('-e', 'POSTGRES_INITDB_ARGS=--locale-provider=builtin --builtin-locale=C.UTF-8') } else { @() }
+    Invoke-Podman run -d --pod $run --name "$run-db" -e POSTGRES_USER=atlas -e POSTGRES_DB=atlas -e "TZ=$timeZone" @initdb `
         --secret "$run-db,type=env,target=POSTGRES_PASSWORD" -v "${run}-pg:/var/lib/postgresql" $image | Out-Null
     foreach ($attempt in 1..120) {
         # TCP, not the socket: the entrypoint's temporary init server listens on the socket only.
@@ -380,8 +383,10 @@ try {
     $swapped = Get-TableChecksums $columns
     $swapChanges = @($before.Keys | Where-Object { $before[$_].md5 -ne $swapped[$_].md5 })
     Add-Result 'database image: swapped on the same volume, every table unchanged' ($swapChanges.Count -eq 0) "$OldPostgresImage ($oldServerVersion) -> $PostgresImage ($(Get-SqlValue 'SHOW server_version;')); changed: $($swapChanges -join ', ')"
-    # A different C library would order text differently and silently break text B-tree indexes; amcheck proves the old
-    # indexes are still ordered under the new image, so no REINDEX is needed.
+    # A different C library or collation would order text differently and silently break text B-tree indexes; amcheck proves
+    # every index is ordered under the new image (after upgrade.sh they were built anew). Text sorts as before: by code point,
+    # on musl and with the builtin provider alike (upgrade.sh compares an ordering probe).
+    Add-Result 'database: collation builtin C.UTF-8 (libc-independent)' ((Get-SqlValue "SELECT datlocprovider::text || ' ' || coalesce(datlocale, '') FROM pg_database WHERE datname = 'atlas';") -eq 'b C.UTF-8') 'pg_database.datlocprovider'
     try {
         $checked = Invoke-Sql @"
 CREATE EXTENSION amcheck;

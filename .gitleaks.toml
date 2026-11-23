@@ -6,7 +6,7 @@ useDefault = true
 [[rules]]
 id = "internal-company-domain"
 description = "Internal company hosts and mail addresses do not belong in public sources or commit metadata"
-regex = '''(?i)\b(?:[a-z0-9-]+\.)*scalesoft\.(?:cz|com)\b'''
+regex = '''(?i)\b(?:[a-z0-9-]+\.)*(?:scalesoft\.(?:cz|com)|devscale\.cz)\b'''
 
 [[rules]]
 id = "generic-api-key"
