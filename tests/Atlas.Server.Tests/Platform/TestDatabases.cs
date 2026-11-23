@@ -70,9 +70,12 @@ internal static class TestDatabases
         var database = s_run + "_" + Interlocked.Increment(ref s_counter);
         s_live[database] = 0;
         // The default WAL_LOG strategy copies the ~11 MB template in milliseconds on Linux and, unlike FILE_COPY,
-        // does not force a checkpoint per clone while dozens of clones are created at once.
+        // does not force a checkpoint per clone while dozens of clones are created at once. Text sorts as in docker-compose.yml
+        // (builtin C.UTF-8, by code point) whatever C library and locale the test server has; clones inherit it.
         await TestCosts.MeasureAsync(template is null ? "database empty" : "database clone",
-            () => ExecuteAsync(Admin, template is null ? $"CREATE DATABASE {database}" : $"CREATE DATABASE {database} TEMPLATE {template}"));
+            () => ExecuteAsync(Admin, template is null
+                ? $"CREATE DATABASE {database} TEMPLATE template0 LOCALE_PROVIDER builtin BUILTIN_LOCALE 'C.UTF-8'"
+                : $"CREATE DATABASE {database} TEMPLATE {template}"));
         return database;
     }
 
