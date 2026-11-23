@@ -1,8 +1,11 @@
 import type { MarkdownEditorState, MarkdownPlugin } from "@atlas/markdown/core";
 import type { Editor } from "@tiptap/core";
 import type { DecorationSet } from "@tiptap/pm/view";
-import { yCursorPluginKey } from "@tiptap/y-tiptap";
-import { animateAtlas, literalMs, PROTOTYPE_MS, scrollBehavior } from "./motion/aiMotion";
+import { absolutePositionToRelativePosition, relativePositionToAbsolutePosition, yCursorPluginKey, ySyncPluginKey } from "@tiptap/y-tiptap";
+import type { Awareness } from "y-protocols/awareness";
+import * as Y from "yjs";
+import { animateAtlas, literalMs, motionMs, PROTOTYPE_MS, scrollBehavior } from "./motion/aiMotion";
+import { COLLABORATION_POINTER_PATH } from "./live/collaborationPointer";
 import "./collaborationPresence.css";
 
 type StatePeer = MarkdownEditorState["peers"][number];
@@ -21,6 +24,8 @@ export interface CollaborationPresence {
 
 export function createCollaborationPresence(options: {
   onChange(peers: CollaborationPeer[]): void;
+  /** Share the mouse pointer over the text and show the co-editors' (a page; a board has its own, BoardPresence). */
+  pointers?: boolean;
 }): CollaborationPresence {
   let peers: readonly StatePeer[] = [];
   let attachment: Attachment | undefined;
@@ -37,7 +42,7 @@ export function createCollaborationPresence(options: {
       create: () => ({
         onAttach: ({ editor, signal }) => {
           attachment?.destroy();
-          attachment = attach(editor, () => publish(), signal);
+          attachment = attach(editor, () => publish(), signal, options.pointers === true);
           attachment.render(peers);
           publish();
           return () => {
@@ -68,7 +73,7 @@ interface Attachment {
   destroy(): void;
 }
 
-function attach(editor: Editor, changed: () => void, signal: AbortSignal): Attachment {
+function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointers: boolean): Attachment {
   const editable = editor.view.dom as HTMLElement;
   const container = editable.parentElement ?? editable;
   const overlay = document.createElement("div");
@@ -119,7 +124,8 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal): Attac
     if (currentPeers.length === 0) {
       cancelAnimationFrame(drawFrame);
       drawFrame = 0;
-      overlay.replaceChildren();
+      overlay.querySelectorAll(".collaboration-presence__cursor").forEach(cursor => cursor.remove());
+      placePointers(new Map(), 0, 0);
       publishIfChanged();
       return;
     }
@@ -142,6 +148,10 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal): Attac
     const measured = new Map(currentPeers.flatMap(peer => {
       const position = positions.get(peer.clientId);
       return position === undefined ? [] : [[peer.clientId, editor.view.coordsAtPos(position)] as const];
+    }));
+    const pointed = new Map(currentPeers.flatMap(peer => {
+      const pointer = remotePointer(peer.clientId);
+      return pointer ? [[peer.clientId, pointer] as const] : [];
     }));
     if (pendingLayoutMovement) {
       pendingLayoutMovement = false;
@@ -177,7 +187,110 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal): Attac
       cursor.style.transform = `translate3d(${coords.left - originX}px, ${coords.top - originY}px, 0)`;
       cursor.style.height = `${Math.max(1, coords.bottom - coords.top)}px`;
     }
+    placePointers(pointed, originX, originY);
   };
+
+  // Pointers (spec of the promo film's page scene): each editor publishes where its mouse is in the awareness state, anchored
+  // to the nearest document position (a Yjs relative position) plus its offset in px, so it lands on the same word at any
+  // window width or scroll. A reader of a live page has no caret extension and so no awareness here: it sends and shows none.
+  const awareness = pointers ? caretAwareness(editor) : undefined;
+  const binding = () => (ySyncPluginKey.getState(editor.state) as { binding?: SyncBinding } | undefined)?.binding;
+  const peer = (clientId: number) => currentPeers.find(entry => entry.clientId === clientId);
+  const leavingPointers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
+  function remotePointer(clientId: number) {
+    const pointer = awareness?.getStates().get(clientId)?.pointer as Partial<PointerState> | null | undefined;
+    const sync = binding();
+    if (!pointer || !sync || !Number.isFinite(pointer.x) || !Number.isFinite(pointer.y)) return undefined;
+    try {
+      // Another client's state: an anchor that resolves to nothing (deleted text, garbage) shows no pointer.
+      const position = relativePositionToAbsolutePosition(sync.doc, sync.type, Y.createRelativePositionFromJSON(pointer.anchor), sync.mapping as never);
+      if (position === null || position < 0 || position > editor.state.doc.content.size) return undefined;
+      const at = editor.view.coordsAtPos(position);
+      return { left: at.left + clampOffset(pointer.x!), top: at.top + clampOffset(pointer.y!), down: pointer.down === true };
+    } catch { return undefined; }
+  }
+  function placePointers(pointed: ReadonlyMap<number, { left: number; top: number; down: boolean }>, originX: number, originY: number) {
+    const shown = new Map([...overlay.querySelectorAll<HTMLElement>(".collaboration-pointer")].map(element => [Number(element.dataset.pointerClientId), element]));
+    for (const [clientId, element] of shown) {
+      if (pointed.has(clientId) || leavingPointers.has(element)) continue;
+      // It fades out where it was last, as on a board.
+      element.classList.add("is-leaving");
+      leavingPointers.set(element, setTimeout(() => { leavingPointers.delete(element); element.remove(); }, motionMs(overlay, "--atlas-motion-surface")));
+    }
+    for (const [clientId, at] of pointed) {
+      const person = peer(clientId)!;
+      let element = shown.get(clientId);
+      if (!element) {
+        element = document.createElement("div");
+        element.className = "collaboration-pointer";
+        element.dataset.pointerClientId = String(clientId);
+        element.innerHTML = `<svg viewBox="0 0 22 26"><path d="${COLLABORATION_POINTER_PATH}"/></svg><span class="collaboration-pointer__name"></span>`;
+        overlay.append(element);
+      } else if (leavingPointers.has(element)) {
+        clearTimeout(leavingPointers.get(element));
+        leavingPointers.delete(element);
+        element.classList.remove("is-leaving");
+      }
+      element.querySelector(".collaboration-pointer__name")!.textContent = person.name;
+      element.style.setProperty("--collaboration-color", safeColor(person.color));
+      element.style.transform = `translate3d(${at.left - originX}px, ${at.top - originY}px, 0)`;
+      element.classList.toggle("is-pressed", at.down);
+    }
+  }
+
+  // The own pointer: sampled at most every POINTER_MS (the board's 20 a second), the last position always sent.
+  let pointerAt: { x: number; y: number } | null = null;
+  let pointerDown = false;
+  let pointerTimer: ReturnType<typeof setTimeout> | undefined;
+  const publishPointer = () => {
+    clearTimeout(pointerTimer);
+    pointerTimer = undefined;
+    const sync = binding();
+    if (destroyed || !awareness || !pointerAt || !sync) return;
+    // Beside the text (a margin, under the last line) the position is the nearest edge's; the offset keeps the distance.
+    const box = editable.getBoundingClientRect();
+    const hit = editor.view.posAtCoords({
+      left: Math.min(Math.max(pointerAt.x, box.left + 1), box.right - 1),
+      top: Math.min(Math.max(pointerAt.y, box.top + 1), box.bottom - 1),
+    });
+    if (!hit) return;
+    const at = editor.view.coordsAtPos(hit.pos);
+    const state: PointerState = {
+      anchor: Y.relativePositionToJSON(absolutePositionToRelativePosition(hit.pos, sync.type, sync.mapping as never)),
+      x: Math.round(pointerAt.x - at.left),
+      y: Math.round(pointerAt.y - at.top),
+      ...(pointerDown ? { down: true } : {}),
+    };
+    awareness.setLocalStateField("pointer", state);
+  };
+  const hidePointer = () => {
+    clearTimeout(pointerTimer);
+    pointerTimer = undefined;
+    pointerAt = null;
+    pointerDown = false;
+    if (awareness?.getLocalState()?.pointer) awareness.setLocalStateField("pointer", null);
+  };
+  const onPointer = (event: PointerEvent) => {
+    // A finger is no pointer anyone follows; a reader or a read-only view does not point either.
+    if (event.pointerType === "touch" || !editor.isEditable) return;
+    pointerAt = { x: event.clientX, y: event.clientY };
+    if (event.type === "pointerdown" || event.type === "pointerup") {
+      // A click is shorter than a sample: the press goes out at once.
+      pointerDown = event.type === "pointerdown";
+      publishPointer();
+    } else pointerTimer ??= setTimeout(publishPointer, POINTER_MS);
+  };
+  const onVisibility = () => { if (document.visibilityState === "hidden") hidePointer(); };
+  const onRemotePointers = ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }) => {
+    if (currentPeers.length && [...added, ...updated, ...removed].some(id => id !== awareness?.clientID)) draw();
+  };
+  if (awareness) {
+    for (const type of ["pointermove", "pointerdown", "pointerup"] as const) container.addEventListener(type, onPointer);
+    container.addEventListener("pointerleave", hidePointer);
+    window.addEventListener("blur", hidePointer);
+    document.addEventListener("visibilitychange", onVisibility);
+    awareness.on("change", onRemotePointers);
+  }
 
   const onTransaction = () => draw();
   const onLayout = () => draw(true);
@@ -210,6 +323,15 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal): Attac
     cancelAnimationFrame(layoutFrame);
     cancelAnimationFrame(settleFrame);
     halos.forEach(halo => halo.cancel());
+    if (awareness) {
+      hidePointer();
+      for (const type of ["pointermove", "pointerdown", "pointerup"] as const) container.removeEventListener(type, onPointer);
+      container.removeEventListener("pointerleave", hidePointer);
+      window.removeEventListener("blur", hidePointer);
+      document.removeEventListener("visibilitychange", onVisibility);
+      awareness.off("change", onRemotePointers);
+    }
+    leavingPointers.forEach(timer => clearTimeout(timer));
     signal.removeEventListener("abort", destroy);
     overlay.remove();
     container.classList.remove("collaboration-presence-active");
@@ -250,6 +372,22 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal): Attac
     },
     destroy,
   };
+}
+
+const POINTER_MS = 50;
+/** Beyond this a remote offset is no pointer over this page (the server passes the field through as the client wrote it). */
+const POINTER_REACH = 4096;
+interface PointerState { anchor: unknown; x: number; y: number; down?: true }
+interface SyncBinding { doc: Y.Doc; type: Y.XmlFragment; mapping: unknown }
+
+/** The awareness the caret extension publishes to (useCollab binds it to the provider's). */
+function caretAwareness(editor: Editor) {
+  const caret = editor.extensionManager.extensions.find(extension => extension.name === "collaborationCaret");
+  return (caret?.options as { provider?: { awareness?: Awareness } } | undefined)?.provider?.awareness;
+}
+
+function clampOffset(value: number) {
+  return Math.min(POINTER_REACH, Math.max(-POINTER_REACH, value));
 }
 
 function cursorPositions(editor: Editor) {

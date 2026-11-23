@@ -1,0 +1,39 @@
+/* A co-editor's pointer (collaborationPointer.ts): each sample (≤ 20 a second) is carried over --atlas-motion-fast, so it glides. */
+.collaboration-pointer {
+  --collaboration-color: #64748b;
+  position: absolute;
+  top: 0;
+  left: 0;
+  animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out);
+  transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out);
+}
+.collaboration-pointer.is-leaving { opacity: 0; }
+.collaboration-pointer svg {
+  display: block;
+  width: 18px;
+  height: 21px;
+  margin: -2px 0 0 -2px;
+  fill: var(--collaboration-color);
+  stroke: var(--surface);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  transform-origin: 2px 2px;
+  transition: scale var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+/* The person presses the mouse button (the film's click). */
+.collaboration-pointer.is-pressed svg { scale: .85; }
+/* The label of a collaborator's caret in a page (../collaborationPresence.css). */
+.collaboration-pointer__name {
+  position: absolute;
+  top: 17px;
+  left: 12px;
+  max-width: 12rem;
+  overflow: hidden;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--collaboration-color);
+  color: white;
+  font: 600 11px/1.5 system-ui, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

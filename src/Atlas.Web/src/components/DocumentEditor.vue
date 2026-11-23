@@ -289,7 +289,7 @@ watch(() => detail.open.value && props.pageId, async (pageId, _, onCleanup) => {
   } catch { /* Without access to the history the view only leaves the line out. */ }
 });
 const uploads = createEditorUploads(() => ({ pageId: props.pageId, canWrite: !props.readonly && !joining.value && !joinError.value && (!sessionRequested.value || !!adapter.value) }));
-const presence = createCollaborationPresence({ onChange: peers => emit("collaborationPeers", peers) });
+const presence = createCollaborationPresence({ onChange: peers => emit("collaborationPeers", peers), pointers: true });
 // Password references (WP4 V6): one set of host services per document, shared by the reader view and the editors.
 // Released values stay in memory only (secrets/secretsHost.ts); the picker and the re-authentication dialog load on use.
 const SecretPicker = lazyComponent(() => import("../secrets/SecretPicker.vue"));

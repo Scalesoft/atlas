@@ -1799,17 +1799,21 @@ describe('presence reconnect', () => {
   }
 
   it('publishes the roster only when it changes, not when a colleague moves the caret', async () => {
-    const { a, b, peersA } = pair()
+    const { a, b, peersA, packetCount } = pair()
     await a.start()
     await b.start()
     expect(peersA).toHaveBeenLastCalledWith([expect.objectContaining({ name: 'Bob' })])
     const calls = peersA.mock.calls.length
+    const packets = packetCount()
     b.awareness.setLocalStateField('cursor', { anchor: 1, head: 1 })
+    b.awareness.setLocalStateField('pointer', { x: 1, y: 1 })
     b.awareness.setLocalStateField('cursor', { anchor: 2, head: 2 })
-    expect(a.awareness.getStates().get(b.awareness.clientID)).toMatchObject({ cursor: { anchor: 2 } })
+    // Moves within 50 ms share one packet (the server relays 30 a second).
+    await vi.waitFor(() => expect(a.awareness.getStates().get(b.awareness.clientID)).toMatchObject({ cursor: { anchor: 2 }, pointer: { x: 1 } }))
+    expect(packetCount() - packets).toBeLessThanOrEqual(2)
     expect(peersA.mock.calls.length).toBe(calls)
     b.awareness.setLocalStateField('user', { name: 'Bobby', color: '#654321' })
-    expect(peersA).toHaveBeenLastCalledWith([expect.objectContaining({ name: 'Bobby' })])
+    await vi.waitFor(() => expect(peersA).toHaveBeenLastCalledWith([expect.objectContaining({ name: 'Bobby' })]))
   })
 
   it('rebuilds both rosters after a lost leave without changing either user or cursor', async () => {
