@@ -9,7 +9,7 @@
 # - only a complete, verified and cleanly stopped cluster is renamed to 19/docker, which the new image opens.
 # It refuses to run while a container uses the volume, when 19/docker exists (already upgraded) or without enough free space.
 # An interrupted run leaves only 19/upgrade, which the next run removes. Take a backup first all the same.
-#   deploy/postgres/upgrade.sh <volume> <old image> <new image>   (new image: the one docker-compose.yml pins), e.g.
+#   deploy/postgres/upgrade.sh <volume or host directory> <old image> <new image>   (new image: the one docker-compose.yml pins), e.g.
 #   deploy/postgres/upgrade.sh atlas_wiki-db-data ghcr.io/scalesoft/atlas-postgres:18.6-pgvector0.8.7-r2 \
 #     docker.io/pgvector/pgvector:0.8.7-pg19-trixie@sha256:ace863afa68a13560603dc7366fad0adb4f5ddd0a21c8f06418195f32e03fa08
 #   POSTGRES_USER: the superuser of the volume (docker-compose.yml: wikiuser, the default); ENGINE=podman for Podman.
@@ -25,8 +25,10 @@ fail() { echo "upgrade: $*" >&2; exit 1; }
 in_volume() { "$engine" run --rm -v "$volume:$root" --entrypoint sh "$new_image" -c "$1"; }
 major() { "$engine" run --rm --entrypoint sh "$1" -c 'echo "$PG_MAJOR"'; }
 
-"$engine" volume inspect "$volume" > /dev/null 2>&1 || fail "no volume $volume"
-[[ -z $("$engine" ps -q --filter "volume=$volume") ]] || fail "a container uses $volume; stop it first (docker compose stop)"
+# A named volume (docker-compose.yml) or a bind-mounted host directory (an absolute path, e.g. /var/lib/atlas/db).
+[[ $volume == /* && -d $volume ]] || "$engine" volume inspect "$volume" > /dev/null 2>&1 || fail "no volume or directory $volume"
+# The mounts of running containers by volume name and source (Podman's ps --filter volume= misses bind mounts).
+! "$engine" ps -q | xargs -r "$engine" inspect --format '{{range .Mounts}}{{println .Name}}{{println .Source}}{{end}}' | grep -qFx -- "$volume"   || fail "a container uses $volume; stop it first (docker compose stop)"
 old=$(major "$old_image") new=$(major "$new_image")
 [[ $old =~ ^[0-9]+$ && $new =~ ^[0-9]+$ && $new -gt $old ]] || fail "expected an old and a newer PostgreSQL image, got $old and $new"
 in_volume "test ! -e $root/$new/docker" || fail "$root/$new/docker exists: the volume is already upgraded"

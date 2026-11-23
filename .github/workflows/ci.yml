@@ -91,8 +91,9 @@ jobs:
       - name: Start PostgreSQL
         run: |
           set -euo pipefail
-          image=$(sed -n 's/.*ATLAS_POSTGRES_IMAGE:-\([^}]*\)}.*//p' docker-compose.yml)
-          docker run -d --name atlas-test-pg -p 5432:5432 -e POSTGRES_USER=atlas -e POSTGRES_PASSWORD=atlas-ci -e POSTGRES_DB=atlas_test             -e POSTGRES_INITDB_ARGS='--locale-provider=builtin --builtin-locale=C.UTF-8' "$image"
+          image=$(sed -n 's/.*ATLAS_POSTGRES_IMAGE:-\([^}]*\)}.*/\1/p' docker-compose.yml)
+          docker run -d --name atlas-test-pg -p 5432:5432 -e POSTGRES_USER=atlas -e POSTGRES_PASSWORD=atlas-ci -e POSTGRES_DB=atlas_test \
+            -e POSTGRES_INITDB_ARGS='--locale-provider=builtin --builtin-locale=C.UTF-8' "$image"
           for i in $(seq 1 60); do docker exec atlas-test-pg pg_isready -h 127.0.0.1 -U atlas -d atlas_test && exit 0; sleep 2; done
           docker logs atlas-test-pg; exit 1
       # The PDF tests print with the Chromium headless shell of Playwright 1.64 (as the Dockerfile installs).
