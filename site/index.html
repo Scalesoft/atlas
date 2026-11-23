@@ -539,7 +539,7 @@ footer nav a { text-decoration: none; } footer nav a:hover { color: var(--ink); 
 
     <div class="dev">
       <ul class="rv">
-        <li><span><b>Self-hosted, one process.</b> A single .NET server plus PostgreSQL 18 with pgvector, shipped as Docker images with a Compose file.</span></li>
+        <li><span><b>Self-hosted, one process.</b> A single .NET server plus PostgreSQL 19 with pgvector, shipped as Docker images with a Compose file.</span></li>
         <li><span><b>REST API.</b> <code>/api/v1</code> with personal tokens (read, or read and write). The OpenAPI document is served at <code>/api/v1/openapi.json</code>.</span></li>
         <li><span><b>MCP server.</b> <code>/mcp</code> for Claude Code and other agents. They write drafts, and publishing waits for your confirmation in Atlas.</span></li>
         <li><span><b>OpenAPI blocks in pages.</b> API references rendered with Scalar right in the wiki, so anyone can try an endpoint from the docs.</span></li>
@@ -602,7 +602,7 @@ curl --header <span class="s">"Authorization: Bearer $ATLAS_TOKEN"</span> \
       <div class="ol">
         <div class="glass rv">
           <h3>Get the Compose file</h3>
-          <p>Atlas and PostgreSQL 18 with pgvector, as two ready-made images.</p>
+          <p>Atlas and PostgreSQL 19 with pgvector, as two ready-made images.</p>
 <pre><code>mkdir atlas &amp;&amp; cd atlas
 curl -fsSLO \
   https://github.com/Scalesoft/atlas/raw/main/docker-compose.yml</code></pre>
@@ -638,7 +638,7 @@ docker compose up -d</code></pre>
           <h3>Requirements</h3>
           <dl class="spec">
             <dt>Runtime</dt><dd>Docker with Compose v2</dd>
-            <dt>Database</dt><dd>PostgreSQL 18 + pgvector (its own image)</dd>
+            <dt>Database</dt><dd>PostgreSQL 19 + pgvector (its own image)</dd>
             <dt>Memory</dt><dd>about 2 GB (Atlas is capped at 1.5 GB)</dd>
             <dt>Platform</dt><dd>linux/amd64 is what we run in production</dd>
             <dt>Licence</dt><dd>MIT</dd>

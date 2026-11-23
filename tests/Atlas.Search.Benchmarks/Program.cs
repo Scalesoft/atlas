@@ -14,7 +14,7 @@ var PublishedCall="SELECT * FROM ("+SearchQueries.Published+") moved";
 var connectionString = Environment.GetEnvironmentVariable("ATLAS_TEST_DATABASE");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new InvalidOperationException("Set ATLAS_TEST_DATABASE to an isolated PostgreSQL 18 test database.");
+    throw new InvalidOperationException("Set ATLAS_TEST_DATABASE to an isolated PostgreSQL 19 test database.");
 }
 var readerCount = int.TryParse(Environment.GetEnvironmentVariable("ATLAS_BENCHMARK_READERS"), out var requestedReaders) ? Math.Clamp(requestedReaders, 1, 50) : 2;
 var includeAliases = Environment.GetEnvironmentVariable("ATLAS_BENCHMARK_ALIASES") == "1";

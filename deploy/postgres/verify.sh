@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Acceptance of an atlas-postgres image for one platform: OS/architecture, PostgreSQL and pgvector versions from the
 # Dockerfile, CREATE EXTENSION vector with a cosine HNSW scan (verify.sql), and the same text ordering as the base image
-# (collation.sql), i.e. an existing postgres:18-alpine volume stays valid. Runs each image as that platform, so on the
+# (collation.sql), i.e. text sorts as on the earlier Alpine (musl) images. Runs each image as that platform, so on the
 # ARM64 host the linux/amd64 variant runs emulated: that is its runtime acceptance, not the native ARM64 run.
 #   deploy/postgres/verify.sh <image> <platform>            e.g. atlas-postgres-ci:abc-amd64 linux/amd64
-#   ENGINE=podman deploy/postgres/verify.sh localhost/atlas-postgres:18.6-pgvector0.8.7-r2 linux/amd64
+#   ENGINE=podman deploy/postgres/verify.sh localhost/atlas-postgres:19.0-pgvector0.8.7-r1 linux/amd64
 set -euo pipefail
 image=$1
 platform=$2

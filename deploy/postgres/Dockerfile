@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
-# Atlas PostgreSQL: the official base postgres:18.6-alpine plus pgvector, nothing else. Same Alpine/musl and the same
-# PostgreSQL major as the former postgres:18-alpine, so an existing data volume is reused as-is (no dump, no REINDEX).
-# Image tag: <POSTGRES_VERSION>-pgvector<PGVECTOR_VERSION>[-<IMAGE_REVISION>], e.g. 18.6-pgvector0.8.7-r2; .github/workflows/release.yml
+# Atlas PostgreSQL: the official base postgres:19.0-alpine plus pgvector and a start guard, nothing else. Alpine/musl like
+# the former 18.x images, so text sorts the same (collation.sql). A PostgreSQL 18 volume is moved by upgrade.sh, never opened.
+# Image tag: <POSTGRES_VERSION>-pgvector<PGVECTOR_VERSION>[-<IMAGE_REVISION>], e.g. 19.0-pgvector0.8.7-r1; .github/workflows/release.yml
 # derives it from the ARG defaults below. Bump IMAGE_REVISION (r2, r3, ...) for any other change to this file.
-ARG POSTGRES_VERSION=18.6
-ARG POSTGRES_BASE=docker.io/library/postgres:18.6-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+ARG POSTGRES_VERSION=19.0
+ARG POSTGRES_BASE=docker.io/library/postgres:19.0-alpine@sha256:8b0ff4cdf221f0c53d7fcda681d3b461be725c492cd881c5ec9c0ad25023f188
 ARG PGVECTOR_VERSION=0.8.7
 ARG PGVECTOR_COMMIT=f37c13f68b57d2c3472b2214fbcff699d6d34876
-ARG IMAGE_REVISION=r2
+ARG IMAGE_REVISION=r1
 
 # A short C build for the target architecture (on an ARM64 host: emulated for linux/amd64). It is not the .NET SDK,
 # which AGENTS.md keeps on $BUILDPLATFORM; cross-compiling against the target's PGXS on Alpine would need a musl cross toolchain.
@@ -35,6 +35,20 @@ ARG PGVECTOR_COMMIT
 ARG IMAGE_REVISION
 COPY --from=build /out/lib/ /usr/local/lib/postgresql/
 COPY --from=build /out/extension/ /usr/local/share/postgresql/extension/
+# The volume is /var/lib/postgresql and each major keeps its cluster in <major>/docker. On a volume with only another major's
+# cluster the base image would initialise an empty one beside it and Atlas would offer a fresh installation: refuse to start.
+RUN printf '%s\n' '#!/bin/sh' \
+      'if [ "$PGDATA" = "/var/lib/postgresql/$PG_MAJOR/docker" ] && [ ! -s "$PGDATA/PG_VERSION" ]; then' \
+      '  for old in /var/lib/postgresql/*/docker/PG_VERSION; do' \
+      '    [ -s "$old" ] || continue' \
+      '    echo "atlas-postgres: ${old%/PG_VERSION} holds PostgreSQL $(cat "$old") data and $PGDATA is empty; upgrade the volume first (deploy/postgres/upgrade.sh, docs/operations.md)." >&2' \
+      '    exit 1' \
+      '  done' \
+      'fi' \
+      'exec docker-entrypoint.sh "$@"' > /usr/local/bin/atlas-entrypoint.sh \
+    && chmod 755 /usr/local/bin/atlas-entrypoint.sh
+ENTRYPOINT ["atlas-entrypoint.sh"]
+CMD ["postgres"]
 LABEL org.opencontainers.image.title="atlas-postgres" \
       org.opencontainers.image.description="PostgreSQL ${POSTGRES_VERSION} (Alpine) with pgvector ${PGVECTOR_VERSION} for Atlas" \
       org.opencontainers.image.version="${POSTGRES_VERSION}-pgvector${PGVECTOR_VERSION}${IMAGE_REVISION:+-}${IMAGE_REVISION}" \

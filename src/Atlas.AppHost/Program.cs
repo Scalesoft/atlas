@@ -2,12 +2,12 @@ using Aspire.Hosting.ApplicationModel;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// pgvector on the same PostgreSQL 18.6 Debian base as the former postgres:18.6, so the volume stays compatible.
-// Migration 2026100520 requires the extension (deploy/postgres builds the Alpine production image).
+// pgvector on PostgreSQL 19 (Debian). Migration 2026100520 requires the extension (deploy/postgres builds the Alpine
+// production image). A volume per major: PostgreSQL 19 never opens the former atlas-postgres-18-data, which stays as it was.
 var postgres = builder.AddPostgres("postgres")
-    .WithImage("pgvector/pgvector", "0.8.7-pg18-trixie")
-    .WithImageSHA256("9d9c930220cb9bf2f956d10a8f909cf9973d9672ca0278aef2c1e6facccad2e0")
-    .WithDataVolume("atlas-postgres-18-data");
+    .WithImage("pgvector/pgvector", "0.8.7-pg19-trixie")
+    .WithImageSHA256("ace863afa68a13560603dc7366fad0adb4f5ddd0a21c8f06418195f32e03fa08")
+    .WithDataVolume("atlas-postgres-19-data");
 var database = postgres.AddDatabase("atlas-db", "atlas");
 
 var bootstrap = builder.AddParameter("bootstrap-token", new GenerateParameterDefault { MinLength = 48, Special = false }, secret: true, persist: true)

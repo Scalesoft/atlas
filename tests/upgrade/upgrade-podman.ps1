@@ -17,8 +17,8 @@
        Old server -> the old ref's own first-run.spec.ts installs the wiki -> seed-old.mjs seeds realistic data
        through the old public API and a real browser (collaboration) and writes manifest.json.
     4. The old server stops; a table-by-table checksum (old columns only) is taken. The database container is replaced by
-       -PostgresImage on the same volume (checksums and every B-tree index re-checked with amcheck: same collation, no
-       REINDEX). The NEW server starts on the same volumes and migrates. Checksums are compared right after startup, SQL
+       -PostgresImage on the same volume, after deploy/postgres/upgrade.sh when the PostgreSQL major differs (18 -> 19)
+       (checksums and every B-tree index re-checked with amcheck). The NEW server starts on the same volumes and migrates. Checksums are compared right after startup, SQL
        invariants are checked (pgvector installed), verify-new.mjs compares every manifest item through the new API and
        browser, then a smoke subset of the current tests/browser runs against the upgraded instance.
     5. Evidence under artifacts/upgrade-podman/<run>/ ; pod, volumes, secrets and the created worktree are removed.
@@ -364,6 +364,18 @@ try {
     Invoke-Podman stop -t 60 "$run-db" | Out-Null
     Save-Logs '-old-image'
     Invoke-Podman rm "$run-db" | Out-Null
+    # A new PostgreSQL major (18 -> 19) is moved on the volume as in production; the old cluster stays beside it.
+    $majors = @($OldPostgresImage, $PostgresImage | ForEach-Object { "$(Invoke-Podman run --rm --entrypoint sh $_ -c 'echo $PG_MAJOR')".Trim() })
+    if ($majors[0] -ne $majors[1]) {
+        $env:ENGINE = 'podman'; $env:POSTGRES_USER = 'atlas'
+        # Git Bash on Windows: `bash` on PATH may be the WSL launcher, which would run in the Podman machine.
+        $bash = if ($IsWindows) { Join-Path (Split-Path (Split-Path (Get-Command git).Source)) 'bin/bash.exe' } else { 'bash' }
+        & $bash (Join-Path $repo 'deploy/postgres/upgrade.sh') "$run-pg" $OldPostgresImage $PostgresImage 2>&1 | Tee-Object -FilePath (Join-Path $outRoot 'pg-upgrade.log') | Out-Host
+        $upgradeCode = $LASTEXITCODE
+        Remove-Item Env:ENGINE, Env:POSTGRES_USER
+        Add-Result "database: PostgreSQL $($majors[0]) -> $($majors[1]) by deploy/postgres/upgrade.sh" ($upgradeCode -eq 0) 'pg-upgrade.log'
+        if ($upgradeCode -ne 0) { throw 'deploy/postgres/upgrade.sh failed; see pg-upgrade.log' }
+    }
     Start-Db $PostgresImage
     $swapped = Get-TableChecksums $columns
     $swapChanges = @($before.Keys | Where-Object { $before[$_].md5 -ne $swapped[$_].md5 })
