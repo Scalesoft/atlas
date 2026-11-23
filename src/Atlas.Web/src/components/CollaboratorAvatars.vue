@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import AtlasIcon from "./AtlasIcon.vue";
 import AiGlyph from "./ai/AiGlyph.vue";
+import { isAgentUser } from "../live/agentUser";
 import t from "../i18n/components-a";
 import type { CollaborationPeer } from "../collaborationPresence";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -24,13 +25,13 @@ function initials(name: string) {
 }
 function peerLabel(peer: CollaborationPeer) {
   if (peer.activity) return peer.activity;
-  if (peer.id?.startsWith("ai:")) return t.collaborators.agent(peer.name);
+  if (isAgent(peer)) return t.collaborators.agent(peer.name);
   return peer.cursorAvailable
     ? t.collaborators.goTo(peer.name)
     : t.collaborators.noCursor(peer.name);
 }
 // An agent shows only while it writes (LivePageWrites): without its caret yet it is at work, with it it has just written.
-const isAgent = (peer: CollaborationPeer) => peer.id?.startsWith("ai:") === true;
+const isAgent = (peer: CollaborationPeer) => isAgentUser(peer.id);
 function navigate(peer: CollaborationPeer) {
   if (!peer.cursorAvailable) return;
   emit("navigate", peer.clientId);

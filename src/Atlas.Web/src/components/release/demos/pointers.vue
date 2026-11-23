@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
 import "../../../collaborationPresence.css";
-import { COLLABORATION_POINTER_PATH } from "../../../live/collaborationPointer";
+import { userColor } from "../../../live/objectPresence";
+import CollaborationPointer from "../../CollaborationPointer.vue";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import t from "../../../i18n/components-release";
 import { typeText, useDemoLoop, type At } from "./demoClock";
 
 // Co-editors on one page, as in the promo film: Jana's pointer glides in and she writes; Anna selects a word and writes over it. The
-// pointers are Atlas's own (live/collaborationPointer), carried between samples by the same spring (pointerGlide) as on a live page.
+// pointers are Atlas's own (CollaborationPointer), carried between samples by the same spring (pointerGlide) as on a live page.
 const d = t.demos.pointers;
-const people = [{ name: "Jana", color: "#9b6dff" }, { name: "Anna", color: "#f0559e" }] as const;
+// Sample people in their colours (userColor, as their carets and avatars have them).
+const people = [{ name: "Jana", color: userColor("00000004") }, { name: "Anna", color: userColor("00000007") }] as const;
 const root = ref<HTMLElement>();
 const janaAt = ref<HTMLElement>();
 const annaAt = ref<HTMLElement>();
-const pointers = ref<HTMLElement[]>([]);
+const pointerViews = ref<{ $el: HTMLElement }[]>([]);
+const pointer = (who: number) => pointerViews.value[who]!.$el;
 const jana = ref(""), anna = ref(d.before), selected = ref(false), carets = ref([false, false]), pressed = ref([false, false]), fading = ref(false);
 const glide = createPointerGlide(() => root.value!, (element, x, y) => { element.style.transform = `translate3d(${x}px, ${y}px, 0)`; });
 onBeforeUnmount(() => glide.stop());
@@ -27,7 +30,7 @@ function point(el: HTMLElement | undefined, end = false): [number, number] {
 function move(at: At, from: number, who: number, a: [number, number], b: [number, number], ms: number) {
   for (let s = 0; s <= ms; s += 50) {
     const k = s / ms, e = k * k * (3 - 2 * k), bow = Math.sin(Math.PI * k) * 14;
-    at(from + s, () => glide.to(pointers.value[who]!, a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e - bow));
+    at(from + s, () => glide.to(pointer(who), a[0] + (b[0] - a[0]) * e, a[1] + (b[1] - a[1]) * e - bow));
   }
 }
 const press = (at: At, ms: number, who: number) => {
@@ -42,8 +45,8 @@ useDemoLoop(root, (at) => {
   const janaRest: [number, number] = [Math.max(budget[0] + 110, width * .62), budget[1] - 4], annaRest: [number, number] = [Math.max(wordEnd[0] + 90, width * .7), wordEnd[1] + 16];
   at(0, () => {
     fading.value = false; jana.value = ""; anna.value = d.before; selected.value = false; carets.value = [false, false];
-    glide.to(pointers.value[0]!, ...janaOut, true);
-    glide.to(pointers.value[1]!, ...annaOut, true);
+    glide.to(pointer(0), ...janaOut, true);
+    glide.to(pointer(1), ...annaOut, true);
   });
   move(at, 200, 0, janaOut, budget, 900);
   press(at, 1150, 0);
@@ -64,8 +67,8 @@ useDemoLoop(root, (at) => {
 }, () => {
   jana.value = d.approved; anna.value = d.after; carets.value = [true, true];
   const budget = point(janaAt.value, true), wordEnd = point(annaAt.value, true);
-  glide.to(pointers.value[0]!, Math.max(budget[0] + 110, root.value!.clientWidth * .62), budget[1] - 4, true);
-  glide.to(pointers.value[1]!, Math.max(wordEnd[0] + 90, root.value!.clientWidth * .7), wordEnd[1] + 16, true);
+  glide.to(pointer(0), Math.max(budget[0] + 110, root.value!.clientWidth * .62), budget[1] - 4, true);
+  glide.to(pointer(1), Math.max(wordEnd[0] + 90, root.value!.clientWidth * .7), wordEnd[1] + 16, true);
 });
 </script>
 
@@ -74,14 +77,11 @@ useDemoLoop(root, (at) => {
     <div class="demo-doc" :class="{ 'is-fading': fading }">
       <p class="demo-doc-title">{{ d.title }}</p>
       <p>{{ d.budget }}<span ref="janaAt" />{{ jana }}<span v-if="carets[0]" class="demo-caret" :style="{ '--collaboration-color': people[0].color }"><span class="collaboration-presence__label">Jana</span></span></p>
-      <p>{{ d.launch }}<span ref="annaAt" class="demo-word" :class="{ 'is-selected': selected }">{{ anna }}</span><span v-if="carets[1]" class="demo-caret" :style="{ '--collaboration-color': people[1].color }"><span class="collaboration-presence__label">Anna</span></span></p>
+      <p>{{ d.launch }}<span ref="annaAt" class="demo-word" :class="{ 'is-selected': selected }" :style="{ '--collaboration-color': people[1].color }">{{ anna }}</span><span v-if="carets[1]" class="demo-caret" :style="{ '--collaboration-color': people[1].color }"><span class="collaboration-presence__label">Anna</span></span></p>
       <p class="demo-doc-muted">{{ d.next }}</p>
     </div>
-    <div v-for="(person, index) in people" :key="person.name" ref="pointers" class="collaboration-pointer" :class="{ 'is-pressed': pressed[index] }"
-      :style="{ '--collaboration-color': person.color }">
-      <svg viewBox="0 0 22 26"><path :d="COLLABORATION_POINTER_PATH" /></svg>
-      <span class="collaboration-pointer__name">{{ person.name }}</span>
-    </div>
+    <CollaborationPointer v-for="(person, index) in people" :key="person.name" ref="pointerViews" :name="person.name" :color="person.color"
+      :class="{ 'is-pressed': pressed[index] }" />
   </div>
 </template>
 
@@ -93,7 +93,7 @@ useDemoLoop(root, (at) => {
 .demo-doc-title { font-weight: 700; font-size: 14px; }
 .demo-doc-muted { color: var(--muted); }
 .demo-word { border-radius: 3px; transition: background-color var(--atlas-motion-base) var(--atlas-ease-out); }
-.demo-word.is-selected { background: color-mix(in srgb, #f0559e 28%, transparent); }
+.demo-word.is-selected { background: color-mix(in srgb, var(--collaboration-color) 28%, transparent); }
 /* The co-editor's caret of a live page (collaborationPresence.css), inline after what they typed. */
 .demo-caret { position: relative; display: inline-block; width: 2px; height: 1.25em; margin-left: 1px; vertical-align: -.25em; background: var(--collaboration-color); animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .demo-caret .collaboration-presence__label { top: -1.2rem; font-size: 10px; }

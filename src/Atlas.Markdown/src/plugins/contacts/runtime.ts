@@ -307,7 +307,7 @@ function renderInlineContact(context: Context, snapshot: MarkdownContact, parent
     card.dataset.contactKind = unresolved ? 'unresolved' : internal ? 'internal' : 'external'
     const displayedName = internal ? identity?.name ?? contact.name : contact.name
     const picture = avatar(doc, displayedName, internal ? identity?.photo ?? contact.photo : contact.photo)
-    if (internal) picture.style.backgroundColor = markdownUserColor(identity?.id ?? contact.name)
+    if (internal) picture.style.backgroundColor = (options.userColor ?? markdownUserColor)(identity?.id ?? contact.name)
     // Every person is the core chip in its mention look (chip.css takes its values from it): internal on the user's colour, external
     // on the plain initials or photo, unresolved dashed with „?“.
     const look = { variant: 'mention' as const, tag: 'button' as const, media: picture, label: displayedName, className: 'md-contact-name', editable: !!context.editor?.isEditable,

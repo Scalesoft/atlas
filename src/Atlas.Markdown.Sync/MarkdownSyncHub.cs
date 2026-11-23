@@ -350,6 +350,8 @@ public sealed partial class MarkdownSyncHub(
                 if (doc.ApproxStateBytes() + update.Length > options.MaxDocumentBytes)
                     throw new HubException("Document size limit exceeded.");
 
+                if (!doc.ServerClients.IsEmpty && WritesAsServerClient(doc, update))
+                    throw InvalidContent(documentId, peer.User, ContentAdmission.Rejected(ContentRejectionReason.Malformed, "structs of a server collaborator's client"));
                 // Content admission runs in the same critical section as the durable append it guards.
                 var admission = await contentGuard.AdmitUpdateAsync(ContentContext(doc, peer.User), update,
                     Context.ConnectionAborted).ConfigureAwait(false);
@@ -493,7 +495,7 @@ public sealed partial class MarkdownSyncHub(
             try { validated = AuthorityAwareness.Validate(payload, peer.User, authorityOptions.MaxAwarenessBytes, presenceOnly: !peer.CanWrite); }
             catch (InvalidDataException) { return; }
             if (peer.AwarenessClientId is { } bound && bound != validated.ClientId) return;
-            if (doc.Peers.Values.Any(other => other != peer && other.AwarenessClientId == validated.ClientId)) return;
+            if (doc.ServerClients.ContainsKey(validated.ClientId) || doc.Peers.Values.Any(other => other != peer && other.AwarenessClientId == validated.ClientId)) return;
             peer.AwarenessClientId = validated.ClientId;
             peer.AwarenessClock = validated.Clock;
             payload = validated.Payload;
@@ -841,6 +843,13 @@ public sealed partial class MarkdownSyncHub(
         => new(doc.DocumentId, author.Id,
             doc.Peers.Values.Select(peer => peer.User.Id).Distinct(StringComparer.Ordinal).ToArray(),
             doc.Schema, doc.Snapshot, doc.Log, doc.ContentSession);
+
+    /// <summary>The update writes as a collaborator the server shows (an agent's presence). A payload that does not decode is the content guard's to refuse.</summary>
+    private static bool WritesAsServerClient(LiveDocument doc, byte[] update)
+    {
+        try { return YjsUpdateDecoder.Decode(update, long.MaxValue).Clients.Any(range => doc.ServerClients.ContainsKey((long)range.Client)); }
+        catch (Exception) { return false; }
+    }
 
     private HubException InvalidContent(string documentId, CollabUser author, ContentAdmission admission)
     {

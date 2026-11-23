@@ -6,7 +6,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Plugin } from "@tiptap/pm/state";
-import { yCursorPluginKey } from "@tiptap/y-tiptap";
+import { absolutePositionToRelativePosition, yCursorPluginKey, ySyncPluginKey } from "@tiptap/y-tiptap";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from "y-protocols/awareness";
 import * as Y from "yjs";
@@ -145,6 +145,12 @@ describe("collaboration cursor presentation", () => {
     presence.update([]);
     presence.update([]);
     expect(changes).toHaveLength(2);
+  });
+
+  it("shows an agent writing again and again as one avatar, its latest write's", () => {
+    const agent = (clientId: number): Peer => ({ clientId, id: "ai:jana", name: "Jana · AI (MCP)", color: "#7c3aed" });
+    const { changes } = attach({}, [agent(7), peer(1), agent(8), agent(9)]);
+    expect((changes.at(-1) as { clientId: number }[]).map(entry => entry.clientId)).toEqual([1, 9]);
   });
 
   it("keeps equal names distinct by client id and removes peers that leave", () => {
@@ -458,6 +464,53 @@ describe("co-editor pointers", () => {
     expect(pointerOf(reader.host)).toBeNull();
   });
 
+  it("draws 40 co-editors' pointers moving 20 times a second in one paint a frame, writing only their positions (perf guard)", () => {
+    const ydoc = new Y.Doc();
+    const reader = pointerEditor(ydoc);
+    reader.editor.commands.insertContent("Čtyřicet lidí ukazuje na tenhle odstavec najednou.");
+    const sync = ySyncPluginKey.getState(reader.editor.state) as { type: Y.XmlFragment; binding: { mapping: never } };
+    const at = (pos: number) => Y.relativePositionToJSON(absolutePositionToRelativePosition(pos, sync.type, sync.binding.mapping));
+    const peers = Array.from({ length: 40 }, (_, index) => {
+      const peer = new Awareness(new Y.Doc());
+      peer.setLocalState({ user: { id: `u${index}`, name: `Kolega ${index}`, color: "#0284c7" }, pointer: { anchor: at(1 + index % 40), x: 2, y: 3 } });
+      applyAwarenessUpdate(reader.awareness, encodeAwarenessUpdate(peer, [peer.clientID]), "remote");
+      return peer;
+    });
+    reader.presence.update(peers.map((peer, index) => ({ clientId: peer.clientID, id: `u${index}`, name: `Kolega ${index}`, color: "#0284c7" })));
+    frame();
+    const overlay = reader.host.querySelector(".collaboration-presence")!;
+    expect(overlay.querySelectorAll(".collaboration-pointer")).toHaveLength(40);
+    const coords = vi.mocked(reader.editor.view.coordsAtPos);
+    let transactions = 0;
+    reader.editor.on("transaction", () => { transactions++; });
+
+    const records: MutationRecord[] = [];
+    const observer = new MutationObserver(found => records.push(...found));
+    observer.observe(overlay, { subtree: true, childList: true, characterData: true, attributes: true });
+    let worst = 0;
+    for (let sample = 0; sample < 20; sample++) {
+      // A frame's worth of samples from everyone, as the server relays them: one paint is waiting.
+      for (const [index, peer] of peers.entries()) {
+        peer.setLocalStateField("pointer", { anchor: at(1 + (index + sample) % 40), x: sample, y: 3 });
+        applyAwarenessUpdate(reader.awareness, encodeAwarenessUpdate(peer, [peer.clientID]), "remote");
+      }
+      expect(frames.size).toBeLessThanOrEqual(2);
+      coords.mockClear();
+      const started = performance.now();
+      frame();
+      worst = Math.max(worst, performance.now() - started);
+      // One measurement per pointer, nothing per sample.
+      expect(coords.mock.calls.length).toBeLessThanOrEqual(40);
+    }
+    records.push(...observer.takeRecords());
+    observer.disconnect();
+    // Nothing but positions: no element, text or colour written for a pointer that only moved.
+    expect(records.filter(record => record.type !== "attributes" || record.attributeName !== "style")).toEqual([]);
+    expect(transactions).toBe(0);
+    console.info(`pointers: 40 co-editors x 20 samples, 20 paints, worst paint ${worst.toFixed(1)} ms, ${records.length} style writes`);
+    peers.forEach(peer => peer.destroy());
+  });
+
   it("shows nothing for an anchor that resolves to nothing", () => {
     const { jana, reader } = pair();
     jana.awareness.setLocalStateField("pointer", { anchor: { type: { client: 1, clock: 999 }, tname: null, item: { client: 7, clock: 999 }, assoc: 0 }, x: 1, y: 1 });
@@ -545,5 +598,55 @@ describe("an agent's write typed in", () => {
     frame(now);
     frame(now);
     expect(unwritten()).toBe("");
+  });
+
+  it("types a long write in at most one step a frame, within its bounded time, while a person keeps typing (perf guard)", () => {
+    let now = 1000;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const ydoc = new Y.Doc();
+    const awareness = new Awareness(ydoc);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
+      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+    vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {} });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); editor.destroy(); host.remove(); awareness.destroy(); });
+    editor.commands.insertContent("Petr píše.");
+    presence.update([{ clientId: 777, id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" }]);
+    // The agent's write: 40 paragraphs of 20 words (about 6 000 letters) in one update, as LivePageWrites appends it.
+    const agentDoc = new Y.Doc();
+    agentDoc.clientID = 777;
+    Y.applyUpdate(agentDoc, Y.encodeStateAsUpdate(ydoc));
+    const fragment = agentDoc.getXmlFragment("default");
+    fragment.insert(1, Array.from({ length: 40 }, (_, block) => {
+      const paragraph = new Y.XmlElement("paragraph");
+      paragraph.insert(0, [new Y.XmlText(Array.from({ length: 20 }, (_, word) => `slovo${block}x${word}`).join(" "))]);
+      return paragraph;
+    }));
+    Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(agentDoc, Y.encodeStateVector(ydoc)));
+    let transactions = 0;
+    editor.on("transaction", () => { transactions++; });
+    let frameCount = 0;
+    const started = performance.now();
+    let worst = 0;
+    while (host.querySelector(".atlas-agent-unwritten") && frameCount < 600) {
+      now += 16;
+      // The person types on in their own paragraph meanwhile.
+      if (frameCount % 10 === 0) editor.chain().insertContentAt(2, "x").run();
+      const before = Date.now();
+      frame(now);
+      worst = Math.max(worst, Date.now() - before);
+      frameCount++;
+    }
+    // All of it is there within one and a half of the AI's loops, at most one step a frame, the person's letters too.
+    expect(host.querySelector(".atlas-agent-unwritten")).toBeNull();
+    expect(now - started).toBeLessThanOrEqual(1.5 * 1600 + 32);
+    expect(transactions).toBeLessThanOrEqual(frameCount + Math.ceil(frameCount / 10));
+    expect(editor.getText()).toContain("slovo39x19");
+    expect(editor.getText().startsWith("P" + "x".repeat(Math.ceil(frameCount / 10)))).toBe(true);
+    console.info(`agent reveal: 800 words typed in over ${frameCount} frames (${now - started} ms of motion), ${transactions} transactions, worst frame ${worst} ms`);
   });
 });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
-import { COLLABORATION_POINTER_PATH } from "../../../live/collaborationPointer";
+import { userColor } from "../../../live/objectPresence";
+import CollaborationPointer from "../../CollaborationPointer.vue";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import { drawContactQr } from "../../../contacts/contactQr";
 import t from "../../../i18n/components-release";
@@ -13,7 +14,9 @@ const [first, last] = d.mention.split(" ");
 const VCARD = `BEGIN:VCARD\nVERSION:3.0\nN:${last};${first}\nFN:${d.mention}\nTITLE:${d.role}\nEMAIL:jana.novakova@example.test\nTEL:+420 600 000 000\nEND:VCARD`;
 const root = ref<HTMLElement>();
 const chip = ref<HTMLElement>();
-const hand = ref<HTMLElement>();
+const hand = ref<{ $el: HTMLElement }>();
+// Sample people in their colours (userColor): Jana of the card, and whoever points at her.
+const jana = userColor("00000004"), pointing = userColor("00000007");
 const card = ref(false), code = ref(""), round = ref(0);
 const glide = createPointerGlide(() => root.value!, (element, x, y) => { element.style.transform = `translate3d(${x}px, ${y}px, 0)`; });
 onBeforeUnmount(() => glide.stop());
@@ -26,19 +29,19 @@ function target(): [number, number] {
 }
 useDemoLoop(root, (at) => {
   const to = target(), from: [number, number] = [to[0] - 60, root.value!.clientHeight + 30];
-  at(0, () => { card.value = false; code.value = ""; glide.to(hand.value!, ...from, true); });
+  at(0, () => { card.value = false; code.value = ""; glide.to(hand.value!.$el, ...from, true); });
   for (let s = 0; s <= 800; s += 50) {
     const k = s / 800, e = k * k * (3 - 2 * k);
-    at(200 + s, () => glide.to(hand.value!, from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e));
+    at(200 + s, () => glide.to(hand.value!.$el, from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e));
   }
   at(1150, () => { card.value = true; });
   at(1700, async () => { const svg = await drawn; round.value++; code.value = svg; });
-  at(6400, () => { card.value = false; glide.to(hand.value!, from[0], from[1]); });
+  at(6400, () => { card.value = false; glide.to(hand.value!.$el, from[0], from[1]); });
   return 7000;
 }, async () => {
   card.value = true;
   const to = target();
-  glide.to(hand.value!, to[0], to[1], true);
+  glide.to(hand.value!.$el, to[0], to[1], true);
   code.value = await drawn;
 });
 </script>
@@ -48,7 +51,7 @@ useDemoLoop(root, (at) => {
     <div class="demo-qr-person">
       <span ref="chip" class="demo-qr-chip">@{{ d.mention }}</span>
       <div class="demo-qr-card" :class="{ 'is-open': card }">
-        <span class="demo-qr-avatar">JN</span>
+        <span class="demo-qr-avatar" :style="{ background: jana }">JN</span>
         <span><b>{{ d.mention }}</b><small>{{ d.role }}</small></span>
       </div>
     </div>
@@ -56,9 +59,7 @@ useDemoLoop(root, (at) => {
       <div class="demo-qr-code"><div v-if="code" :key="round" class="demo-qr-svg" v-html="code" /></div>
       <small>{{ d.scan }}</small>
     </div>
-    <div ref="hand" class="collaboration-pointer" style="--collaboration-color: #f0559e">
-      <svg viewBox="0 0 22 26"><path :d="COLLABORATION_POINTER_PATH" /></svg>
-    </div>
+    <CollaborationPointer ref="hand" :color="pointing" />
   </div>
 </template>
 
@@ -72,11 +73,15 @@ useDemoLoop(root, (at) => {
 .demo-qr-card > span:last-child { min-width: 0; }
 .demo-qr-card b, .demo-qr-card small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demo-qr-card small { color: var(--muted); font-size: 11.5px; }
-.demo-qr-avatar { display: grid; flex: none; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #9b6dff, #f0559e); color: white; font-size: 11px; font-weight: 700; }
+.demo-qr-avatar { display: grid; flex: none; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: white; font-size: 11px; font-weight: 700; }
 .demo-qr-side { display: grid; justify-items: center; gap: 4px; }
 .demo-qr-side small { color: var(--muted); font-size: 10.5px; }
-/* The contact card's code, its rings rising slower than in the card (contactQr.css reads these two tokens). */
-.demo-qr-code { --atlas-motion-fast: calc(800ms * var(--atlas-motion-scale, 1)); --atlas-motion-base: calc(420ms * var(--atlas-motion-scale, 1));
+/* The contact card's code, its rings rising slower than in the card: contactQr.css's ring and step, each scaled by a factor of the demo. */
+.demo-qr-code { --demo-ring-slow: 2.1; --demo-step-slow: 6.7;
   width: 104px; height: 104px; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line); }
 .demo-qr-svg, .demo-qr-svg :deep(svg) { width: 100%; height: 100%; }
+.demo-qr-svg :deep(.atlas-qr-band) { animation-duration: calc(var(--atlas-motion-base) * var(--demo-ring-slow));
+  animation-delay: calc(var(--qr-band) * var(--atlas-motion-fast) * var(--demo-step-slow) / 5); }
+@media (prefers-reduced-motion: reduce) { .demo-qr-svg :deep(.atlas-qr-band) { animation-delay: initial; } }
+:global([data-atlas-reduced-motion]) .demo-qr-svg .atlas-qr-band { animation-delay: initial; }
 </style>

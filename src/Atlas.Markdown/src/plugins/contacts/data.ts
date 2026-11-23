@@ -71,6 +71,8 @@ export interface ContactsPluginOptions {
   directoryUrl?: (objectId: string) => string
   /** The places a linked contact is used (host: GET /api/usage/{id}), for the read-only card: title, where, and the address to open. Not used without it. */
   readerUsage?: (objectId: string, context: { signal: AbortSignal }) => Promise<{ places: readonly { title: string; detail?: string; url: string }[]; more: number } | null>
+  /** A person's colour (their caret's, the host's palette) for an internal contact's chip; without it the editor's own (markdownUserColor). */
+  userColor?: (userId: string) => string
   /** Draws a QR code (SVG markup, black on white with its quiet zone) for the card's „QR kód“ beside „Stáhnout vizitku“; the card offers no QR code without it. */
   qrCode?: (text: string) => Promise<ContactQrCode>
   /**

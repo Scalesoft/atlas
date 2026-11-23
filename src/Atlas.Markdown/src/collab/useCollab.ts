@@ -24,6 +24,7 @@ import type { AnyExtension, Editor } from '@tiptap/core'
 import { SignalRYjsProvider, type PresenceUser } from './SignalRYjsProvider'
 import { DurableSignalRYjsProvider, type DurableCollaborationOptions } from './DurableSignalRYjsProvider'
 import { awarenessColor } from './awareness-color'
+import { caretAwareness } from './caretAwareness'
 import type { MarkdownDocumentSchema } from '../core/types'
 import { CollaborationHistoryBoundary } from './historyBoundary'
 import { CollaborationRemoteSelection } from './remoteSelection'
@@ -187,7 +188,8 @@ export function useCollab(opts: UseCollabOptions): CollabHandle {
     // PresenceStack can key + colour peers consistently with their caret.
     const user = { id: opts.user.id, name: opts.user.name, color }
     if (opts.reader) provider.awareness.setLocalStateField('user', user)
-    else extensions.push(CollaborationCaret.configure({ provider, user }))
+    // Carets redraw only for a caret or a name that changed, not for every other field of the state (a host's pointers).
+    else extensions.push(CollaborationCaret.configure({ provider: { awareness: caretAwareness(provider.awareness) }, user }))
   }
 
   function attachEditor(editor: Editor): void {

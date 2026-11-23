@@ -117,6 +117,9 @@ internal sealed class LiveDocument(string documentId)
     // PeerCount/enumeration) are safe against under-gate structural mutations on other connections.
     // Logical decisions (election, seeding) still run under the gate for consistency.
     public ConcurrentDictionary<string, Peer> Peers { get; } = new(StringComparer.Ordinal);
+    /// <summary>The client ids of collaborators the server shows (an agent writing, <see cref="LiveDocumentWriter.ShowAsync"/>), for the
+    /// document's lifetime: no peer takes one for its awareness or writes structs as it (its text would be typed in with the AI caret).</summary>
+    public ConcurrentDictionary<long, byte> ServerClients { get; } = new();
     public string? SnapshotterConnId { get; set; }
     private long _joinCounter;
     public long NextJoinOrder() => ++_joinCounter;

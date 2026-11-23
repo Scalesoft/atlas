@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Atlas.Markdown.Sync;
 using Atlas.Server.Features.Collaboration.Domain;
 using Atlas.Server.Features.Mcp;
+using Atlas.Server.Platform.Validation;
+using ModelContextProtocol.Client;
 using Atlas.Server.Tests.Collaboration;
 using Atlas.Server.Tests.Platform;
 using Xunit;
@@ -238,6 +240,75 @@ public sealed class McpLiveWriteTests
             SELECT (SELECT count(*) FROM "PageRevision" r WHERE r."PageId"=@page) || ':' || c."Sequence" || ':' || coalesce(c."LastSavedSequence", 0)
             FROM "PageCollaboration" c WHERE c."PageId"=@page
             """, ("page", Guid.Parse(page.Id))));
+    }
+
+    /// <summary>
+    /// A person types word by word into section A while three agents insert three sections each, all at once: every word and every
+    /// section lands (nothing an agent writes takes back what the person typed meanwhile, nor the other way), the person's words in
+    /// their order, the page stays on its generation, and the whole run is bounded. The person's updates are made as a browser makes
+    /// them, against what it has seen so far (its own words and the agents' updates that reached it), so they are concurrent with the agents'.
+    /// </summary>
+    [PostgreSqlFact]
+    public async Task People_and_agents_writing_one_page_at_once_lose_nothing()
+    {
+        await using var f = await McpSite.CreateAsync(services: CollaborationContentGuardHttpTests.BrowserSeeds);
+        var (live, page, generation) = await OpenLiveAsync(f);
+        await using var hub = live.Hub;
+        var agents = new List<McpClient>();
+        for (var agent = 0; agent < 3; agent++) agents.Add((await McpAttachmentToolTests.DraftClientAsync(f)).Client);
+        var schema = new MarkdownDocumentSchema(HostDocumentValidator.Instance.Schema.SchemaRevision, HostDocumentValidator.Instance.Schema.Profile,
+            HostDocumentValidator.Instance.Schema.Plugins.Values.Select(plugin => new MarkdownSchemaPlugin(plugin.Id, plugin.Version)).ToArray());
+        var authority = new ManagedLiveWriteAuthority();
+        var mine = new List<byte[]>();
+        const int Words = 20;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+
+        async Task TypeAsync()
+        {
+            for (var word = 0; word < Words; word++)
+            {
+                byte[][] seen;
+                lock (live.Updates) seen = [.. mine, .. live.Updates];
+                var shown = System.Text.Json.Nodes.JsonNode.Parse(YjsDocumentMaterializer.Builtin.Materialize(Baseline, seen.Select(update => (ReadOnlyMemory<byte>)update)))!;
+                var text = shown["content"]!.AsArray().First(block => block!["content"]?[0]?["text"]?.GetValue<string>().StartsWith("Text A.") == true)!["content"]![0]!;
+                text["text"] = text["text"]!.GetValue<string>() + $" w{word}";
+                using var target = JsonDocument.Parse(shown.ToJsonString());
+                var update = await authority.WriteAsync(schema, Baseline, seen, target.RootElement, 0, null, CancellationToken.None);
+                await live.Hub.InvokeAsync<long>("SendUpdate", live.DocumentId, Guid.NewGuid().ToString("D"), update);
+                lock (live.Updates) mine.Add(update);
+            }
+        }
+        var latencies = new System.Collections.Concurrent.ConcurrentBag<long>();
+        async Task WriteAsync(McpClient client, int agent)
+        {
+            for (var section = 0; section < 3; section++)
+            {
+                var started = clock.ElapsedMilliseconds;
+                var written = await CallAsync(client, "atlas_insert_section", new
+                {
+                    pageId = page.Id, expectedVersion = page.Version, heading = $"Agent {agent}.{section}", level = 2, markdown = $"Píše agent {agent}, oddíl {section}."
+                });
+                latencies.Add(clock.ElapsedMilliseconds - started);
+                Assert.True(written.IsError != true, $"agent {agent}.{section}: {Text(written)}");
+            }
+        }
+
+        await Task.WhenAll([TypeAsync(), .. agents.Select((client, agent) => WriteAsync(client, agent))]);
+        await CollaborationContentGuardHttpTests.WaitUntilAsync(() => { lock (live.Updates) return live.Updates.Count == 9; });
+        var elapsed = clock.ElapsedMilliseconds;
+
+        Assert.Equal(generation, await GenerationAsync(f, page.Id));
+        byte[][] all;
+        lock (live.Updates) all = [.. mine, .. live.Updates];
+        var final = YjsDocumentMaterializer.Builtin.Materialize(Baseline, all.Select(update => (ReadOnlyMemory<byte>)update));
+        Assert.Contains("Text A." + string.Concat(Enumerable.Range(0, Words).Select(word => $" w{word}")), final);
+        Assert.Contains("Text B.", final);
+        for (var agent = 0; agent < 3; agent++)
+            for (var section = 0; section < 3; section++)
+                Assert.Contains($"Píše agent {agent}, oddíl {section}.", final);
+        // Bounded: the agents' writes queue at the page's gate one after another, the person's words in between.
+        Assert.True(elapsed < 60_000, $"{elapsed} ms");
+        Console.WriteLine($"People_and_agents_writing_one_page_at_once: {Words} words + 9 agent writes in {elapsed} ms; agent write max {latencies.Max()} ms, median {latencies.Order().ElementAt(latencies.Count / 2)} ms");
     }
 
     /// <summary>The page "## A / Text A. / ## B / Text B.", open in a person's browser with its live document seeded (Baseline).</summary>

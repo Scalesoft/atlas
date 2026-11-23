@@ -92,6 +92,7 @@ public sealed class LiveDocumentWriter(MarkdownSyncOptions options, DocumentRegi
         (ulong Client, uint Clock)? caret = null)
     {
         if (registry.TryGet(documentId) is not { } doc) return;
+        doc.ServerClients.TryAdd(clientId, 0);
         var shown = user is null ? null : new { id = user.Id, name = user.Name, color = user.Color ?? "#7c3aed" };
         var at = caret is { } c ? new { item = new { client = c.Client, clock = c.Clock }, assoc = -1 } : null;
         var state = shown is null ? "null"

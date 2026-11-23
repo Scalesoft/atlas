@@ -13,16 +13,18 @@ import type { RemoteDrag } from "../../boards/boardSession";
 import { createCollaborationPresence, type CollaborationPeer } from "../../collaborationPresence";
 import BoardPresence from "../boards/canvas/BoardPresence.vue";
 import CollaboratorAvatars from "../CollaboratorAvatars.vue";
+import { userColor } from "../../live/objectPresence";
 import StatusBadge from "../settings/StatusBadge.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 import { Button } from "../ui/button";
 
+// Each person in their colour (userColor, as their carets, pointers and history have it).
 const samples = [
-  { clientId: 1, name: "Jana Nováková", color: "#5274bd", cursorAvailable: true },
-  { clientId: 2, name: "Petr Král", color: "#348879", cursorAvailable: true },
-  { clientId: 3, name: "Eva Svobodová", color: "#a46b45", cursorAvailable: false },
-  { clientId: 4, name: "Tomáš Novotný", color: "#8d5cf6", cursorAvailable: true },
-  { clientId: 5, name: "Lucie Dvořáková", color: "#ad4c70", cursorAvailable: true },
+  { clientId: 1, name: "Jana Nováková", color: userColor("00000002"), cursorAvailable: true },
+  { clientId: 2, name: "Petr Král", color: userColor("00000001"), cursorAvailable: true },
+  { clientId: 3, name: "Eva Svobodová", color: userColor("00000003"), cursorAvailable: false },
+  { clientId: 4, name: "Tomáš Novotný", color: userColor("00000004"), cursorAvailable: true },
+  { clientId: 5, name: "Lucie Dvořáková", color: userColor("00000007"), cursorAvailable: true },
 ];
 const peers = ref(samples.slice(0, 3));
 const confirmation = ref(0);
@@ -41,7 +43,7 @@ function togglePointers() {
       { userId: "jana", displayName: "Jana Nováková", color: samples[0]!.color, dragging: [], cursor: path(t, 0) },
       { userId: "petr", displayName: "Petr Král", color: samples[1]!.color, dragging: [], cursor: path(t, 2.4) },
       // An AI's pointer (an „ai:“ user): the arrow in the AI gradient, its stars writing in its name pill, the aura breathing.
-      { userId: "ai:nexus", displayName: "Nexus · AI (MCP)", color: "#7c3aed", dragging: [], cursor: { x: path(t, 4.2).x + 60, y: path(t, 4.2).y } },
+      { userId: "ai:nexus", displayName: "Nexus · AI (MCP)", color: userColor("00000004"), dragging: [], cursor: { x: path(t, 4.2).x + 60, y: path(t, 4.2).y } },
     ];
   }, 50);
 }
@@ -57,7 +59,8 @@ let agentAbort: AbortController | undefined;
 let agentTimer: ReturnType<typeof setTimeout> | undefined;
 const agentAvatars = ref<CollaborationPeer[]>([]);
 const agentPresence = createCollaborationPresence({ onChange: peers => { agentAvatars.value = peers; } });
-const agentPeer = { clientId: 9, id: "ai:gallery", name: "Jana Nováková · AI (MCP)", color: "#7c3aed" };
+// An agent's colour is the AI ink (collaborationPresence.css), whatever the server sends.
+const agentPeer = { clientId: 9, id: "ai:gallery", name: "Jana Nováková · AI (MCP)", color: userColor("00000002") };
 const caretAt = Extension.create({
   name: "galleryAgentCaret",
   addProseMirrorPlugins: () => [new Plugin({
@@ -120,7 +123,7 @@ onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); a
       <Button @click="confirmation++">Přehrát potvrzení</Button>
     </div>
     <div class="pointer-sample">
-      <p>Ukazatel spolupracovníka je jeden: na nástěnce (BoardPresence) i nad stránkou (collaborationPresence s <code>pointers: true</code>). Na stránce se kotví k nejbližšímu místu v textu, takže ukazuje na stejné slovo při jiné šířce okna i posunu. Mezi vzorky (20× za sekundu, po síti nepravidelně) ho nese pružina v každém snímku (live/pointerGlide.ts): drží rychlost a u vzorku se nezastaví; stisk tlačítka vyšle kroužek. Čtenář živé stránky ani dotyk ukazatel neposílají; při omezeném pohybu skáče bez plynulého přechodu.</p>
+      <p>Ukazatel spolupracovníka je jeden: na nástěnce (BoardPresence) i nad stránkou (collaborationPresence s <code>pointers: true</code>). Ve Vue pohledu (nástěnka, ukázky vydání) ho kreslí CollaborationPointer.vue, v overlayi stránky stejné značení live/collaborationPointer.ts <code>createPointerElement</code>; jméno, barva a u AI (uživatel „ai:“, <code>isAgentUser</code>) šipka v AI gradientu z tokenů. Pohyb mu dává volající (pointerGlide.ts), stisk a odchod třídy is-pressed a is-leaving. Na stránce se kotví k nejbližšímu místu v textu, takže ukazuje na stejné slovo při jiné šířce okna i posunu. Mezi vzorky (20× za sekundu, po síti nepravidelně) ho nese pružina v každém snímku (live/pointerGlide.ts): drží rychlost a u vzorku se nezastaví; stisk tlačítka vyšle kroužek. Čtenář živé stránky ani dotyk ukazatel neposílají; při omezeném pohybu skáče bez plynulého přechodu.</p>
       <BoardPresence :remote="pointers" :viewport="{ x: 0, y: 0, zoom: 1 }" />
     </div>
     <div class="st-actions">

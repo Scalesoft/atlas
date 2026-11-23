@@ -1123,4 +1123,46 @@ public class MarkdownSyncHubTests
         await WaitUntil(() => awareness.Count == 2, Timeout);
         Assert.Equal(AuthorityAwarenessTests.Frame("null", client: 7, clock: 4), awareness.Last());
     }
+
+    /// <summary>
+    /// An agent's presence (LiveDocumentWriter.ShowAsync) is the server's: a peer that read its client id from the awareness can neither
+    /// take it for its own awareness (hiding or replacing the AI for everyone) nor write Yjs structs as it (the editors would type its text
+    /// in with the AI caret, agentReveal.ts). The peer's own client id still works.
+    /// </summary>
+    [Fact]
+    public async Task A_peer_can_neither_show_nor_write_as_a_collaborator_the_server_shows()
+    {
+        await using var host = await HubTestHost.StartAsync();
+        await using var a = host.Connection("alice");
+        await using var b = host.Connection("bob");
+        await a.StartAsync();
+        await b.StartAsync();
+        var awareness = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
+        var updates = new System.Collections.Concurrent.ConcurrentQueue<byte[]>();
+        a.On<string, byte[]>("ReceiveAwareness", (_, payload) => awareness.Enqueue(payload));
+        a.On<string, byte[], long>("ReceiveUpdate", (_, update, _) => updates.Enqueue(update));
+        await SeedAsync(a, "doc1");
+        await b.InvokeAsync<JoinResult>("JoinDocument", "doc1");
+        await host.Writer.ShowAsync("doc1", 4242, 1, new CollabUser("ai:alice", "Alice · AI (MCP)"));
+        await WaitUntil(() => awareness.Count == 1, Timeout);
+
+        await b.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("null", client: 4242, clock: 9));
+        var forged = await Assert.ThrowsAsync<Microsoft.AspNetCore.SignalR.HubException>(() => b.InvokeAsync<long>("SendUpdate", "doc1", NewUpdateId(), TextAt(4242)));
+        Assert.Contains("[INVALID_CONTENT]", forged.Message);
+        // Its own client id is as before: its awareness and its text go out.
+        await b.InvokeAsync("SendAwareness", "doc1", AuthorityAwarenessTests.Frame("{}", client: 7, clock: 1));
+        await b.InvokeAsync<long>("SendUpdate", "doc1", NewUpdateId(), TextAt(7));
+        await WaitUntil(() => awareness.Count == 2 && updates.Count == 1, Timeout);
+        Assert.Equal(7, awareness.Last()[1]);
+        Assert.Equal(TextAt(7), Assert.Single(updates));
+    }
+
+    /// <summary>A Yjs update of one struct of <paramref name="client"/> (clock 0): "x" in the root type "t".</summary>
+    private static byte[] TextAt(int client)
+    {
+        var id = new List<byte>();
+        for (; client > 127; client >>= 7) id.Add((byte)(client & 127 | 128));
+        id.Add((byte)client);
+        return [1, 1, .. id, 0, 4, 1, 1, (byte)'t', 1, (byte)'x', 0];
+    }
 }

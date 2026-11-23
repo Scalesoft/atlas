@@ -5,8 +5,9 @@ import { absolutePositionToRelativePosition, relativePositionToAbsolutePosition,
 import type { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
 import { animateAtlas, literalMs, motionMs, PROTOTYPE_MS, scrollBehavior } from "./motion/aiMotion";
-import { COLLABORATION_POINTER_PATH } from "./live/collaborationPointer";
+import { createPointerElement } from "./live/collaborationPointer";
 import { createAgentReveal } from "./live/agentReveal";
+import { isAgentUser } from "./live/agentUser";
 import { createPointerGlide } from "./live/pointerGlide";
 import { mountAiGlyph } from "./components/ai/mountAiGlyph";
 import "./collaborationPresence.css";
@@ -35,7 +36,8 @@ export function createCollaborationPresence(options: {
   let peers: readonly StatePeer[] = [];
   let attachment: Attachment | undefined;
 
-  const publish = () => options.onChange(peers.map(peer => ({
+  // An agent shows anew for each write (LivePageWrites: a presence per write, whose caret lingers a moment): one avatar, its latest.
+  const publish = () => options.onChange(peers.filter((peer, index) => !isAgentUser(peer.id) || !peers.slice(index + 1).some(later => later.id === peer.id)).map(peer => ({
     ...peer,
     cursorAvailable: attachment?.positions.has(peer.clientId) ?? false,
     ...(attachment?.writing(peer.clientId) ? { writing: true } : {}),
@@ -209,7 +211,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
         if (cursor) removeCursor(cursor);
         continue;
       }
-      const agent = peer.id?.startsWith("ai:") === true;
+      const agent = isAgentUser(peer.id);
       if (!cursor) {
         cursor = document.createElement("span");
         cursor.className = "collaboration-presence__cursor";
@@ -237,7 +239,9 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
         leavingCursors.delete(cursor);
         cursor.classList.remove("is-leaving");
       }
-      cursor.querySelector<HTMLElement>(".collaboration-presence__name")!.textContent = peer.name;
+      // Every frame redraws every cursor: only what changed is written (a text node or a style each would be churn for every peer).
+      const name = cursor.querySelector<HTMLElement>(".collaboration-presence__name")!;
+      if (name.textContent !== peer.name) name.textContent = peer.name;
       const glyph = glyphs.get(cursor);
       const typing = reveal?.front(peer.clientId) !== undefined;
       // While its text is typed in, the caret stands exactly on the front: it steps with the words instead of trailing them.
@@ -248,7 +252,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
         mountAiGlyph(cursor.querySelector<HTMLElement>(".collaboration-presence__glyph")!, { size: 12, state, working: state === "writing" });
       }
       // An agent's colour is the AI ink (collaborationPresence.css), not the person's.
-      if (!agent) cursor.style.setProperty("--collaboration-color", safeColor(peer.color));
+      if (!agent) setColor(cursor, peer.color);
       cursor.style.transform = `translate3d(${coords.left - originX}px, ${coords.top - originY}px, 0)`;
       cursor.style.height = `${Math.max(1, coords.bottom - coords.top)}px`;
     }
@@ -287,18 +291,17 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       const person = peer(clientId)!;
       let element = shown.get(clientId);
       if (!element) {
-        element = document.createElement("div");
-        element.className = "collaboration-pointer";
+        element = createPointerElement();
         element.dataset.pointerClientId = String(clientId);
-        element.innerHTML = `<svg viewBox="0 0 22 26"><path d="${COLLABORATION_POINTER_PATH}"/></svg><span class="collaboration-pointer__name"></span>`;
         overlay.append(element);
       } else if (leavingPointers.has(element)) {
         clearTimeout(leavingPointers.get(element));
         leavingPointers.delete(element);
         element.classList.remove("is-leaving");
       }
-      element.querySelector(".collaboration-pointer__name")!.textContent = person.name;
-      element.style.setProperty("--collaboration-color", safeColor(person.color));
+      const name = element.querySelector(".collaboration-pointer__name")!;
+      if (name.textContent !== person.name) name.textContent = person.name;
+      setColor(element, person.color);
       // Glued to the text while the page itself moves (scroll anchoring, a dock opening); gliding otherwise.
       glide.to(element, at.left - originX, at.top - originY, overlay.classList.contains("is-layout-moving"));
       element.classList.toggle("is-pressed", at.down);
@@ -348,6 +351,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     } else pointerTimer ??= setTimeout(publishPointer, POINTER_MS);
   };
   const onVisibility = () => { if (document.visibilityState === "hidden") hidePointer(); };
+  // 'update', not 'change': the caret plugin's awareness (useCollab's caretAwareness) reports a 'change' only for carets and names.
   const onRemotePointers = ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }) => {
     if (currentPeers.length && [...added, ...updated, ...removed].some(id => id !== awareness?.clientID)) draw();
   };
@@ -356,7 +360,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     container.addEventListener("pointerleave", hidePointer);
     window.addEventListener("blur", hidePointer);
     document.addEventListener("visibilitychange", onVisibility);
-    awareness.on("change", onRemotePointers);
+    awareness.on("update", onRemotePointers);
   }
 
   const onTransaction = () => draw();
@@ -398,7 +402,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       container.removeEventListener("pointerleave", hidePointer);
       window.removeEventListener("blur", hidePointer);
       document.removeEventListener("visibilitychange", onVisibility);
-      awareness.off("change", onRemotePointers);
+      awareness.off("update", onRemotePointers);
     }
     leavingPointers.forEach(timer => clearTimeout(timer));
     glide.stop();
@@ -414,7 +418,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     writing: clientId => reveal?.front(clientId) !== undefined,
     render(next) {
       currentPeers = next;
-      reveal?.setAgents(new Set(next.filter(peer => peer.id?.startsWith("ai:")).map(peer => peer.clientId)));
+      reveal?.setAgents(new Set(next.filter(peer => isAgentUser(peer.id)).map(peer => peer.clientId)));
       observeLayout(next.length > 0);
       draw();
     },
@@ -472,8 +476,10 @@ function cursorPositions(editor: Editor) {
   return result;
 }
 
-function safeColor(color: string) {
-  return CSS.supports("color", color) ? color : "#64748b";
+function setColor(element: HTMLElement, color: string) {
+  if (element.dataset.color === color) return;
+  element.dataset.color = color;
+  element.style.setProperty("--collaboration-color", CSS.supports("color", color) ? color : "#64748b");
 }
 
 function scrollCaretIntoView(editor: Editor, position: number, behavior: ScrollBehavior) {
