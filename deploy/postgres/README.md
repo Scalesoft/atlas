@@ -17,7 +17,7 @@ Tag se skládá z výchozích hodnot `ARG` v `Dockerfile`: `<POSTGRES_VERSION>-p
 
 ## Sestavení a ověření
 
-Image v registru `ghcr.io/scalesoft/atlas-postgres:<tag>` publikuje krok „Database image“ ve workflow vydání při každém vydání, pro `linux/amd64`. Na hostiteli jiné architektury se varianta překládá a ověřuje v emulaci; jde o krátký překlad C, ne o .NET SDK (AGENTS.md). Ověření (`verify.sh`) pro zvolenou platformu kontroluje OS a architekturu, verze PostgreSQL a pgvectoru, `CREATE EXTENSION vector`, kosinovou vzdálenost, HNSW index s `hnsw.iterative_scan` (`verify.sql`) a shodné řazení textu se základním image (`collation.sql`).
+Image v registru `ghcr.io/scalesoft/atlas-postgres:<tag>` publikuje [`.github/workflows/postgres-image.yml`](../../.github/workflows/postgres-image.yml) pro `linux/amd64`, když se na `main` změní `deploy/postgres`; tag je ten, který připíná `docker-compose.yml` (změna Dockerfile = nový `IMAGE_REVISION` a nový tag tam). Na hostiteli jiné architektury se varianta překládá a ověřuje v emulaci; jde o krátký překlad C, ne o .NET SDK (AGENTS.md). Ověření (`verify.sh`) pro zvolenou platformu kontroluje OS a architekturu, verze PostgreSQL a pgvectoru, `CREATE EXTENSION vector`, kosinovou vzdálenost, HNSW index s `hnsw.iterative_scan` (`verify.sql`) a shodné řazení textu se základním image (`collation.sql`).
 
 Místně (Podman, výsledek `localhost/atlas-postgres:<tag>`; e2e a test upgradu ho staví samy):
 

@@ -160,11 +160,11 @@ public static class SearchQueries
             AND (a."IsWikiAdmin" OR d."PageId" IN (SELECT "PageId" FROM access
               WHERE "Role">=2 OR coalesce(p."PublicationMode",s."PublicationMode")='Live'))
         ), body_probe AS MATERIALIZED (
-          -- The body of each real draft, read through its key: a join would let the planner test every working revision.
+          -- The readable drafts the strict tests missed whose body the trigram index can match (IX_WorkingSearchDocument_BodyTrigram,
+          -- chosen since 2026112300 gave <% its real cost): a word no body has reads no body; testing each draft's body read them all.
           SELECT d."PageId" FROM accessible d
-          WHERE :fuzzy AND NOT (d."Vector" @@ to_tsquery('simple',:fts)
-            OR (NOT :phrase AND d."NormalizedTitle" LIKE :prefix))
-            AND (SELECT :query <% body."NormalizedBody" FROM "WorkingSearchDocument" body WHERE body."PageId"=d."PageId")
+          WHERE :fuzzy AND NOT (d."Vector" @@ to_tsquery('simple',:fts) OR (NOT :phrase AND d."NormalizedTitle" LIKE :prefix))
+            AND d."PageId" IN (SELECT body."PageId" FROM "WorkingSearchDocument" body WHERE :query <% body."NormalizedBody")
           LIMIT 64
         ), matches AS MATERIALIZED (
           SELECT "PageId" FROM "WorkingSearchDocument" WHERE "Vector" @@ to_tsquery('simple',:fts)

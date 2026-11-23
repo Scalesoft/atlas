@@ -105,7 +105,9 @@ public sealed class LiveCollaborationMessagesTests
         var agentRevision = await f.Site.ScalarAsync("""SELECT "Id" FROM "PageRevision" WHERE "PageId" = @page AND "ActiveTo" IS NULL""", ("page", Guid.Parse(page.Id)));
         var undone = await CallAsync(client, "atlas_undo_change", new { pageId = page.Id, revisionId = agentRevision!.ToString(), expectedVersion = await VersionAsync(f, page.Id) });
         Assert.True(undone.IsError != true, Text(undone));
-        await CollaborationContentGuardHttpTests.WaitUntilAsync(() => !anna.Document.Contains("Text B přepsal agent.", StringComparison.Ordinal));
+        // Each connection gets the undo on its own; Boris's may arrive after Anna's.
+        await CollaborationContentGuardHttpTests.WaitUntilAsync(() => !anna.Document.Contains("Text B přepsal agent.", StringComparison.Ordinal)
+            && !boris.Document.Contains("Text B přepsal agent.", StringComparison.Ordinal));
         Assert.Equal(anna.Document, boris.Document);
         Assert.Contains("\"Text B.\"", anna.Document);
         Assert.Contains("Text C přepsal agent. Boris.", anna.Document);
