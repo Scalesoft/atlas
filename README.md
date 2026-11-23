@@ -75,7 +75,9 @@ pnpm --dir src/Atlas.Web run build:editor
 dotnet run --project src/Atlas.AppHost --launch-profile https
 ```
 
-With Podman, set `ASPIRE_CONTAINER_RUNTIME=podman` first. The installation token is in the Aspire dashboard (resource
+With Podman, set `ASPIRE_CONTAINER_RUNTIME=podman` first. Since 5.1 Aspire keeps its database (PostgreSQL 19) in the new volume
+`atlas-postgres-19-builtin-data`, so the first start after the update is an empty installation; the former `atlas-postgres-18-data`
+stays untouched (delete it with `podman volume rm` or `docker volume rm` once you no longer need it). The installation token is in the Aspire dashboard (resource
 `atlas-service`, Logs). The editor changes in the same commit as its use; always run pnpm from `src/Atlas.Web`.
 `ATLAS_EDITOR_MODE=source` serves the editor sources with hot reload ([details](src/Atlas.Web/README.md)).
 The component gallery is at `/?gallery=1` on the Vite development server.
