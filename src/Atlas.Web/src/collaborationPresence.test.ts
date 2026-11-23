@@ -1,4 +1,5 @@
 import { Extension, Editor } from "@tiptap/core";
+import Collaboration from "@tiptap/extension-collaboration";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -6,6 +7,8 @@ import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Plugin } from "@tiptap/pm/state";
 import { yCursorPluginKey } from "@tiptap/y-tiptap";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from "y-protocols/awareness";
+import * as Y from "yjs";
 import type { MarkdownEditorState } from "@atlas/markdown/core";
 import { createCollaborationPresence } from "./collaborationPresence";
 
@@ -350,5 +353,88 @@ describe("collaboration cursor presentation", () => {
     expect(container.querySelector(".collaboration-presence")).toBeNull();
     expect(removeAbortListener).toHaveBeenCalledWith("abort", expect.any(Function));
     attached.splice(0);
+  });
+});
+
+describe("co-editor pointers", () => {
+  // Two editors of one page: Jana (writer) moves her mouse, the other side draws her pointer.
+  function pointerEditor(ydoc: Y.Doc) {
+    const awareness = new Awareness(ydoc);
+    const caret = Extension.create({ name: "collaborationCaret", addOptions: () => ({ provider: { awareness } }) });
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }), caret] });
+    vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {}, pointers: true });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); editor.destroy(); host.remove(); awareness.destroy(); });
+    return { editor, host, awareness, presence };
+  }
+  function pair() {
+    const docA = new Y.Doc(), docB = new Y.Doc();
+    docA.on("update", (update: Uint8Array) => Y.applyUpdate(docB, update));
+    docB.on("update", (update: Uint8Array) => Y.applyUpdate(docA, update));
+    const jana = pointerEditor(docA), reader = pointerEditor(docB);
+    jana.editor.commands.insertContent("abcdef");
+    // The relay: every change of Jana's awareness reaches the other side.
+    jana.awareness.on("update", ({ added, updated, removed }: Record<string, number[]>) =>
+      applyAwarenessUpdate(reader.awareness, encodeAwarenessUpdate(jana.awareness, [...added!, ...updated!, ...removed!]), "remote"));
+    reader.presence.update([{ clientId: jana.awareness.clientID, id: "jana", name: "Jana", color: "#d946ef" }]);
+    return { jana, reader };
+  }
+  const move = (host: HTMLElement, type: string, clientX: number, clientY: number, pointerType = "mouse") =>
+    host.dispatchEvent(Object.assign(new MouseEvent(type, { clientX, clientY, bubbles: true }), { pointerType }));
+  const pointerOf = (host: HTMLElement) => host.querySelector<HTMLElement>(".collaboration-pointer");
+
+  beforeEach(() => { vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] }); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("anchors the pointer to the text, so an edit before it carries it along", () => {
+    const { jana, reader } = pair();
+    vi.spyOn(jana.editor.view, "posAtCoords").mockReturnValue({ pos: 4, inside: -1 });
+    move(jana.host, "pointermove", 140, 70);
+    move(jana.host, "pointermove", 135, 75);
+    expect(jana.awareness.getLocalState()?.pointer).toBeUndefined();
+    vi.advanceTimersByTime(50);
+    // One sample per 50 ms, the latest: 135 − (100 + 4 · 8) = 3 px right of the character, 15 px under its top.
+    expect(jana.awareness.getLocalState()?.pointer).toMatchObject({ x: 3, y: 15 });
+    frame();
+    expect(pointerOf(reader.host)!.style.transform).toBe("translate3d(135px, 75px, 0px)");
+    expect(pointerOf(reader.host)!.textContent).toBe("Jana");
+
+    jana.editor.chain().insertContentAt(1, "XY").run();
+    frame();
+    expect(pointerOf(reader.host)!.style.transform).toBe("translate3d(151px, 75px, 0px)");
+    expect(pointerOf(jana.host)).toBeNull();
+  });
+
+  it("sends a press at once, nothing for a finger, and takes the pointer away when the mouse leaves", () => {
+    const { jana, reader } = pair();
+    vi.spyOn(jana.editor.view, "posAtCoords").mockReturnValue({ pos: 2, inside: -1 });
+    move(jana.host, "pointermove", 120, 70, "touch");
+    vi.advanceTimersByTime(50);
+    expect(jana.awareness.getLocalState()?.pointer).toBeUndefined();
+    move(jana.host, "pointerdown", 120, 70);
+    expect(jana.awareness.getLocalState()?.pointer).toMatchObject({ down: true });
+    frame();
+    expect(pointerOf(reader.host)!.classList.contains("is-pressed")).toBe(true);
+
+    jana.host.dispatchEvent(new MouseEvent("pointerleave"));
+    expect(jana.awareness.getLocalState()?.pointer).toBeNull();
+    frame();
+    expect(pointerOf(reader.host)!.classList.contains("is-leaving")).toBe(true);
+    vi.runAllTimers();
+    expect(pointerOf(reader.host)).toBeNull();
+  });
+
+  it("shows nothing for an anchor that resolves to nothing", () => {
+    const { jana, reader } = pair();
+    jana.awareness.setLocalStateField("pointer", { anchor: { type: { client: 1, clock: 999 }, tname: null, item: { client: 7, clock: 999 }, assoc: 0 }, x: 1, y: 1 });
+    frame();
+    expect(pointerOf(reader.host)).toBeNull();
+    jana.awareness.setLocalStateField("pointer", { anchor: "garbage", x: "1", y: 1 });
+    frame();
+    expect(pointerOf(reader.host)).toBeNull();
   });
 });

@@ -40,3 +40,10 @@
   transition: none;
 }
 
+/* A pointer jumps when the page itself moves or under reduced motion, and still fades in and out. */
+.collaboration-presence.is-layout-moving .collaboration-pointer,
+.collaboration-presence.is-reduced-motion .collaboration-pointer,
+[data-atlas-reduced-motion] .collaboration-presence .collaboration-pointer {
+  transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out);
+}
+

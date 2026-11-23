@@ -26,6 +26,8 @@ const HEARTBEAT_MS = 15000
 const TIMEOUT_MS = 30000
 const SWEEP_MS = 5000
 const REMOTE_ORIGIN = 'remote'
+// The server relays at most 30 awareness packets a second per connection; a caret and a pointer moving together share one every 50 ms.
+const SEND_MS = 50
 
 /** Presence is advisory and owns its listeners/timers independently of document durability. */
 export class PresenceSession {
@@ -34,6 +36,9 @@ export class PresenceSession {
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null
   private sweepTimer: ReturnType<typeof setInterval> | null = null
   private publishedPeers = '[]'
+  private readonly pending = new Set<number>()
+  private pendingTimer: ReturnType<typeof setTimeout> | null = null
+  private lastSent = -Infinity
 
   constructor(readonly awareness: Awareness, private readonly options: PresenceSessionOptions) {
     awareness.on('update', this.onUpdate)
@@ -56,6 +61,7 @@ export class PresenceSession {
     // The offline leave may have been lost. A null/live pair also lets peers that still know us reply.
     this.awareness.setLocalState(null)
     this.awareness.setLocalState(state)
+    this.flush()
     this.localStateBeforeLeave = null
   }
 
@@ -66,6 +72,8 @@ export class PresenceSession {
     if (state == null) return
     // Advance the clock even when identity/cursor content has not changed.
     this.awareness.setLocalState(state)
+    // An answer to a newcomer and the heartbeat do not wait behind a move.
+    this.flush()
   }
 
   /** Send the removal before the transport closes, even after listeners have been stopped. */
@@ -86,6 +94,8 @@ export class PresenceSession {
   /** Stop callbacks synchronously; the provider sends leave and then closes its transport. */
   stop(): void {
     this.stopped = true
+    if (this.pendingTimer) { clearTimeout(this.pendingTimer); this.pendingTimer = null }
+    this.pending.clear()
     if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null }
     if (this.sweepTimer) { clearInterval(this.sweepTimer); this.sweepTimer = null }
     this.awareness.off('update', this.onUpdate)
@@ -109,7 +119,20 @@ export class PresenceSession {
     if (changed.some(id => id !== this.awareness.clientID)) this.emitPeers()
     if (origin === REMOTE_ORIGIN) return
     const outgoing = changed.filter(id => !this.options.ownStateOnly || id === this.awareness.clientID)
-    if (outgoing.length) this.send(encodeAwarenessUpdate(this.awareness, outgoing))
+    if (!outgoing.length) return
+    outgoing.forEach(id => this.pending.add(id))
+    // An arrival or a leave goes at once (the null/live pair of announceJoin must reach peers as two packets); a move may wait.
+    const wait = this.lastSent + SEND_MS - Date.now()
+    if (changes.added.length || changes.removed.length || wait <= 0) this.flush()
+    else this.pendingTimer ??= setTimeout(this.flush, wait)
+  }
+  private flush = (): void => {
+    if (this.pendingTimer) { clearTimeout(this.pendingTimer); this.pendingTimer = null }
+    if (this.stopped || !this.pending.size) return
+    const ids = [...this.pending]
+    this.pending.clear()
+    this.lastSent = Date.now()
+    this.send(encodeAwarenessUpdate(this.awareness, ids))
   }
   private send(payload: Uint8Array): void {
     if (!this.options.isJoined() || !this.options.isConnected()) return

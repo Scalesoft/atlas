@@ -3,6 +3,7 @@ import { computed, defineComponent, h, onBeforeUnmount, ref, shallowRef, watch, 
 import type { RemoteDrag } from "../../../boards/boardSession";
 import type { Viewport } from "../../../boards/boardViewport";
 import { motionMs } from "../../../motion/aiMotion";
+import { COLLABORATION_POINTER_PATH } from "../../../live/collaborationPointer";
 
 /**
  * Other people on the board (spec §3.5): their pointer with their name, and the boxes they drag, in screen space. Each person has
@@ -67,9 +68,9 @@ const PresenceMark = defineComponent({
       if (!look) return null;
       const leavingClass = mark.out ? " is-leaving" : "";
       return mark.mark.itemId === undefined
-        ? h("div", { class: `board-cursor${leavingClass}`, "data-board-cursor": "", style: look.style }, [
-          h("svg", { width: 16, height: 18, viewBox: "0 0 16 18" }, [h("path", { d: "M1 1l13 7-6 1.6L5 16z" })]),
-          h("span", { class: "board-cursor-name" }, look.name),
+        ? h("div", { class: `collaboration-pointer${leavingClass}`, "data-board-cursor": "", style: look.style }, [
+          h("svg", { viewBox: "0 0 22 26" }, [h("path", { d: COLLABORATION_POINTER_PATH })]),
+          h("span", { class: "collaboration-pointer__name" }, look.name),
         ])
         : h("div", { class: `board-ghost${leavingClass}`, "data-board-ghost": "", style: look.style });
     };
@@ -85,11 +86,9 @@ const PresenceMark = defineComponent({
 
 <style scoped>
 .board-presence { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.board-presence :deep(:is(.board-cursor, .board-ghost)) { position: absolute; top: 0; left: 0; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out);
+/* The pointer is the one over a page (collaborationPointer.css); a dragged box moves and fades the same way. */
+.board-presence :deep(.board-ghost) { position: absolute; top: 0; left: 0; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out);
   transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out); }
 .board-presence :deep(.is-leaving) { opacity: 0; }
-.board-presence :deep(.board-cursor svg) { display: block; fill: var(--collaboration-color); stroke: var(--surface); stroke-width: 1.2; }
-/* The label of a collaborator's caret in a page (collaborationPresence.css). */
-.board-presence :deep(.board-cursor-name) { position: absolute; top: 16px; left: 12px; padding: 1px 6px; border-radius: 4px; background: var(--collaboration-color); color: white; font-size: 11px; font-weight: 600; line-height: 1.5; white-space: nowrap; }
 .board-presence :deep(.board-ghost) { border: 2px dashed var(--collaboration-color); border-radius: var(--atlas-radius-md); background: color-mix(in oklab, var(--collaboration-color) 10%, transparent); }
 </style>
