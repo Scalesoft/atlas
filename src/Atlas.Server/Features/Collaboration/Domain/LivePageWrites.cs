@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Atlas.Markdown.Sync;
 using Atlas.Server.Features.Collaboration.Commands;
@@ -60,21 +61,47 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
         var agent = await bus.InvokeAsync<LiveWriteAgent>(new GetLiveWriteAgent(claimed, current.ApiTokenId), ct);
         // An agent shows among the collaborators while it writes; a person's own web action (linking a page) needs no second avatar.
         long? presence = current.Channel is ContentChannel.Mcp or ContentChannel.Api or ContentChannel.Assistant ? Random.Shared.NextInt64(1, int.MaxValue) : null;
+        var shownAs = new CollabUser($"ai:{claimed:N}", $"{agent.Name} · AI ({Source(current, agent.TokenName)})");
         if (presence is { } shown)
         {
-            await writer.ShowAsync(documentId, shown, 1, new CollabUser($"ai:{claimed:N}", $"{agent.Name} · AI ({Source(current, agent.TokenName)})"), ct);
+            await writer.ShowAsync(documentId, shown, 1, shownAs, ct);
         }
+        var caret = new StrongBox<(ulong Client, uint Clock)?>();
         try
         {
-            return await HeldAsync(pageId, documentId, readVersion, wholeDocument, mcp, write, authority, new CollabUser(claimed.ToString(), agent.Name),
-                new UpdateOrigin(current.Code, current.ApiTokenId, current.ConversationId), ct);
+            var result = await HeldAsync(pageId, documentId, readVersion, wholeDocument, mcp, write, authority, new CollabUser(claimed.ToString(), agent.Name),
+                new UpdateOrigin(current.Code, current.ApiTokenId, current.ConversationId), caret, ct);
+            // After the gate: the agent's caret where its update ended, so the people see where it wrote (the editors draw it in the AI look).
+            if (presence is { } at && caret.Value is { } written)
+            {
+                await writer.ShowAsync(documentId, at, 2, shownAs, CancellationToken.None, written);
+            }
+            return result;
         }
         finally
         {
             if (presence is { } hidden)
             {
-                await writer.ShowAsync(documentId, hidden, 2, null, CancellationToken.None);
+                if (caret.Value is null) await writer.ShowAsync(documentId, hidden, 2, null, CancellationToken.None);
+                else _ = HideLaterAsync(documentId, hidden);
             }
+        }
+    }
+
+    /// <summary>How long the agent's caret stays where it wrote, so it can be seen at all; a write itself takes milliseconds.</summary>
+    internal static readonly TimeSpan CaretLinger = TimeSpan.FromSeconds(2);
+
+    private async Task HideLaterAsync(string documentId, long clientId)
+    {
+        try
+        {
+            await Task.Delay(CaretLinger);
+            await writer.ShowAsync(documentId, clientId, 3, null, CancellationToken.None);
+        }
+        catch (Exception error)
+        {
+            // The host may be stopping; the editors drop a silent state after the awareness timeout anyway.
+            log.LogDebug(error, "The agent's presence on {DocumentId} could not be removed", documentId);
         }
     }
 
@@ -105,7 +132,7 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
     }
 
     private async Task<T> HeldAsync<T>(Guid pageId, string documentId, int? readVersion, bool wholeDocument, bool mcp, Func<Task<T>> write,
-        ILiveWriteAuthority authority, CollabUser author, UpdateOrigin origin, CancellationToken ct)
+        ILiveWriteAuthority authority, CollabUser author, UpdateOrigin origin, StrongBox<(ulong Client, uint Clock)?> caret, CancellationToken ct)
     {
         await using var hold = await writer.HoldAsync(documentId, ct);
         var page = hold is null ? null : (await bus.InvokeAsync<LiveWritePageResult>(new GetLiveWritePage(pageId, mcp), ct)).Page;
@@ -140,13 +167,13 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
             if (scope.Written is { } written
                 && (await bus.InvokeAsync<LiveWriteRevision>(new LiveWriteRevisionExists(written.Id), CancellationToken.None)).Exists)
             {
-                await AppendAsync(hold, schema, scope, authority, author, origin);
+                await AppendAsync(hold, schema, scope, authority, author, origin, caret);
             }
             throw;
         }
         if (scope.Written is not null)
         {
-            await AppendAsync(hold, schema, scope, authority, author, origin);
+            await AppendAsync(hold, schema, scope, authority, author, origin, caret);
         }
         return result;
     }
@@ -196,7 +223,7 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
 
     /// <summary>After the writer's commit: the revision as one update of the live document, or today's reset when that cannot be done.</summary>
     private async Task AppendAsync(LiveDocumentHold hold, MarkdownDocumentSchema schema, LivePageWriteScope scope, ILiveWriteAuthority authority,
-        CollabUser author, UpdateOrigin origin)
+        CollabUser author, UpdateOrigin origin, StrongBox<(ulong Client, uint Clock)?> caret)
     {
         var written = scope.Written!.Value;
         try
@@ -205,6 +232,9 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
             var update = await authority.WriteAsync(schema, hold.Snapshot, hold.Updates, content.RootElement.GetProperty("document"), hold.Sequence + 1,
                 CancellationToken.None);
             var sequence = await hold.AppendAsync(author, update, origin, CancellationToken.None);
+            // The update is appended: a caret that cannot be read only means none is shown, never a reset.
+            try { caret.Value = Atlas.Yjs.YjsCaret.AfterWrite(update, update.Length); }
+            catch (Exception error) when (error is not OperationCanceledException) { log.LogDebug(error, "No caret for the live write of page {PageId}", scope.PageId); }
             await bus.InvokeAsync(new MarkLiveWriteSaved(scope.PageId, scope.Generation, sequence, written.Id),CancellationToken.None);
         }
         catch (Exception error)

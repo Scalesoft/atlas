@@ -1,5 +1,6 @@
 import { Extension, Editor } from "@tiptap/core";
 import Collaboration from "@tiptap/extension-collaboration";
+import CollaborationCaret from "@tiptap/extension-collaboration-caret";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -111,6 +112,24 @@ describe("collaboration cursor presentation", () => {
     expect(changes.at(-1)).toEqual([expect.objectContaining({ clientId: 1, cursorAvailable: true })]);
     frame();
     expect(source.host.parentElement!.querySelector('[data-client-id="1"]')).not.toBeNull();
+  });
+
+  it("draws an agent's caret in the AI look with the AI glyph, and fades it out where it wrote", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const agent: Peer = { clientId: 3, id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" };
+    const { host, presence } = attach({ 1: 2, 3: 5 }, [peer(1), agent]);
+    const caret = host.querySelector<HTMLElement>('[data-client-id="3"]')!;
+    expect(caret.classList).toContain("is-agent");
+    expect(caret.style.getPropertyValue("--collaboration-color")).toBe("");
+    expect(caret.querySelector("[data-ai-glyph]")!.getAttribute("data-state")).toBe("done");
+    expect(caret.textContent).toBe("Jana · AI (MCP)");
+    // A person's caret goes at once, the agent's fades out first.
+    presence.update([]);
+    expect(host.querySelector('[data-client-id="1"]')).toBeNull();
+    expect(caret.classList).toContain("is-leaving");
+    vi.advanceTimersByTime(400);
+    expect(caret.isConnected).toBe(false);
+    vi.useRealTimers();
   });
 
   it("publishes nothing when the editor republishes the same peers (perf guard)", () => {
@@ -443,5 +462,40 @@ describe("co-editor pointers", () => {
     jana.awareness.setLocalStateField("pointer", { anchor: "garbage", x: "1", y: 1 });
     frame();
     expect(pointerOf(reader.host)).toBeNull();
+  });
+});
+
+describe("an agent's caret from the server", () => {
+  it("lands right after the text the agent wrote, from the state the server sends (LiveDocumentWriter.ShowAsync)", () => {
+    const ydoc = new Y.Doc();
+    const awareness = new Awareness(ydoc);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
+      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+    vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {} });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); editor.destroy(); host.remove(); awareness.destroy(); });
+    editor.commands.insertContent("abcdef");
+    // The agent's update, as the server's authority writes it: its own client appends " agent" (its clocks 0–5).
+    const agentDoc = new Y.Doc();
+    agentDoc.clientID = 777;
+    Y.applyUpdate(agentDoc, Y.encodeStateAsUpdate(ydoc));
+    ((agentDoc.getXmlFragment("default").get(0) as Y.XmlElement).get(0) as Y.XmlText).insert(6, " agent");
+    Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(agentDoc, Y.encodeStateVector(ydoc)));
+    // Then its presence, in exactly the server's JSON: a collapsed cursor after its last letter (assoc −1).
+    const server = new Awareness(new Y.Doc());
+    const at = { item: { client: 777, clock: 5 }, assoc: -1 };
+    server.setLocalState({ user: { id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" }, cursor: { anchor: at, head: at } });
+    applyAwarenessUpdate(awareness, encodeAwarenessUpdate(server, [server.clientID]), "remote");
+    presence.update([{ clientId: server.clientID, id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" }]);
+    frame();
+    const caret = host.querySelector<HTMLElement>(`[data-client-id="${server.clientID}"]`)!;
+    expect(caret.classList).toContain("is-agent");
+    // "abcdef agent" is positions 1–12 of the paragraph: the caret stands at 13, after "agent".
+    expect(caret.style.transform).toBe(`translate3d(${100 + 13 * 8}px, 60px, 0px)`);
+    server.destroy();
   });
 });
