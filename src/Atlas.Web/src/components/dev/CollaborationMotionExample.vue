@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from "vue";
+import { Editor, Extension } from "@tiptap/core";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
+import Text from "@tiptap/extension-text";
+import { Plugin } from "@tiptap/pm/state";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { yCursorPluginKey } from "@tiptap/y-tiptap";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import type { RemoteDrag } from "../../boards/boardSession";
+import { createCollaborationPresence } from "../../collaborationPresence";
 import BoardPresence from "../boards/canvas/BoardPresence.vue";
 import CollaboratorAvatars from "../CollaboratorAvatars.vue";
 import StatusBadge from "../settings/StatusBadge.vue";
@@ -18,7 +26,7 @@ const peers = ref(samples.slice(0, 3));
 const confirmation = ref(0);
 const selected = ref("");
 
-// Co-editors' pointers: samples arrive 20 times a second, as from the server; each is carried over --atlas-motion-fast.
+// Co-editors' pointers: samples arrive 20 times a second, as from the server; pointerGlide.ts carries them between.
 const pointers = ref<RemoteDrag[]>([]);
 let pointerTimer: ReturnType<typeof setInterval> | undefined;
 const path = (t: number, phase: number) => ({ x: 150 + 120 * Math.cos(t / 900 + phase), y: 60 + 34 * Math.sin(t / 600 + phase) });
@@ -33,7 +41,46 @@ function togglePointers() {
     ];
   }, 50);
 }
-onBeforeUnmount(() => clearInterval(pointerTimer));
+
+// An agent's caret over a page: the real overlay (collaborationPresence) on a small editor. In the application the caret comes from the
+// agent's awareness state, which the server sends after an MCP, API or assistant write (LivePageWrites); here a cursor decoration of
+// the y-tiptap key stands in for it, as the collaboration extension would place it.
+const agentHost = ref<HTMLElement>();
+let agentEditor: Editor | undefined;
+let agentTimer: ReturnType<typeof setTimeout> | undefined;
+const agentPresence = createCollaborationPresence({ onChange: () => {} });
+const agentAbort = new AbortController();
+const agentPeer = { clientId: 9, id: "ai:gallery", name: "Jana Nováková · AI (MCP)", color: "#7c3aed" };
+onMounted(() => {
+  const caretAt = Extension.create({
+    name: "galleryAgentCaret",
+    addProseMirrorPlugins: () => [new Plugin({
+      key: yCursorPluginKey,
+      state: {
+        init: () => DecorationSet.empty,
+        apply: (transaction, current) => {
+          const at = transaction.getMeta(yCursorPluginKey) as number | null | undefined;
+          if (at === undefined) return current.map(transaction.mapping, transaction.doc);
+          return at === null ? DecorationSet.empty : DecorationSet.create(transaction.doc, [Decoration.widget(at, () => document.createElement("span"), { key: "9" })]);
+        },
+      },
+    })],
+  });
+  agentEditor = new Editor({ element: agentHost.value!, extensions: [Document, Paragraph, Text, caretAt], content: "<p>Shrnutí porady: rozpočet schválen.</p>", editable: false });
+  agentPresence.plugin.create({ profile: "rich", signal: agentAbort.signal }).onAttach!({ editor: agentEditor, controller: {} as never, signal: agentAbort.signal });
+});
+function playAgentWrite() {
+  const editor = agentEditor!;
+  clearTimeout(agentTimer);
+  editor.commands.setContent("<p>Shrnutí porady: rozpočet schválen.</p>");
+  const end = editor.state.doc.content.size - 1;
+  editor.view.dispatch(editor.state.tr.insertText(" Další krok: objednat licence do pátku.", end));
+  editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, editor.state.doc.content.size - 1));
+  agentPresence.update([agentPeer]);
+  // The server keeps the agent's caret about two seconds (LivePageWrites.CaretLinger), then it fades out.
+  agentTimer = setTimeout(() => agentPresence.update([]), 2000);
+}
+onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); agentAbort.abort(); agentEditor?.destroy(); });
 </script>
 
 <template>
@@ -56,6 +103,13 @@ onBeforeUnmount(() => clearInterval(pointerTimer));
     <div class="st-actions">
       <Button variant="outline" :aria-pressed="pointers.length > 0" @click="togglePointers">{{ pointers.length ? "Zastavit ukazatele" : "Přehrát ukazatele" }}</Button>
     </div>
+    <div class="pointer-sample agent-sample">
+      <p>Kurzor AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, server pošle po zápisu jeho kurzor hned za text, který napsal. Kurzor má AI inkoust, jemnou záři a AI znak, který jednou přehraje „hotovo“; asi dvě sekundy stojí, kde agent psal, pak zmizí prolnutím. Lidé nezáří. Ukázka kreslí skutečný overlay nad malým editorem.</p>
+      <div ref="agentHost" class="agent-editor" />
+    </div>
+    <div class="st-actions">
+      <Button variant="outline" @click="playAgentWrite">Přehrát zápis agenta</Button>
+    </div>
     <p role="status">{{ selected ? `Ukázka přechodu na kurzor: ${selected}` : 'Zvolte autora nebo přehrajte potvrzení.' }}</p>
     <p>StatusBadge s confirmed použijte až po potvrzené operaci. Pro trvalý stav revize slouží PageStatusBadge. Příchod, odchod a pořadí používají stabilní ID; při omezeném pohybu se zachová text a ikona bez posouvání.</p>
   </SettingsSection>
@@ -64,5 +118,6 @@ onBeforeUnmount(() => clearInterval(pointerTimer));
 <style scoped>
 .motion-sample { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; min-height: 64px; margin-block: 8px 16px; }
 p { color: var(--muted); font-size: 13px; }
+.agent-editor { padding-top: 22px; font-size: 15px; }
 .pointer-sample { position: relative; min-height: 140px; margin-block: 8px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); }
 </style>

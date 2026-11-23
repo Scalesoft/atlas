@@ -40,3 +40,24 @@
   transition: none;
 }
 
+/* An agent writing for a person (3.6-H): its caret stands a moment where it wrote, in the AI ink, with a soft glow and the AI
+   glyph in its label (the promo film's AI caret; people never glow). It fades in and out. */
+.collaboration-presence__cursor.is-agent {
+  --collaboration-color: var(--ai-ink);
+  box-shadow: 0 0 8px 1px color-mix(in srgb, var(--ai-ink) 55%, transparent);
+  animation: st-fade-in var(--atlas-motion-surface) var(--atlas-ease-out);
+  transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out);
+}
+.collaboration-presence.is-layout-moving .collaboration-presence__cursor.is-agent,
+.collaboration-presence.is-reduced-motion .collaboration-presence__cursor.is-agent,
+[data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent {
+  transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out);
+}
+.collaboration-presence__cursor.is-agent.is-leaving { opacity: 0; }
+.collaboration-presence__cursor.is-agent .collaboration-presence__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ai-ink) 45%, transparent);
+}
+.collaboration-presence__glyph { display: inline-flex; --ai-ink: white; }

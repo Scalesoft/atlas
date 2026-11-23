@@ -7,6 +7,7 @@ import * as Y from "yjs";
 import { animateAtlas, literalMs, motionMs, PROTOTYPE_MS, scrollBehavior } from "./motion/aiMotion";
 import { COLLABORATION_POINTER_PATH } from "./live/collaborationPointer";
 import { createPointerGlide } from "./live/pointerGlide";
+import { mountAiGlyph } from "./components/ai/mountAiGlyph";
 import "./collaborationPresence.css";
 
 type StatePeer = MarkdownEditorState["peers"][number];
@@ -106,6 +107,24 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
   let layoutFrame = 0;
   let settleFrame = 0;
   const halos = new Set<Animation>();
+  // An agent writing for a person (3.6-H, its user id "ai:…") wears the AI look and the AI glyph, which Vue renders into its label.
+  const glyphs = new Map<HTMLElement, () => void>();
+  const leavingCursors = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
+  const dropCursor = (cursor: HTMLElement) => {
+    glyphs.get(cursor)?.();
+    glyphs.delete(cursor);
+    clearTimeout(leavingCursors.get(cursor));
+    leavingCursors.delete(cursor);
+    cursor.remove();
+  };
+  // A person's caret goes with them; an agent's, shown only for a moment after its write, fades out where it wrote.
+  const removeCursor = (cursor: HTMLElement) => {
+    if (!cursor.classList.contains("is-agent")) dropCursor(cursor);
+    else if (!leavingCursors.has(cursor)) {
+      cursor.classList.add("is-leaving");
+      leavingCursors.set(cursor, setTimeout(() => dropCursor(cursor), motionMs(overlay, "--atlas-motion-surface")));
+    }
+  };
 
   let published = "";
   const publishIfChanged = () => {
@@ -125,7 +144,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     if (currentPeers.length === 0) {
       cancelAnimationFrame(drawFrame);
       drawFrame = 0;
-      overlay.querySelectorAll(".collaboration-presence__cursor").forEach(cursor => cursor.remove());
+      overlay.querySelectorAll<HTMLElement>(".collaboration-presence__cursor").forEach(removeCursor);
       placePointers(new Map(), 0, 0);
       publishIfChanged();
       return;
@@ -165,26 +184,43 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     }
     const wanted = new Set(currentPeers.map(peer => peer.clientId));
     overlay.querySelectorAll<HTMLElement>(".collaboration-presence__cursor").forEach(cursor => {
-      if (!wanted.has(Number(cursor.dataset.clientId))) cursor.remove();
+      if (!wanted.has(Number(cursor.dataset.clientId))) removeCursor(cursor);
     });
     for (const peer of currentPeers) {
       const coords = measured.get(peer.clientId);
       let cursor = overlay.querySelector<HTMLElement>(`[data-client-id="${peer.clientId}"]`);
       if (!coords) {
-        cursor?.remove();
+        if (cursor) removeCursor(cursor);
         continue;
       }
+      const agent = peer.id?.startsWith("ai:") === true;
       if (!cursor) {
         cursor = document.createElement("span");
         cursor.className = "collaboration-presence__cursor";
         cursor.dataset.clientId = String(peer.clientId);
         const label = document.createElement("span");
         label.className = "collaboration-presence__label";
+        const name = document.createElement("span");
+        name.className = "collaboration-presence__name";
+        label.append(name);
         cursor.append(label);
+        if (agent) {
+          cursor.classList.add("is-agent");
+          const glyph = document.createElement("span");
+          glyph.className = "collaboration-presence__glyph";
+          label.prepend(glyph);
+          // It has just written: the glyph's „done“ (the small stars gather, a pop and a tick), once.
+          glyphs.set(cursor, mountAiGlyph(glyph, { size: 12, state: "done" }));
+        }
         overlay.append(cursor);
+      } else if (leavingCursors.has(cursor)) {
+        clearTimeout(leavingCursors.get(cursor));
+        leavingCursors.delete(cursor);
+        cursor.classList.remove("is-leaving");
       }
-      cursor.querySelector<HTMLElement>(".collaboration-presence__label")!.textContent = peer.name;
-      cursor.style.setProperty("--collaboration-color", safeColor(peer.color));
+      cursor.querySelector<HTMLElement>(".collaboration-presence__name")!.textContent = peer.name;
+      // An agent's colour is the AI ink (collaborationPresence.css), not the person's.
+      if (!agent) cursor.style.setProperty("--collaboration-color", safeColor(peer.color));
       cursor.style.transform = `translate3d(${coords.left - originX}px, ${coords.top - originY}px, 0)`;
       cursor.style.height = `${Math.max(1, coords.bottom - coords.top)}px`;
     }
@@ -326,6 +362,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     cancelAnimationFrame(layoutFrame);
     cancelAnimationFrame(settleFrame);
     halos.forEach(halo => halo.cancel());
+    [...overlay.querySelectorAll<HTMLElement>(".collaboration-presence__cursor")].forEach(dropCursor);
     if (awareness) {
       hidePointer();
       for (const type of ["pointermove", "pointerdown", "pointerup"] as const) container.removeEventListener(type, onPointer);

@@ -86,10 +86,16 @@ public sealed class LiveDocumentWriter(MarkdownSyncOptions options, DocumentRegi
     /// Shows a collaborator that is no connection (an agent writing for a person) to everyone on the document, as an awareness state
     /// of its own client id, or removes it (<paramref name="user"/> null). Best effort, never stored; call it without a hold.
     /// </summary>
-    public async Task ShowAsync(string documentId, long clientId, int clock, CollabUser? user, CancellationToken ct = default)
+    /// <param name="caret">Where its caret stands (<see cref="Atlas.Yjs.YjsCaret"/>): the editors draw it as a person's, as y-prosemirror's
+    /// cursor state, a collapsed selection of two relative positions right after that unit.</param>
+    public async Task ShowAsync(string documentId, long clientId, int clock, CollabUser? user, CancellationToken ct = default,
+        (ulong Client, uint Clock)? caret = null)
     {
         if (registry.TryGet(documentId) is not { } doc) return;
-        var state = user is null ? "null" : JsonSerializer.Serialize(new { user = new { id = user.Id, name = user.Name, color = user.Color ?? "#7c3aed" } }, Unescaped);
+        var shown = user is null ? null : new { id = user.Id, name = user.Name, color = user.Color ?? "#7c3aed" };
+        var at = caret is { } c ? new { item = new { client = c.Client, clock = c.Clock }, assoc = -1 } : null;
+        var state = shown is null ? "null"
+            : JsonSerializer.Serialize(at is null ? new { user = shown } : (object)new { user = shown, cursor = new { anchor = at, head = at } }, Unescaped);
         var json = Encoding.UTF8.GetBytes(state);
         using var payload = new MemoryStream();
         foreach (var value in new[] { 1L, clientId, clock, json.Length }) WriteVarUint(payload, value);

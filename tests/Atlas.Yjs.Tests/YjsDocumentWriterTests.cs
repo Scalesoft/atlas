@@ -51,4 +51,17 @@ public class YjsDocumentWriterTests
         Assert.Equal(ContentRejectionReason.LimitExceeded, Assert.Throws<YjsWriteException>(() => writer.Write(state, [], large, 2)).Reason);
         Assert.Equal(ContentRejectionReason.LimitExceeded, Assert.Throws<YjsWriteException>(() => writer.Seed(large, 2)).Reason);
     }
+
+    [Fact]
+    public void The_caret_of_a_write_stands_after_the_text_it_inserted_or_where_it_deleted()
+    {
+        var state = WriterCorpus.Writer.Seed(Page, 7);
+        // " světe" is client 8's clocks 0–5: the caret is right after its last letter.
+        var typed = WriterCorpus.Writer.Write(state, [], Json("""{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Ahoj světe"}]}]}"""), 8);
+        Assert.Equal((8UL, 5U), YjsCaret.AfterWrite(typed.Update, long.MaxValue));
+        // Deleting "oj" (client 7's clocks 4–5, after the paragraph and "Ah") inserts nothing: the caret stands where the text was.
+        var deleted = WriterCorpus.Writer.Write(state, [], Json("""{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Ah"}]}]}"""), 8);
+        Assert.Equal((7UL, 5U), YjsCaret.AfterWrite(deleted.Update, long.MaxValue));
+        Assert.Null(YjsCaret.AfterWrite(WriterCorpus.Writer.Write(state, [], Page, 8).Update, long.MaxValue));
+    }
 }

@@ -16,7 +16,7 @@ namespace Atlas.Server.Tests.Mcp;
 
 /// <summary>
 /// 3.6-H: an agent's write into a page open in live editing is a collaborator's update. The person's editor gets it on the same generation
-/// (no remount), the agent shows among the collaborators while it writes, the update names its channel and token, and the history splits:
+/// (no remount), the agent shows among the collaborators while it writes (and its caret where it wrote), the update names its channel and token, and the history splits:
 /// what people typed is checkpointed as their revision before the agent's own revision.
 /// </summary>
 public sealed class McpLiveWriteTests
@@ -47,10 +47,13 @@ public sealed class McpLiveWriteTests
         Assert.True(written.IsError != true, Text(written));
         // Same generation, the person's editor got the agent's update as a peer's and saw the agent come and go among the collaborators.
         Assert.Equal(generation, await GenerationAsync(f, page.Id));
-        await CollaborationContentGuardHttpTests.WaitUntilAsync(() => live.Updates.Count == 1 && live.Presence.Count == 2);
+        // Then its caret right after the text it wrote (" přepsal agent", the update's 14 units), which stays a moment before it goes.
+        await CollaborationContentGuardHttpTests.WaitUntilAsync(() => live.Updates.Count == 1 && live.Presence.Count == 3);
         Assert.Equal(Agent, Assert.Single(live.Updates));
         Assert.Contains("· AI (MCP: Claude Code)", live.Presence[0]);
-        Assert.EndsWith("null", live.Presence[1]);
+        Assert.DoesNotContain("cursor", live.Presence[0]);
+        Assert.Contains("\"cursor\":{\"anchor\":{\"item\":{\"client\":3370890274,\"clock\":13},\"assoc\":-1}", live.Presence[1]);
+        Assert.EndsWith("null", live.Presence[2]);
         // The agent's revision (its channel and token) is the live document's checkpoint at the update's sequence.
         Assert.Equal($"2:{f.AdminId}:mcp:{tokenId}", await f.Site.ScalarAsync("""
             SELECT r."Version" || ':' || r."AuthorId" || ':' || r."Channel" || ':' || r."ApiTokenId" FROM "PageRevision" r
