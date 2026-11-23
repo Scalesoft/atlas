@@ -138,7 +138,9 @@ function warm(item: PageRevisionSummary) {
     if (target.previousRevisionId) historyApi.prefetch(props.page.id, target.previousRevisionId);
   }
 }
-function hover(item: PageRevisionSummary) { clearTimeout(hoverTimer); hoverTimer = setTimeout(() => { if (!disposed && allowed.value) warm(item); }, 120); }
+// The version under the pointer or keyboard focus lights its bar in the activity chart; leaving the list goes back to the selected one.
+const pointed = ref<string>();
+function hover(item: PageRevisionSummary) { pointed.value = item.activeFrom; clearTimeout(hoverTimer); hoverTimer = setTimeout(() => { if (!disposed && allowed.value) warm(item); }, 120); }
 // ↑/↓/Home/End walk every visible row button in list order: versions and, when a version is expanded, its steps right under it.
 function moveVersion(event: KeyboardEvent) {
   if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
@@ -292,7 +294,7 @@ function close() {
 function reset() {
   contextGeneration++; listGeneration++; previewGeneration++;
   listAbort?.abort(); previewAbort?.abort();
-  items.value = []; preview.value = undefined; selectedId.value = undefined;
+  items.value = []; preview.value = undefined; selectedId.value = undefined; pointed.value = undefined;
   lifetime.abort(); lifetime = new AbortController(); historyApi.forget();
   expanded.value = []; stepState.value = {}; selectedItem.value = undefined; selectedStep.value = false; kind.value = "all";
   previous.value = null; previewDiff.value = undefined; filtering.value = false;
@@ -316,9 +318,9 @@ onBeforeUnmount(() => {
   <AppDialog class="page-history-dialog" :title="t.panel.title" size="side" :open="dialogOpen" @close="close" @closed="emit('close')">
     <p v-if="!allowed" class="notice error" role="alert">{{ t.panel.notAllowed }}</p>
     <div v-else class="history-layout">
-      <nav ref="versionsElement" class="history-versions" :aria-label="t.panel.savedVersions" :aria-busy="loading" @keydown="moveVersion">
+      <nav ref="versionsElement" class="history-versions" :aria-label="t.panel.savedVersions" :aria-busy="loading" @keydown="moveVersion" @mouseleave="pointed = undefined">
         <div class="history-list-heading"><span>{{ t.panel.versions(items.length) }}{{ nextBeforeVersion !== null ? '+' : '' }}</span><Button variant="ghost" size="icon-sm" :aria-label="t.panel.refresh" :disabled="loading || busy || filtering" @click="load()"><AtlasIcon name="refresh-cw" :size="14" /></Button></div>
-        <HistoryActivityChart class="history-activity-slot" :items="items" @pick="pickBucket" />
+        <HistoryActivityChart class="history-activity-slot" :items="items" :focus="pointed ?? selectedItem?.activeFrom" @pick="pickBucket" />
         <div class="history-filters">
           <div ref="kindTrack" v-bind="kindThumb" class="history-view-switch history-kind-switch" role="group" :aria-label="t.panel.kindLabel"><button v-for="option in kinds" :key="option.id" :aria-pressed="kind === option.id" @click="kind = option.id">{{ option.label }}</button></div>
           <SearchField v-model="author" :label="t.panel.searchAuthorLabel" :placeholder="t.panel.searchAuthor" wide :disabled="busy" />
@@ -344,7 +346,7 @@ onBeforeUnmount(() => {
                   <LoadingSkeleton v-if="stepState[item.groupId]?.loading" :rows="Math.min(item.checkpoints ?? 2, 4)" row-height="34px" :label="t.panel.stepsLoading" />
                   <p v-if="stepState[item.groupId]?.error" class="notice error" role="alert">{{ stepState[item.groupId]!.error }}</p>
                   <ol v-if="stepState[item.groupId]?.items.length">
-                    <li v-for="step in stepState[item.groupId]!.items" :key="step.id">
+                    <li v-for="(step, index) in stepState[item.groupId]!.items" :key="step.id" :style="{ '--step': index }">
                       <button class="history-version history-step" :data-revision="step.id" :data-step="item.groupId" :aria-current="selectedId === step.id && selectedStep ? 'true' : undefined" :disabled="busy" :title="t.panel.stepTitle(localDate(step.activeFrom), step.authorName, item.version)" @click="selectStep(item, step)" @mouseenter="hover(step)" @focus="hover(step)">
                         <HistoryVersionBody :item="step" step />
                       </button>
@@ -411,6 +413,8 @@ onBeforeUnmount(() => {
 @media (hover: hover) and (pointer: fine) { .history-steps-toggle:hover { color: var(--text); background: var(--hover); } }
 .history-steps { margin-left: 18px; border-left: 2px solid var(--line); }
 .history-steps ol { list-style: none; margin: 0; padding: 0; }
+/* Steps come in one after another under their version (motion.css: no distance under reduced motion). */
+.history-steps li { animation: st-rise-in var(--atlas-motion-base) var(--atlas-ease-out) backwards; animation-delay: calc(min(var(--step), 8) * var(--atlas-motion-fast) / 4); }
 .history-step { min-height: 40px; padding: 6px 14px; }
 .history-preview-label { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: var(--text); }
 .history-preview-ai strong { padding: 0 5px; margin-right: 4px; border-radius: 4px; font-size: 10px; color: var(--ai-ink, var(--accent)); background: var(--ai-wash-strong, var(--hover)); border: 1px solid var(--ai-line, var(--line)); }
@@ -431,6 +435,8 @@ onBeforeUnmount(() => {
 .history-version { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; width: 100%; min-height: 53px; padding: 9px 18px; border: 0; background: transparent; text-align: left; color: var(--text); border-radius: 0; cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .history-version:hover { background: var(--hover); } }
 .history-version[aria-current] { background: var(--navigation-selected-bg); }
+/* An English time („10:58 AM“) is wider than „10:58“. */
+:lang(en) .history-version { grid-template-columns: 54px minmax(0, 1fr) auto; }
 .history-version:focus-visible, .history-view-switch button:focus-visible, .history-restore-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .history-preview-channel { margin-top: 6px; font-size: 12px; color: var(--muted); }
 .history-preview-heading .history-preview-summary { margin-top: 8px; font-size: 13px; color: var(--text); overflow-wrap: anywhere; }

@@ -56,17 +56,35 @@ export function isHourly(items: PageRevisionSummary[]) {
   const times = items.map(i => new Date(i.activeFrom).getTime());
   return Math.max(...times) - Math.min(...times) <= 2 * 86_400_000;
 }
-export interface ActivityBucket { key: string; people: number; ai: number; published: number }
-/** Oldest first; only buckets that have a version. Sizes are added+removed lines from the versions' summaries (none for pre-3.6 rows). */
+export interface ActivityBucket { key: string; people: number; ai: number; published: number; byPerson: Record<string, number> }
+/**
+ * Oldest first; only buckets that have a version. Sizes are added+removed lines from the versions' summaries (none for pre-3.6 rows).
+ * A person's lines are their share of the version's saves (rounded so the shares add up); an AI version's lines are AI's.
+ */
 export function activityBuckets(items: PageRevisionSummary[]): ActivityBucket[] {
   const hourly = isHourly(items), map = new Map<string, ActivityBucket>();
   for (const item of items) {
     const key = bucketKey(item.activeFrom, hourly);
-    const bucket = map.get(key) ?? { key, people: 0, ai: 0, published: 0 };
+    const bucket = map.get(key) ?? { key, people: 0, ai: 0, published: 0, byPerson: {} };
     const size = (item.changes?.added ?? 0) + (item.changes?.removed ?? 0);
-    if (item.isAi) bucket.ai += size; else bucket.people += size;
+    if (item.isAi) bucket.ai += size;
+    else {
+      bucket.people += size;
+      const list = item.changes?.contributors.length ? item.changes.contributors : [{ id: item.authorId, checkpoints: 1 }];
+      const total = list.reduce((sum, c) => sum + c.checkpoints, 0);
+      let done = 0, given = 0;
+      for (const c of list) { done += c.checkpoints; const upTo = Math.round(size * done / total); bucket.byPerson[c.id] = (bucket.byPerson[c.id] ?? 0) + upTo - given; given = upTo; }
+    }
     if (item.isPublished || item.lastPublishedAt) bucket.published++;
     map.set(key, bucket);
   }
   return [...map.values()].sort((a, b) => a.key.localeCompare(b.key));
+}
+/** The people of the loaded versions with most lines first (each in their own colour in the chart); `limit` of them, the rest go together. */
+export function activityPeople(items: PageRevisionSummary[], buckets: ActivityBucket[], limit = 5) {
+  const names = new Map<string, string>(), lines = new Map<string, number>();
+  for (const item of items) { names.set(item.authorId, item.authorName); for (const c of item.changes?.contributors ?? []) names.set(c.id, c.name); }
+  for (const b of buckets) for (const [id, n] of Object.entries(b.byPerson)) lines.set(id, (lines.get(id) ?? 0) + n);
+  const people = [...lines].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).map(([id]) => ({ id, name: names.get(id) ?? "" }));
+  return { shown: people.slice(0, limit), others: people.length > limit };
 }

@@ -7,6 +7,10 @@ entry does not import this module. Install the optional peer `echarts` (`^6.1.0`
 Data/schema load synchronously; the editor grid and Apache ECharts load on first use.
 The renderer uses modular `echarts/core`, the bar/line/pie series, grid, legend,
 tooltip and SVG renderer. Doughnut charts use a pie series with an inner radius.
+A chart outside a document (Atlas.Web's page history) uses the same renderer:
+`(await loadChartRenderer()).createChartRenderer(host, data, look)`, where `ChartLook` stacks the series,
+sets their colours, makes a compact strip, draws the last series as diamond marks, softens all but one
+category and takes a tooltip text and a click per category.
 
 ```ts
 controller.dispatch(insertChart({
