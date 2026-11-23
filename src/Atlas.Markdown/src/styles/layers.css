@@ -1,0 +1,17 @@
+/*
+ * Layer tokens: the one stacking scale of the editor's floating parts, so no surface invents its own number. Zero specificity, so a
+ * host remaps them in any load order. From the bottom:
+ *  - message: the shell's transient messages (a failed drop, a removal) over its foot;
+ *  - surface: the shell's connection column (dot and card), in its corner;
+ *  - toolbar: a selection-owned toolbar above its component;
+ *  - popover: an anchored panel or menu, above the toolbar of the component it edits;
+ *  - drag, drag-preview: what a drag carries, above everything while it moves.
+ * Everything from toolbar up is portalled to the body (position: fixed) and stacks against the host's own layers there; the shell's
+ * own overlays (message, surface) stay in the page, below them. Such an overlay therefore gives way to an open floating panel instead
+ * of fighting it for the top (the connection card folds into its dot, as the table's cell orb hides: popoverInteraction.ts).
+ */
+:where(:root) {
+  --md-layer-message: 3; --md-layer-surface: 4;
+  --md-layer-toolbar: 1100; --md-layer-popover: 1101;
+  --md-layer-drag: 1200; --md-layer-drag-preview: 1300;
+}

@@ -264,8 +264,7 @@ const pageUrl = (page: TaggedPage) => buildShellHashEncoded({ view: "page", page
 .skill-spread-column { display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 2px; height: 100%; }
 .skill-spread-column small { color: var(--muted); font-size: 11px; }
 .skill-spread-bar { align-self: end; width: 100%; height: calc(var(--share) * 100%); min-height: 2px; border-radius: 4px 4px 2px 2px; background: var(--accent); transform-origin: bottom;
-  animation: skill-spread-grow var(--atlas-motion-slow) var(--atlas-ease-out) both; }
-@keyframes skill-spread-grow { from { scale: 1 0; } }
+  animation: atlas-bar-rise var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 @media (prefers-reduced-motion: reduce) { .skill-spread-bar { animation: none; } }
 :global([data-atlas-reduced-motion]) .skill-spread-bar { animation: none; }
 .skill-experts-relations { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 12.5px; }

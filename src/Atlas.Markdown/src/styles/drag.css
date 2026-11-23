@@ -25,7 +25,7 @@
 .md-editor[data-block-dragging] .prosemirror-dropcursor-inline { display: none; }
 /* Placed by `translate` alone (blockDropPreview.ts): following the pointer never lays the page out again. */
 .md-block-drop-guide {
-  position: fixed; left: 0; top: 0; height: 40px; pointer-events: none; z-index: 1200; will-change: translate;
+  position: fixed; left: 0; top: 0; height: 40px; pointer-events: none; z-index: var(--md-layer-drag, 1200); will-change: translate;
   display: flex; align-items: center; justify-content: center;
   border-radius: 6px; background: color-mix(in srgb, var(--accent, #58a9b9) 8%, transparent);
   animation: md-block-drop-enter var(--md-motion-base) var(--md-motion-ease);
@@ -76,7 +76,7 @@
 .md-block-inserter svg { width: 14px; height: 14px; }
 /* Follows the pointer by `translate` on its own layer (dragCard.ts); the lift keeps animating `transform`. */
 .md-drag-preview-clone {
-  box-sizing: border-box; position: fixed; left: 0; top: 0; pointer-events: none; z-index: 1300; will-change: translate;
+  box-sizing: border-box; position: fixed; left: 0; top: 0; pointer-events: none; z-index: var(--md-layer-drag-preview, 1300); will-change: translate;
   background: var(--bg-2, #edf5f6); padding: 10px 12px 12px;
   border: 1px solid var(--line, #d4e4e7); border-radius: 9px;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--text, #102f36) 16%, transparent);

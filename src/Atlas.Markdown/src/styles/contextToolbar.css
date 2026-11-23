@@ -1,6 +1,6 @@
 /* Portals use the same controls.css primitives as the formatting toolbar. */
 .md-context-toolbar, .md-context-popover {
-  position: fixed; z-index: 1100;
+  position: fixed; z-index: var(--md-layer-toolbar, 1100);
   color: var(--text, #102f36); font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif);
 }
 .md-context-toolbar { flex-wrap: wrap; width: max-content; max-width: calc(100vw - 24px); }
@@ -9,7 +9,7 @@
 /* Surface (background/border/radius/shadow) comes from the shared rule in controls.css that
    covers every popover-shaped surface — .bb-popover, .link-popover, .md-context-popover,
    .tt-cell-panel — so a menu never grows a second "mint" background. */
-.md-context-popover { z-index: 1101; width: min(380px, calc(100vw - 24px)); overflow: auto; font-size: 13px; }
+.md-context-popover { z-index: var(--md-layer-popover, 1101); width: min(380px, calc(100vw - 24px)); overflow: auto; font-size: 13px; }
 .md-context-popover:not([data-positioned]) { opacity: 0; }
 .md-context-popover-body { padding: 10px; }
 .md-context-menu > .md-context-popover-body { padding: 4px; display: grid; gap: 1px; }

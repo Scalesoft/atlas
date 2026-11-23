@@ -162,6 +162,9 @@ async function photoPicked(file: File | undefined) {
           <span v-else class="contact-placeholder"><AtlasIcon name="plus" :size="13" />{{ labels[field] }}</span>
         </div>
       </div>
+      <!-- What the holder shows right under the person's name and role (the page's contact editor: what the person knows), above the
+           identifiers and the empty fields an edit reveals, so it stays in view. -->
+      <slot name="summary" />
       <template v-if="!compact">
         <ul v-if="hasLinks || showEmpty" class="contact-links">
           <li v-for="field in (['emails', 'phones', 'website', 'aliases'] as const)" :key="field" class="contact-field" :class="{ 'is-editing': editing === field, 'is-empty': !text(field) }"

@@ -76,8 +76,7 @@ function toggle(key: string) { const next = new Set(opened.value); if (next.has(
 .skill-bars-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); overflow: hidden; }
 /* The bar grows from zero once, on the motion tokens; reduced motion keeps it still. */
 .skill-bars-fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); transform-origin: left; scale: var(--level) 1;
-  animation: skill-bar-grow var(--atlas-motion-slow) var(--atlas-ease-out) both; }
-@keyframes skill-bar-grow { from { scale: 0 1; } }
+  animation: atlas-bar-grow var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 @media (prefers-reduced-motion: reduce) { .skill-bars-fill { animation: none; } }
 :global([data-atlas-reduced-motion]) .skill-bars-fill { animation: none; }
 .skill-bars-value { color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; text-align: right; }
