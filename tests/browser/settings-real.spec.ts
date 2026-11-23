@@ -356,7 +356,7 @@ for (const combo of combos) {
       await shot('23-wizard-4-summary');
       await confirm(page);
       await expect(page.getByText('Zobrazí se jen jednou.', { exact: false })).toBeVisible();
-      await page.getByRole('button', { name: 'Zobrazit' }).click();
+      await page.getByRole('button', { name: 'Zobrazit', exact: true }).click();
       await expect(page.locator('[data-one-time-value]')).toHaveText('Qm7-vT2k-9Lp4-xR8s-Hw3n');
       await shot('24-wizard-5-one-time-secret');
       await page.getByRole('checkbox', { name: 'Heslo mám bezpečně uložené' }).check();
