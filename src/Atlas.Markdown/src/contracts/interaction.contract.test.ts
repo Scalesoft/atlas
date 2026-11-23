@@ -158,7 +158,8 @@ const controllers: MarkdownEditorController[] = []
 afterEach(() => { swaps.length = 0; controllers.splice(0).forEach(controller => controller.destroy()); document.body.replaceChildren() })
 // The code view Atlas passes (DocumentEditor.vue), so the code block is measured as the product shows it.
 let codeBlock: Awaited<ReturnType<typeof createCodeBlockHighlighting>>
-beforeAll(async () => { await import('../concealment'); codeBlock = await createCodeBlockHighlighting() })
+// Lazy chunks the probes open, loaded once here: their first transform on a busy CI worker took longer than a probe waits (800 ms).
+beforeAll(async () => { await import('../concealment'); await import('../plugins/youtrack/pickerRuntime'); codeBlock = await createCodeBlockHighlighting() })
 
 interface Mounted { editor: Editor; host: HTMLElement; outside: HTMLButtonElement; element: () => HTMLElement; position: () => number; value: () => unknown }
 async function mount(descriptor: Descriptor): Promise<Mounted> {
