@@ -1,6 +1,6 @@
 namespace Atlas.Server.Features.Skills.Queries;
 
-// Kdo co umí: the reads (docs/skills-design.md); their results are in SkillContracts.
+// Mapa znalostí: the reads (docs/skills-design.md); their results are in SkillContracts.
 
 /// <summary>What one person (a directory contact) knows, as the reader may see it.</summary>
 public sealed record GetContactSkills(Guid ContactId, bool AiScopeOnly = false);

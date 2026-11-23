@@ -154,7 +154,7 @@ internal sealed class InstallationFixture : IAsyncDisposable
               VALUES (@contact, 1, gen_random_uuid(), @writer, now(), '{"title": "Jana Nováková"}');
             INSERT INTO "ContactPhoto"("ContactId","MimeType","Sha256","Content")
               VALUES (@contact, 'image/png', repeat('a', 64), decode('89504e470d0a1a0a', 'hex'));
-            -- Kdo co umí: a merged spelling of the tag, its alias, a broader topic and a signed rating of the contact.
+            -- Mapa znalostí: a merged spelling of the tag, its alias, a broader topic and a signed rating of the contact.
             INSERT INTO "Tag"("Id","Name","NormalizedName","CreatedAt","CreatedById","MergedIntoId") VALUES (gen_random_uuid(), 'Sit', 'sit (stary)', now(), @writer, @tag);
             INSERT INTO "TagAlias"("Id","TagId","Name","NormalizedName","CreatedAt","CreatedById") VALUES (gen_random_uuid(), @tag, 'Sítě', 'sítě', now(), @writer);
             WITH broader AS (INSERT INTO "Tag"("Id","Name","NormalizedName","CreatedAt","CreatedById") VALUES (gen_random_uuid(), 'Infrastruktura', 'infrastruktura', now(), @writer) RETURNING "Id")

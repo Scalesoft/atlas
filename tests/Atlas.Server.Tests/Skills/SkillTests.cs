@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Atlas.Server.Tests.Skills;
 
-/// <summary>Kdo co umí (docs/skills-design.md): the anonymous summary, another spelling of a topic, a merge and who knows a topic.</summary>
+/// <summary>Mapa znalostí (docs/skills-design.md): the anonymous summary, another spelling of a topic, a merge and who knows a topic.</summary>
 public sealed class SkillTests
 {
     [Trait("Category", "Smoke")]

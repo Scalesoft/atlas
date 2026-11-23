@@ -10,7 +10,7 @@ namespace Atlas.Server.Features.Skills;
 [Migration(2026112310, "Kdo co umí: topic aliases, merges and links, people's skill ratings")]
 public sealed class SkillsMigration() : EmbeddedSchemaMigration("2026112310_skills.sql");
 
-/// <summary>Kdo co umí (docs/skills-design.md): the web's routes and, for AI parity, the same under /api/v1 (reads with the read scope,
+/// <summary>Mapa znalostí (docs/skills-design.md): the web's routes and, for AI parity, the same under /api/v1 (reads with the read scope,
 /// rating, merging and linking with the write scope: they change what other readers see at once).</summary>
 public static class SkillsModule
 {

@@ -18,7 +18,7 @@ import ContactSkillLine from "./ContactSkillLine.vue";
 import "../../page-tags.css";
 
 /**
- * Kdo co umí as a graph (skills spec §7), the third view of Knihovna → Kontakty beside Adresář and Celá wiki: people and the topics they
+ * Mapa znalostí as a graph (skills spec §7), the third view of Knihovna → Kontakty beside Adresář and Celá wiki: people and the topics they
  * know (the line's strength the level the reader may see), topics linked as part of or related. Filters: organization (of the people), space
  * (the topics of its pages, asked of the server) and a topic's text (it, its linked topics and their people). A topic opens its dashboard
  * (`#/library/contacts?q=`), a person opens the person's card beneath (ContactCard with the skill bars). Drawn with ECharts as

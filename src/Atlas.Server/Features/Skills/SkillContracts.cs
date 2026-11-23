@@ -2,7 +2,7 @@ using System.Text.Json.Nodes;
 
 namespace Atlas.Server.Features.Skills;
 
-// Kdo co umí (docs/skills-design.md): the reads and writes of people's topics. A topic is a page tag.
+// Mapa znalostí (docs/skills-design.md): the reads and writes of people's topics. A topic is a page tag.
 
 public sealed record ContactSkills(Guid ContactId, string Name, bool Self, IReadOnlyList<SkillView> Skills, IReadOnlyList<TopicRef> Suggested);
 

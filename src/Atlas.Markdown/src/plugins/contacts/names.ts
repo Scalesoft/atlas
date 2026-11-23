@@ -237,7 +237,7 @@ export function contactIntentions(options: ContactsPluginOptions, pickSelection?
       ranked.forEach(({ contact, reason }, i) => rows.push(person(contact, reason, contactsStrings.nameOfferIs(displayName(contact)), () => pickPerson(editor, nodePos!, contact, options), 10 + i)))
       return rows
     }
-    // A linked person at the caret: „Umí…“ rates what they know (Kdo co umí), in the host's rating at the chip.
+    // A linked person at the caret: „Umí…“ rates what they know (Mapa znalostí), in the host's rating at the chip.
     const linked = (node?.type.name === 'contactInline' || node?.type.name === 'contactCard') && nodePos !== undefined ? (node.attrs.data as { contacts: MarkdownContact[] }).contacts[0] : undefined
     if (linked?.objectId && options.rateSkills) rows.push({ id: 'contacts.skills', label: contactsStrings.intentionSkills, description: displayName(linked), icon: 'svg:lightbulb', group: 'contacts', priority: 20,
       keywords: ['umí', 'znalost', 'dovednost', 'skill'], run: () => { const anchor = editor.view.nodeDOM(nodePos!); if (anchor instanceof HTMLElement) options.rateSkills!(linked.objectId!, { anchor, signal: new AbortController().signal }) } })

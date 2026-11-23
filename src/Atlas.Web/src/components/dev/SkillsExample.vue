@@ -100,7 +100,7 @@ const bigQuery = ref("java");
 </script>
 
 <template>
-  <SettingsPage title="Znalosti lidí" description="Kdo co umí (docs/skills-design.md): téma je štítek, u osoby (kontaktu adresáře) úroveň 1–5. Žádná nová obrazovka: znalosti jsou v kartě osoby, která se otevře klikem na člověka, a „kdo umí X“ je hledání v adresáři Kontakty.">
+  <SettingsPage title="Mapa znalostí" description="Mapa znalostí (docs/skills-design.md): téma je štítek, u osoby (kontaktu adresáře) úroveň 1–5. Žádná nová obrazovka: znalosti jsou v kartě osoby, která se otevře klikem na člověka, a „Kdo umí…“ je hledání v adresáři Kontakty.">
     <SettingsSection title="Umí — v kartě osoby" description="Klik na člověka ve stránce otevře jeho kartu jako dosud; hned pod jménem se dočte řádek Umí (témata jako štítky s pěti tečkami úrovně, nejlepší první, nejvýš šest a +N). Karta se ukáže hned, znalosti doběhnou, jakmile odpoví server, a nic pod nimi neposkočí, dokud nepřijdou. Téma vede do adresáře „kdo další to umí“. Ohodnotit otevře panel u téže osoby. Proč ne nový popover: osoba už jednu kartu má; tohle je jedna sekce v ní.">
       <div class="skills-example-page" data-example-skills-page><!-- @vue-generic {'rich'} --><MarkdownRenderer :value="page" profile="rich" ariaLabel="Ukázka stránky s lidmi" :plugins="plugins" :class="[theme, 'atlas-document-editor']" /></div>
     </SettingsSection>
@@ -113,7 +113,7 @@ const bigQuery = ref("java");
         <SkillExperts :query="query" :api="api" :people="directoryPeople" />
       </div>
     </SettingsSection>
-    <SettingsSection title="SkillGraph — Kdo co umí (třetí pohled v Kontaktech)" description="Graf kdo–co vedle Adresáře a Celé wiki: lidé a témata, síla čáry je úroveň, kterou čtenář smí vidět; témata spojuje „je součástí“ (plná) a „souvisí“ (čárkovaná). Filtry organizace, prostor a téma. Klik na téma otevře jeho přehled v adresáři, na osobu její kartu pod grafem s pruhy znalostí. Seznam je týž graf pro klávesnici; pod 680 px místa je jen seznam. Proč ne graf vazeb stránek (Obsah prostoru): ten ukazuje stránky a objekty prostoru, tohle lidi a témata napříč wiki.">
+    <SettingsSection title="SkillGraph — Mapa znalostí (třetí pohled v Kontaktech)" description="Graf kdo–co vedle Adresáře a Celé wiki: lidé a témata, síla čáry je úroveň, kterou čtenář smí vidět; témata spojuje „je součástí“ (plná) a „souvisí“ (čárkovaná). Filtry organizace, prostor a téma. Klik na téma otevře jeho přehled v adresáři, na osobu její kartu pod grafem s pruhy znalostí. Seznam je týž graf pro klávesnici; pod 680 px místa je jen seznam. Proč ne graf vazeb stránek (Obsah prostoru): ten ukazuje stránky a objekty prostoru, tohle lidi a témata napříč wiki.">
       <SkillGraph :api="api" :data="graph" :spaces="[{ id: 's1', name: 'Orion' }, { id: 's2', name: 'Začínáme' }]" />
     </SettingsSection>
     <SettingsSection title="SkillBars — znalosti osoby" description="Přehled osoby: pruh na téma, délka je úroveň, seskupeno podle širšího tématu (shluky), skupiny podle nejlepšího tématu. Pruhy místo radaru: čtou se při jakémkoli počtu témat i na 375 px. Ukazuje je detail kontaktu v doku a osoba vybraná v grafu (ContactSkillLine s bars).">

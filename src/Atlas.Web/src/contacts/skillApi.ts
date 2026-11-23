@@ -2,7 +2,7 @@ import { api, post, put } from "../api";
 import type { ContactData } from "./contactData";
 
 /**
- * Kdo co umí (docs/skills-design.md): what a person knows, the rating, who knows a topic and the topic catalog (page tags with aliases).
+ * Mapa znalostí (docs/skills-design.md): what a person knows, the rating, who knows a topic and the topic catalog (page tags with aliases).
  * The server never sends anonymous ratings one by one: `score` is the shared self-assessment with the colleagues' average from three on.
  */
 export type SkillVisibility = "private" | "shared" | "signed";
