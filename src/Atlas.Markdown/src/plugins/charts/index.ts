@@ -5,6 +5,9 @@ import { ChartReferences, ensureChartReferences, selectedChartSource } from './s
 
 export type { ChartData, ChartKind, ChartSource } from './data'
 export { defaultChart, normalizeChart, parseChartNumber } from './data'
+export type { ChartLook } from './chartRenderer'
+/** The charts' ECharts renderer for a chart outside a document (Atlas.Web's page history); ECharts loads with it, on first use. */
+export const loadChartRenderer = () => import('./chartRenderer')
 
 // The ```a-chart form loads with the Markdown dialect.
 const form = registerMarkdownDialectForm(() => import('./markdown'))

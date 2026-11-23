@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import type { PageRevisionSummary, RevisionChanges } from "../../history";
-import { activityBuckets, describeChanges, shares, sizeBar } from "./versionSummary";
+import { activityBuckets, activityPeople, describeChanges, shares, sizeBar } from "./versionSummary";
 
 const changes = (o: Partial<RevisionChanges> = {}): RevisionChanges => ({ added: 0, removed: 0, blocks: 0, sections: [], states: [], requirementsAdded: 0, requirementsRemoved: 0, contactsAdded: [], contactsRemoved: [], attachmentsAdded: 0, attachmentsRemoved: 0, titleBefore: null, contributors: [], ...o });
 describe("version summary", () => {
@@ -18,5 +18,16 @@ describe("version summary", () => {
     const v = (at: string, ai = false) => ({ activeFrom: at, isAi: ai, changes: changes({ added: 2, removed: 1 }) }) as PageRevisionSummary;
     expect(activityBuckets([v("2026-11-02T08:10:00"), v("2026-11-02T08:50:00", true), v("2026-11-02T10:00:00")]).map(b => [b.key, b.people, b.ai])).toEqual([["2026-11-02 08", 3, 3], ["2026-11-02 10", 3, 0]]);
     expect(activityBuckets([v("2026-11-02T08:10:00"), v("2026-11-09T08:10:00")]).map(b => b.key)).toEqual(["2026-11-02", "2026-11-09"]);
+  });
+  it("splits a version's lines by the contributors' saves so they add up, the author alone when nobody is listed", () => {
+    const people = [{ id: "a", name: "A", checkpoints: 1 }, { id: "b", name: "B", checkpoints: 1 }, { id: "c", name: "C", checkpoints: 1 }];
+    const items = [
+      { activeFrom: "2026-11-02T08:10:00", authorId: "a", authorName: "A", changes: changes({ added: 10, contributors: people }) },
+      { activeFrom: "2026-11-02T08:40:00", authorId: "c", authorName: "C", changes: changes({ added: 4 }) },
+    ] as PageRevisionSummary[];
+    const [bucket] = activityBuckets(items);
+    expect(bucket!.byPerson).toEqual({ a: 3, b: 4, c: 7 });
+    expect(Object.values(bucket!.byPerson).reduce((s, n) => s + n, 0)).toBe(bucket!.people);
+    expect(activityPeople(items, [bucket!], 2)).toEqual({ shown: [{ id: "c", name: "C" }, { id: "b", name: "B" }], others: true });
   });
 });

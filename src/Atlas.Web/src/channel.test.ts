@@ -43,6 +43,10 @@ describe("ChannelBadge", () => {
     expect(mount(ChannelBadge, { props: { channel: "mcp", token: { ...token, revoked: true }, detailed: true } }).text()).toContain("(odvolaný)");
     expect(mount(ChannelBadge, { props: { channel: "mcp", detailed: true } }).text()).toBe("přes MCP");
   });
+  it("names the client by its token alone in a history row, as the AI caret does", () => {
+    expect(mount(ChannelBadge, { props: { channel: "mcp", token, client: true } }).text()).toBe("přes MCPClaude Code – notebook");
+    expect(mount(ChannelBadge, { props: { channel: "assistant", client: true } }).text()).toBe("přes asistenta");
+  });
   it("renders nothing for web and legacy rows", () => {
     for (const channel of ["web", null, undefined]) expect(mount(ChannelBadge, { props: { channel, token } }).find("[data-channel-badge]").exists()).toBe(false);
   });

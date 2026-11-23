@@ -44,6 +44,21 @@ afterEach(() => {
 })
 
 describe('ECharts renderer', () => {
+  it('draws a look outside documents: stacked, own colours, diamonds, a focused category and picks', () => {
+    const host = document.createElement('div'); document.body.append(host)
+    Object.defineProperties(host, { clientWidth: { value: 300 }, clientHeight: { value: 100 } })
+    const pick = vi.fn()
+    const data: ChartData = { ...defaultChart, grid: [['', 'A', 'Marks'], ['1', '2', ''], ['2', '3', '3']] }
+    renderers.push(createChartRenderer(host, data, { stacked: true, compact: true, marks: true, colors: ['#111', '#222'], focus: 1, tooltip: index => `row ${index}`, pick }))
+    const { series, legend, tooltip } = option()
+    expect(series[0]).toMatchObject({ type: 'bar', stack: 'total', itemStyle: { color: '#111' } })
+    expect(series[0].data.map((d: { itemStyle?: unknown }) => d.itemStyle)).toEqual([{ opacity: 0.4 }, undefined])
+    expect(series[1]).toMatchObject({ type: 'line', symbol: 'diamond', itemStyle: { color: '#222' } })
+    expect(legend.show).toBe(false)
+    expect(tooltip.formatter([{ dataIndex: 1 }])).toBe('row 1')
+    mocks.on.mock.calls.find(call => call[0] === 'click')![1]({ dataIndex: 1 })
+    expect(pick).toHaveBeenCalledWith(1)
+  })
   it('preparation waits for the actual finished event, including replacement updates', async () => {
     mocks.setOption.mockImplementation(() => {})
     const { renderer } = mount()

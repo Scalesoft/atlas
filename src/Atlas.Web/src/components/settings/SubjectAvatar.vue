@@ -5,7 +5,8 @@ import AtlasIcon from "../AtlasIcon.vue";
 
 // A person (initials in a circle) or a group (icon in a rounded square). Decorative: the name is
 // always written next to it. `photo`: a contact's logo or photo over it (package G); the initials stay when it fails.
-const props = withDefaults(defineProps<{ kind: "user" | "group"; name?: string; size?: "sm" | "md"; photo?: string }>(), { name: undefined, size: "md", photo: undefined });
+// `color`: the person's own colour (live/objectPresence userColor, the colour of their cursor) where people are told apart (history).
+const props = withDefaults(defineProps<{ kind: "user" | "group"; name?: string; size?: "sm" | "md"; photo?: string; color?: string }>(), { name: undefined, size: "md", photo: undefined, color: undefined });
 const failed = ref("");
 const initials = computed(() =>
   (props.name ?? "")
@@ -19,7 +20,7 @@ const initials = computed(() =>
 </script>
 
 <template>
-  <span class="subject-avatar" :data-kind="kind" :data-size="size" aria-hidden="true">
+  <span class="subject-avatar" :data-kind="kind" :data-size="size" :style="color ? { background: color, color: '#fff' } : undefined" aria-hidden="true">
     <AtlasIcon v-if="kind === 'group' || !initials" :name="kind === 'group' ? 'users' : 'account'" :size="size === 'sm' ? 14 : 17" />
     <template v-else>{{ initials }}</template>
     <img v-if="photo && photo !== failed" :src="photo" alt="" loading="lazy" decoding="async" class="subject-avatar-photo" @error="failed = photo ?? ''">
