@@ -4,6 +4,11 @@ Změny Atlasu evidované od zavedení verzování.
 
 Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · Performant Pear`) a pod ním své opravné verze jako menší oddíly (`### 3.5.1 — datum`), od nejstarší.
 
+## 5.1 · Tandem Tangerine (nevydáno)
+
+### Spolupráce
+- Server odebere přítomnost odcházejícího spojení, takže se avatary spolupracovníků nezdvojují.
+
 ## 5.0 · Shared Strawberry
 
 *5.0.0 — 2026-11-15*
