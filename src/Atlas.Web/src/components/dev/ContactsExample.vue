@@ -22,6 +22,7 @@ import type { ObjectApi, ObjectDto, ObjectList, ObjectSummary, TrashedObject } f
 import { createContactsPlugin, normalizeContact, type LiveContact, type MarkdownContact } from "@atlas/markdown/plugins/contacts";
 import { rankPeople, teachesAlias, type PersonHit } from "../../contacts/contactSearch";
 import ContactCard from "../contacts/ContactCard.vue";
+import { drawContactQr } from "../../contacts/contactQr";
 import placeholderPhoto from "./assets/placeholder-photo.svg?no-inline";
 import ContactPicker from "../contacts/ContactPicker.vue";
 import ContactDirectory from "../contacts/ContactDirectory.vue";
@@ -178,6 +179,15 @@ const entitySource: EntityApi = {
 };
 
 const editable = ref(true);
+const fullCard: ContactData = { name: "Jana Nováková", title: "Vedoucí provozu", organization: "Example s.r.o.", department: "Služby, provoz; podpora",
+  emails: ["jana.novakova@example.test"], phones: ["+420 602 000 222", "+420 222 000 333"], website: "https://example.test/lide/jana", address: "Dlouhá 12\n110 00 Praha 1" };
+// The person in a sentence: hover the chip for the card, its business card as .vcf or a QR code (drawn by uqr, as in Atlas).
+const personPlugins = [createContactsPlugin({ qrCode: drawContactQr, directoryUrl: () => "#/gallery/contacts" })];
+const personPage: MarkdownRichValue = { format: "atlas-rich", version: 1, plugins: [{ id: "contacts", version: 2 }], document: { type: "doc", content: [
+  { type: "paragraph", content: [{ type: "text", text: "Za provoz budovy odpovídá " },
+    { type: "contactInline", attrs: { data: { version: 1, contacts: [{ ...fullCard, role: "Správce budovy", objectId: "a1b2c3d4-0000-4000-8000-000000000021" }] } } },
+    { type: "text", text: ", v noci volejte dispečink." }] },
+] } };
 const card = ref<ContactData>({ name: "**Petr** Svoboda", title: "Jednatel", organization: "Example s.r.o.", emails: ["petr@example.cz"], phones: ["+420 602 000 111"], aliases: ["PSv", "Péťa"] });
 // What the picker would teach the directory (learnAlias): shown here, nothing leaves the gallery.
 const learned = ref("zatím nic");
@@ -254,6 +264,12 @@ const kinds = overviewKinds().map(kind => `${kind.label} (${kind.kind})`).join("
         <div class="contacts-example-card" data-example-compact><ContactCard :contact="card" compact /></div>
       </div>
       <p class="st-muted" data-example-change>Poslední změna: {{ lastChange }}</p>
+    </SettingsSection>
+    <SettingsSection title="Karta osoby a vizitka do telefonu" description="Najetí myší na osobu v textu (čip kontaktu) po chvilce otevře její kartu: fotka, jméno, funkce, organizace a oddělení, role na stránce, Napsat e-mail a Zavolat, telefony, e-maily, web a adresa s kopírováním, kde je použita, odkaz do adresáře. Fokus zůstává v textu; karta zůstane, dokud je ukazatel na čipu nebo na ní, a zmizí chvilku po odjetí. Stisk v kartě nebo klik čtenáře ji podrží jako otevřenou klikem (Esc nebo klik mimo zavře); klik pisatele ji zavře a otevře úpravu. Na telefonu hover není: klepnutí otevře tutéž kartu. Dole je vizitka dvojím způsobem vedle sebe: Stáhnout vizitku (.vcf) nebo QR kód, který se rozbalí přímo v kartě (žádný popup přes popup). Kód nese celou vizitku (vCard 3.0, bez fotky), žádný odkaz na wiki, takže ji telefon uloží i mimo firemní síť; je černý na bílém i v tmavém motivu, se zaoblenými moduly a rohovými značkami (contactQr.ts, korekce M, tichá zóna 4 moduly), a když by vyšel příliš hustý, vynechá adresu, pak web. Při prvním rozbalení naskočí vlnou od středu, rohové značky naposled (asi 0,4 s z motion tokenů); znovu se stejný kód do 10 minut ukáže hned, s omezenými animacemi jen krátce prolne a pod [data-still] stojí. Karta adresáře (ContactCard) nabízí totéž dvěma ikonami vpravo u jména; kód se rozbalí pod kartou (InlineReveal). Klávesnice: Tab na čip ukáže krátký náhled, Enter otevře kartu (čtenář).">
+      <div data-example-person><!-- @vue-generic {'rich'} --><MarkdownRenderer :value="personPage" profile="rich" ariaLabel="Ukázka karty osoby" :plugins="personPlugins" :class="[theme, 'atlas-document-editor']" /></div>
+      <div class="contacts-example-cards">
+        <div class="contacts-example-card" data-example-qr><ContactCard :contact="fullCard" /></div>
+      </div>
     </SettingsSection>
     <SettingsSection title="PageContactEditor" description="Úprava kontaktu přímo ve stránce: klik na vizitku nebo zmínku propojenou s adresářem (v editoru, volba editLinked pluginu kontaktů) otevře u ní tento panel. Nahoře je živý kontakt jako ContactCard: pole se upravují na místě a ukládají hned do adresáře, takže se změna ukáže všude, kde je kontakt použit (panel řekne, na kolika dalších místech). Pod tím je to, co patří jen stránce: role, uživatelské jméno a zobrazení v textu; to se do stránky zapíše, když se panel zavře (Esc, klik mimo). Kdo nesmí kontakt měnit, vidí jeho údaje jen ke čtení a stránkové údaje upraví dál. Nepropojený kontakt dál upravuje formulář pluginu. Proč ne formulář pluginu: ten edituje kopii ve stránce, tohle edituje jeden kontakt adresáře, ze kterého stránka čte.">
       <label class="contacts-example-switch"><Switch v-model="pageEditorOpen" />Panel otevřený (vypnutí ho zavře a uloží)</label>

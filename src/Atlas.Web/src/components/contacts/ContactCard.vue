@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import t from "../../i18n/contacts-ui";
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, useId, watch } from "vue";
 import { aliasesEdit, contactFieldEdit, maxContactAddress, maxContactLine, type ContactData, type ContactPatch } from "../../contacts/contactData";
 import type { ContactFormValues } from "../../contacts/contactForm";
 import { inertBlockHost, type BoardBlockHost } from "../../boards/editorBlocks";
@@ -9,6 +9,10 @@ import BoardMarkdown from "../boards/text/BoardMarkdown.vue";
 import BoardTextEditor from "../boards/text/BoardTextEditor.vue";
 import type { TextBinding } from "../boards/text/textBinding";
 import AtlasIcon from "../AtlasIcon.vue";
+import InlineReveal from "../settings/InlineReveal.vue";
+import { plainTitle } from "../../objects/relationsApi";
+import { drawContactQr } from "../../contacts/contactQr";
+import type { MarkdownContact } from "@atlas/markdown/plugins/contacts";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 
@@ -114,6 +118,30 @@ async function reveal() {
   const field = root.value?.querySelector<HTMLElement>(".contact-field.is-empty");
   (field?.tabIndex === 0 ? field : field?.querySelector<HTMLElement>(".contact-edit-link"))?.focus();
 }
+// The card for a phone, as the editor's card of a person offers it: the .vcf to download, or its QR code unfolded at the bottom
+// (the contacts plugin's contactQr: the whole card inside the code, no link to the wiki, so it works in a closed network).
+const qrId = useId();
+const qrOpen = ref(false);
+const qr = ref<{ svg: string; omitted: string[] } | null>(null);
+/** The card as a phone shows it: every field here is inline Markdown, a vCard carries its plain text. */
+function plainContact(): MarkdownContact {
+  const { name, title, organization, department, emails, phones, website, address } = props.contact;
+  const plain = (value?: string) => plainTitle(value) || undefined;
+  return { name: plainTitle(name), title: plain(title), organization: plain(organization), department: plain(department), emails, phones, website,
+    address: address?.split("\n").map(line => plainTitle(line)).filter(Boolean).join("\n") || undefined };
+}
+async function downloadCard() {
+  const { downloadContacts } = await import("../../contacts/pageContacts");
+  downloadContacts([plainContact()]);
+}
+watch([qrOpen, () => props.contact], async () => {
+  if (!qrOpen.value) return;
+  try {
+    const { contactQr } = await import("@atlas/markdown/plugins/contacts");
+    const drawn = await contactQr(plainContact(), drawContactQr);
+    qr.value = { svg: drawn.svg, omitted: drawn.omitted.map(field => labels[field === "website" ? "website" : "address"]) };
+  } catch { qr.value = { svg: "", omitted: [] }; }
+});
 const href = (kind: "mailto" | "tel", value: string) => `${kind}:${kind === "tel" ? value.replace(/[^\d+]/g, "") : value}`;
 
 // The logo or photo (package G): over the initials, which stay when it fails to load.
@@ -152,6 +180,11 @@ async function photoPicked(file: File | undefined) {
       </div>
       <button v-if="editable && !compact && !showEmpty && hasEmpty" type="button" class="contact-edit-link contact-reveal" :title="t.card.fill" data-contact-reveal
         @click="reveal"><AtlasIcon name="plus" :size="13" />{{ t.card.fillShort }}</button>
+      <span v-if="!compact && contact.name" class="contact-share">
+        <button type="button" class="contact-share-button" :title="t.card.vcf" :aria-label="t.card.vcf" data-contact-vcf @click="downloadCard"><AtlasIcon name="download" :size="15" /></button>
+        <button type="button" class="contact-share-button" :title="t.card.qr" :aria-label="t.card.qr" :aria-expanded="qrOpen" :aria-controls="qrId" data-contact-qr
+          @click="qrOpen = !qrOpen"><AtlasIcon name="qr-code" :size="15" /></button>
+      </span>
       </div>
       <div v-if="lines.length" class="contact-lines">
         <div v-for="field in lines" :key="field" class="contact-field" :class="{ 'is-editing': editing === field, 'is-empty': !contact[field] }"
@@ -203,6 +236,14 @@ async function photoPicked(file: File | undefined) {
         </div>
       </template>
       <p v-if="error" class="contact-error" role="alert" data-contact-error>{{ error }}</p>
+      <InlineReveal v-if="!compact" :id="qrId" v-model:open="qrOpen">
+        <figure class="contact-qr" data-contact-qr-panel>
+          <!-- uqr's drawing of the code (rects and a path, no text of the contact in it). -->
+          <div v-if="qr?.svg" class="contact-qr-code" role="img" :aria-label="t.card.qr" v-html="qr.svg" />
+          <div v-else class="contact-qr-code" aria-hidden="true" />
+          <figcaption class="contact-qr-hint">{{ qr && !qr.svg ? t.card.qrFailed : t.card.qrHint }}<template v-if="qr?.omitted.length"> {{ t.card.qrOmitted(qr.omitted.join(", ")) }}</template></figcaption>
+        </figure>
+      </InlineReveal>
     </div>
   </article>
 </template>
@@ -243,5 +284,17 @@ async function photoPicked(file: File | undefined) {
 .contact-edit-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .contact-input { flex: 1; min-width: 0; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .contact-address { display: flex; gap: 6px; font-size: 13px; }
+.contact-share { display: inline-flex; flex: none; gap: 2px; margin-left: auto; align-self: center; }
+.contact-share-button { display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out); }
+@media (hover: hover) and (pointer: fine) { .contact-share-button:hover { background: var(--hover); color: var(--text); } }
+.contact-share-button:active { scale: var(--atlas-press); }
+.contact-share-button[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); }
+.contact-share-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* A phone reads black modules on white only: the code keeps its own white, quiet zone included, in the dark theme too. */
+.contact-qr { display: grid; justify-items: start; gap: 8px; margin: 10px 0 2px; }
+.contact-qr-code { width: 216px; height: 216px; max-width: 100%; border-radius: var(--atlas-radius-md); overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line); }
+.contact-qr-code :deep(svg) { width: 100%; height: 100%; }
+.contact-qr-hint { max-width: 340px; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .contact-error { margin: 2px 0 0; color: var(--error); font-size: 12.5px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 </style>

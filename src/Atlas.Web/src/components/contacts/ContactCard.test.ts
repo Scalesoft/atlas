@@ -14,6 +14,17 @@ it("shows the identifiers as links and nothing to edit when it is not editable",
   expect(wrapper.find('[data-contact-field="address"]').exists()).toBe(false);
 });
 
+it("unfolds the card's QR code under it: the plain-text card drawn black on white, no link to the wiki", async () => {
+  wrapper = mount(ContactCard, { attachTo: document.body, props: { contact: jana } });
+  const toggle = wrapper.get("[data-contact-qr]");
+  await toggle.trigger("click");
+  await vi.waitFor(() => expect(wrapper!.find("[data-contact-qr-panel] svg").exists()).toBe(true));
+  expect(toggle.attributes("aria-expanded")).toBe("true");
+  expect(wrapper.get(`#${toggle.attributes("aria-controls")} [role=img]`).attributes("aria-label")).toBeTruthy();
+  expect(wrapper.get("[data-contact-qr-panel] svg rect").attributes("fill")).toBe("white");
+  expect(wrapper.findAll("[data-contact-qr-panel] svg path")).toHaveLength(9);
+});
+
 it("edits an identifier in place and emits the change of just that field, validated by the editor's rules", async () => {
   wrapper = mount(ContactCard, { attachTo: document.body, props: { contact: jana, editable: true } });
   await wrapper.get('[data-contact-field="emails"] .contact-edit-link').trigger("click");

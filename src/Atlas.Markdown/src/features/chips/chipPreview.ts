@@ -22,8 +22,11 @@ function leave(card: HTMLElement, gone: () => void) {
   setTimeout(done, LEAVE_MAX_MS)
 }
 
-/** `selection`: the chip's editor and position, so a chip the keyboard selected (the focus stays in the editor) previews too. */
-export function bindMarkdownChipPreview(chip: HTMLElement, content: () => MarkdownChipPreviewContent | undefined, selection?: { editor: Editor; getPos: () => number | undefined }): () => void {
+/**
+ * `selection`: the chip's editor and position, so a chip the keyboard selected (the focus stays in the editor) previews too.
+ * `pointer: false`: the keyboard only, for a chip whose pointer opens a hover card of its own (a contact).
+ */
+export function bindMarkdownChipPreview(chip: HTMLElement, content: () => MarkdownChipPreviewContent | undefined, selection?: { editor: Editor; getPos: () => number | undefined }, preview?: { pointer?: boolean }): () => void {
   const doc = chip.ownerDocument
   let timer: ReturnType<typeof setTimeout> | undefined, card: HTMLElement | undefined, title: string | null = null
   const leaving = new Set<HTMLElement>()
@@ -52,7 +55,7 @@ export function bindMarkdownChipPreview(chip: HTMLElement, content: () => Markdo
     title = chip.getAttribute('title'); if (title !== null) chip.removeAttribute('title')
   }
   const arm = () => { if (!timer && !card) timer = setTimeout(show, DELAY) }
-  const enter = (event: PointerEvent) => { if (event.pointerType === 'mouse' || event.pointerType === 'pen') arm() }
+  const enter = (event: PointerEvent) => { if (preview?.pointer !== false && (event.pointerType === 'mouse' || event.pointerType === 'pen')) arm() }
   const focus = () => { if (chip.matches(':focus-visible')) arm() }
   const keydown = (event: KeyboardEvent) => { if (event.key === 'Escape') hide() }
   // Escape anywhere dismisses a shown preview; a chip selected by the keyboard arms it, any other selection hides it.

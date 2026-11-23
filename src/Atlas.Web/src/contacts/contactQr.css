@@ -1,0 +1,14 @@
+/*
+ * The QR code of a contact card (contactQr.ts): its rings of modules rise from the centre outwards, the finder squares last, each ring a
+ * fade and a small scale about the code's centre, one fast step after the last (the whole about 400 ms, scaled by the motion tokens).
+ * Under reduced motion every ring only fades at once (the tokens shorten it); `[data-still]` and a code shown again shortly show it as it is.
+ */
+.atlas-qr { display: block; shape-rendering: geometricPrecision; }
+.atlas-qr-band { transform-box: view-box; transform-origin: 50% 50%;
+  animation: atlas-qr-ring var(--atlas-motion-base, 200ms) var(--atlas-ease-out, ease-out) backwards;
+  animation-delay: calc(var(--qr-band) * var(--atlas-motion-fast, 120ms) / 5); }
+@keyframes atlas-qr-ring { from { opacity: 0; scale: .9; } }
+@keyframes atlas-qr-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .atlas-qr-band { animation-name: atlas-qr-fade; animation-delay: 0s; } }
+[data-atlas-reduced-motion] .atlas-qr-band { animation-name: atlas-qr-fade; animation-delay: 0s; }
+[data-still] .atlas-qr-band, .atlas-qr[data-shown] .atlas-qr-band { animation: none; }

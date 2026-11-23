@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeContact, normalizeContacts, normalizeInternalContactUser, serializeVCard } from './data'
+import { contactQr, normalizeContact, normalizeContacts, normalizeInternalContactUser, serializeVCard } from './data'
 
 describe('contact role', () => {
   it('is a trimmed single line of at most 400 characters', () => {
@@ -25,6 +25,20 @@ describe('contact data and portable vCard export', () => {
     for (const line of output.split('\r\n')) expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75)
     expect(output.replace(/\r\n /g, '')).toContain(`FN:${name}\r\n`)
     expect(output).not.toContain('�')
+  })
+  it('writes the QR code card as vCard 3.0 with N, escaped and accented, without the photo, empty or omitted fields', async () => {
+    const jana = { name: 'Jana Nováková', title: 'Vedoucí; provozu', organization: 'Žluťoučký kůň, s.r.o.', department: 'IT\\podpora', phones: ['+420 777 123 456'],
+      emails: ['jana@example.test'], website: 'https://example.test', address: 'Dlouhá 1\n110 00 Praha', photo: 'https://example.test/jana.png' }
+    expect(serializeVCard(jana, {}).split('\r\n')).toEqual(['BEGIN:VCARD', 'VERSION:3.0', 'N:Nováková;Jana;;;', 'FN:Jana Nováková',
+      'ORG:Žluťoučký kůň\\, s.r.o.;IT\\\\podpora', 'TITLE:Vedoucí\\; provozu', 'ADR;TYPE=WORK:;;Dlouhá 1\\n110 00 Praha;;;;', 'TEL;TYPE=VOICE:+420 777 123 456',
+      'EMAIL;TYPE=INTERNET:jana@example.test', 'URL:https://example.test/', 'END:VCARD', ''])
+    expect(serializeVCard({ name: 'Recepce', website: 'https://example.test', address: 'Hlavní 2' }, { omit: ['address', 'website'] }).split('\r\n'))
+      .toEqual(['BEGIN:VCARD', 'VERSION:3.0', 'N:Recepce;;;;', 'FN:Recepce', 'END:VCARD', ''])
+    // Too dense with the address (version 15): drawn again without it, the website stays.
+    const drawn: string[] = []
+    const code = await contactQr(jana, async text => { drawn.push(text); return { svg: '<svg/>', version: text.includes('ADR') ? 15 : 12 } })
+    expect(code).toEqual({ svg: '<svg/>', version: 12, omitted: ['address'] })
+    expect(drawn[1]).toContain('URL:'); expect(drawn[1]).not.toContain('ADR')
   })
   it('exports lists and excludes relative URLs from absolute URI properties', () => {
     const output = serializeVCard([{ name: 'A', website: '/team', photo: 'https://example.cz/a b.png' }, { name: 'B' }])

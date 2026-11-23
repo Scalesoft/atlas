@@ -71,6 +71,8 @@ export interface ContactsPluginOptions {
   directoryUrl?: (objectId: string) => string
   /** The places a linked contact is used (host: GET /api/usage/{id}), for the read-only card: title, where, and the address to open. Not used without it. */
   readerUsage?: (objectId: string, context: { signal: AbortSignal }) => Promise<{ places: readonly { title: string; detail?: string; url: string }[]; more: number } | null>
+  /** Draws a QR code (SVG markup, black on white with its quiet zone) for the card's „QR kód“ beside „Stáhnout vizitku“; the card offers no QR code without it. */
+  qrCode?: (text: string) => Promise<ContactQrCode>
   /**
    * Edits a contact that has objectId where the page shows it, in place of the role-and-display form: the host's editor of the directory
    * contact beside the page's own role, username and display, anchored at `anchor`. `save` stores the page's snapshot right after the
@@ -202,20 +204,43 @@ function fold(value: string): string {
   }
   lines.push(line); return lines.join('\r\n')
 }
-export function serializeVCard(input: MarkdownContact | readonly MarkdownContact[]): string {
+/** The fields a QR code leaves out when it would be too dense to read, least needed on a phone first (contactQr). */
+export type VCardOmit = 'address' | 'website'
+/**
+ * The file „Stáhnout vizitku“ saves (vCard 4.0), or with `qr` the text of the card's QR code: vCard 3.0, which every phone camera reads,
+ * with N (the last word is the family name) and without the photo (a link a phone outside the network cannot reach, and a denser code).
+ */
+export function serializeVCard(input: MarkdownContact | readonly MarkdownContact[], qr?: { omit?: readonly VCardOmit[] }): string {
   const contacts = Array.isArray(input) ? input : [input]
   return contacts.map(value => {
-    const c = normalizeContact(value)
-    const lines = ['BEGIN:VCARD', 'VERSION:4.0', `FN:${escapeText(c.name)}`]
+    const c = normalizeContact(value), words = c.name.split(/\s+/).filter(Boolean)
+    const lines = qr
+      ? ['BEGIN:VCARD', 'VERSION:3.0', `N:${escapeText(words.length > 1 ? words.at(-1)! : c.name)};${escapeText(words.slice(0, -1).join(' '))};;;`, `FN:${escapeText(c.name)}`]
+      : ['BEGIN:VCARD', 'VERSION:4.0', `FN:${escapeText(c.name)}`]
     if (c.organization || c.department) lines.push(`ORG:${escapeText(c.organization ?? '')};${escapeText(c.department ?? '')}`)
     if (c.title) lines.push(`TITLE:${escapeText(c.title)}`)
-    if (c.address) lines.push(`ADR:;;${escapeText(c.address)};;;;`)
-    for (const phone of c.phones ?? []) lines.push(`TEL;VALUE=text:${escapeText(phone)}`)
-    for (const email of c.emails ?? []) lines.push(`EMAIL:${escapeText(email)}`)
+    if (c.address && !qr?.omit?.includes('address')) lines.push(`ADR${qr ? ';TYPE=WORK' : ''}:;;${escapeText(c.address)};;;;`)
+    for (const phone of c.phones ?? []) lines.push(`TEL;${qr ? 'TYPE=VOICE' : 'VALUE=text'}:${escapeText(phone)}`)
+    for (const email of c.emails ?? []) lines.push(`EMAIL${qr ? ';TYPE=INTERNET' : ''}:${escapeText(email)}`)
     // vCard URI properties require absolute URLs; local image/file references remain document-only.
-    if (c.website && /^https?:\/\//i.test(c.website)) lines.push(`URL:${new URL(c.website).href}`)
-    if (c.photo && /^https?:\/\//i.test(c.photo)) lines.push(`PHOTO:${new URL(c.photo).href}`)
+    if (c.website && /^https?:\/\//i.test(c.website) && !qr?.omit?.includes('website')) lines.push(`URL:${new URL(c.website).href}`)
+    if (c.photo && /^https?:\/\//i.test(c.photo) && !qr) lines.push(`PHOTO:${new URL(c.photo).href}`)
     lines.push('END:VCARD')
     return lines.map(fold).join('\r\n') + '\r\n'
   }).join('')
+}
+/** A QR code the host drew (`qrCode`): its SVG markup and version (a side of 17 + 4 × version modules, without the quiet zone). */
+export interface ContactQrCode { readonly svg: string; readonly version: number }
+/**
+ * The QR code of a contact card: the whole card inside the code (serializeVCard with `qr`), so a phone saves the person with no link to the
+ * wiki. Up to version 14 (73 modules) a phone reads it from a screen at the card's size; a denser one leaves out the address, then the website.
+ */
+export async function contactQr(contact: MarkdownContact, draw: (text: string) => Promise<ContactQrCode>): Promise<ContactQrCode & { omitted: readonly VCardOmit[] }> {
+  const tries: readonly VCardOmit[][] = [[], ['address'], ['address', 'website']]
+  let code: ContactQrCode = { svg: '', version: 0 }
+  for (const omit of tries) {
+    code = await draw(serializeVCard(contact, { omit }))
+    if (code.version <= 14) return { ...code, omitted: omit }
+  }
+  return { ...code, omitted: tries.at(-1)! }
 }
