@@ -270,6 +270,10 @@ public sealed class ApiTokenRightsTests : IClassFixture<ApiTokenRightsTests.Toke
             "PUT /api/v1/jobs/{jobId}/paused",
             // 3.5 G: a contact's logo or photo.
             "PUT /api/v1/contacts/{id:guid}/photo",
+            // 5.1 Mapa znalostí: a rating (or its removal), a topic merged into another, a topic's broader or related topics.
+            "PUT /api/v1/contacts/{id:guid}/skills",
+            "POST /api/v1/skills/topics/{id:guid}/merge",
+            "PUT /api/v1/skills/topics/{id:guid}/parents",
         }.Order(StringComparer.Ordinal), mutations.Select(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Single() + " " + e.RoutePattern.RawText).Order(StringComparer.Ordinal));
         Assert.All(mutations, endpoint => Assert.Contains(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>(),
             data => data.Policy == PersonalApiEndpoints.WritePolicy));
