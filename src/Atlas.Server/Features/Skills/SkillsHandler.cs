@@ -251,13 +251,18 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
     {
         // The anonymous ratings (shared, of others than the reader, who knows their own) count only when there are none or Threshold of
         // them: beside the signed ones (listed with their levels) one or two could be worked out of an average. Else the signed ones alone.
-        var (peers, average) = admin || x.Anonymous is 0 or >= Threshold ? (x.Peers, x.PeerAverage) : (x.Signed, x.SignedAverage);
+        // Watched over time, an exact count and average would give away each new anonymous rating: a reader's number takes the anonymous
+        // ratings by band only (SkillStore.Bands), so it moves when the count crosses into the next band, never by one rating inside it.
+        var anonymous = admin || x.Anonymous is 0 or >= Threshold;
+        var (peers, average) = admin ? (x.Peers, x.PeerAverage)
+            : anonymous && x.Band > 0 ? (x.Signed + x.Band, ((x.SignedAverage ?? 0) * x.Signed + x.BandAverage!.Value * x.Band) / (x.Signed + x.Band))
+            : (x.Signed, x.SignedAverage);
         var showPeers = admin && peers > 0 || peers >= Threshold;
         double? score = showPeers
             ? ((x.Self ?? 0) + average!.Value * peers) / (peers + (x.Self is null ? 0 : 1))
             : x.Self;
         return new SkillView(x.TagId, x.Name, score is { } value ? Math.Round(value, 1) : null, x.Self, x.SelfNote, showPeers ? peers : 0,
-            !showPeers && x.Peers > 0, x.Mine, x.MyVisibility, x.MyNote, x.Raters, evidence, x.Group);
+            !showPeers && x.Peers > 0, x.Mine, x.MyVisibility, x.MyNote, x.Raters, evidence, x.Group, showPeers && !admin && anonymous && x.Band > 0);
     }
 
     /// <summary>A topic with something the reader may see: a number, the person's own estimate, the reader's rating or a named rater.

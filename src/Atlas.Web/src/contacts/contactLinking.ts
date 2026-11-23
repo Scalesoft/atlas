@@ -162,7 +162,7 @@ export const topicUrl = (topic: string) => buildShellHashEncoded({ view: "librar
 /** One topic in the person's card: the level the reader may see and a line on who says so and how. */
 function readerSkill(skill: ContactSkill) {
   const t = skillsText.skills;
-  const who = skill.peers ? t.confirmedShort(skill.peers) : skill.fewPeers ? t.fewShort : skill.self != null ? t.selfShort : skill.mine != null ? t.yours(skill.mine) : "";
+  const who = skill.peers ? t.confirmedShort(skill.peers, skill.peersAtLeast) : skill.fewPeers ? t.fewShort : skill.self != null ? t.selfShort : skill.mine != null ? t.yours(skill.mine) : "";
   return { name: skill.name, level: shownLevel(skill), detail: [who, skill.selfNote ?? "", skill.myNote ?? "", ...skill.raters.map(rater => `${rater.name}: ${rater.level}${rater.note ? ` (${rater.note})` : ""}`)].filter(Boolean).join(" · "), url: topicUrl(skill.name) };
 }
 /** „Umí“ of the read-only card: the topics the reader may see, the best first; null for a contact the reader may not read. */

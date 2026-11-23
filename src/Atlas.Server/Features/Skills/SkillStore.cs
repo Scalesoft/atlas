@@ -19,7 +19,8 @@ public sealed class SkillStore(ISession session)
     public static string Fold(string expression) => $"regexp_replace(lower(public.unaccent({expression})), '[^a-z0-9#+]+', '', 'g')";
 
     /// <summary>The account whose own contact each of :contacts is (its account contact: directoryId, live, not private, as
-    /// <see cref="OwnContactAsync"/>), null for a contact of nobody.</summary>
+    /// <see cref="AccountContacts.OwnContact"/> and <see cref="OwnContactAsync"/>), null for a contact of nobody. The link is only an admin's to
+    /// move (ContactObjectType.RefuseIdentityMoveAsync): nobody makes a colleague's contact their own by editing it.</summary>
     private const string Owners = """
         owner AS (
           SELECT c."Id" AS contact, a."Id" AS account FROM "ContentResource" c
@@ -48,17 +49,34 @@ public sealed class SkillStore(ISession session)
         """;
 
     /// <summary><see cref="Anonymous"/>: how many of <see cref="Peers"/> are shared (not signed) by others than the reader, the ones the
-    /// threshold protects; <see cref="Signed"/> and <see cref="SignedAverage"/> the signed ones (SkillsHandler.View).</summary>
+    /// threshold protects; <see cref="Signed"/> and <see cref="SignedAverage"/> the signed ones; <see cref="Band"/> and <see cref="BandAverage"/>
+    /// the oldest anonymous ratings up to the band their count is in (<see cref="Bands"/>), the only ones a reader's number is made of
+    /// (SkillsHandler.View). <see cref="Peers"/> and <see cref="PeerAverage"/> are exact, for a wiki admin in the app only.</summary>
     public sealed record Summary(Guid ContactId, Guid TagId, string Name, int? Self, string? SelfNote, int Peers, double? PeerAverage, int? Mine, string? MyVisibility,
-        string? MyNote, IReadOnlyList<SkillRater> Raters, string? Group = null, int Anonymous = 0, int Signed = 0, double? SignedAverage = null);
+        string? MyNote, IReadOnlyList<SkillRater> Raters, string? Group = null, int Anonymous = 0, int Signed = 0, double? SignedAverage = null, int Band = 0,
+        double? BandAverage = null);
+
+    /// <summary>The bands of anonymous ratings (3–4, 5–9, 10–19, 20–49, 50+): a reader's number takes the oldest ratings up to the band's start,
+    /// so one more anonymous rating inside a band changes nothing anybody sees, and crossing into the next adds at least two at once.</summary>
+    public static readonly int[] Bands = [3, 5, 10, 20, 50];
+
+    private static readonly string BandStart = "CASE " + string.Join(" ", Bands.Reverse().Select(start => $"WHEN anon_n >= {start} THEN {start}")) + " ELSE anon_n END";
 
     /// <summary>The ratings of :contacts (in :tags, or all when null) as <paramref name="actor"/> may see them, one row per contact and topic.</summary>
     public Task<List<Summary>> SummariesAsync(UserAccount actor, bool admin, bool aiScopeOnly, Guid[] contacts, Guid[]? tags, CancellationToken ct)
         => session.ReadRowsAsync($$"""
-            {{PageTagStore.AccessiblePages}}, {{VisibleTags}}, {{Owners}}, rated AS (
-              SELECT r.*, COALESCE(r."RaterId" = o.account, false) AS self, u."DisplayName" AS rater
+            {{PageTagStore.AccessiblePages}}, {{VisibleTags}}, {{Owners}}, joined AS (
+              SELECT r.*, COALESCE(r."RaterId" = o.account, false) AS self, u."DisplayName" AS rater,
+                NOT COALESCE(r."RaterId" = o.account, false) AND r."Visibility" = 'shared' AS anon
               FROM "SkillRating" r JOIN owner o ON o.contact = r."ContactId" JOIN "UserAccount" u ON u."Id" = r."RaterId"
               WHERE :alltags OR r."TagId" = ANY(:tags)
+            ), counted AS (
+              -- Each anonymous rating's place among the person's in the topic, oldest first (the id is time-ordered), and how many there are.
+              SELECT j.*, row_number() OVER (PARTITION BY j."ContactId", j."TagId", j.anon ORDER BY j."Id") AS place,
+                count(*) FILTER (WHERE j.anon) OVER (PARTITION BY j."ContactId", j."TagId") AS anon_n
+              FROM joined j
+            ), rated AS (
+              SELECT c.*, c.anon AND c.place <= {{BandStart}} AS banded FROM counted c
             )
             SELECT r."ContactId", t."Id", t."Name",
               max(r."Level") FILTER (WHERE r.self AND (r."Visibility" <> 'private' OR r."RaterId" = :actor)),
@@ -74,7 +92,9 @@ public sealed class SkillStore(ISession session)
                 AND g."Id" IN (SELECT "TagId" FROM visible)),
               count(*) FILTER (WHERE NOT r.self AND r."Visibility" = 'shared' AND r."RaterId" <> :actor),
               count(*) FILTER (WHERE NOT r.self AND r."Visibility" = 'signed'),
-              avg(r."Level") FILTER (WHERE NOT r.self AND r."Visibility" = 'signed')::float8
+              avg(r."Level") FILTER (WHERE NOT r.self AND r."Visibility" = 'signed')::float8,
+              count(*) FILTER (WHERE r.banded),
+              avg(r."Level") FILTER (WHERE r.banded)::float8
             FROM rated r JOIN "Tag" t ON t."Id" = r."TagId"
             GROUP BY r."ContactId", t."Id", t."Name"
             HAVING bool_or(r."Visibility" <> 'private' OR r."RaterId" = :actor)
@@ -84,7 +104,8 @@ public sealed class SkillStore(ISession session)
                 ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly
             }, row => new Summary(row.GetGuid(0), row.GetGuid(1), row.GetString(2), Int(row, 3), Text(row, 4), (int)row.GetInt64(5),
                 row.IsDBNull(6) ? null : row.GetDouble(6), Int(row, 7), Text(row, 8), Text(row, 9),
-                JsonSerializer.Deserialize<SkillRater[]>(row.GetString(10), JsonSerializerOptions.Web) ?? [], Text(row, 11), (int)row.GetInt64(12), (int)row.GetInt64(13), row.IsDBNull(14) ? null : row.GetDouble(14)), ct);
+                JsonSerializer.Deserialize<SkillRater[]>(row.GetString(10), JsonSerializerOptions.Web) ?? [], Text(row, 11), (int)row.GetInt64(12), (int)row.GetInt64(13), row.IsDBNull(14) ? null : row.GetDouble(14),
+                (int)row.GetInt64(15), row.IsDBNull(16) ? null : row.GetDouble(16)), ct);
 
     public sealed record Evidence(Guid ContactId, Guid TagId, Guid PageId, string Title, string SpaceName, bool InContext);
 
@@ -121,7 +142,7 @@ public sealed class SkillStore(ISession session)
             SELECT r."ContactId" FROM "SkillRating" r WHERE r."TagId" = ANY(:tags) AND (r."Visibility" <> 'private' OR r."RaterId" = :actor)
             UNION
             SELECT c."Id" FROM tagged p JOIN "PageRevision" r ON r."PageId" = p."Id"
-              JOIN "ContentResource" c ON c."TypeId" = 'atlas.contact' AND c."TrashedAt" IS NULL AND c."Data"->>'directoryId' IS NOT NULL
+              JOIN "ContentResource" c ON c."TypeId" = 'atlas.contact' AND c."TrashedAt" IS NULL AND c."Scope" <> 'private' AND c."Data"->>'directoryId' IS NOT NULL
                 AND lower(c."Data"->>'directoryId') = CAST(r."AuthorId" AS text)
             UNION
             SELECT m."ObjectId" FROM tagged p JOIN "PageObjectMention" m ON m."SourcePageId" = p."Id"

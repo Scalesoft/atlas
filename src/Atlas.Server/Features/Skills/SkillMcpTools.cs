@@ -187,7 +187,7 @@ public sealed class SkillMcpTools(IMessageBus bus)
         if (via is not null) parts.Add($"přes užší téma {McpText.Line(via, 60)}");
         if (skill.Score is { } score) parts.Add($"úroveň {score.ToString("0.#", CultureInfo.GetCultureInfo("cs-CZ"))}/5");
         if (skill.Self is { } self) parts.Add($"vlastní odhad {self}");
-        if (skill.Peers > 0) parts.Add($"hodnotili kolegové: {skill.Peers}");
+        if (skill.Peers > 0) parts.Add($"hodnotili kolegové: {skill.Peers}{(skill.PeersAtLeast ? "+" : "")}");
         else if (skill.FewPeers) parts.Add("hodnotili kolegové, zatím bez průměru");
         if (skill.Mine is { } mine) parts.Add($"vaše hodnocení {mine} ({skill.MyVisibility}){(skill.MyNote is { Length: > 0 } own ? $": {McpText.Line(own, 200)}" : "")}");
         if (skill.SelfNote is { Length: > 0 } note) parts.Add($"jak: {McpText.Line(note, 200)}");

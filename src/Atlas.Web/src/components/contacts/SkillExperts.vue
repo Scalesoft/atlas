@@ -85,7 +85,7 @@ function why(expert: Expert, cardLevel = false) {
   if (!skill) return t.skills.pages(expert.evidence);
   const level = shownLevel(skill);
   return [expert.via ? t.skills.via(expert.via) : "", level && !cardLevel ? t.skills.levels[Math.round(level) - 1] : "",
-    skill.peers ? t.skills.confirmedShort(skill.peers) : skill.fewPeers ? t.skills.fewShort : skill.self != null ? t.skills.selfShort : "",
+    skill.peers ? t.skills.confirmedShort(skill.peers, skill.peersAtLeast) : skill.fewPeers ? t.skills.fewShort : skill.self != null ? t.skills.selfShort : "",
     skill.selfNote ?? "", skill.myNote ?? "", ...skill.raters.map(rater => rater.note ?? ""), expert.evidence ? t.skills.pages(expert.evidence) : ""]
     .filter((part, index, parts) => part && parts.indexOf(part) === index).join(" · ");
 }

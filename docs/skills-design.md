@@ -44,7 +44,7 @@ Téma je existující štítek. Štítek „.NET“ na stránce a téma „.NET�
 `SkillRating(ContactId, TagId, RaterId, Level, Visibility, Note, UpdatedAt)`, unikátní (ContactId, TagId, RaterId).
 
 - **Škála 1–5** s popisky: 1 Základy · 2 Pracuji s tím · 3 Samostatně · 4 Do hloubky · 5 Učím ostatní.
-- **Sebehodnocení** = hodnotitel je účet, jehož kontakt je hodnocený.
+- **Sebehodnocení** = hodnotitel je účet, jehož kontakt je hodnocený (kontakt účtu: `directoryId`, živý, ne soukromý). Propojení s účtem smí editor jen nastavit u kontaktu bez účtu na sebe; odpojit, přesunout nebo propojit cizí účet smí jen správce wiki, takže úpravou pole se nikdo nestane kolegou.
 - **Hodnocení od ostatních** = kolega hodnotí kontakt (i externí osobu, např. konzultanta dodavatele).
 - **Poznámka „jak“** (nepovinná, jeden řádek inline Markdownu, do 200 znaků): „konfiguračně“, „vývoj integrace“, „Orion 2025“.
   Z ní AI skládá „konfiguračně je umí …“.
@@ -63,11 +63,23 @@ Téma je existující štítek. Štítek „.NET“ na stránce a téma „.NET�
 | průměr a počet hodnocení od ostatních (`shared` + `signed`) | počet ≥ **K = 3** a anonymních (`shared`) 0 nebo ≥ K (jinak by se 1–2 anonymní dopočítala z podepsaných); jinak jen „hodnotili kolegové, zatím bez průměru“ |
 | jména a úrovně podepsaných (`signed`) | vždy |
 | moje vlastní hodnocení P | vždy (i `private`) |
-| kdo dal kolik anonymně | jen **správce wiki** (rozhodnutí vlastníka) v aplikaci a `/api/v1`, nikdy přes MCP a asistenta; ostatní ani P ne |
+| kdo dal kolik anonymně | jen **správce wiki** (rozhodnutí vlastníka) v aplikaci, nikdy přes token (`/api/v1`, MCP) ani asistenta; ostatní ani P ne |
 
 **Skóre** pro řazení: průměr viditelných čísel (sdílené sebehodnocení a průměr ostatních nad prahem, ten s vahou počtu). Hodnocení
 pod prahem do skóre nevstupují — jinak by šla dopočítat. Na serveru se souhrn počítá v jednom SQL; klient nikdy nedostane jednotlivá
 anonymní hodnocení.
+
+**Pásma proti rozdílům v čase.** Kdo by souhrn sledoval, z přesného počtu a průměru na desetiny by po každém novém anonymním hodnocení
+dopočítal jeho úroveň. Anonymní hodnocení proto vstupují do čísla po pásmech **3–4, 5–9, 10–19, 20–49, 50+**: číslo čtenáře tvoří
+nejstarší anonymní hodnocení do začátku pásma (3, 5, 10, 20, 50), počet se ukáže jako „nejméně N“ (REST `peersAtLeast`, MCP „N+“, graf
+stejné číslo). Další hodnocení uvnitř pásma tak nezmění nic, co kdo vidí; při přechodu do dalšího pásma přibudou najednou nejméně dvě,
+takže je vidět jen jejich součet. Proč pásma a ne zaokrouhlení na celé úrovně: i celé číslo by se pohnulo a prozradilo, zda nové hodnocení
+bylo nad průměrem, nebo pod ním. Přesná čísla vidí jen správce wiki v aplikaci.
+
+Zbylé riziko: (1) když hodnotitel z té nejstarší skupiny změní úroveň, číslo se pohne o jeho změnu (kdo ji udělal, se nepozná);
+(2) při přechodu pásma je znám součet dvou a více nových hodnocení, a kdo ví, kdo z kolegů zrovna hodnotil, zúží jejich úrovně;
+(3) čtenář, který sám hodnotil anonymně, zná o jedno hodnocení víc než ostatní. Šum ani zpoždění se nepřidávají (číslo má zůstat
+stejné pro všechny a vysvětlitelné).
 
 ## 3. Deduplikace a shlukování
 

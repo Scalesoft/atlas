@@ -80,6 +80,7 @@ public sealed class ContactObjectType : IObjectType, IObjectChangeHandler, IWiki
             throw new ObjectChangeRejected("Změna kontaktu nastavuje pole: { \"fields\": { … } }.");
         }
         var (data, change) = ContactFields.Apply(context.Data!, fields, context.ObjectId);
+        await RefuseIdentityMoveAsync(context, data, ct);
         if (fields.Any(field => field.Key is "emails" or "directoryId"))
         {
             await RefuseDuplicateAsync(context, data, ct);
@@ -91,6 +92,23 @@ public sealed class ContactObjectType : IObjectType, IObjectChangeHandler, IWiki
             await m_session.DeleteAsync(photo, ct);
         }
         return new ObjectWrite(data, ContactFields.Title(data), new JsonObject { ["fields"] = change });
+    }
+
+    /// <summary>
+    /// The account link (directoryId) is who a person is: their own contact, their self-estimate in Mapa znalostí, the pages they wrote.
+    /// An editor may link a contact of nobody to themself (the account's own contact, as the sweep does); unlinking, moving the link or
+    /// linking another account is a wiki admin's (AccountContactCommands), so nobody becomes somebody else by editing a field.
+    /// </summary>
+    private async Task RefuseIdentityMoveAsync(ObjectChangeContext context, JsonObject data, CancellationToken ct)
+    {
+        var (before, after) = (context.Data?["directoryId"]?.GetValue<string>(), data["directoryId"]?.GetValue<string>());
+        if (string.Equals(before, after, StringComparison.OrdinalIgnoreCase)
+            || before is null && string.Equals(after, context.Actor.Account.Id.ToString(), StringComparison.OrdinalIgnoreCase)
+            || await EffectiveWikiAdmin.IsAdminAsync(m_session, context.Actor.Account, ct))
+        {
+            return;
+        }
+        throw new ObjectChangeRejected("Propojení kontaktu s účtem mění jen správce wiki (při sloučení slučte kontakt do toho s účtem, ne naopak).");
     }
 
     /// <summary>One person once (K1): a contact of the wiki or a space whose address or account another live one of them has is refused with

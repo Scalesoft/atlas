@@ -1,3 +1,7 @@
+using System.Text.Json.Nodes;
+using Atlas.Server.Features.Contacts;
+using Atlas.Server.Features.Objects.Commands;
+using Atlas.Server.Features.Objects.Contracts;
 using Atlas.Server.Features.Skills.Commands;
 using Atlas.Server.Features.Skills.Queries;
 using Atlas.Server.Features.PageTags;
@@ -150,6 +154,63 @@ public sealed class SkillTests
         Assert.Empty((await f.As<ExpertList>(f.Reader, new FindExperts($"Veřejné {own}"))).Topic!.Parents);
         Assert.Equal($"Tajný obor {own}", (await f.As<ContactSkills>(f.Writer, new GetContactSkills(person))).Skills.Single(x => x.TagId == narrow).Group);
         Assert.Null(Assert.Single((await f.As<ContactSkills>(f.Reader, new GetContactSkills(person))).Skills).Group);
+    }
+
+    [PostgreSqlFact]
+    public async Task Moving_ones_account_link_onto_a_colleague_is_refused_so_a_rating_of_the_colleague_stays_a_peers()
+    {
+        await using var f = await RelationsFixture.SharedAsync();
+        var own = Guid.NewGuid().ToString("N")[..8];
+        // The writer's own contact (the account link, directoryId: the sweep's, or made here) and a colleague's.
+        using var session = f.Host.OpenSession();
+        var self = await session.CreateSQLQuery("""
+            SELECT "Id" FROM "ContentResource" WHERE "TypeId" = 'atlas.contact' AND "TrashedAt" IS NULL AND "Scope" <> 'private'
+              AND lower("Data"->>'directoryId') = :account LIMIT 1
+            """).SetParameter("account", f.Writer.Id.ToString()).UniqueResultAsync<Guid?>() ?? (await f.As<ObjectDto>(f.Writer, new CreateObject(ContactObjectType.Id,
+            ObjectScopes.Wiki, null, new JsonObject { ["name"] = $"Já {own}", ["directoryId"] = f.Writer.Id.ToString() }))).Id;
+        var colleague = await f.ContactAsync(f.Writer, ObjectScopes.Wiki, $"Kolegyně {own}", $"kolegyne-{own}@example.test");
+        var link = (Guid id, string? account) => new ApplyObjectChange(id, Guid.NewGuid(), null,
+            new JsonObject { ["fields"] = new JsonObject { ["directoryId"] = account } });
+
+        // Unlinking one's own contact, and linking oneself to the colleague's, are a wiki admin's: a field edit makes nobody somebody else.
+        await Assert.ThrowsAnyAsync<Exception>(() => f.As<ObjectChangeResult>(f.Writer, link(self, null)));
+        await Assert.ThrowsAnyAsync<Exception>(() => f.As<ObjectChangeResult>(f.Writer, link(colleague, f.Writer.Id.ToString())));
+
+        var rated = await f.As<ContactSkills>(f.Writer, new RateSkill(colleague, new RateSkillRequest($"Účetnictví {own}", 4, "signed")));
+        Assert.False(rated.Self);
+        var seen = Assert.Single((await f.As<ContactSkills>(f.Reader, new GetContactSkills(colleague))).Skills);
+        Assert.Null(seen.Self);
+        Assert.Equal((f.Writer.DisplayName, 4), (Assert.Single(seen.Raters).Name, seen.Raters[0].Level));
+        // The writer's own contact is still the writer's: a rating of it is the self-estimate.
+        await f.As<ContactSkills>(f.Writer, new RateSkill(self, new RateSkillRequest($"Účetnictví {own}", 2, "shared")));
+        Assert.Equal(2, Assert.Single((await f.As<ContactSkills>(f.Reader, new GetContactSkills(self))).Skills).Self);
+    }
+
+    [PostgreSqlFact]
+    public async Task One_more_anonymous_rating_inside_a_band_changes_no_number_anybody_sees()
+    {
+        await using var f = await RelationsFixture.SharedAsync();
+        var own = Guid.NewGuid().ToString("N")[..8];
+        var person = await f.ContactAsync(f.Writer, ObjectScopes.Wiki, $"Hana {own}", $"hana-{own}@example.test");
+        var topic = $"Rozpočty {own}";
+        foreach (var (rater, level) in new[] { (f.Reader, 2), (f.Manager, 4), (f.Admin, 3) })
+        {
+            await f.As<ContactSkills>(rater, new RateSkill(person, new RateSkillRequest(topic, level, "shared")));
+        }
+        async Task<(double? Score, int Peers, bool AtLeast, double? Graph)> SeenAsync()
+        {
+            var skill = Assert.Single((await f.As<ContactSkills>(f.Writer, new GetContactSkills(person))).Skills);
+            var graph = await f.As<SkillGraph>(f.Writer, new GetSkillGraph());
+            return (skill.Score, skill.Peers, skill.PeersAtLeast, graph.Links.Single(x => x.Source == person && x.Target == skill.TagId).Level);
+        }
+        var before = await SeenAsync();
+        Assert.Equal((3.0, 3, true, 3.0), before);
+
+        // A fourth anonymous rating (3–4 is one band) leaves the reader's number as it was: watching it tells nothing of the new level.
+        await f.As<ContactSkills>(f.Outsider, new RateSkill(person, new RateSkillRequest(topic, 5, "shared")));
+        Assert.Equal(before, await SeenAsync());
+        // The admin in the app still sees the exact average.
+        Assert.Equal(3.5, Assert.Single((await f.As<ContactSkills>(f.Admin, new GetContactSkills(person))).Skills).Score);
     }
 
     [PostgreSqlFact]
