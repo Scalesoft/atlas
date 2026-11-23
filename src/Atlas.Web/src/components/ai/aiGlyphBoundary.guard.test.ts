@@ -23,6 +23,8 @@ const MODEL_SURFACES = [
   "components/assistant/AssistantPanelHeader.vue", // the header of the Assistant panel (W10)
   "components/assistant/AssistantPanel.vue", // the empty assistant greets with the large glyph (refresh 2.5, size xl)
   "components/CommandIcon.vue", // AI palette commands and explicit AI settings identity
+  "components/CollaboratorAvatars.vue", // AI identity: an agent writing into a page for a person, at work and done (3.6-H)
+  "components/boards/canvas/BoardPresence.vue", // AI identity: an AI's pointer on a board, its stars at work in its name pill
 ] as const;
 // Surfaces that look close to a model one but are not: they must never import the glyph.
 const NEVER_GLYPH = [

@@ -5,6 +5,7 @@ import type { Viewport } from "../../../boards/boardViewport";
 import { motionMs } from "../../../motion/aiMotion";
 import { COLLABORATION_POINTER_PATH } from "../../../live/collaborationPointer";
 import { createPointerGlide } from "../../../live/pointerGlide";
+import AiGlyph from "../../ai/AiGlyph.vue";
 
 /**
  * Other people on the board (spec §3.5): their pointer with their name, and the boxes they drag, in screen space. Each person has
@@ -51,25 +52,34 @@ watch(() => [props.viewport.x, props.viewport.y, props.viewport.zoom], () => gli
 onBeforeUnmount(() => { timers.forEach(clearTimeout); glide.stop(); });
 const shown = computed(() => [...live.value.map(mark => ({ mark, out: false })), ...[...leaving.value.values()].map(mark => ({ mark, out: true }))]);
 
-interface Look { name?: string; style: Record<string, string>; at?: { x: number; y: number } }
+interface Look { name?: string; agent?: boolean; style: Record<string, string>; at?: { x: number; y: number } }
 /** What a mark draws now, read by the mark itself (props are reactive): a ghost box, or a pointer with the name; null once gone. */
 function lookOf(mark: Mark): Look | null {
   const user = props.remote.find(person => person.userId === mark.userId);
   if (mark.itemId === undefined) {
     if (!user?.cursor) return null;
-    return { name: user.displayName, style: { "--collaboration-color": user.color }, at: { x: user.cursor.x, y: user.cursor.y } };
+    return { name: user.displayName, agent: user.userId.startsWith("ai:"), style: { "--collaboration-color": user.color }, at: { x: user.cursor.x, y: user.cursor.y } };
   }
   const drag = user?.dragging.find(entry => entry.itemId === mark.itemId);
   if (!user || !drag) return null;
   const at = screen(drag.x, drag.y), zoom = props.viewport.zoom;
   return { style: { "--collaboration-color": user.color, width: `${drag.width * zoom}px`, height: `${drag.height * zoom}px`, transform: `translate(${at.x}px, ${at.y}px)` } };
 }
+// An AI's arrow is filled with the AI gradient: an SVG paint server, one per arrow (an id another arrow could take away is not shared).
+let gradients = 0;
+const aiArrow = (id: string) => [
+  h("defs", [h("linearGradient", { id, x1: "0", y1: "0", x2: "1", y2: "1" }, [
+    h("stop", { "stop-color": "#8f6dff" }), h("stop", { offset: ".5", "stop-color": "#4c78e5" }), h("stop", { offset: "1", "stop-color": "#2fe6d2" }),
+  ])]),
+  h("path", { d: COLLABORATION_POINTER_PATH, fill: `url(#${id})` }),
+];
 // A mark whose person stopped keeps its last look while it fades out.
 const PresenceMark = defineComponent({
   props: { mark: { type: Object as PropType<Mark>, required: true }, out: Boolean },
   setup: mark => {
     let last: Look | null = null;
     const pointer = ref<HTMLElement>();
+    const gradient = `board-ai-pointer-${++gradients}`;
     watchEffect(() => {
       const at = lookOf(mark.mark)?.at;
       if (at && pointer.value) glide.to(pointer.value, at.x, at.y);
@@ -80,9 +90,11 @@ const PresenceMark = defineComponent({
       if (!look) return null;
       const leavingClass = mark.out ? " is-leaving" : "";
       return mark.mark.itemId === undefined
-        ? h("div", { ref: pointer, class: `collaboration-pointer${leavingClass}`, "data-board-cursor": "", style: look.style }, [
-          h("svg", { viewBox: "0 0 22 26" }, [h("path", { d: COLLABORATION_POINTER_PATH })]),
-          h("span", { class: "collaboration-pointer__name" }, look.name),
+        ? h("div", { ref: pointer, class: `collaboration-pointer${look.agent ? " is-agent" : ""}${leavingClass}`, "data-board-cursor": "", style: look.style }, [
+          h("svg", { viewBox: "0 0 22 26" }, look.agent ? aiArrow(gradient) : [h("path", { d: COLLABORATION_POINTER_PATH })]),
+          // An AI at work, as in the promo film: its stars write in its name pill while it is on the board.
+          h("span", { class: "collaboration-pointer__name" },
+            look.agent ? [h(AiGlyph, { size: 12, state: "writing", working: true, class: "collaboration-pointer__glyph" }), look.name] : look.name),
         ])
         : h("div", { class: `board-ghost${leavingClass}`, "data-board-ghost": "", style: look.style });
     };

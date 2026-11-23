@@ -209,8 +209,11 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
           const glyph = document.createElement("span");
           glyph.className = "collaboration-presence__glyph";
           label.prepend(glyph);
-          // It has just written: the glyph's „done“ (the small stars gather, a pop and a tick), once.
-          glyphs.set(cursor, mountAiGlyph(glyph, { size: 12, state: "done" }));
+          // As the film's AI caret: the stars write (the star pulses and sways, the small ones spark) while the text lands, then
+          // „done“ once (they gather, a pop and a tick) before the caret fades out.
+          const unmount = mountAiGlyph(glyph, { size: 12, state: "writing", working: true });
+          const settle = setTimeout(() => mountAiGlyph(glyph, { size: 12, state: "done" }), motionMs(overlay, "--atlas-motion-loop"));
+          glyphs.set(cursor, () => { clearTimeout(settle); unmount(); });
         }
         overlay.append(cursor);
       } else if (leavingCursors.has(cursor)) {

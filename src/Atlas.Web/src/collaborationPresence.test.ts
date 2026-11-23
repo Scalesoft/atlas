@@ -121,6 +121,9 @@ describe("collaboration cursor presentation", () => {
     const caret = host.querySelector<HTMLElement>('[data-client-id="3"]')!;
     expect(caret.classList).toContain("is-agent");
     expect(caret.style.getPropertyValue("--collaboration-color")).toBe("");
+    // Its stars write while the text lands, then play „done“ once.
+    expect(caret.querySelector("[data-ai-glyph]")!.getAttribute("data-state")).toBe("writing");
+    vi.advanceTimersByTime(1600);
     expect(caret.querySelector("[data-ai-glyph]")!.getAttribute("data-state")).toBe("done");
     expect(caret.textContent).toBe("Jana · AI (MCP)");
     // A person's caret goes at once, the agent's fades out first.
