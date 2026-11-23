@@ -11,7 +11,7 @@ const brand = 'src/Atlas.Web/src/assets/brand';
 /** The header lines (`codename: …`, `mark: …`) and the rest, as whatsNew/releaseNotes.ts reads them. */
 const header = text => {
   const fields = {};
-  for (let match; (match = /^(codename|mark|cover): *(.+?) *\n/.exec(text));) { fields[match[1]] = match[2]; text = text.slice(match[0].length); }
+  for (let match; (match = /^(codename|mark|cover|demos): *(.+?) *\n/.exec(text));) { fields[match[1]] = match[2]; text = text.slice(match[0].length); }
   return { ...fields, body: text.trimStart() };
 };
 const newer = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; };

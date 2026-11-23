@@ -28,6 +28,9 @@ describe("release notes", () => {
     expect([hotfix.codename, hotfix.mark, hotfix.highlights]).toEqual([undefined, undefined, []]);
     expect(parseReleaseNote("3.6.0", "mark: none\n*1. 1. 2027*\n").mark).toBeUndefined();
     expect(parseReleaseNote("3.6.0", "codename: Quiet Quince\nmark: quince\ncover: secret\n\n*1. 1. 2027*\n", { quince: 1 })).toMatchObject({ mark: "quince", cover: "secret", date: "1. 1. 2027" });
+    // `demos:` gives the highlights in turn their live demo; `-` and a demo that is not bundled give none.
+    const demos = parseReleaseNote("5.1.0", "codename: Tandem Tangerine\nmark: none\ndemos: qr - nope\n\n### Hlavně\nVěta.\n- **A:** a.\n- **B:** b.\n- **C:** c.\n", {}, { qr: 1 });
+    expect(demos.highlights.map(item => item.demo)).toEqual(["qr", undefined, undefined]);
     expect(firstPoint(parseReleaseNote("3.4.3", "*2. 11. 2026*\n\n### Opravy\n- **Panel** stojí vpravo. Vždy.\n"))).toBe("Panel stojí vpravo");
   });
 

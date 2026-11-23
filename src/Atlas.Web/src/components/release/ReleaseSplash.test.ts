@@ -52,6 +52,22 @@ describe("ReleaseSplash", () => {
     await wrapper.find("[data-release-changelog]").trigger("click");
     expect(wrapper.emitted("changelog")).toHaveLength(1);
     wrapper.unmount();
+    // Esc closes at once, during the intro too: the splash never holds up work.
+    const again = mount(ReleaseSplash, { props: { note, since: "4.1.0", others: [] }, attachTo: document.body });
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(again.emitted("close")).toHaveLength(1);
+    again.unmount();
+  });
+
+  it("a highlight with a live demo shows it on top of its card, and the card flies out of the motif", async () => {
+    const staged = parseReleaseNote("5.1.0", "codename: Tandem Tangerine\nmark: quince\ndemos: graph\n\n### Hlavně\nSpolu.\n- **Mapa znalostí:** kdo co umí.\n- **PostgreSQL 19:** nová databáze.\n",
+      { quince: () => Promise.resolve("") }, { graph: 1 });
+    const wrapper = mount(ReleaseSplash, { props: { note: staged, since: "5.0.0", others: [] } });
+    expect(wrapper.find("section").attributes("data-staged")).toBe("");
+    const [demo, plain] = wrapper.findAll(".release-splash-card");
+    expect([demo!.attributes("data-fly"), demo!.attributes("data-wave"), demo!.find(".release-splash-demo").exists()]).toEqual(["", undefined, true]);
+    expect([plain!.attributes("data-fly"), plain!.attributes("data-wave"), plain!.find(".release-splash-demo").exists()]).toEqual([undefined, "", false]);
+    await vi.waitFor(() => expect(wrapper.find(".demo-graph").exists()).toBe(true));
   });
 
   it("a covered motif lies under the invisible ink, a button that Enter uncovers without leaving the splash", async () => {

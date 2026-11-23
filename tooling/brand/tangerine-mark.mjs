@@ -81,6 +81,28 @@ const PART = { delay: 1, duration: 2.8, easing: [0.65, 0, 0.35, 1], stops: [0, 0
 const ease = bezier(...PART.easing);
 // After the parting (s): one segment of the right cut lights up, its angle is dimensioned, then the half fades and the segment becomes the fish.
 const FISH = { pick: 4.3, angle: 4.5, at: 5.8, duration: 2.6 };
+
+/**
+ * Two co-editors' pointers (Atlas's own: live/collaborationPointer.ts, the film's colours and names) come in, take one half each and
+ * part the tangerine together, in tandem: each rides on its half's group, so it moves with it. `path`: [time, x, y] in the half's
+ * final coordinates, the last one where it rests (also the still drawing); `presses`: [from, to] while its button is down.
+ */
+const POINTER = "M2 2L2 21L7.5 16L11 24L14.5 22.5L11 15L19 15Z";
+function hand(id, name, color, path, presses) {
+  const [, ex, ey] = path.at(-1), end = presses.at(-1)[1], pct = (t) => f(100 * t / end);
+  const moves = path.map(([t, x, y], i) => `${pct(t)}%{transform:translate(${f(x - ex)}px,${f(y - ey)}px);opacity:${i ? 1 : 0}}`).join("");
+  const down = presses.map(([a, b]) => `${pct(a - 0.1)}%{transform:none}${pct(a)}%,${pct(b - 0.15)}%{transform:scale(.85)}${pct(b)}%{transform:none}`).join("");
+  const w = name.length * 1.2 + 2;
+  return {
+    css: `@keyframes tangerine-${id}{0%{transform:translate(${f(path[0][1] - ex)}px,${f(path[0][2] - ey)}px);opacity:0}${moves}100%{transform:none;opacity:1}}
+@keyframes tangerine-${id}-press{0%{transform:none}${down}100%{transform:none}}`,
+    svg: `<g class="wm-hands" transform="translate(${f(ex)} ${f(ey)})"><g class="wm-hand" style="animation:tangerine-${id} ${end}s cubic-bezier(.45,0,.3,1) both">
+${presses.map(([a]) => `<circle class="wm-ring" r="1.7" stroke="${color}" style="animation-delay:${f(a)}s"/>`).join("")}
+<g class="wm-press" style="animation:tangerine-${id}-press ${end}s linear both"><path d="${POINTER}" transform="scale(.17) translate(-2 -2)" fill="${color}" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></g>
+<rect x="2.1" y="3.3" width="${f(w)}" height="3" rx="1.5" fill="${color}"/><text class="wm-name" x="${f(2.1 + w / 2)}" y="5.38" text-anchor="middle">${name}</text>
+</g></g>`,
+  };
+}
 function partX(t) {
   const s = Math.min(Math.max(t - PART.delay, 0), PART.duration), i = Math.min(PART.stops.findLastIndex((x) => x <= s), PART.stops.length - 2);
   return PART.x[i] + (PART.x[i + 1] - PART.x[i]) * ease((s - PART.stops[i]) / (PART.stops[i + 1] - PART.stops[i]));
@@ -150,6 +172,10 @@ ${h.side > 0 ? `<path class="wm-line wm-seg wm-pick" d="${h.segments[pick]}" sty
 </g>
 ${halfDims(h)}
 </g>`;
+
+  // The two co-editors: Jana takes the left half, Anna the right one; they part it together, then Anna draws the fish out.
+  const jana = hand("jana", "Jana", "#9b6dff", [[0.2, l.cx - 17, CY - 19], [0.95, l.cx - 8, CY - 7], [3.9, l.cx - 8, CY - 7]], [[1, 3.9]]);
+  const anna = hand("anna", "Anna", "#f0559e", [[0.35, r.cx + 17, CY + 17], [1, r.cx + 8, CY - 7], [5.4, r.cx + 8, CY - 7], [5.8, r.cx + 4, CY + 0.5], [8.4, r.cx + 4, CY + 0.5]], [[1.05, 3.9], [5.85, 8.4]]);
 
   // The crack down the middle of the whole fruit, seen only while it breaks.
   const crack = `M${pt([MID, CY - R])}` + [-0.6, 0.5, -0.4, 0.7, -0.5, 0.3, 0].map((dx, i) => `L${pt([MID + dx, CY - R + (i + 1) * 2 * R / 7])}`).join("");
@@ -223,6 +249,9 @@ ${counter((t) => FL * (0.3 + 0.7 * fishEase(Math.min(Math.max((t - FISH.at) / FI
 .wm-tangerine .wm-fishbody{stroke-width:1.2;fill:url(#tangerine-gradient);fill-opacity:.16}
 .wm-tangerine .wm-ridge{stroke-width:.6}
 .wm-tangerine .wm-vein{stroke-width:.35}
+.wm-tangerine .wm-ring{fill:none;stroke-width:.4;opacity:0;animation:tangerine-ring .6s cubic-bezier(.22,1,.36,1)}
+.wm-tangerine .wm-name{font:600 2px ui-sans-serif,system-ui,sans-serif;fill:#fff}
+.wm-tangerine .wm-hand path{filter:drop-shadow(0 .2px .35px rgb(0 0 0 / .3))}
 .wm-tangerine .wm-crack{stroke-width:.7;opacity:0;animation:tangerine-crack 1s ease-out 1s}
 .wm-tangerine .wm-dl{stroke-width:.35}
 .wm-tangerine .wm-show{animation:tangerine-show .5s ease both}
@@ -242,11 +271,14 @@ ${keyframes(`tangerine-mid-${s < 0 ? "l" : "r"}`, (x) => `translateX(${f(s * (de
 @keyframes tangerine-show{from{opacity:0}}
 @keyframes tangerine-ghost{from{opacity:1}}
 ${fishMotion}
+${jana.css}
+${anna.css}
+@keyframes tangerine-ring{from{transform:scale(.4);opacity:.9}to{transform:scale(1.8);opacity:0}}
 @keyframes tangerine-tick{from,to{opacity:1}}
 @keyframes tangerine-pass{0%{stroke-dashoffset:0;opacity:0}2%,18%{opacity:.9}21%,100%{stroke-dashoffset:-100;opacity:0}}
 @media(prefers-reduced-motion:reduce){.wm-tangerine *{animation:none!important}.wm-tangerine .wm-glint{display:none}}
 [data-still] .wm-tangerine *{animation:none!important}[data-still] .wm-tangerine .wm-glint{display:none}
-.release-mark[data-variant="icon"] .wm-tangerine .wm-dim{display:none}
+.release-mark[data-variant="icon"] .wm-tangerine :is(.wm-dim,.wm-hands){display:none}
 </style>
 ${drawHalf(l)}
 ${drawHalf(r)}
@@ -258,6 +290,8 @@ ${diameter}
 ${angle}
 </g>
 ${fish}
+<g class="wm-l">${jana.svg}</g>
+<g class="wm-r">${anna.svg}</g>
 </svg>
 `;
 }
