@@ -186,11 +186,12 @@ function businessCard(panel: HTMLElement, contact: MarkdownContact, options: Con
   if (!options.qrCode) return
   const region = doc.createElement('div'); region.className = 'md-contact-qr'; region.id = `md-contact-qr-${Math.random().toString(36).slice(2, 8)}`; region.inert = true
   const inner = doc.createElement('div'); inner.className = 'md-contact-qr-inner'; region.append(inner); panel.append(region)
+  // One listener for the card's life (none piles up when reduced motion has no transition to end).
+  region.addEventListener('transitionend', event => { if (event.target === region && region.dataset.open === 'true') inner.scrollIntoView({ block: 'nearest' }) })
   const toggle = button(actions, '', () => {
     const open = toggle.getAttribute('aria-expanded') !== 'true'
     toggle.setAttribute('aria-expanded', String(open)); region.dataset.open = String(open); region.inert = !open
     // The unfolded code is brought into the card's view once it has its height (a card at the bottom of the screen scrolls).
-    if (open) region.addEventListener('transitionend', () => inner.scrollIntoView({ block: 'nearest' }), { once: true })
     if (!open || inner.childElementCount) return
     const code = doc.createElement('div'); code.className = 'md-contact-qr-code'; code.setAttribute('role', 'img'); code.setAttribute('aria-label', contactsStrings.qrCodeLabel(contact.name))
     const hint = doc.createElement('p'); hint.className = 'md-contact-qr-hint'; hint.textContent = contactsStrings.qrHint
