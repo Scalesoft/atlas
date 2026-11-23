@@ -492,6 +492,7 @@ public sealed class HubTestHost : IAsyncDisposable
     public InMemoryDocumentStore Store { get; }
     public DocumentRegistry Registry => _app.Services.GetRequiredService<DocumentRegistry>();
     public DocumentAccessCoordinator Access => _app.Services.GetRequiredService<DocumentAccessCoordinator>();
+    public LiveDocumentWriter Writer => _app.Services.GetRequiredService<LiveDocumentWriter>();
 
     private HubTestHost(WebApplication app, string baseUrl, InMemoryDocumentStore store)
     {
