@@ -287,7 +287,7 @@ const en: ContactsUiMessages = {  card: {
     merge: "Merge",
     mergeConfirm: (from: string, into: string) => `Merge “${from}” into “${into}”? The old name stays as another spelling and page tags move.`,
     merged: (into: string) => `Merged into “${into}”.`,
-    confirmedShort: (count: number) => (count === 1 ? "confirmed by 1 colleague" : `confirmed by ${count} colleagues`),
+    confirmedShort: (count: number, atLeast = false) => (atLeast ? `confirmed by ${count}+ colleagues` : count === 1 ? "confirmed by 1 colleague" : `confirmed by ${count} colleagues`),
     fewShort: "rated by colleagues, no average yet",
     selfShort: "own estimate",
     via: (topic: string) => `via ${topic}`,

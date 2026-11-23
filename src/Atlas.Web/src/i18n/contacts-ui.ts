@@ -287,7 +287,10 @@ const cs = {  card: {
     merge: "Sloučit",
     mergeConfirm: (from: string, into: string) => `Sloučit „${from}“ do „${into}“? Starý název zůstane jako jiný zápis a štítky stránek se přesunou.`,
     merged: (into: string) => `Sloučeno do „${into}“.`,
-    confirmedShort: (count: number) => plural(count, { one: "potvrdil # kolega", few: "potvrdili # kolegové", other: "potvrdilo # kolegů" }),
+    /** `atLeast`: the anonymous ratings count by band (skills spec §2.3), so the count is a lower bound. */
+    confirmedShort: (count: number, atLeast = false) => atLeast
+      ? plural(count, { one: "potvrdil nejméně # kolega", few: "potvrdili nejméně # kolegové", other: "potvrdilo nejméně # kolegů" })
+      : plural(count, { one: "potvrdil # kolega", few: "potvrdili # kolegové", other: "potvrdilo # kolegů" }),
     fewShort: "hodnotili kolegové, zatím bez průměru",
     selfShort: "vlastní odhad",
     via: (topic: string) => `přes ${topic}`,

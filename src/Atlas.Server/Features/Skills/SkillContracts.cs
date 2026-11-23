@@ -9,9 +9,10 @@ public sealed record ContactSkills(Guid ContactId, string Name, bool Self, IRead
 
 /// <summary>One topic of a person. <see cref="Score"/> 1–5 or null (nothing the reader may see as a number); <see cref="Peers"/> the
 /// colleagues counted in it (0 below the threshold, also when one or two of them are anonymous beside signed ones; <see cref="FewPeers"/> then says some rated it); <see cref="Raters"/> the signed ratings,
-/// for a wiki admin every shared one; <see cref="Evidence"/> the readable pages of the topic the person wrote or is mentioned on.</summary>
+/// for a wiki admin every shared one; <see cref="Evidence"/> the readable pages of the topic the person wrote or is mentioned on. <see cref="PeersAtLeast"/>: <see cref="Peers"/> counts
+/// the anonymous ratings by band (SkillStore.Bands): at least this many colleagues.</summary>
 public sealed record SkillView(Guid TagId, string Name, double? Score, int? Self, string? SelfNote, int Peers, bool FewPeers, int? Mine, string? MyVisibility, string? MyNote,
-    IReadOnlyList<SkillRater> Raters, int Evidence, string? Group = null);
+    IReadOnlyList<SkillRater> Raters, int Evidence, string? Group = null, bool PeersAtLeast = false);
 
 public sealed record SkillRater(string Name, int Level, string Visibility, string? Note);
 

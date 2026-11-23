@@ -13,6 +13,8 @@ export interface ContactSkill {
   mine?: number | null; myVisibility?: SkillVisibility | null; myNote?: string | null; raters: SkillRater[]; evidence: number;
   /** The broader topic (part of), for grouping. */
   group?: string | null;
+  /** `peers` counts the anonymous ratings by band (3, 5, 10, 20, 50): at least this many colleagues. */
+  peersAtLeast?: boolean;
 }
 export interface TopicRef { id: string; name: string; people: number; matched?: string | null }
 /** `moderate`: the reader may remove a topic from the person for everyone (the person or a wiki admin). */
