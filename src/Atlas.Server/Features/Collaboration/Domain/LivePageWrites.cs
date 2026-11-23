@@ -88,8 +88,9 @@ public sealed class LivePageWrites(IMessageBus bus, LiveDocumentWriter writer, I
         }
     }
 
-    /// <summary>How long the agent's caret stays where it wrote, so it can be seen at all; a write itself takes milliseconds.</summary>
-    internal static readonly TimeSpan CaretLinger = TimeSpan.FromSeconds(2);
+    /// <summary>How long the agent's caret stays where it wrote, so it can be seen at all (a write itself takes milliseconds): its glyph writes
+    /// one loop and plays „done“ (collaborationPresence.ts), then it fades.</summary>
+    internal static readonly TimeSpan CaretLinger = TimeSpan.FromSeconds(3.5);
 
     private async Task HideLaterAsync(string documentId, long clientId)
     {

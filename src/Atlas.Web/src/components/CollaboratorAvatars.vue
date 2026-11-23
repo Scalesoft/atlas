@@ -55,7 +55,7 @@ function navigate(peer: CollaborationPeer) {
               :aria-disabled="!peer.cursorAvailable || undefined"
               @click="navigate(peer)"
             >
-              <span class="collaborator-avatar-face" aria-hidden="true">
+              <span class="collaborator-avatar-face" :class="{ 'atlas-ai-aura': isAgent(peer) }" aria-hidden="true">
                 {{ initials(peer.name) }}
                 <span v-if="isAgent(peer)" class="collaborator-mode">
                   <AiGlyph :size="10" :working="!peer.cursorAvailable" :state="peer.cursorAvailable ? 'done' : 'writing'" />
@@ -137,13 +137,18 @@ function navigate(peer: CollaborationPeer) {
   .collaborator-avatar-slot:hover .collaborator-mode svg { animation: atlas-collaborator-pencil calc(var(--atlas-motion-pop) * 2) var(--atlas-ease-inout); }
 }
 .collaborator-avatar:is(.is-unavailable, .is-elsewhere) { cursor: default; }
-/* An agent writing for a person (3.6-H): the person's initials in the AI ink with a soft glow, and the AI glyph instead of the pencil,
+/* An agent writing for a person (3.6-H): the person's initials on the AI gradient in the AI aura (styles/ai.css), and the AI glyph instead of the pencil,
    at work (writing: the star pulses and sways, the small stars spark) until it has written (done, once). People never glow. */
-.collaborator-avatar.is-agent .collaborator-avatar-face {
-  background: var(--ai-ink);
-  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--ai-ink) 45%, transparent);
+.collaborator-avatar.is-agent .collaborator-avatar-face { background: var(--ai-gradient); }
+/* Its badge, as in the film: the stars in white on the AI gradient, writing while it works. */
+.collaborator-avatar.is-agent .collaborator-mode { width: 15px; height: 15px; background: var(--ai-gradient); --ai-ink: white; --ai-line-strong: rgb(255 255 255 / .5); }
+/* It joins visibly: one ring of the aura spreads from the face (the film's ripple); under reduced motion it only fades. */
+.collaborator-avatar.is-agent .collaborator-avatar-face::after {
+  content: ""; position: absolute; inset: -2px; border: 2px solid var(--ai-aura); border-radius: 50%; opacity: 0; pointer-events: none;
+  animation: atlas-edit-lock-ring var(--atlas-motion-pop) var(--atlas-ease-out);
 }
-.collaborator-avatar.is-agent .collaborator-mode { color: var(--ai-ink); }
+@media (prefers-reduced-motion: reduce) { .collaborator-avatar.is-agent .collaborator-avatar-face::after { animation-name: st-fade-out; } }
+:global([data-atlas-reduced-motion]) .collaborator-avatar.is-agent .collaborator-avatar-face::after { animation-name: st-fade-out; }
 .collaborator-avatar.is-unavailable .collaborator-avatar-face { opacity: .7; }
 .collaborator-menu-item.is-unavailable { cursor: default; opacity: .7; }
 .collaborator-overflow {

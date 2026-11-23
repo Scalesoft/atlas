@@ -45,3 +45,14 @@ it("fades a mark out at its last place when a colleague stops, and lets it go af
   expect(marks.get("[data-board-ghost]").classes()).not.toContain("is-leaving");
   vi.useRealTimers();
 });
+
+it("draws an AI's pointer in the AI gradient with its stars writing in its name, a person's in their colour", () => {
+  const marks = presence([jana(10), { userId: "ai:0f3c", displayName: "Nexus", color: "#7c3aed", cursor: { x: 40, y: 20 }, dragging: [] }]);
+  const [person, ai] = marks.findAll("[data-board-cursor]");
+  expect(person!.classes()).not.toContain("is-agent");
+  expect(person!.find("[data-ai-glyph]").exists()).toBe(false);
+  expect(ai!.classes()).toContain("is-agent");
+  expect(ai!.get("path").attributes("fill")).toBe(`url(#${ai!.get("linearGradient").attributes("id")})`);
+  expect(ai!.get("[data-ai-glyph]").attributes("data-state")).toBe("writing");
+  expect(ai!.text()).toBe("Nexus");
+});

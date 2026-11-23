@@ -11,14 +11,14 @@
 .collaboration-pointer.is-leaving { opacity: 0; }
 .collaboration-pointer svg {
   display: block;
-  width: 18px;
-  height: 21px;
-  margin: -2px 0 0 -2px;
+  width: 20px;
+  height: 23.6px;
+  margin: -1.8px 0 0 -1.8px;
   fill: var(--collaboration-color);
-  stroke: var(--surface);
+  stroke: white;
   stroke-width: 1.8;
   stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgb(0 0 0 / .3));
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / .35));
   transform-origin: 2px 2px;
   animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out);
   transition: scale var(--atlas-motion-fast) var(--atlas-ease-out);
@@ -39,16 +39,16 @@
 }
 .collaboration-pointer__name {
   position: absolute;
-  top: 17px;
-  left: 12px;
+  top: 19px;
+  left: 14px;
   max-width: 12rem;
   overflow: hidden;
-  padding: 2px 8px;
+  padding: 2px 9px;
   border-radius: 999px;
   background: var(--collaboration-color);
-  box-shadow: 0 2px 8px rgb(0 0 0 / .2);
+  box-shadow: 0 4px 12px rgb(0 0 0 / .25);
   color: white;
-  font: 600 11px/1.5 system-ui, sans-serif;
+  font: 600 12px/1.5 system-ui, sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
   transform-origin: 0 0;
@@ -58,3 +58,23 @@
   .collaboration-pointer.is-pressed::before { animation-name: st-fade-out; }
 }
 [data-atlas-reduced-motion] .collaboration-pointer.is-pressed::before { animation-name: st-fade-out; }
+
+/* An AI's pointer (an „ai:“ user; the promo film's Nexus): the arrow in the AI gradient (BoardPresence.vue's paint server) with a white
+   edge and an aura, its name in a pill of the AI gradient with the AI glyph writing in white, in the aura that breathes (styles/ai.css). */
+.collaboration-pointer.is-agent svg {
+  stroke: white;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--ai-aura) 70%, transparent)) drop-shadow(0 2px 3px rgb(0 0 0 / .35));
+}
+.collaboration-pointer.is-agent .collaboration-pointer__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px 2px 6px;
+  background: var(--ai-gradient);
+  animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out), atlas-ai-aura var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+}
+.collaboration-pointer__glyph { --ai-ink: white; --ai-line-strong: rgb(255 255 255 / .55); }
+@media (prefers-reduced-motion: reduce) {
+  .collaboration-pointer.is-agent .collaboration-pointer__name { animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out); }
+}
+[data-atlas-reduced-motion] .collaboration-pointer.is-agent .collaboration-pointer__name { animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out); }

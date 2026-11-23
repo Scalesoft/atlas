@@ -38,6 +38,8 @@ function togglePointers() {
     pointers.value = [
       { userId: "jana", displayName: "Jana Nováková", color: samples[0]!.color, dragging: [], cursor: path(t, 0) },
       { userId: "petr", displayName: "Petr Král", color: samples[1]!.color, dragging: [], cursor: path(t, 2.4) },
+      // An AI's pointer (an „ai:“ user): the arrow in the AI gradient, its stars writing in its name pill, the aura breathing.
+      { userId: "ai:nexus", displayName: "Nexus · AI (MCP)", color: "#7c3aed", dragging: [], cursor: { x: path(t, 4.2).x + 60, y: path(t, 4.2).y } },
     ];
   }, 50);
 }
@@ -83,8 +85,8 @@ function playAgentWrite() {
     editor.view.dispatch(editor.state.tr.setMeta(yCursorPluginKey, editor.state.doc.content.size - 1));
     agentPresence.update([agentPeer]);
     agentAvatars.value = [{ ...agentPeer, cursorAvailable: true }];
-    // The server keeps the agent's caret about two seconds (LivePageWrites.CaretLinger), then it fades out.
-    agentTimer = setTimeout(() => { agentPresence.update([]); agentAvatars.value = []; }, 2000);
+    // The server keeps the agent's caret 3.5 s (LivePageWrites.CaretLinger): its stars write, play „done“, then it fades out.
+    agentTimer = setTimeout(() => { agentPresence.update([]); agentAvatars.value = []; }, 3500);
   }, 1600);
 }
 onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); agentAbort.abort(); agentEditor?.destroy(); });
@@ -111,7 +113,7 @@ onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); a
       <Button variant="outline" :aria-pressed="pointers.length > 0" @click="togglePointers">{{ pointers.length ? "Zastavit ukazatele" : "Přehrát ukazatele" }}</Button>
     </div>
     <div class="pointer-sample agent-sample">
-      <p>Kurzor AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, server pošle po zápisu jeho kurzor hned za text, který napsal. Kurzor má AI inkoust, jemnou záři a AI znak, který jednou přehraje „hotovo“; asi dvě sekundy stojí, kde agent psal, pak zmizí prolnutím. Lidé nezáří. Avatar agenta nese iniciály člověka, za kterého píše, v AI inkoustu se září a místo tužky AI znak: dokud agent pracuje, znak píše (hvězda pulzuje a kývá se), s kurzorem přehraje „hotovo“. Ukázka kreslí skutečný overlay nad malým editorem a skutečné CollaboratorAvatars.</p>
+      <p>Kurzor AI agenta: když agent (MCP, osobní API, Asistent) zapíše do otevřené stránky, server pošle po zápisu jeho kurzor hned za text, který napsal. Kurzor má AI inkoust, jemnou záři a AI znak, který jednou přehraje „hotovo“; asi tři a půl sekundy stojí, kde agent psal, pak zmizí prolnutím. Lidé nezáří. Avatar agenta nese iniciály člověka, za kterého píše, v AI inkoustu se září a místo tužky AI znak: dokud agent pracuje, znak píše (hvězda pulzuje a kývá se), s kurzorem přehraje „hotovo“. Ukázka kreslí skutečný overlay nad malým editorem a skutečné CollaboratorAvatars.</p>
       <CollaboratorAvatars class="agent-avatars" :peers="agentAvatars" />
       <div ref="agentHost" class="agent-editor" />
     </div>
@@ -128,5 +130,5 @@ onBeforeUnmount(() => { clearInterval(pointerTimer); clearTimeout(agentTimer); a
 p { color: var(--muted); font-size: 13px; }
 .agent-editor { padding-top: 22px; font-size: 15px; }
 .agent-avatars { min-height: 36px; }
-.pointer-sample { position: relative; min-height: 140px; margin-block: 8px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); }
+.pointer-sample { position: relative; min-height: 160px; margin-block: 8px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); }
 </style>

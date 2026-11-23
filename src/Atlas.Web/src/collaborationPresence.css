@@ -40,12 +40,14 @@
   transition: none;
 }
 
-/* An agent writing for a person (3.6-H): its caret stands a moment where it wrote, in the AI ink, with a soft glow and the AI
-   glyph in its label (the promo film's AI caret; people never glow). It fades in and out. */
+/* An agent writing for a person (3.6-H), as the promo film's AI caret: a line of the AI gradient and a label of it with the AI glyph
+   in white, both in an aura that breathes while the agent is there (styles/ai.css; people never glow). The label pops in, the glyph
+   writes, then plays „done“ (collaborationPresence.ts); the caret stands a moment where the agent wrote and fades out. */
 .collaboration-presence__cursor.is-agent {
-  --collaboration-color: var(--ai-ink);
-  box-shadow: 0 0 8px 1px color-mix(in srgb, var(--ai-ink) 55%, transparent);
-  animation: st-fade-in var(--atlas-motion-surface) var(--atlas-ease-out);
+  width: 2.5px;
+  border-radius: 1px;
+  background: var(--ai-gradient-line);
+  animation: st-fade-in var(--atlas-motion-surface) var(--atlas-ease-out), atlas-ai-aura var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
   transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out);
 }
 .collaboration-presence.is-layout-moving .collaboration-presence__cursor.is-agent,
@@ -57,7 +59,26 @@
 .collaboration-presence__cursor.is-agent .collaboration-presence__label {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--ai-ink) 45%, transparent);
+  gap: 4px;
+  max-width: 14rem;
+  padding: 2px 7px 2px 5px;
+  background: var(--ai-gradient);
+  transform-origin: 0 100%;
+  animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out), atlas-ai-aura var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
 }
-.collaboration-presence__glyph { display: inline-flex; --ai-ink: white; }
+.collaboration-presence__glyph { display: inline-flex; flex: none; --ai-ink: white; --ai-line-strong: rgb(255 255 255 / .55); }
+.collaboration-presence__name { overflow: hidden; text-overflow: ellipsis; }
+/* Under reduced motion the aura stands at its middle and the label only fades in. */
+@media (prefers-reduced-motion: reduce) {
+  .collaboration-presence__cursor.is-agent { animation: st-fade-in var(--atlas-motion-surface) var(--atlas-ease-out); }
+  .collaboration-presence__cursor.is-agent .collaboration-presence__label { animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out); }
+  .collaboration-presence__cursor.is-agent, .collaboration-presence__cursor.is-agent .collaboration-presence__label {
+    box-shadow: 0 0 10px color-mix(in srgb, var(--ai-aura) 65%, transparent);
+  }
+}
+[data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent { animation: st-fade-in var(--atlas-motion-surface) var(--atlas-ease-out); }
+[data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent .collaboration-presence__label { animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out); }
+[data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent,
+[data-atlas-reduced-motion] .collaboration-presence__cursor.is-agent .collaboration-presence__label {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ai-aura) 65%, transparent);
+}
