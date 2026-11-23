@@ -30,4 +30,8 @@ describe("version summary", () => {
     expect(Object.values(bucket!.byPerson).reduce((s, n) => s + n, 0)).toBe(bucket!.people);
     expect(activityPeople(items, [bucket!], 2)).toEqual({ shown: [{ id: "c", name: "C" }, { id: "b", name: "B" }], others: true });
   });
+  it("leaves versions without a valid time out of the buckets", () => {
+    const items = [{ activeFrom: "nope", authorId: "a", authorName: "A", changes: changes({ added: 1 }) }, { activeFrom: "2026-11-02T08:10:00", authorId: "a", authorName: "A", changes: changes({ added: 2 }) }] as PageRevisionSummary[];
+    expect(activityBuckets(items).map(b => b.key)).toEqual(["2026-11-02 08"]);
+  });
 });

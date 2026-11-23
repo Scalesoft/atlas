@@ -52,8 +52,8 @@ export function bucketKey(iso: string, hourly: boolean) {
 }
 /** Hours when the loaded range spans at most two days, days otherwise. */
 export function isHourly(items: PageRevisionSummary[]) {
-  if (!items.length) return false;
-  const times = items.map(i => new Date(i.activeFrom).getTime());
+  const times = items.map(i => new Date(i.activeFrom).getTime()).filter(Number.isFinite);
+  if (!times.length) return false;
   return Math.max(...times) - Math.min(...times) <= 2 * 86_400_000;
 }
 export interface ActivityBucket { key: string; people: number; ai: number; published: number; byPerson: Record<string, number> }
@@ -64,6 +64,7 @@ export interface ActivityBucket { key: string; people: number; ai: number; publi
 export function activityBuckets(items: PageRevisionSummary[]): ActivityBucket[] {
   const hourly = isHourly(items), map = new Map<string, ActivityBucket>();
   for (const item of items) {
+    if (Number.isNaN(new Date(item.activeFrom).getTime())) continue; // no time, no bucket
     const key = bucketKey(item.activeFrom, hourly);
     const bucket = map.get(key) ?? { key, people: 0, ai: 0, published: 0, byPerson: {} };
     const size = (item.changes?.added ?? 0) + (item.changes?.removed ?? 0);
