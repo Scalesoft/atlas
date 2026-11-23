@@ -25,10 +25,10 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
     {
         var actor = await guard.LockIdentityAsync(null, false, ct);
         var (contactId, name, admin) = await ReadableAsync(actor, query.ContactId, ct);
-        var summaries = await store.SummariesAsync(actor, admin, [contactId], null, ct);
+        var summaries = await store.SummariesAsync(actor, admin, Ai(query.AiScopeOnly), [contactId], null, ct);
         var evidence = await store.EvidenceAsync(actor, Ai(query.AiScopeOnly), [contactId], null, "", ct);
         var counts = evidence.GroupBy(x => x.TagId).ToDictionary(x => x.Key, x => x.Select(e => e.PageId).Distinct().Count());
-        var skills = summaries.Select(x => View(x, admin, counts.GetValueOrDefault(x.TagId)))
+        var skills = summaries.Select(x => View(x, admin, counts.GetValueOrDefault(x.TagId))).Where(Shown)
             .OrderByDescending(x => x.Score ?? x.Mine ?? 0).ThenBy(x => x.Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
         var self = await OwnContactAsync(actor, contactId, ct);
         // Suggestions only on one's own profile: topics of pages the person wrote, not rated yet, most pages first.
@@ -40,12 +40,12 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         var suggestedTopics = new List<TopicRef>();
         foreach (var (id, pages) in suggested)
         {
-            if (await store.TopicAsync(id, ct) is { } topic)
+            if (await store.TopicAsync(actor, Ai(query.AiScopeOnly), id, ct) is { } topic)
             {
                 suggestedTopics.Add(new TopicRef(topic.Id, topic.Name, pages));
             }
         }
-        return new ContactSkills(contactId, name, self, skills, suggestedTopics);
+        return new ContactSkills(contactId, name, self, skills, suggestedTopics, self || await store.IsWikiAdminAsync(actor, ct));
     }
 
     public async Task<ContactSkills> Handle(RateSkill command, CancellationToken ct)
@@ -60,6 +60,10 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         {
             throw new ApiException(400, "Viditelnost je private, shared nebo signed.", "invalid_argument");
         }
+        if (request.Everyone && request.Level is not null)
+        {
+            throw new ApiException(400, "Pro všechny jde téma jen odebrat (level null).", "invalid_argument");
+        }
         var (contactId, _, _) = await ReadableAsync(actor, command.ContactId, ct);
         var (name, normalized) = TagNames.Prepare([request.Topic ?? ""]).Single();
         var note = TagNames.Normalize(request.Note, MaxNote, true) is { Length: > 0 } text ? text : null;
@@ -72,6 +76,21 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         }
         await locks.AcquireAdvisoryAsync("atlas.tag:catalog", ct);
         var tagId = await tags.ResolveAsync(name, normalized, actor, ct);
+        // Another spelling resolves to a tag the reader may know of only: a hidden one would confirm its name, so the typed one is its own topic.
+        if (!await store.VisibleAsync(actor, Ai(false), tagId, ct))
+        {
+            tagId = await tags.CreateAsync(name, normalized, actor, ct);
+        }
+        if (request.Everyone)
+        {
+            // A topic on the person for everyone (a label anybody may put on anybody) goes when the person or a wiki admin says so.
+            if (!self && !await store.IsWikiAdminAsync(actor, ct))
+            {
+                throw new ApiException(403, "Téma pro všechny odebere jen sám člověk nebo správce wiki.", "forbidden");
+            }
+            await store.RemoveTopicAsync(contactId, tagId, actor.Id, ct);
+            return await Handle(new GetContactSkills(contactId), ct);
+        }
         await store.SaveAsync(contactId, tagId, actor.Id, request.Level, visibility, note, ct);
         return await Handle(new GetContactSkills(contactId), ct);
     }
@@ -87,13 +106,13 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         var context = TagNames.Normalize(query.Context, 200, true);
         var role = TagNames.Normalize(query.Role, 200, true);
         var found = await store.SearchAsync(actor, Ai(query.AiScopeOnly), text, null, 6, ct);
-        if (found.Count == 0 || await store.TopicAsync(found[0].Id, ct) is not { } topic)
+        if (found.Count == 0 || await store.TopicAsync(actor, Ai(query.AiScopeOnly), found[0].Id, ct) is not { } topic)
         {
             return new ExpertList(null, found, []);
         }
         // The topic and its narrower ones: who knows C# knows a part of .NET.
         var topicIds = topic.Children.Select(x => x.Id).Prepend(topic.Id).ToArray();
-        var admin = await store.IsWikiAdminAsync(actor, ct);
+        var admin = await AdminAsync(actor, ct);
         var live = await directory.LiveAsync(actor, await store.CandidatesAsync(actor, Ai(query.AiScopeOnly), topicIds, ct), ct);
         var people = live.Values.Where(x => x is { State: "ok", ContactId: not null, Contact: not null })
             .DistinctBy(x => x.ContactId).ToDictionary(x => x.ContactId!.Value, x => x.Contact!);
@@ -103,7 +122,7 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
                 .ToDictionary(x => x.Key, x => x.Value);
         }
         var ids = people.Keys.ToArray();
-        var summaries = (await store.SummariesAsync(actor, admin, ids, topicIds, ct)).ToLookup(x => x.ContactId);
+        var summaries = (await store.SummariesAsync(actor, admin, Ai(query.AiScopeOnly), ids, topicIds, ct)).ToLookup(x => x.ContactId);
         var evidence = (await store.EvidenceAsync(actor, Ai(query.AiScopeOnly), ids, topicIds, context, ct)).ToLookup(x => x.ContactId);
         var experts = new List<Expert>();
         foreach (var (id, contact) in people)
@@ -113,8 +132,12 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
                 || Folded(contact["organization"]?.ToString()).Contains(Folded(context), StringComparison.Ordinal)
                 || summaries[id].Any(x => Folded(x.SelfNote).Contains(Folded(context), StringComparison.Ordinal)));
             // The topic itself first, else the best of the narrower ones.
-            var best = summaries[id].Select(x => (Summary: x, View: View(x, admin, pages.Count(p => p.TagId == x.TagId))))
+            var best = summaries[id].Select(x => (Summary: x, View: View(x, admin, pages.Count(p => p.TagId == x.TagId)))).Where(x => Shown(x.View))
                 .OrderBy(x => x.Summary.TagId == topic.Id ? 0 : 1).ThenByDescending(x => x.View.Score ?? x.View.Mine ?? 0).FirstOrDefault();
+            if (best.View is null && pages.Length == 0)
+            {
+                continue;
+            }
             var shown = context.Length > 0 && pages.Any(x => x.InContext) ? pages.Where(x => x.InContext) : pages;
             experts.Add(new Expert(id, contact, best.View, best.View is { } view && view.TagId != topic.Id ? view.Name : null, inContext, pages.Length,
                 shown.Take(3).Select(x => new EvidencePage(x.PageId, x.Title, x.SpaceName)).ToArray()));
@@ -144,8 +167,14 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         {
             throw new ApiException(400, "Téma nelze sloučit samo se sebou.", "invalid_argument");
         }
+        // A merge retags the pages of the merged topic: one on a page the reader may not edit (or, over MCP, of a space out of AI) is a wiki
+        // admin's to merge, in the app, as page tags are a writer's.
+        if (!await AdminAsync(actor, ct) && await store.TaggedBeyondAsync(actor, Ai(false), command.TagId, ct))
+        {
+            throw new ApiException(403, "Téma je i na stránkách, které nemůžete upravit; sloučí ho správce wiki.", "forbidden");
+        }
         await store.MergeAsync(command.TagId, command.IntoId, actor.Id, ct);
-        return (await store.TopicAsync(command.IntoId, ct))!;
+        return (await store.TopicAsync(actor, Ai(false), command.IntoId, ct))!;
     }
 
     public async Task<TopicView> Handle(LinkTopics command, CancellationToken ct)
@@ -169,7 +198,7 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
             throw new ApiException(400, "Téma nemůže být součástí sebe ani svého podtématu.", "invalid_argument");
         }
         await store.LinkAsync(command.TagId, command.ParentId, command.Kind, command.Remove, actor.Id, ct);
-        return (await store.TopicAsync(command.TagId, ct))!;
+        return (await store.TopicAsync(actor, Ai(false), command.TagId, ct))!;
     }
 
     /// <summary>At most this many topics in the graph: the ones most people know.</summary>
@@ -182,8 +211,9 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         var live = await directory.LiveAsync(actor, pairs.Select(x => x.ContactId).Distinct().ToArray(), ct);
         var people = live.Values.Where(x => x is { State: "ok", ContactId: not null, Contact: not null }).DistinctBy(x => x.ContactId)
             .ToDictionary(x => x.ContactId!.Value, x => x.Contact!);
-        var admin = await store.IsWikiAdminAsync(actor, ct);
-        var summaries = people.Count == 0 ? [] : await store.SummariesAsync(actor, admin, people.Keys.ToArray(), pairs.Select(x => x.TagId).Distinct().ToArray(), ct);
+        var admin = await AdminAsync(actor, ct);
+        var summaries = (people.Count == 0 ? [] : await store.SummariesAsync(actor, admin, Ai(query.AiScopeOnly), people.Keys.ToArray(), pairs.Select(x => x.TagId).Distinct().ToArray(), ct))
+            .Where(x => Shown(View(x, admin, 0))).ToList();
         var byTopic = summaries.GroupBy(x => x.TagId).OrderByDescending(x => x.Count()).ThenBy(x => x.First().Name, StringComparer.CurrentCultureIgnoreCase).ToArray();
         var kept = byTopic.Take(GraphTopics).ToArray();
         var keptPeople = kept.SelectMany(x => x).Select(x => x.ContactId).ToHashSet();
@@ -204,8 +234,13 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
         {
             throw new ApiException(404, "Kontakt nebyl nalezen.", "contact_missing");
         }
-        return (id, contact["name"]?.ToString() ?? "", await store.IsWikiAdminAsync(actor, ct));
+        return (id, contact["name"]?.ToString() ?? "", await AdminAsync(actor, ct));
     }
+
+    /// <summary>Whether the reader sees every shared rating with its rater: a wiki admin, and only in the app. A token (/api/v1, MCP) and the
+    /// assistant never get who gave what (the text may go to a model; atlas_find_experts promises it).</summary>
+    private async Task<bool> AdminAsync(UserAccount actor, CancellationToken ct)
+        => channel.Current is { ApiTokenId: null, IsAiBound: false } && await store.IsWikiAdminAsync(actor, ct);
 
     /// <summary>G5: MCP and the assistant see nothing of a space switched out of AI (RequestChannel.IsAiBound).</summary>
     private bool Ai(bool requested) => requested || channel.Current.IsAiBound;
@@ -214,13 +249,20 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
 
     private static SkillView View(SkillStore.Summary x, bool admin, int evidence)
     {
-        var showPeers = x.Peers >= Threshold || admin && x.Peers > 0;
+        // The anonymous ratings (shared, of others than the reader, who knows their own) count only when there are none or Threshold of
+        // them: beside the signed ones (listed with their levels) one or two could be worked out of an average. Else the signed ones alone.
+        var (peers, average) = admin || x.Anonymous is 0 or >= Threshold ? (x.Peers, x.PeerAverage) : (x.Signed, x.SignedAverage);
+        var showPeers = admin && peers > 0 || peers >= Threshold;
         double? score = showPeers
-            ? ((x.Self ?? 0) + x.PeerAverage!.Value * x.Peers) / (x.Peers + (x.Self is null ? 0 : 1))
+            ? ((x.Self ?? 0) + average!.Value * peers) / (peers + (x.Self is null ? 0 : 1))
             : x.Self;
-        return new SkillView(x.TagId, x.Name, score is { } value ? Math.Round(value, 1) : null, x.Self, x.SelfNote, showPeers ? x.Peers : 0,
+        return new SkillView(x.TagId, x.Name, score is { } value ? Math.Round(value, 1) : null, x.Self, x.SelfNote, showPeers ? peers : 0,
             !showPeers && x.Peers > 0, x.Mine, x.MyVisibility, x.MyNote, x.Raters, evidence, x.Group);
     }
+
+    /// <summary>A topic with something the reader may see: a number, the person's own estimate, the reader's rating or a named rater.
+    /// One or two anonymous ratings alone list nothing: else anybody could put an unremovable label on anybody.</summary>
+    private static bool Shown(SkillView view) => view.Score is not null || view.Self is not null || view.Mine is not null || view.Raters.Count > 0;
 
     /// <summary>The fold of <see cref="SkillStore.Fold"/> for text in memory (role and context against a contact's fields).</summary>
     public static string Folded(string? value)

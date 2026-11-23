@@ -10,7 +10,7 @@ Pro automatické ZIP archivy lze v nastavení záloh vybrat pojmenovaný profil 
 - Skutečné nakonfigurované adresáře `DataProtection:KeysPath`, `Security:DataPath`, `Authentication:OpenIdConnect:CertificateDirectory`, `Attachments:DataPath`, `ContentImport:DataPath` a `Vaults:DataPath` (soubory KeePass umístění „Na serveru wiki“). Zachovat i používaný `ContentExport:DataPath`, pokud obsahuje rozpracované výstupy.
 - Celý odpovídající publikační adresář včetně `wwwroot`, seznam SHA-256 souborů, verzi schématu a bezpečně uloženou provozní konfiguraci.
 
-Záloha obsahuje přihlašovací a obnovovací materiál. Přístup omezte stejně jako k databázi a klíčům serveru; zálohy, runtime konfigurace, cookie ani tokeny nepatří do Gitu či běžného testového reportu.
+Databáze (a záloha instalace, která ji přenáší) obsahuje i hodnocení Mapy znalostí (`SkillRating`) s hodnotitelem u každého, také u soukromých a anonymních: kdo má zálohu, vidí, kdo koho jak hodnotil, což aplikace ostatním neukáže. Záloha obsahuje přihlašovací a obnovovací materiál. Přístup omezte stejně jako k databázi a klíčům serveru; zálohy, runtime konfigurace, cookie ani tokeny nepatří do Gitu či běžného testového reportu.
 
 ## Konzistentní záloha
 

@@ -60,10 +60,10 @@ Téma je existující štítek. Štítek „.NET“ na stránce a téma „.NET�
 | Údaj | Kdy |
 |---|---|
 | sebehodnocení P | je `shared`, nebo R = P |
-| průměr a počet hodnocení od ostatních (`shared` + `signed`) | počet ≥ **K = 3**; pod prahem jen „hodnotili 1–2 kolegové“ bez čísla |
+| průměr a počet hodnocení od ostatních (`shared` + `signed`) | počet ≥ **K = 3** a anonymních (`shared`) 0 nebo ≥ K (jinak by se 1–2 anonymní dopočítala z podepsaných); jinak jen „hodnotili kolegové, zatím bez průměru“ |
 | jména a úrovně podepsaných (`signed`) | vždy |
 | moje vlastní hodnocení P | vždy (i `private`) |
-| kdo dal kolik anonymně | jen **správce wiki** (rozhodnutí vlastníka); ostatní ani P ne |
+| kdo dal kolik anonymně | jen **správce wiki** (rozhodnutí vlastníka) v aplikaci a `/api/v1`, nikdy přes MCP a asistenta; ostatní ani P ne |
 
 **Skóre** pro řazení: průměr viditelných čísel (sdílené sebehodnocení a průměr ostatních nad prahem, ten s vahou počtu). Hodnocení
 pod prahem do skóre nevstupují — jinak by šla dopočítat. Na serveru se souhrn počítá v jednom SQL; klient nikdy nedostane jednotlivá

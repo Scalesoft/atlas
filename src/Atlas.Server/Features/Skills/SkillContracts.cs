@@ -4,19 +4,21 @@ namespace Atlas.Server.Features.Skills;
 
 // Mapa znalostí (docs/skills-design.md): the reads and writes of people's topics. A topic is a page tag.
 
-public sealed record ContactSkills(Guid ContactId, string Name, bool Self, IReadOnlyList<SkillView> Skills, IReadOnlyList<TopicRef> Suggested);
+/// <summary><see cref="Moderate"/>: the reader may remove a topic from the person for everyone (the person or a wiki admin).</summary>
+public sealed record ContactSkills(Guid ContactId, string Name, bool Self, IReadOnlyList<SkillView> Skills, IReadOnlyList<TopicRef> Suggested, bool Moderate = false);
 
 /// <summary>One topic of a person. <see cref="Score"/> 1–5 or null (nothing the reader may see as a number); <see cref="Peers"/> the
-/// colleagues counted in it (0 below the threshold, <see cref="FewPeers"/> then says some rated it); <see cref="Raters"/> the signed ratings,
+/// colleagues counted in it (0 below the threshold, also when one or two of them are anonymous beside signed ones; <see cref="FewPeers"/> then says some rated it); <see cref="Raters"/> the signed ratings,
 /// for a wiki admin every shared one; <see cref="Evidence"/> the readable pages of the topic the person wrote or is mentioned on.</summary>
 public sealed record SkillView(Guid TagId, string Name, double? Score, int? Self, string? SelfNote, int Peers, bool FewPeers, int? Mine, string? MyVisibility, string? MyNote,
     IReadOnlyList<SkillRater> Raters, int Evidence, string? Group = null);
 
 public sealed record SkillRater(string Name, int Level, string Visibility, string? Note);
 
-/// <summary>The reader's rating of a person in a topic named by text (an existing topic, an alias or a new one); Level null removes it.
-/// Visibility private (only the rater), shared (anonymously in the summary) or signed (with the rater's name; one's own is shared).</summary>
-public sealed record RateSkillRequest(string Topic, int? Level, string? Visibility = null, string? Note = null);
+/// <summary>The reader's rating of a person in a topic named by text (an existing topic, an alias or a new one); Level null removes it,
+/// with <see cref="Everyone"/> the topic for everyone (the person or a wiki admin only). Visibility private (only the rater), shared
+/// (anonymously in the summary) or signed (with the rater's name; one's own is shared).</summary>
+public sealed record RateSkillRequest(string Topic, int? Level, string? Visibility = null, string? Note = null, bool Everyone = false);
 
 /// <summary><see cref="SelfContactId"/>: the reader's own contact, for „Přidat sebe“ (null without one).</summary>
 public sealed record ExpertList(TopicView? Topic, IReadOnlyList<TopicRef> Similar, IReadOnlyList<Expert> People, Guid? SelfContactId = null);

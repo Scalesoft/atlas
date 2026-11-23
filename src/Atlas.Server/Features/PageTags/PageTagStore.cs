@@ -67,10 +67,12 @@ public sealed class PageTagStore(ISession session)
               UNION ALL SELECT COALESCE(t."MergedIntoId", t."Id"), 3 FROM "TagAlias" a JOIN "Tag" t ON t."Id" = a."TagId" WHERE {Skills.SkillStore.Fold("a.\"NormalizedName\"")} = {Skills.SkillStore.Fold(":name")}
             ) x WHERE rank < 2 OR {Skills.SkillStore.Fold(":name")} <> '' ORDER BY rank, id LIMIT 1
             """).AddScalar("id", NHibernateUtil.Guid).SetParameter("name", normalizedName).UniqueResultAsync<Guid?>(ct);
-        if (known is { } existing)
-        {
-            return existing;
-        }
+        return known ?? await CreateAsync(name, normalizedName, actor, ct);
+    }
+
+    /// <summary>The tag of exactly this normalized name (the one it went into when merged), new when there is none; no other spelling.</summary>
+    public async Task<Guid> CreateAsync(string name, string normalizedName, UserAccount actor, CancellationToken ct)
+    {
         // Ordered caller acquisition plus ON CONFLICT prevents catalog races across pages/spaces.
         await session.CreateSQLQuery("""
             INSERT INTO "Tag"("Id","Name","NormalizedName","CreatedAt","CreatedById")
@@ -79,7 +81,7 @@ public sealed class PageTagStore(ISession session)
             """).SetParameter("id", Guid.CreateVersion7()).SetParameter("name", name)
             .SetParameter("normalized", normalizedName).SetParameter("created", DateTime.UtcNow, NHibernateUtil.UtcDateTime)
             .SetParameter("actor", actor.Id).ExecuteUpdateAsync(ct);
-        return await session.CreateSQLQuery("""SELECT "Id" FROM "Tag" WHERE "NormalizedName"=:name""")
+        return await session.CreateSQLQuery("""SELECT COALESCE("MergedIntoId","Id") FROM "Tag" WHERE "NormalizedName"=:name""")
             .SetParameter("name", normalizedName).UniqueResultAsync<Guid>(ct);
     }
 

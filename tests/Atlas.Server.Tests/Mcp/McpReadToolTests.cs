@@ -23,7 +23,7 @@ public sealed class McpReadToolTests
 {
     private static readonly string[] ReadTools =
         ["atlas_download_attachment", "atlas_explain_access", "atlas_find_experts", "atlas_find_mentions", "atlas_find_pages_by_tag", "atlas_get_attachment", "atlas_get_backlinks",
-            "atlas_get_board", "atlas_get_contact", "atlas_get_history", "atlas_get_job_run", "atlas_get_labels", "atlas_get_note", "atlas_get_overview", "atlas_get_page", "atlas_get_publication", "atlas_get_relations", "atlas_get_skills", "atlas_get_space_tree", "atlas_list_appearance",
+            "atlas_get_board", "atlas_get_contact", "atlas_get_history", "atlas_get_job_run", "atlas_get_labels", "atlas_get_note", "atlas_get_overview", "atlas_get_page", "atlas_get_publication", "atlas_get_relations", "atlas_get_skill_graph", "atlas_get_skills", "atlas_get_space_tree", "atlas_list_appearance",
             "atlas_list_attachments", "atlas_list_contact_duplicates", "atlas_list_entities", "atlas_list_jobs", "atlas_list_notifications", "atlas_list_object_trash", "atlas_list_pages", "atlas_list_personal", "atlas_list_recent_changes", "atlas_list_shared_with_me", "atlas_list_space_contents", "atlas_list_spaces", "atlas_list_trash", "atlas_list_unlinked", "atlas_list_usage", "atlas_read_logs",
             "atlas_recognize", "atlas_search", "atlas_suggest_tags"];
 
