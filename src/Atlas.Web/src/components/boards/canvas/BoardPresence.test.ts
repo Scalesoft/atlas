@@ -10,12 +10,20 @@ const jana = (x: number): RemoteDrag => ({ userId: "u2", displayName: "Jana", co
 const presence = (remote: RemoteDrag[]) => mount(BoardPresence, { attachTo: document.body, props: { remote, viewport: { x: 0, y: 0, zoom: 1 } }, global: { stubs: { transition: false, "transition-group": false } } });
 
 it("moves a colleague's ghost and pointer without the group measuring them again, which laid out the whole board on every preview (COL2-1)", async () => {
+  const frames: FrameRequestCallback[] = [];
+  vi.spyOn(globalThis, "requestAnimationFrame").mockImplementation(callback => frames.push(callback));
   const marks = presence([jana(10)]);
+  const pointer = marks.get("[data-board-cursor]").element as HTMLElement;
+  expect(pointer.style.transform).toBe("translate(10px, 20px)");
   const measured = vi.spyOn(Element.prototype, "getBoundingClientRect");
   await marks.setProps({ remote: [jana(60)] });
   await marks.setProps({ remote: [jana(110)], viewport: { x: 5, y: 0, zoom: 1 } });
   expect(marks.get("[data-board-ghost]").attributes("style")).toContain("translate(115px, 6px)");
-  expect(marks.get("[data-board-cursor]").attributes("style")).toContain("translate(115px, 20px)");
+  // The pointer glides in board coordinates and is drawn through the viewport: it moved with the board at once, then towards 110.
+  expect(pointer.style.transform).toBe("translate(15px, 20px)");
+  const start = performance.now();
+  for (let i = 1; i <= 60; i++) frames.splice(0).forEach(callback => callback(start + i * 16));
+  expect(pointer.style.transform).toBe("translate(115px, 20px)");
   expect(marks.get("[data-board-cursor]").text()).toBe("Jana");
   expect(measured).not.toHaveBeenCalled();
 });

@@ -1,11 +1,12 @@
-/* A co-editor's pointer (collaborationPointer.ts): each sample (≤ 20 a second) is carried over --atlas-motion-fast, so it glides. */
+/* A co-editor's pointer, as in the promo film: an arrow in the person's colour with their name in a pill. It moves by pointerGlide.ts
+   (a spring per frame, not a transition), pops in and fades out; a press rings once. Under reduced motion it only fades. */
 .collaboration-pointer {
   --collaboration-color: #64748b;
   position: absolute;
   top: 0;
   left: 0;
   animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out);
-  transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out);
+  transition: opacity var(--atlas-motion-surface) var(--atlas-ease-out);
 }
 .collaboration-pointer.is-leaving { opacity: 0; }
 .collaboration-pointer svg {
@@ -17,23 +18,43 @@
   stroke: var(--surface);
   stroke-width: 1.8;
   stroke-linejoin: round;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / .3));
   transform-origin: 2px 2px;
+  animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out);
   transition: scale var(--atlas-motion-fast) var(--atlas-ease-out);
 }
-/* The person presses the mouse button (the film's click). */
+/* The person presses the mouse button: the arrow gives way and a ring spreads from its tip. */
 .collaboration-pointer.is-pressed svg { scale: .85; }
-/* The label of a collaborator's caret in a page (../collaborationPresence.css). */
+.collaboration-pointer.is-pressed::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--collaboration-color);
+  border-radius: 50%;
+  opacity: 0;
+  animation: atlas-edit-lock-ring var(--atlas-motion-pop) var(--atlas-ease-out);
+}
 .collaboration-pointer__name {
   position: absolute;
   top: 17px;
   left: 12px;
   max-width: 12rem;
   overflow: hidden;
-  padding: 1px 6px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
   background: var(--collaboration-color);
+  box-shadow: 0 2px 8px rgb(0 0 0 / .2);
   color: white;
   font: 600 11px/1.5 system-ui, sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transform-origin: 0 0;
+  animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out);
 }
+@media (prefers-reduced-motion: reduce) {
+  .collaboration-pointer.is-pressed::before { animation-name: st-fade-out; }
+}
+[data-atlas-reduced-motion] .collaboration-pointer.is-pressed::before { animation-name: st-fade-out; }
