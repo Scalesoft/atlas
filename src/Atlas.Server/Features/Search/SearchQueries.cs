@@ -16,7 +16,10 @@ public static class SearchQueries
 {
     /// <summary>A query of several words found as one phrase in the body (a person's name on a contact card, „luboš krbec“): above scattered
     /// words, and at the hybrid title tier (1500), so pages found only by meaning never push it off the first page.</summary>
-    private static string BodyPhraseOf(string body) => $"""WHEN strpos(:query,' ')>0 AND d."Vector" @@ to_tsquery('simple',:fts) AND strpos({body},:query)>0 THEN 1500""";
+    /// <summary>The hybrid title tier boundary (the fused query below splits at it): a phrase in the body ranks with titles, not with scattered words.</summary>
+    private const int BodyPhraseScore = 1500;
+
+    private static string BodyPhraseOf(string body) => $"""WHEN strpos(:query,' ')>0 AND d."Vector" @@ to_tsquery('simple',:fts) AND strpos({body},:query)>0 THEN {BodyPhraseScore}""";
     private static readonly string BodyPhrase = BodyPhraseOf("d.\"NormalizedBody\"");
     private static readonly string DraftBodyPhrase = BodyPhraseOf("""(SELECT b."NormalizedBody" FROM "WorkingSearchDocument" b WHERE b."PageId"=d."PageId")""");
 
