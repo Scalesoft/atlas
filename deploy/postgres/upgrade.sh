@@ -27,7 +27,8 @@ major() { "$engine" run --rm --entrypoint sh "$1" -c 'echo "$PG_MAJOR"'; }
 
 # A named volume (docker-compose.yml) or a bind-mounted host directory (an absolute path, e.g. /var/lib/atlas/db).
 [[ $volume == /* && -d $volume ]] || "$engine" volume inspect "$volume" > /dev/null 2>&1 || fail "no volume or directory $volume"
-[[ -z $("$engine" ps -q --filter "volume=$volume") ]] || fail "a container uses $volume; stop it first (docker compose stop)"
+# The mounts of running containers by volume name and source (Podman's ps --filter volume= misses bind mounts).
+! "$engine" ps -q | xargs -r "$engine" inspect --format '{{range .Mounts}}{{println .Name}}{{println .Source}}{{end}}' | grep -qFx -- "$volume"   || fail "a container uses $volume; stop it first (docker compose stop)"
 old=$(major "$old_image") new=$(major "$new_image")
 [[ $old =~ ^[0-9]+$ && $new =~ ^[0-9]+$ && $new -gt $old ]] || fail "expected an old and a newer PostgreSQL image, got $old and $new"
 in_volume "test ! -e $root/$new/docker" || fail "$root/$new/docker exists: the volume is already upgraded"
