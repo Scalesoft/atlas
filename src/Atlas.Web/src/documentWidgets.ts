@@ -18,6 +18,7 @@ import { language, waitForTexts } from "./i18n";
 import "@atlas/markdown/concealment/style.css";
 import { contactPluginOptions, type ContactHost } from "./contacts/contactLinking";
 import { drawContactQr } from "./contacts/contactQr";
+import { userColor } from "./live/objectPresence";
 import { pickContact, withContactPicker, type PeopleSearch } from "./contacts/contactSlash";
 import { createRequirementsPlugin, type ProjectorHost } from "./projector/requirementsPlugin";
 // The contacts overview (a kind of the page overview, after the requirements one) wherever a page is shown.
@@ -156,7 +157,7 @@ function widgets(context: DocumentWidgetContext) {
   // Directories only while editing: history and public views render the stored contact and page snapshots.
   // Live contacts wherever a page is shown in the app (reading too); history and public views keep the snapshot of their time.
   const contacts = context.kind === "edit" ? gateContactWrites({ ...(context.contacts && { directory: context.contacts, suggestions: true }), ...contactPluginOptions(context.contactHost),
-    ...(context.people && { pick: pickContact(context.people) }), ...(context.knownPeople && { known: context.knownPeople }), ...(context.contactUsage && { usage: context.contactUsage }) }, context.canWrite) : { qrCode: drawContactQr };
+    ...(context.people && { pick: pickContact(context.people) }), ...(context.knownPeople && { known: context.knownPeople }), ...(context.contactUsage && { usage: context.contactUsage }) }, context.canWrite) : { qrCode: drawContactQr, userColor };
   const pages = context.kind === "edit" && context.pages ? { source: context.pages, typing: true } : {};
   const people = context.kind === "edit" ? context.people : undefined;
   return [people ? withContactPicker(createContactsPlugin(contacts), people) : createContactsPlugin(contacts), createChartsPlugin(), createConcealedContentPlugin(), createDiagramsPlugin(),

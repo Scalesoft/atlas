@@ -157,3 +157,9 @@ describe("contact usage for the read-only card", () => {
     expect(await (await import("./contactLinking")).usedOn("c1", new AbortController().signal, { usage: async () => null })).toBeNull();
   });
 });
+
+it("paints a person's mention chip in the colour of their caret and avatars (one colour per person)", async () => {
+  const { userColor } = await import("../live/objectPresence");
+  expect(contactPluginOptions().userColor).toBe(userColor);
+  expect(contactPluginOptions().userColor!(id)).toBe(userColor(id));
+});
