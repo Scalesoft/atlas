@@ -245,7 +245,7 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
     <ContactDuplicates v-else-if="duplicatesOpen" :api="contacts" @close="closeTrash" @merged="merged" />
     <template v-else>
       <div class="contact-directory-toolbar">
-        <SearchField v-model="query" :label="t.directory.searchLabel" :placeholder="t.directory.searchPlaceholder" wide data-contact-search data-focus-landing @keydown="searchKeys" />
+        <SearchField v-model="query" :label="t.directory.searchLabel" :placeholder="skills ? t.skills.searchPlaceholder : t.directory.searchPlaceholder" wide data-contact-search data-focus-landing @keydown="searchKeys" />
         <Button v-if="canCreate" type="button" aria-controls="contact-directory-new" :aria-expanded="creating" data-contact-create @click="creating = !creating">
           <AtlasIcon name="plus" :size="15" />{{ t.directory.newContact }}
         </Button>
@@ -260,7 +260,7 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
         <div class="contact-directory-new"><ContactForm v-model="form" :errors="errors" :busy="saving" :submit-label="t.directory.saveToDirectory" @submit="create" /></div>
       </InlineReveal>
       <p v-if="note" class="contact-directory-note" role="status" data-contact-note>{{ note }}</p>
-      <!-- Kdo co umí: the people who know the topic the search names, above the contacts found by their fields. -->
+      <!-- Mapa znalostí: the people who know the topic the search names, above the contacts found by their fields. -->
       <SkillExperts v-if="query.trim()" :query="query" :api="skills" @found="experts = $event" />
       <ErrorState v-if="error && !rows.length" :title="t.directory.loadFailed" :text="error" :retry-label="t.directory.reload" :busy="loading" @retry="lookup.update(query)" />
       <LoadingSkeleton v-else-if="!loaded" :label="t.directory.loading" />

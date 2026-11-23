@@ -204,7 +204,7 @@ export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOpt
     directoryUrl: () => buildShellHashEncoded({ view: "library", tab: "contacts" }),
     // „Použito na“ of the read-only card: the first few places the reader may see, the rest as a number.
     readerUsage: (objectId, { signal }) => usedOn(objectId, signal, undefined, host?.place()?.id),
-    // „Umí“ of the read-only card and its Ohodnotit (Kdo co umí).
+    // „Umí“ of the read-only card and its Ohodnotit (Mapa znalostí).
     readerSkills: (objectId, { signal }) => readerSkills(objectId, signal),
     rateSkills: (objectId, { anchor }) => { rateSkills(objectId, anchor); },
     ...(host && {

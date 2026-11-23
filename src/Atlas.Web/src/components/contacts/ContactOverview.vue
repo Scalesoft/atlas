@@ -24,7 +24,7 @@ import "../settings/settings.css";
  * the directory, each with the places it occurs in (a page opens at its heading, the directory at Knihovna → Kontakty), filtered by any
  * field and exported as CSV or vCard with the same rights. One switch above the search names where it looks, with the same words
  * wherever it is shown (UX1-14): in a space Tento prostor / Celá wiki, in Knihovna Adresář / Celá wiki, where the `directory` slot
- * (ContactDirectory) takes the place of the list, and Kdo co umí where the `skills` slot gives the graph (SkillGraph). Read-only by design: contacts are changed where they live (ContactDirectory for
+ * (ContactDirectory) takes the place of the list, and Mapa znalostí where the `skills` slot gives the graph (SkillGraph). Read-only by design: contacts are changed where they live (ContactDirectory for
  * the directory, the page for a card), so this is no second directory. Rows are ContactCard as the directory shows them. Typing
  * preselects the first person (`data-first`) and Enter opens its first place; the first Esc empties the search. `source`
  * is replaced by the gallery.
@@ -40,7 +40,7 @@ const scopes = [
   ...(props.spaceId ? [{ value: "space", label: t.overviewView.thisSpace, icon: "book" }] : []),
   ...(slots.directory ? [{ value: "directory", label: t.overviewView.directory, icon: "users" }] : []),
   { value: "instance", label: t.overviewView.wholeWiki, icon: "globe" },
-  // Kdo co umí: the graph of who knows what (SkillGraph), where Knihovna gives it.
+  // Mapa znalostí: the graph of who knows what (SkillGraph), where Knihovna gives it.
   ...(slots.skills ? [{ value: "skills", label: t.skills.graphScope, icon: "network" }] : []),
 ];
 const listing = computed(() => scope.value !== "directory" && scope.value !== "skills");

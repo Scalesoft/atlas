@@ -10,7 +10,7 @@ using Atlas.Server.Platform.Persistence;
 namespace Atlas.Server.Features.Skills;
 
 /// <summary>
-/// Kdo co umí (docs/skills-design.md): a person's topics, the rating, who knows a topic, merging and linking topics. Any signed-in reader may
+/// Mapa znalostí (docs/skills-design.md): a person's topics, the rating, who knows a topic, merging and linking topics. Any signed-in reader may
 /// rate any contact they may read and keep the topic catalog (owner decision 2026-11-23); the summary shows colleagues' ratings from
 /// <see cref="Threshold"/> of them on, so nobody can tell who gave what, except a wiki admin, who sees every shared rating with its rater.
 /// </summary>

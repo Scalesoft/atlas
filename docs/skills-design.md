@@ -1,4 +1,7 @@
-# Kdo co umí (znalosti lidí) — specifikace 5.1
+# Mapa znalostí — specifikace 5.1
+
+Názvy v UI: funkce **Mapa znalostí** (en *Knowledge map*), hledání v Kontaktech s nápovědou **„Kdo umí…“** (*Who knows…*),
+sekce v kartě osoby **„Umí“** (*Knows*). Kód zůstává `skills` / `Skill…`.
 
 Stav: **schváleno a postaveno pro 5.1** (rozhodnutí vlastníka v § 10).
 
@@ -124,7 +127,7 @@ Našeptávač témat: `GET /skills/topics?q` (název, alias, podobný zápis; ex
 ## 7. UI — v kartě osoby a v Kontaktech, žádná nová obrazovka
 
 Osoby už Atlas má: **kontakt** je jedna entita sdílená napříč wiki a prostory. Znalosti se ukazují tam, kde člověka už vidíte, a téma
-i graf žijí v **Knihovna → Kontakty** (stávající přepínač Adresář / Celá wiki / **Kdo co umí**), takže nepřibyl žádný navigační vzor.
+i graf žijí v **Knihovna → Kontakty** (stávající přepínač Adresář / Celá wiki / **Mapa znalostí**), takže nepřibyl žádný navigační vzor.
 
 1. **Karta osoby po kliku** (čtecí karta pluginu kontaktů, `readerSkills`): pod jménem řádek **Umí** — témata jako štítky s pěti tečkami,
    nejlepší první, nejvýš 6 a +N; dočte se po kartě, místo drží skryté. Téma vede na jeho dashboard (`#/library/contacts?q=<téma>`).

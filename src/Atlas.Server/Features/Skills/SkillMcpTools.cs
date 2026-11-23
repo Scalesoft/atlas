@@ -14,7 +14,7 @@ using Wolverine;
 namespace Atlas.Server.Features.Skills;
 
 /// <summary>
-/// Kdo co umí over MCP and for the assistant (AI parity, docs/skills-design.md §6): who knows a topic, what a person knows, rating, merging
+/// Mapa znalostí over MCP and for the assistant (AI parity, docs/skills-design.md §6): who knows a topic, what a person knows, rating, merging
 /// and linking topics as the token owner. Not a Wolverine handler: the class name does not end with "Handler".
 /// </summary>
 [McpServerToolType]
@@ -22,10 +22,10 @@ public sealed class SkillMcpTools(IMessageBus bus)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    [McpServerTool(Name = "atlas_find_experts", Title = "Kdo co umí", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true)]
+    [McpServerTool(Name = "atlas_find_experts", Title = "Mapa znalostí: kdo umí", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true)]
     [McpToolScope(ApiScopes.Read)]
     [AssistantDescription("Kdo umí téma (technologii, oblast): topic, volitelně context (zákazník, projekt, prostor: „Orion“) a role. Pro otázky „kdo dělal/umí X“.")]
-    [Description("Najde lidi, kteří umí téma (štítek, i podle aliasu nebo jiného zápisu, včetně užších témat: .NET najde i C#): jejich úroveň 1–5 " +
+    [Description("Mapa znalostí: najde lidi, kteří umí téma (štítek, i podle aliasu nebo jiného zápisu, včetně užších témat: .NET najde i C#): jejich úroveň 1–5 " +
         "(vlastní odhad a průměr hodnocení kolegů od tří hodnocení), poznámky „jak“ a stránky k tématu, které psali nebo na nich jsou zmínění. " +
         "context (prostor, štítek nebo organizace, např. zákazník) zúží stránky a jeho lidi dá první; role filtruje podle funkce kontaktu. " +
         "Odpovídejte jménem, funkcí a tím, jak téma umí („Pavel Horák – vývojář; konfiguračně je umí konzultant Tomáš Kolář“). " +
@@ -72,7 +72,7 @@ public sealed class SkillMcpTools(IMessageBus bus)
     [McpServerTool(Name = "atlas_get_skills", Title = "Co člověk umí", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true)]
     [McpToolScope(ApiScopes.Read)]
     [AssistantDescription("Co umí osoba z adresáře: contactId (atlas_get_contact, atlas_find_experts). Témata s úrovní 1–5 a poznámkami.")]
-    [Description("Vypíše, co umí osoba (kontakt adresáře): témata s úrovní 1–5 (vlastní odhad a průměr kolegů od tří hodnocení), vaše vlastní hodnocení, " +
+    [Description("Mapa znalostí: vypíše, co umí osoba (kontakt adresáře): témata s úrovní 1–5 (vlastní odhad a průměr kolegů od tří hodnocení), vaše vlastní hodnocení, " +
         "podepsaná hodnocení s poznámkami a kolik stránek k tématu napsala. U vlastního kontaktu i navržená témata ze stránek, které jste psali. " + McpText.TrustNotice)]
     public async Task<CallToolResult> GetSkillsAsync([Description("contactId osoby.")] string contactId, CancellationToken ct = default)
     {

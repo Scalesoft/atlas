@@ -369,7 +369,7 @@ const navigation = [
   { path: "boards-all", label: "Tabule: všechny prvky" },
   { path: "contents", label: "Obsah prostoru a vazby" },
   { path: "contacts", label: "Kontakty a adresář" },
-  { path: "skills", label: "Znalosti lidí" },
+  { path: "skills", label: "Mapa znalostí" },
   { path: "personal", label: "Osobní prostor a sdílení" },
   { path: "requirements", label: "Požadavky ve stránce" },
   { path: "requirements-model", label: "Požadavky: model v jednom editoru" },

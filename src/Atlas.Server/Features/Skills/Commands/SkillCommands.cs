@@ -1,6 +1,6 @@
 namespace Atlas.Server.Features.Skills.Commands;
 
-// Kdo co umí: the writes (docs/skills-design.md); their requests and results are in SkillContracts.
+// Mapa znalostí: the writes (docs/skills-design.md); their requests and results are in SkillContracts.
 
 public sealed record RateSkill(Guid ContactId, RateSkillRequest Request);
 
