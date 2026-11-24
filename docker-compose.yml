@@ -3,12 +3,13 @@
 # (never commit it): ATLAS_DB_OWNER_PASSWORD, ATLAS_DB_APP_PASSWORD; no ';' in either. Pin ATLAS_IMAGE to a released version.
 services:
   wiki-db:
-    # The official pgvector image (PostgreSQL 19, Debian), pinned by digest. A volume with PostgreSQL 18 data must be upgraded
-    # first (deploy/postgres/upgrade.sh; docs/operations.md, "Upgrade na PostgreSQL 19").
-    image: ${ATLAS_POSTGRES_IMAGE:-docker.io/pgvector/pgvector:0.8.7-pg19-trixie@sha256:ace863afa68a13560603dc7366fad0adb4f5ddd0a21c8f06418195f32e03fa08}
+    # The official pgvector image (PostgreSQL 19, Debian), pinned by digest. A volume with the previous major's cluster is
+    # converted first by wiki-db-upgrade-dump and wiki-db-upgrade below.
+    image: &wiki-db-image ${ATLAS_POSTGRES_IMAGE:-docker.io/pgvector/pgvector:0.8.7-pg19-trixie@sha256:ace863afa68a13560603dc7366fad0adb4f5ddd0a21c8f06418195f32e03fa08}
     restart: unless-stopped
-    # Each major keeps its cluster in <major>/docker on the volume. With only another major's cluster there, the image would
-    # create an empty one beside it and Atlas would offer a fresh installation: refuse to start instead; the data stay as they are.
+    # Each major keeps its cluster in <major>/docker on the volume. With only another major's cluster there (an older one than
+    # the conversion knows, or wiki-db started alone, e.g. --no-deps), the image would create an empty one beside it and Atlas
+    # would offer a fresh installation: refuse to start instead; the data stay as they are.
     entrypoint:
       - sh
       - -c
@@ -16,22 +17,25 @@ services:
         if [ ! -s "$$PGDATA/PG_VERSION" ]; then
           for old in /var/lib/postgresql/*/docker/PG_VERSION; do
             [ -s "$$old" ] || continue
-            echo "wiki-db: $${old%/PG_VERSION} holds PostgreSQL $$(cat "$$old") data and $$PGDATA is empty; upgrade the volume first (deploy/postgres/upgrade.sh, docs/operations.md)." >&2
+            echo "wiki-db: $${old%/PG_VERSION} holds PostgreSQL $$(cat "$$old") data and $$PGDATA is empty. docker compose up -d converts the previous major; an older one needs each Atlas release that changed the major in turn (docs/operations.md, \"Nová hlavní verze PostgreSQL\")." >&2
             exit 1
           done
         fi
         exec docker-entrypoint.sh "$$@"
       - wiki-db
     command: ["postgres"]
-    environment:
+    depends_on:
+      wiki-db-upgrade:
+        condition: service_completed_successfully
+    environment: &wiki-db-environment
       # The schema's owner: migrations and the installation restore. An existing volume keeps the password it was created with.
       POSTGRES_USER: wikiuser
       POSTGRES_PASSWORD: ${ATLAS_DB_OWNER_PASSWORD:-change-me-owner}
       POSTGRES_DB: wikidb
       # Text sorts by code point with PostgreSQL's own Unicode tables, as on the former Alpine image and whatever C library the
-      # image has; the collation never changes version. Applies when the volume is created (deploy/postgres/upgrade.sh does the same).
+      # image has; the collation never changes version. Applies when a cluster is created (by the image or wiki-db-upgrade).
       POSTGRES_INITDB_ARGS: --locale-provider=builtin --builtin-locale=C.UTF-8
-    volumes:
+    volumes: &wiki-db-volumes
       - wiki-db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
@@ -39,6 +43,109 @@ services:
       timeout: 5s
       retries: 30
       start_period: 10s
+
+  # A new PostgreSQL major converts the volume by itself on the first `docker compose up -d`; afterwards both steps only check
+  # and end (docs/operations.md, "Nová hlavní verze PostgreSQL"). The next major moves the two pins: ATLAS_POSTGRES_IMAGE to it,
+  # ATLAS_POSTGRES_PREVIOUS_IMAGE to the one before. Step 1: the previous major's official image starts its cluster
+  # (<major>/docker) privately as the cluster's owner and dumps it into upgrade-from-<major>/. The cluster stays as it is, so the
+  # previous release's compose file still opens it (a rollback).
+  wiki-db-upgrade-dump:
+    image: ${ATLAS_POSTGRES_PREVIOUS_IMAGE:-docker.io/pgvector/pgvector:0.8.7-pg18-trixie@sha256:ab49524d18df7200b74ac9a475e1db6297fc1eb57da4c214c63d10ecc4b754fa}
+    network_mode: none
+    environment: *wiki-db-environment
+    volumes: *wiki-db-volumes
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -Eeuo pipefail
+        root=/var/lib/postgresql
+        old=$$root/$$PG_MAJOR/docker state=$$root/upgrade-from-$$PG_MAJOR
+        dump=$$state/dump.sql.gz
+        checkpoint() { pg_controldata "$$old" | grep '^Latest checkpoint location:'; }
+        [ -s "$$old/PG_VERSION" ] || exit 0
+        for version in "$$root"/*/docker/PG_VERSION; do
+          [ -s "$$version" ] && [ "$$(cat "$$version")" -gt "$$PG_MAJOR" ] || continue
+          # Converted. The old cluster started since (a rollback) holds data the newer one lacks: never go on with the older copy.
+          if [ -s "$$state/checkpoint" ] && [ "$$(checkpoint)" != "$$(cat "$$state/checkpoint")" ]; then
+            echo "wiki-db-upgrade-dump: PostgreSQL $$PG_MAJOR ran after its conversion. To convert it again, remove the newer cluster: docker compose run --rm --entrypoint rm wiki-db-upgrade-dump -r $${version%/docker/PG_VERSION}; to keep the newer cluster instead: docker compose run --rm --entrypoint rm wiki-db-upgrade-dump $$state/checkpoint" >&2
+            exit 1
+          fi
+          exit 0
+        done
+        # A cluster that did not shut down cleanly may still run in another container. Only an interrupted dump (its .partial
+        # file) or the operator ("recover") lets this one start it.
+        status=$$(pg_controldata "$$old" | sed -n 's/^Database cluster state: *//p')
+        if [ "$$status" != "shut down" ] && [ ! -e "$$dump.partial" ] && [ "$${1:-}" != recover ]; then
+          echo "wiki-db-upgrade-dump: PostgreSQL $$PG_MAJOR in $$old is \"$$status\": it still runs in another container or stopped uncleanly. Stop every container that uses the volume, then: docker compose run --rm wiki-db-upgrade-dump recover" >&2
+          exit 1
+        fi
+        echo "wiki-db-upgrade-dump: dumping PostgreSQL $$PG_MAJOR for the conversion to the next major"
+        mkdir -p "$$state"
+        : > "$$dump.partial"
+        export PGCTLTIMEOUT=3600 PGHOST=/tmp
+        # The cluster's owner runs it (UID 70 from the former Alpine image); nothing writes to it, autovacuum included.
+        pg() { gosu "$$(stat -c %u:%g "$$old")" "$$@"; }
+        trap 'pg pg_ctl -D "$$old" -m fast -w stop > /dev/null 2>&1 || :' EXIT
+        pg pg_ctl -D "$$old" -o "-c listen_addresses='' -c unix_socket_directories=/tmp -c autovacuum=off" -w start
+        # initdb writes the time zone of its environment into postgresql.conf; timestamptz text, ::date and date_trunc depend on it.
+        pg psql -X -At -U "$$POSTGRES_USER" -d postgres -c 'SHOW timezone' > "$$state/timezone"
+        pg pg_dumpall -U "$$POSTGRES_USER" | gzip -1 > "$$dump.partial"
+        pg pg_ctl -D "$$old" -m fast -w stop
+        checkpoint > "$$state/checkpoint"
+        mv "$$dump.partial" "$$dump"
+      - wiki-db-upgrade-dump
+
+  # Step 2: this image restores the dump into <major>/upgrade and renames it to <major>/docker only when it is complete; an
+  # interrupted run starts over the next time.
+  wiki-db-upgrade:
+    image: *wiki-db-image
+    network_mode: none
+    depends_on:
+      wiki-db-upgrade-dump:
+        condition: service_completed_successfully
+    environment: *wiki-db-environment
+    volumes: *wiki-db-volumes
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -Eeuo pipefail
+        shopt -s nullglob
+        root=/var/lib/postgresql
+        new=$$root/$$PG_MAJOR
+        set -- "$$root"/upgrade-from-*/dump.sql.gz
+        [ ! -s "$$new/docker/PG_VERSION" ] || { rm -f "$$@"; exit 0; }
+        [ $$# -gt 0 ] || exit 0
+        [ $$# -eq 1 ] || { echo "wiki-db-upgrade: more than one dump to restore: $$*" >&2; exit 1; }
+        dump=$$1 state=$${1%/dump.sql.gz}
+        old=$${state##*/upgrade-from-}
+        [ "$$old" -lt "$$PG_MAJOR" ] || { echo "wiki-db-upgrade: $$dump is not from an older major than PostgreSQL $$PG_MAJOR" >&2; exit 1; }
+        echo "wiki-db-upgrade: restoring the PostgreSQL $$old dump into PostgreSQL $$PG_MAJOR"
+        export PGDATA=$$new/upgrade PGCTLTIMEOUT=3600 TZ=$$(cat "$$state/timezone")
+        pg() { gosu postgres "$$@"; }
+        rm -rf "$$new/upgrade"
+        install -d -m 700 -o postgres "$$PGDATA"
+        # As the image's own first start: the superuser POSTGRES_USER (its password comes with the dump), password logins over TCP.
+        pg initdb -U "$$POSTGRES_USER" $$POSTGRES_INITDB_ARGS > /dev/null
+        echo 'host all all all scram-sha-256' >> "$$PGDATA/pg_hba.conf"
+        pg pg_ctl -o "-c listen_addresses=''" -w start
+        # The superuser exists already. A database that sorted with the C library (the Alpine image up to Atlas 5.0) gets the
+        # builtin collation (code point order, as musl sorted); only CREATE DATABASE lines change, never a row of COPY data.
+        gunzip -c "$$dump" | awk -v user="$$POSTGRES_USER" '
+          copy { if ($$0 == "\\.") copy = 0; print; next }
+          /^COPY .* FROM stdin;$$/ { copy = 1 }
+          $$0 == "CREATE ROLE " user ";" { next }
+          /^CREATE DATABASE / { sub(/ LOCALE_PROVIDER = libc /, " LOCALE_PROVIDER = builtin BUILTIN_LOCALE = \047C.UTF-8\047 ") }
+          { print }' | pg psql -X -q -v ON_ERROR_STOP=1 -U "$$POSTGRES_USER" -d postgres > /dev/null
+        libc=$$(pg psql -X -At -U "$$POSTGRES_USER" -d postgres -c "SELECT string_agg(datname, ', ') FROM pg_database WHERE datlocprovider = 'c'")
+        [ -z "$$libc" ] || { echo "wiki-db-upgrade: databases still sort with the C library: $$libc" >&2; exit 1; }
+        pg vacuumdb -q -U "$$POSTGRES_USER" --all --analyze-only
+        pg pg_ctl -m fast -w stop
+        mv "$$PGDATA" "$$new/docker"
+        rm -f "$$dump"
+        echo "wiki-db-upgrade: PostgreSQL $$PG_MAJOR runs from $$new/docker; $$root/$$old/docker is kept for a rollback"
+      - wiki-db-upgrade
 
   atlas:
     image: ${ATLAS_IMAGE:-ghcr.io/scalesoft/atlas:latest}
