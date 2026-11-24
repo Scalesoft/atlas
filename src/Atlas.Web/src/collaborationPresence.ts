@@ -187,8 +187,9 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       const position = positions.get(peer.clientId);
       return position === undefined ? [] : [[peer.clientId, editor.view.coordsAtPos(position)] as const];
     }));
+    const textWidth = editable.getBoundingClientRect().width;
     const pointed = new Map(currentPeers.flatMap(peer => {
-      const pointer = remotePointer(peer.clientId);
+      const pointer = remotePointer(peer.clientId, textWidth);
       return pointer ? [[peer.clientId, pointer] as const] : [];
     }));
     if (pendingLayoutMovement) {
@@ -260,14 +261,17 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
   };
 
   // Pointers (spec of the promo film's page scene): each editor publishes where its mouse is in the awareness state, anchored
-  // to the nearest document position (a Yjs relative position) plus its offset in px, so it lands on the same word at any
-  // window width or scroll. A reader of a live page has no caret extension and so no awareness here: it sends and shows none.
+  // to the nearest document position (a Yjs relative position) plus its offset, so it lands on the same word at any window
+  // width or scroll. The offset is in px of the sender's text column (`w`, its width): a reader with a narrower or wider column
+  // (a laptop beside a portrait monitor) scales it to its own, so a pointer in the margin or over a picture keeps its place
+  // relative to the page, not the screen. A reader of a live page has no caret extension and so no awareness here: it sends and
+  // shows none.
   const awareness = pointers ? caretAwareness(editor) : undefined;
   const binding = () => (ySyncPluginKey.getState(editor.state) as { binding?: SyncBinding } | undefined)?.binding;
   const peer = (clientId: number) => currentPeers.find(entry => entry.clientId === clientId);
   const leavingPointers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
   const glide = createPointerGlide(() => overlay, (element, x, y) => { element.style.transform = `translate3d(${x}px, ${y}px, 0)`; });
-  function remotePointer(clientId: number) {
+  function remotePointer(clientId: number, textWidth: number) {
     const pointer = awareness?.getStates().get(clientId)?.pointer as Partial<PointerState> | null | undefined;
     const sync = binding();
     if (!pointer || !sync || !Number.isFinite(pointer.x) || !Number.isFinite(pointer.y)) return undefined;
@@ -276,7 +280,8 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       const position = relativePositionToAbsolutePosition(sync.doc, sync.type, Y.createRelativePositionFromJSON(pointer.anchor), sync.mapping as never);
       if (position === null || position < 0 || position > editor.state.doc.content.size) return undefined;
       const at = editor.view.coordsAtPos(position);
-      return { left: at.left + clampOffset(pointer.x!), top: at.top + clampOffset(pointer.y!), down: pointer.down === true };
+      const scale = pointerScale(pointer.w, textWidth);
+      return { left: at.left + clampOffset(pointer.x! * scale), top: at.top + clampOffset(pointer.y! * scale), down: pointer.down === true };
     } catch { return undefined; }
   }
   function placePointers(pointed: ReadonlyMap<number, { left: number; top: number; down: boolean }>, originX: number, originY: number) {
@@ -329,6 +334,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       anchor: Y.relativePositionToJSON(absolutePositionToRelativePosition(hit.pos, sync.type, sync.mapping as never)),
       x: Math.round(pointerAt.x - at.left),
       y: Math.round(pointerAt.y - at.top),
+      w: Math.round(box.width),
       ...(pointerDown ? { down: true } : {}),
     };
     awareness.setLocalStateField("pointer", state);
@@ -453,7 +459,12 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
 const POINTER_MS = 50;
 /** Beyond this a remote offset is no pointer over this page (the server passes the field through as the client wrote it). */
 const POINTER_REACH = 4096;
-interface PointerState { anchor: unknown; x: number; y: number; down?: true }
+interface PointerState { anchor: unknown; x: number; y: number; w?: number; down?: true }
+/** The sender's text column against this reader's: the factor its offset is scaled by (1 without a width, an older client). */
+export function pointerScale(senderWidth: unknown, readerWidth: number) {
+  if (typeof senderWidth !== "number" || !(senderWidth > 0) || !(readerWidth > 0)) return 1;
+  return Math.min(Math.max(readerWidth / senderWidth, 0.25), 4);
+}
 interface SyncBinding { doc: Y.Doc; type: Y.XmlFragment; mapping: unknown }
 
 /** The awareness the caret extension publishes to (useCollab binds it to the provider's). */

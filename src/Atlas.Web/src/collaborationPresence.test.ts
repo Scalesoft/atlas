@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from "y-protocols/awareness";
 import * as Y from "yjs";
 import type { MarkdownEditorState } from "@atlas/markdown/core";
-import { createCollaborationPresence } from "./collaborationPresence";
+import { createCollaborationPresence, pointerScale } from "./collaborationPresence";
 
 type Peer = MarkdownEditorState["peers"][number];
 
@@ -443,6 +443,28 @@ describe("co-editor pointers", () => {
     for (let i = 2; i <= 60; i++) frame(start + i * 16);
     expect(pointerOf(reader.host)!.style.transform).toBe("translate3d(151px, 75px, 0px)");
     expect(pointerOf(jana.host)).toBeNull();
+  });
+
+  it("scales the offset to the reader's text column, so a laptop and a portrait monitor see the pointer at the same place of the page", () => {
+    const { jana, reader } = pair();
+    // Jana's text column is 800 px wide (a wide monitor), the reader's 400 px (a narrow window).
+    vi.spyOn(jana.editor.view.dom, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 800, 600));
+    vi.spyOn(reader.editor.view.dom, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 400, 600));
+    vi.spyOn(jana.editor.view, "posAtCoords").mockReturnValue({ pos: 4, inside: -1 });
+    // 200 px right of the character and 40 px under its top on Jana's screen (over a picture, in the margin)…
+    move(jana.host, "pointermove", 100 + 4 * 8 + 200, 100);
+    vi.advanceTimersByTime(50);
+    expect(jana.awareness.getLocalState()?.pointer).toMatchObject({ x: 200, y: 40, w: 800 });
+    frame();
+    // …is 100 px and 20 px on the reader's half as wide column: the same place relative to the page, not the same pixels.
+    expect(pointerOf(reader.host)!.style.transform).toBe("translate3d(232px, 80px, 0px)");
+  });
+
+  it("keeps an offset as it is from a client that sends no width, and bounds an absurd ratio", () => {
+    expect(pointerScale(undefined, 400)).toBe(1);
+    expect(pointerScale(800, 0)).toBe(1);
+    expect(pointerScale(800, 400)).toBe(0.5);
+    expect(pointerScale(10, 4000)).toBe(4);
   });
 
   it("sends a press at once, nothing for a finger, and takes the pointer away when the mouse leaves", () => {
