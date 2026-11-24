@@ -47,8 +47,6 @@ const en: VerificationMessages = {
   bySpace: (months) => (months ? `By space (${plural(months, { one: "# month", other: "# months" })})` : "By space (off)"),
   months: (n) => plural(n, { one: "# month", other: "# months" }),
   never: "Do not verify",
-  searchVerified: "Verified page",
-  searchExpired: "Page verification expired",
   health: {
     nav: "Content status",
     title: "Content status",

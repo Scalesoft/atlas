@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import PageVerification from "./PageVerification.vue";
-import { verificationLabel, verificationMark, type PageVerification as Verification, type VerificationState } from "../pageVerification";
+import { verificationMark } from "../verificationMark";
+import { verificationLabel, type PageVerification as Verification, type VerificationState } from "../pageVerification";
 
 const day = 86_400_000;
 const at = (days: number) => new Date(Date.now() + days * day).toISOString();

@@ -10,14 +10,14 @@ import { lexiconOf, lexiconReady } from "./linking/lexicon";
 import { objectApi } from "./objects/objectApi";
 import { referenceAnswers, referencesOnTheWay } from "./linking/pageReferenceAnswers";
 import { buildShellHashEncoded } from "./shellRoute";
-import { verificationMark, type VerificationState } from "./pageVerification";
+import { verificationMark } from "./verificationMark";
 
 /** `type` "board": a board of the Boards module (POST /api/pages/references answers it among the pages, UX PG4-4). */
 interface Titled { readonly id: string; readonly title: string; readonly type?: string; readonly verification?: string }
 interface Found extends Titled { readonly spaceId?: string; readonly spaceName?: string; readonly isDraft?: boolean; readonly matchedAlias?: string | null }
 
 /** Ověřený obsah (5.2): the link chip draws the verification's shield before the title (display only, as every `icon`). */
-const markOf = (state: string | undefined) => { const mark = verificationMark(state as VerificationState | undefined); return mark ? { icon: mark.icon } : {}; };
+const markOf = (state: string | undefined) => { const mark = verificationMark(state); return mark ? { icon: mark.icon } : {}; };
 const pageUrl = (id: string) => buildShellHashEncoded({ view: "page", pageId: id });
 const reference = (page: Titled): MarkdownPageReference => page.type === "board"
   ? { id: page.id, title: page.title, url: buildShellHashEncoded({ view: "board", boardId: page.id }), icon: "layout-dashboard" }

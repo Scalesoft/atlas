@@ -3,6 +3,8 @@ import type { ShellMessages } from "./shell";
 
 const en: ShellMessages = {
   common: {
+    verifiedPage: "Verified page",
+    verificationExpired: "Page verification expired",
     back: "Back",
     close: "Close",
     open: "Open",

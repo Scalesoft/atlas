@@ -95,9 +95,3 @@ export const contentHealthApi: ContentHealthApi = {
   bulk: (spaceId, request) => post<ContentHealthBulkResult>(`/spaces/${encodeURIComponent(spaceId)}/content-health/bulk`, request),
 };
 
-/** The quiet mark of a search result or a link chip (§3.3, §10.5): a shield for a verified page, a warning one for an expired one; nothing otherwise (the order of results does not change, O5). */
-export function verificationMark(state: VerificationState | null | undefined) {
-  if (state === "verified" || state === "expiring") return { icon: "shield-check", label: t.searchVerified, warn: false };
-  if (state === "expired") return { icon: "shield-alert", label: t.searchExpired, warn: true };
-  return null;
-}

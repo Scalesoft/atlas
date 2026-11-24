@@ -48,9 +48,6 @@ const cs = {
   bySpace: (months: number | null) => (months ? `Podle prostoru (${plural(months, { one: "# měsíc", few: "# měsíce", other: "# měsíců" })})` : "Podle prostoru (vypnuto)"),
   months: (n: number) => plural(n, { one: "# měsíc", few: "# měsíce", other: "# měsíců" }),
   never: "Neověřovat",
-  // Search and links
-  searchVerified: "Ověřená stránka",
-  searchExpired: "Ověření stránky vypršelo",
   // Stav obsahu (6)
   health: {
     nav: "Stav obsahu",
