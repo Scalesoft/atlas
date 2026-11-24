@@ -6,7 +6,7 @@ using ISession = NHibernate.ISession;
 
 namespace Atlas.Server.Features.PersonalLibrary;
 
-public sealed class AnalyticsHandler(ISession session, PersonalPageGuard guard, VaultGrantSnapshots vaultGrants)
+public sealed class AnalyticsHandler(ISession session, PersonalPageGuard guard, VaultGrantSnapshots vaultGrants, IContentAccess access)
 {
     private const int PageSize = 50;
     private const string Zone = "Europe/Prague";
@@ -155,6 +155,80 @@ public sealed class AnalyticsHandler(ISession session, PersonalPageGuard guard, 
             """, actor, start, end).SetMaxResults(20).ListAsync<object[]>(ct);
         return new PopularPages(rows.Select(row => new PopularPage((Guid)row[0], (string)row[1], (long)row[2], (long)row[3])).ToArray());
     }
+
+    public async Task<Atlas.Server.Features.PageVerifications.SpaceReadership> Handle(GetSpaceReadership query, CancellationToken ct)
+    {
+        var (start, end) = Period(query.From, query.To);
+        var offset = SpaceCursor(query.Cursor);
+        var actor = await RequireSpaceEditorAsync(access, query.SpaceId, ct);
+        var rows = await SpaceReadsAsync(session, actor.Id, query.SpaceId, start, end, ct);
+        var shown = (query.Filter switch
+        {
+            null or "" or "all" => rows,
+            "unread" => rows.Where(row => row.Views == 0).ToList(),
+            _ => throw new ApiException(400, "Neznámý filtr čtenosti.")
+        }).OrderByDescending(row => row.Readers).ThenByDescending(row => row.Views).ThenBy(row => row.Title, StringComparer.Ordinal)
+            .ThenBy(row => row.PageId).ToList();
+        return new(shown.Skip(offset).Take(PageSize).Select(row => new Atlas.Server.Features.PageVerifications.SpaceReadershipItem(
+                row.PageId, row.Title, row.Views, row.Readers, row.LastViewedAt, row.LastPublishedAt)).ToArray(),
+            shown.Count > offset + PageSize ? (offset + PageSize).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
+    }
+
+    /// <summary>One published page of a space with its readership in the period (<see cref="SpaceReadsAsync"/>).</summary>
+    public sealed record SpaceRead(Guid PageId, Guid? ParentId, string Title, int PublishedVersion, long Views, long Readers, DateTime? LastViewedAt,
+        DateTime? LastPublishedAt);
+
+    /// <summary>
+    /// Every published, untrashed, non-template page of the space the actor may read (EffectivePageAccess, as <see cref="VisiblePages"/>),
+    /// with its views, distinct readers and last view in [start, end) and its last publication: one statement, each page's views counted
+    /// through IX_PageView_PageTime. Counts only, never who read. Shared by Stav obsahu (plan §6).
+    /// </summary>
+    /// <remarks>shortcut: no daily aggregates (plan §5.2): measured by SpaceReadershipBudgetTests; add an aggregate table only when a
+    /// space of 5 000 pages over 365 days takes more than 300 ms.</remarks>
+    public static Task<List<SpaceRead>> SpaceReadsAsync(ISession session, Guid actorId, Guid spaceId, DateTime start, DateTime end, CancellationToken ct)
+        => session.ReadRowsAsync(SpaceReadsSql, new Dictionary<string, object> { ["actor"] = actorId, ["space"] = spaceId, ["start"] = start, ["end"] = end },
+            row => new SpaceRead(row.GetGuid(0), row.IsDBNull(1) ? null : row.GetGuid(1), row.GetString(2), row.GetInt32(3), row.GetInt64(4),
+                row.GetInt64(5), row.IsDBNull(6) ? null : Utc(row.GetDateTime(6)), row.IsDBNull(7) ? null : Utc(row.GetDateTime(7))), ct);
+
+    /// <summary>The statement of <see cref="SpaceReadsAsync"/> (:actor, :space, :start, :end); public for its budget test.</summary>
+    public const string SpaceReadsSql = """
+            WITH visible AS MATERIALIZED (
+                SELECT p."Id", p."ParentId", pub."Title", pub."Version"
+                FROM "EffectivePageAccess" m
+                JOIN "Page" p ON p."Id"=m."PageId"
+                JOIN "PageRevision" pub ON pub."Id"=p."PublishedRevisionId"
+                WHERE m."UserId"=:actor AND m."SpaceId"=:space AND m."Role">=1 AND p."SpaceId"=:space AND NOT p."IsTrashed" AND NOT p."IsTemplate"
+            )
+            SELECT v."Id" AS "PageId", v."ParentId" AS "ParentId", v."Title" AS "Title", v."Version" AS "Version",
+                r."Views" AS "Views", r."Readers" AS "Readers", r."LastViewedAt" AS "LastViewedAt", pp."ActiveFrom" AS "LastPublishedAt"
+            FROM visible v
+            CROSS JOIN LATERAL (
+                SELECT count(*) AS "Views", count(DISTINCT pv."UserId") AS "Readers", max(pv."ViewedAt") AS "LastViewedAt"
+                FROM "PageView" pv WHERE pv."PageId"=v."Id" AND pv."ViewedAt">=:start AND pv."ViewedAt"<:end
+            ) r
+            LEFT JOIN "PagePublication" pp ON pp."PageId"=v."Id" AND pp."ActiveTo" IS NULL
+            """;
+
+    /// <summary>Stav obsahu and the space's readership: its admins and everyone who may write in it (plan §6).</summary>
+    public static async Task<UserAccount> RequireSpaceEditorAsync(IContentAccess access, Guid spaceId, CancellationToken ct)
+    {
+        var actor = await access.LockActorAsync(spaceId, ct);
+        await access.RequireSpaceAsync(spaceId, SpaceRole.Writer, ct);
+        return actor;
+    }
+
+    /// <summary>The (start, end) of the last <paramref name="days"/> days ending today, as the period of the other reads.</summary>
+    public static (DateTime Start, DateTime End) LastDays(int days, DateTime now)
+    {
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(now, TimeZone));
+        return Period(today.AddDays(1 - days), today);
+    }
+
+    public static int SpaceCursor(string? cursor) => cursor is null or ""
+        ? 0
+        : int.TryParse(cursor, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var offset) && offset <= 100_000
+            ? offset
+            : throw new ApiException(400, "Neplatný posun seznamu.");
 
     private IQuery Visible(string sql, UserAccount actor, DateTime start, DateTime end) =>
         session.CreateSQLQuery(VisiblePages + sql).SetParameter("actor", actor.Id)

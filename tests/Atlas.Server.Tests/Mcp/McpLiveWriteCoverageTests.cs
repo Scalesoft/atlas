@@ -30,6 +30,8 @@ public sealed class McpLiveWriteCoverageTests
         // The former publish and direct tools, write since 3.6: they change the tree, a publication, objects or boards, not a page's document.
         ["atlas_publish"] = "publishes a version; the document does not change",
         ["atlas_set_publication"] = "a setting of the page, not its content",
+        ["atlas_set_verification"] = "a setting of the page (its steward and verification), not its content",
+        ["atlas_report_outdated"] = "a notification to the steward; the page does not change",
         ["atlas_move_page"] = "the tree, not the document",
         ["atlas_arrange_pages"] = "the tree, not the document",
         ["atlas_sort_pages"] = "the tree, not the document",

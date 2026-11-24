@@ -23,6 +23,6 @@ internal static class CurrentSettings
         return new SpaceSettingsDto(current.SpaceId, current.Name, current.Icon, current.Color, current.Description,
             current.PinPolicy.ToString(), current.ActiveFrom,
             SpaceCoverDto.From(cover?.Source, cover?.CatalogKey, cover?.Sha256, cover?.Tinted, current.Name, current.Description, current.Icon),
-            current.CommentsEnabled, current.PublicationMode.ToString());
+            current.CommentsEnabled, current.PublicationMode.ToString(), (await session.GetAsync<Space>(spaceId, ct))?.VerificationIntervalMonths);
     }
 }

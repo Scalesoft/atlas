@@ -1,0 +1,20 @@
+{
+  "Bez výběru stránek lze jen nastavit garanta podle posledního autora.": "Without a selection of pages, only the owner can be set from the last author.",
+  "Najednou lze změnit nejvýše {max} stránek.": "At most {max} pages can be changed at once.",
+  "Zadejte, co se má u ověření stránky změnit.": "Specify what to change in the page's verification.",
+  "Šablony se neověřují.": "Templates are not verified.",
+  "Vyberte interval ověření 3, 6 nebo 12 měsíců, nebo stránku neověřovat.": "Choose a verification interval of 3, 6 or 12 months, or do not verify the page.",
+  "Datum platnosti lze zadat jen s ověřením.": "A validity date can only be given with a verification.",
+  "Stránka nemá publikovanou verzi, podle jejíhož autora by se garant nastavil.": "The page has no published version whose author could become its owner.",
+  "Ověřování je u této stránky vypnuté.": "Verification is switched off for this page.",
+  "Ověřit lze jen publikovanou stránku. Nejdřív ji publikujte.": "Only a published page can be verified. Publish it first.",
+  "Ověřit lze do data v budoucnosti, nejvýše za pět let.": "A page can be verified until a date in the future, at most five years ahead.",
+  "Garantem může být jen aktivní uživatel, který smí stránku číst.": "Only an active user who may read the page can be its owner.",
+  "Poznámka": "Note",
+  "Vyberte období 30, 90 nebo 365 dní.": "Choose a period of 30, 90 or 365 days.",
+  "Počet položek musí být 1 až 100.": "The number of items must be 1 to 100.",
+  "Neznámý filtr stavu obsahu.": "Unknown content health filter.",
+  "Neznámé řazení stavu obsahu.": "Unknown content health sort order.",
+  "Neznámý filtr čtenosti.": "Unknown readership filter.",
+  "Vyberte interval ověření 3, 6 nebo 12 měsíců, nebo ověřování vypněte.": "Choose a verification interval of 3, 6 or 12 months, or switch verification off."
+}

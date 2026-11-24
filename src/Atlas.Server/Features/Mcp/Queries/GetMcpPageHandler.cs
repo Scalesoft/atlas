@@ -19,9 +19,10 @@ public sealed class GetMcpPageHandler
     private readonly McpVisibility m_visibility;
     private readonly McpPagePaths m_paths;
     private readonly PageLinkStore m_links;
+    private readonly PageVerifications.PageVerificationReader m_verifications;
 
     public GetMcpPageHandler(ISession session, PageReader reader, IContentAccess access, McpVisibility visibility, McpPagePaths paths,
-        PageLinkStore links)
+        PageLinkStore links, PageVerifications.PageVerificationReader verifications)
     {
         m_session = session;
         m_reader = reader;
@@ -29,6 +30,7 @@ public sealed class GetMcpPageHandler
         m_visibility = visibility;
         m_paths = paths;
         m_links = links;
+        m_verifications = verifications;
     }
 
     public async Task<McpPageRead> Handle(GetMcpPage query, CancellationToken ct)
@@ -69,6 +71,8 @@ public sealed class GetMcpPageHandler
             }
         }
         var version = query.Working || page.Live ? page.Version : page.PublishedVersion ?? page.Version;
+        // 5.2: the verification block (plan §7); the tool says when the source expired.
+        page = page with { Verification = await m_verifications.ReadAsync(page.Id, page.PublishedVersion, ct) };
         return new McpPageRead(page, query.Working, version, space.Name, path, titles);
     }
 }

@@ -12,11 +12,13 @@ public sealed class SearchHandler
     private readonly Atlas.Server.Features.Ai.Access.AiPolicyResolver m_policy;
     private readonly ISearchMissRecorder m_misses;
     private readonly ContentParticipants m_participants;
+    private readonly NHibernate.ISession m_session;
 
     public SearchHandler(IContentAccess access, SearchSql sql, ISearchMissRecorder misses, Atlas.Server.Features.Ai.Access.AiPolicyResolver policy,
-        ContentParticipants participants)
+        ContentParticipants participants, NHibernate.ISession session)
     {
         m_access = access;
+        m_session = session;
         m_sql = sql;
         m_policy = policy;
         m_misses = misses;
@@ -143,6 +145,13 @@ public sealed class SearchHandler
             // Filter after the window: paging continues to describe the original lexical/hybrid order.
             var excluded = await m_sql.ExcludedFromAiAsync(items.Select(item => item.SpaceId).ToHashSet(), ct);
             items.RemoveAll(item => excluded.Contains(item.SpaceId));
+        }
+        if (items.Count > 0 && await PageVerifications.PageVerificationReader.StatesAsync(m_session, items.Select(item => item.Id).ToList(), ct) is { Count: > 0 } states)
+        {
+            for (var i = 0; i < items.Count; i++)
+            {
+                items[i] = items[i] with { VerificationState = states.GetValueOrDefault(items[i].Id) };
+            }
         }
         var resources = new List<SearchResourceHit>();
         if (query.Offset == 0 && query.Options is { Content: "all" or "published", ChangedWithin: "any", AiScopeOnly: false })

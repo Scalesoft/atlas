@@ -198,6 +198,8 @@ public sealed class McpG5CoverageTests
             ["atlas_set_decoration"] = [new() { ["pageId"] = page.Id, ["clear"] = true }],
             // The former direct tool (write since 3.6): a mode is required.
             ["atlas_set_publication"] = [new() { ["pageId"] = page.Id, ["mode"] = "Live" }],
+            // 5.2: pageId, or spaceId with pageIds for a bulk change; pageIds alone is refused before G5.
+            ["atlas_set_verification"] = [new() { ["pageId"] = page.Id, ["verify"] = true }, new() { ["spaceId"] = space, ["pageIds"] = new[] { page.Id }, ["verify"] = true }],
             // runId is a number: the plain call would send a Guid; a job that does not exist is the call that reaches the handler.
             ["atlas_cancel_job_run"] = [new() { ["jobId"] = "none", ["runId"] = 1 }],
             ["atlas_set_tags"] = [new() { ["pageId"] = page.Id, ["add"] = new[] { "x" } }],

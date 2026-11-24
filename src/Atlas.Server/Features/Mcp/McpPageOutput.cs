@@ -89,6 +89,10 @@ public static partial class McpPageOutput
         text.Append("- pageId: ").Append(page.Id).Append('\n');
         text.Append("- spaceId: ").Append(page.SpaceId).Append('\n');
         text.Append("- publikovaná: ").Append(page.IsPublished ? "ano" : "ne").Append('\n');
+        if (page.Verification is { } verification && PageVerifications.PageVerificationText.Line(verification) is { } verified)
+        {
+            text.Append("- ověření: ").Append(verified).Append('\n');
+        }
         if (page.CanEdit)
         {
             text.Append("- expectedVersion (pro zápis): ").Append(page.Version.ToString(CultureInfo.InvariantCulture)).Append('\n');
@@ -187,6 +191,10 @@ public static partial class McpPageOutput
         if (page.CanEdit)
         {
             structured["expectedVersion"] = page.Version;
+        }
+        if (page.Verification is { } block)
+        {
+            structured["verification"] = PageVerifications.PageVerificationText.Json(block);
         }
         if (section is not null)
         {

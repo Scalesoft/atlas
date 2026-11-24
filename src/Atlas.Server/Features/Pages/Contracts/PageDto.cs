@@ -23,6 +23,10 @@ public sealed record PageDto(Guid Id, Guid SpaceId, Guid? ParentId, string Title
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool OwnAccess { get; init; }
 
+    /// <summary>5.2: the page's verification, on <c>GET /api/v1/pages/{id}</c> and atlas_get_page only.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PageVerifications.PageVerificationView? Verification { get; init; }
+
     /// <summary>The personal API's <c>?format=markdown</c>: the Markdown with placeholders a save sends back.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public PageMarkdownSource? Source { get; init; }

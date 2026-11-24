@@ -17,13 +17,25 @@ public static class NotificationKinds
     /// <summary>A background job failed for good (3.3 plan §4.3), to the wiki administrators: the subject is <see cref="JobSubject"/>,
     /// the anchor the job id. Shown to whoever is a wiki administrator when reading.</summary>
     public const string JobFailed = "job.failed";
+    /// <summary>5.2: the topic (and preference) of the steward's reminders (ContentVerificationJob): one item per page, the later stage
+    /// replaces the earlier one, as a share's change replaces its share.</summary>
+    public const string VerificationDue = "page.verification_due";
+    /// <summary>The page's verification expires within 14 days (topic <see cref="VerificationDue"/>).</summary>
+    public const string VerificationExpiring = "page.verification_expiring";
+    /// <summary>The page's verification expired (topic <see cref="VerificationDue"/>).</summary>
+    public const string VerificationExpired = "page.verification_expired";
+    /// <summary>5.2 „Nahlásit neaktuální“: a reader reports the page outdated to its steward (else up to three editors who last published
+    /// it); the reader's note is stored in the anchor and read as the item's excerpt; repeated reports aggregate into one item.</summary>
+    public const string ReportedOutdated = "page.reported_outdated";
 
     /// <summary>The kinds a preference names; a share's change and end follow the switch of <see cref="ItemShared"/>.</summary>
-    public static readonly IReadOnlyList<string> All = [CommentMention, PageMention, ItemShared];
+    public static readonly IReadOnlyList<string> All = [CommentMention, PageMention, ItemShared, VerificationDue, ReportedOutdated];
 
     /// <summary>The preference and aggregation topic of a kind: the three share kinds are one topic, so a share that changes or ends
     /// replaces its earlier item instead of leaving it beside the new one.</summary>
-    public static string Topic(string kind) => kind is ItemShareChanged or ItemUnshared ? ItemShared : kind;
+    public static string Topic(string kind) => kind is ItemShareChanged or ItemUnshared ? ItemShared
+        : kind is VerificationExpiring or VerificationExpired ? VerificationDue
+        : kind;
 
     /// <summary>The subject of a job's failures: one per job id, so they aggregate into one item.</summary>
     public static Guid JobSubject(string jobId)

@@ -105,6 +105,7 @@ public static class AtlasEndpoints
         app.MapSkills();
         app.MapPageLinks();
         app.MapPageDecorations();
+        Atlas.Server.Features.PageVerifications.PageVerificationsModule.MapPageVerifications(app);
         app.MapPagePublication();
         app.MapRelations();
         Atlas.Server.Features.Entities.EntityEndpoints.MapEntities(app);

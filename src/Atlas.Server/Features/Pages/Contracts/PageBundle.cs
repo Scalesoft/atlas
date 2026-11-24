@@ -16,6 +16,14 @@ namespace Atlas.Server.Features.Pages.Contracts;
 public sealed record PageBundle(PersonalPageState? PersonalState, PageTagState? Tags, PageConnections? Connections,
     LiveContactsResult? Contacts, PageReferenceList? Pages, PageBundleCollaboration? Collaboration)
 {
+    /// <summary>5.2: the page's verification (the chip at the title, the panel's facts); state off while verification is off for the page.</summary>
+    public PageVerifications.PageVerificationView? Verification { get; init; }
+
+    /// <summary>5.2 „Čtenost“ of the panel: distinct readers in the last 90 days, as Čtenost stránky counts them; null while verification is
+    /// off for the page.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public long? Readers { get; init; }
+
     /// <summary>The directory contacts and linked pages a document names (chips, links), as the client would ask for them.</summary>
     public static (List<Guid> Contacts, HashSet<Guid> Pages) ReferencedIds(string contentJson)
     {

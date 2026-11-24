@@ -20,6 +20,9 @@ public static class ApiOperations
     public const string Favorite = "page.favorite";
     public const string Visit = "page.visit";
     public const string PageDecorationSet = "page.decoration_set";
+    public const string PageVerificationSet = "page.verification_set";
+    public const string PageReportOutdated = "page.report_outdated";
+    public const string SpaceVerificationBatch = "space.verification_batch";
     public const string PageTagsSet = "page.tags_set";
     public const string PageTagsChange = "page.tags_change";
     public const string SkillRate = "skill.rate";

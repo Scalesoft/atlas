@@ -1,0 +1,221 @@
+using System.ComponentModel;
+using System.Globalization;
+using System.Text;
+using System.Text.Json.Nodes;
+using Atlas.Server.Features.Mcp;
+using Atlas.Server.Features.Mcp.Commands;
+using Atlas.Server.Features.PageVerifications.Commands;
+using Atlas.Server.Features.PageVerifications.Queries;
+using Atlas.Server.Features.PersonalApi;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+using Wolverine;
+
+namespace Atlas.Server.Features.PageVerifications;
+
+/// <summary>atlas_set_verification: G5 first (the page's space, or the space of a bulk change), then the shared write.</summary>
+public sealed record SetMcpVerification(Guid PageId, SetPageVerificationRequest Request);
+
+/// <summary>atlas_set_verification with spaceId: G5 on the space, then the shared bulk write.</summary>
+public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
+
+/// <summary>atlas_list_content_health: G5 on the space, then the shared read.</summary>
+public sealed record GetMcpContentHealth(GetContentHealth Query);
+
+/// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
+public sealed record ReportMcpOutdated(ReportPageOutdated Command);
+
+public sealed class PageVerificationMcpHandler(McpOrganizationGuard guard, PageVerificationHandler handler, PageVerificationQueryHandler queries)
+{
+    public async Task<PageVerificationView> Handle(SetMcpVerification command, CancellationToken ct)
+    {
+        await guard.LockPageSpaceAsync(command.PageId, ct);
+        return await handler.Handle(new SetPageVerification(command.PageId, command.Request), ct);
+    }
+
+    public async Task<SpaceVerificationResult> Handle(SetMcpSpaceVerification command, CancellationToken ct)
+    {
+        await guard.LockSpaceForWriteAsync(command.SpaceId, ct);
+        return await handler.Handle(new SetSpaceVerification(command.SpaceId, command.Request), ct);
+    }
+
+    public async Task<ContentHealthList> Handle(GetMcpContentHealth query, CancellationToken ct)
+    {
+        await guard.LockSpaceForReadAsync(query.Query.SpaceId, ct);
+        return await queries.Handle(query.Query, ct);
+    }
+
+    public async Task<PageOutdatedReport> Handle(ReportMcpOutdated command, CancellationToken ct)
+    {
+        await guard.LockPageSpaceSharedAsync(command.Command.PageId, ct);
+        return await handler.Handle(command.Command, ct);
+    }
+}
+
+/// <summary>5.2 over MCP (plan §7): what a person does with verification, AI does under the token's owner with the same rights; a
+/// verification over MCP is marked „přes AI“. Not a Wolverine handler.</summary>
+[McpServerToolType]
+public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerificationMcpTools> logger)
+{
+    private const string States = "Stavy: verified (ověřeno), expiring (vyprší do 14 dní), expired (vypršelo), unverified (neověřeno), off (stránka se neověřuje).";
+
+    [McpServerTool(Name = "atlas_set_verification", Title = "Ověřit stránku nebo nastavit garanta", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false)]
+    [McpToolScope(ApiScopes.Write)]
+    [AssistantDescription("Ověří publikovanou stránku (verify), nastaví garanta (stewardId nebo stewardFromLastAuthor) nebo interval ověření. pageId, nebo spaceId s pageIds hromadně.")]
+    [Description("Ověří publikovanou verzi stránky (verify: true, volitelně until = datum platnosti, jinak dnes + interval), nastaví garanta " +
+        "(stewardId = id uživatele, který smí stránku číst; stewardFromLastAuthor: true = autor poslední publikované verze) nebo interval ověření " +
+        "(intervalMonths: inherit = podle prostoru, 0 = neověřovat, 3, 6, 12). Hromadně: spaceId a pageIds (až 500; verify, stewardId, " +
+        "stewardFromLastAuthor), spaceId bez pageIds se stewardFromLastAuthor nastaví garanta všem ověřovaným stránkám prostoru bez garanta. " +
+        "Smí každý s právem úprav stránky; ověření se označí „přes AI“. Šablony se neověřují. Přes MCP vyžaduje rozsah Zápis. " + States)]
+    public Task<CallToolResult> SetVerificationAsync(
+        [Description("pageId stránky (nebo spaceId s pageIds pro hromadnou změnu).")] string? pageId = null,
+        [Description("true = ověřit publikovanou verzi.")] bool? verify = null,
+        [Description("Datum, do kdy ověření platí (ISO 8601), jen s verify.")] string? until = null,
+        [Description("Id uživatele, který bude garantem.")] string? stewardId = null,
+        [Description("true = garantem bude autor poslední publikované verze.")] bool? stewardFromLastAuthor = null,
+        [Description("inherit (podle prostoru), 0 (neověřovat), 3, 6 nebo 12.")] string? intervalMonths = null,
+        [Description("Pro hromadnou změnu: spaceId prostoru.")] string? spaceId = null,
+        [Description("Pro hromadnou změnu: pageIds stránek prostoru.")] string[]? pageIds = null,
+        CancellationToken ct = default)
+        => RunAsync("atlas_set_verification", async () =>
+        {
+            var page = McpArguments.OptionalId(pageId, "pageId");
+            var space = McpArguments.OptionalId(spaceId, "spaceId");
+            if ((page is null) == (space is null))
+            {
+                return McpErrors.InvalidArgument("Zadejte pageId, nebo spaceId pro hromadnou změnu.");
+            }
+            DateTime? end = null;
+            if (until is not null)
+            {
+                if (!DateTime.TryParse(until, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
+                {
+                    return McpErrors.InvalidArgument("until musí být datum ISO 8601.");
+                }
+                end = parsed;
+            }
+            int? months = null;
+            if (intervalMonths is not null and not "inherit")
+            {
+                if (!int.TryParse(intervalMonths, NumberStyles.None, CultureInfo.InvariantCulture, out var parsedMonths))
+                {
+                    return McpErrors.InvalidArgument("intervalMonths je inherit, 0, 3, 6 nebo 12.");
+                }
+                months = parsedMonths;
+            }
+            var request = new SetPageVerificationRequest(verify, end, McpArguments.OptionalId(stewardId, "stewardId"), stewardFromLastAuthor, months,
+                intervalMonths == "inherit" ? true : null);
+            if (space is not null && (months is not null || intervalMonths is not null || end is not null))
+            {
+                return McpErrors.InvalidArgument("Hromadně lze jen ověřit a nastavit garanta; interval a datum nastavte po stránkách.");
+            }
+            var ids = pageIds?.Select((id, index) => McpArguments.RequiredId(id, $"pageIds[{index}]")).ToList();
+            if (space is { } spaceToChange)
+            {
+                var bulk = await bus.InvokeAsync<SpaceVerificationResult>(new SetMcpSpaceVerification(spaceToChange,
+                    new SetSpaceVerificationRequest(ids, verify, request.StewardId, stewardFromLastAuthor)), ct);
+                return McpText.Result($"Hromadná změna ověření: změněno {bulk.Updated} stránek, přeskočeno {bulk.Skipped} (bez práva úprav, nepublikované, mimo prostor nebo bez autora).",
+                    new JsonObject { ["updated"] = bulk.Updated, ["skipped"] = bulk.Skipped });
+            }
+            var view = await bus.InvokeAsync<PageVerificationView>(new SetMcpVerification(page!.Value, request), ct);
+            var structured = PageVerificationText.Json(view);
+            structured["pageId"] = page;
+            structured["intervalMonths"] = view.IntervalMonths;
+            structured["spaceIntervalMonths"] = view.SpaceIntervalMonths;
+            return McpText.Result("Ověření stránky uloženo.\n- pageId: " + page + "\n- ověření: " + (PageVerificationText.Line(view) ?? "stránka se neověřuje"), structured);
+        }, ct);
+
+    [McpServerTool(Name = "atlas_list_content_health", Title = "Stav obsahu prostoru", ReadOnly = true, Idempotent = true, OpenWorld = false, Destructive = false)]
+    [McpToolScope(ApiScopes.Read)]
+    [AssistantDescription("Stav obsahu prostoru: ověření a čtenost stránek, nejdřív čtené a neověřené. spaceId, volitelně filter, mine, sort, days, query, cursor.")]
+    [Description("Stav obsahu prostoru (pro správce a editory prostoru): počty stránek podle stavu ověření a publikované stránky se stavem, " +
+        "garantem, datem vypršení a čteností (zobrazení a různí čtenáři za období, bez jmen). filter: all, due (k ověření), without_steward, " +
+        "unread (nečtené v období); mine: jen kde jsem garant; sort: due_read (výchozí: nejdřív k ověření, pak nejčtenější), expiry, readers, " +
+        "published; days: 30, 90 (výchozí), 365. " + States + " " + McpText.TrustNotice)]
+    public Task<CallToolResult> ListContentHealthAsync(
+        [Description("spaceId prostoru.")] string spaceId,
+        [Description("all, due, without_steward, unread.")] string? filter = null,
+        [Description("true = jen stránky, kde jsem garant.")] bool mine = false,
+        [Description("due_read, expiry, readers, published.")] string? sort = null,
+        [Description("Období čtenosti: 30, 90 nebo 365 dní.")] int days = 90,
+        [Description("Část názvu stránky.")] string? query = null,
+        [Description("Počet položek 1–50, výchozí 20.")] int limit = 20,
+        [Description("nextCursor z předchozího výsledku.")] string? cursor = null,
+        CancellationToken ct = default)
+        => RunAsync("atlas_list_content_health", async () =>
+        {
+            var space = McpArguments.RequiredId(spaceId, "spaceId");
+            if (limit is < 1 or > 50)
+            {
+                return McpErrors.InvalidArgument("limit musí být 1 až 50.");
+            }
+            var list = await bus.InvokeAsync<ContentHealthList>(new GetMcpContentHealth(new GetContentHealth(space, filter, mine, sort, days, query, cursor, limit)), ct);
+            var text = new StringBuilder();
+            var s = list.Summary;
+            text.Append("Stav obsahu: ověřeno ").Append(s.Verified).Append(", brzy vyprší ").Append(s.Expiring).Append(", vypršelo nebo neověřeno ")
+                .Append(s.ExpiredOrUnverified).Append(", bez garanta ").Append(s.WithoutSteward).Append(". Stránek v seznamu: ").Append(list.Total).Append(".\n");
+            var items = new JsonArray();
+            foreach (var item in list.Items)
+            {
+                text.Append("- ").Append(McpText.Line(item.Title, 200)).Append(" (pageId ").Append(item.PageId).Append(")\n   cesta: ")
+                    .Append(McpText.Line(item.Path, 400)).Append("\n   stav: ").Append(item.State)
+                    .Append(item.VerifiedUntil is { } until ? ", do " + until.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "")
+                    .Append(item.ChangedSinceVerification ? ", změněno po ověření" : "")
+                    .Append(", garant: ").Append(item.StewardName is { } name ? McpText.Line(name, 100) : "bez garanta")
+                    .Append("\n   čtenost za ").Append(days).Append(" dní: ").Append(item.Readers).Append(" čtenářů, ").Append(item.Views).Append(" zobrazení\n");
+                items.Add(new JsonObject
+                {
+                    ["pageId"] = item.PageId, ["title"] = item.Title, ["path"] = item.Path, ["state"] = item.State, ["stewardId"] = item.StewardId,
+                    ["stewardName"] = item.StewardName, ["verifiedUntil"] = item.VerifiedUntil, ["changedSinceVerification"] = item.ChangedSinceVerification,
+                    ["readers"] = item.Readers, ["views"] = item.Views, ["lastViewedAt"] = item.LastViewedAt, ["lastPublishedAt"] = item.LastPublishedAt
+                });
+            }
+            if (list.NextCursor is { } next)
+            {
+                text.Append("Další stránky: zavolejte atlas_list_content_health se stejnými parametry a cursor: \"").Append(next).Append("\".\n");
+            }
+            var structured = new JsonObject
+            {
+                ["summary"] = new JsonObject
+                {
+                    ["verified"] = s.Verified, ["expiring"] = s.Expiring, ["expiredOrUnverified"] = s.ExpiredOrUnverified, ["withoutSteward"] = s.WithoutSteward
+                },
+                ["total"] = list.Total, ["items"] = items, ["nextCursor"] = list.NextCursor
+            };
+            return McpText.Result(text.ToString(), structured);
+        }, ct);
+
+    [McpServerTool(Name = "atlas_report_outdated", Title = "Nahlásit neaktuální stránku", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false)]
+    [McpToolScope(ApiScopes.Write)]
+    [AssistantDescription("Nahlásí garantovi stránky, že je neaktuální, s volitelnou poznámkou. pageId, note.")]
+    [Description("Nahlásí stránku jako neaktuální: garant stránky (bez garanta až tři editoři, kteří ji naposledy publikovali) dostane oznámení " +
+        "s poznámkou (nejvýše 500 znaků). Smí každý čtenář stránky; stránka se nemění. Přes MCP vyžaduje rozsah Zápis.")]
+    public Task<CallToolResult> ReportOutdatedAsync(
+        [Description("pageId stránky.")] string pageId,
+        [Description("Volitelná poznámka: co je neaktuální.")] string? note = null,
+        CancellationToken ct = default)
+        => RunAsync("atlas_report_outdated", async () =>
+        {
+            var id = McpArguments.RequiredId(pageId, "pageId");
+            var report = await bus.InvokeAsync<PageOutdatedReport>(new ReportMcpOutdated(new ReportPageOutdated(id, new ReportPageOutdatedRequest(note))), ct);
+            return McpText.Result($"Nahlášeno: oznámení dostalo {report.Notified} lidí.", new JsonObject { ["pageId"] = id, ["notified"] = report.Notified });
+        }, ct);
+
+    private async Task<CallToolResult> RunAsync(string tool, Func<Task<CallToolResult>> body, CancellationToken ct)
+    {
+        try
+        {
+            return await body();
+        }
+        catch (ApiException error)
+        {
+            return McpErrors.From(error);
+        }
+        catch (Exception error) when (error is not OperationCanceledException || !ct.IsCancellationRequested)
+        {
+            // Never the exception text: an ORM or driver message can quote statement parameters, which hold tool arguments.
+            logger.LogError("MCP tool {Tool} failed ({ErrorType})", tool, error.GetType().Name);
+            return McpErrors.Error(500, "internal_error", "Nástroj se nepodařilo dokončit.");
+        }
+    }
+}

@@ -130,6 +130,11 @@ public sealed class McpReadTools
                 {
                     head.Append("   publikováno: ").Append(Date(published)).Append('\n');
                 }
+                if (hit.VerificationState is { } verificationState)
+                {
+                    // 5.2: an expired verification is said in the answer (plan §7).
+                    head.Append("   ověření: ").Append(PageVerifications.PageVerificationText.State(verificationState)).Append('\n');
+                }
                 entries.Add((head.ToString(), hit.PassageBody is { Length: > 0 } passage ? McpText.Content(SearchText.Passage(passage, MaxPassage)) : null,
                     McpText.Line(hit.Snippet, 400)));
                 var item = new JsonObject
@@ -141,6 +146,10 @@ public sealed class McpReadTools
                 {
                     item["headingTitle"] = sectionTitle;
                     item["headingId"] = sectionId;
+                }
+                if (hit.VerificationState is { } stateOfHit)
+                {
+                    item["verification"] = new JsonObject { ["state"] = stateOfHit };
                 }
                 if (hit.PublishedAt is { } at)
                 {
@@ -323,7 +332,7 @@ public sealed class McpReadTools
     [McpServerTool(Name = "atlas_get_page", Title = "Přečíst stránku", ReadOnly = true, Idempotent = true, OpenWorld = false, Destructive = false)]
     [McpToolScope(ApiScopes.Read)]
     [AssistantDescription("Přečte publikovanou stránku jako Markdown se seznamem sekcí; s version: \"working\" rozepsanou pracovní verzi (jen editorovi stránky). " +
-        "pageId, volitelně headingId pro jednu sekci a cursor pro pokračování dlouhé stránky.")]
+        "pageId, volitelně headingId pro jednu sekci a cursor pro pokračování dlouhé stránky. Je-li ověření stránky vypršelé, řekněte v odpovědi, že zdroj nebyl ověřen od uvedeného data.")]
     [Description("Přečte stránku wiki jako Markdown: publikovanou verzi (výchozí), nebo pracovní verzi (version: \"working\", jen pokud smíte stránku upravovat). " +
         "Vrací název, cestu, verzi, expectedVersion pro zápis (jen editorovi), sekce s headingId a komponenty jako zástupné značky ⟦c:N⟧. " +
         "Obrázky příloh přicházejí jako Markdown ![popis](url), karty souborů jako zástupné značky s položkou embeds (attachmentId, occurrence). " +
