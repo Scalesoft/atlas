@@ -112,10 +112,24 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
             var ids = pageIds?.Select((id, index) => McpArguments.RequiredId(id, $"pageIds[{index}]")).ToList();
             if (space is { } spaceToChange)
             {
+                // One action per call, as Stav obsahu sends it.
+                var action = verify == true && request.StewardId is null && stewardFromLastAuthor != true ? "verify"
+                    : verify != true && request.StewardId is not null && stewardFromLastAuthor != true ? "steward"
+                    : verify != true && request.StewardId is null && stewardFromLastAuthor == true ? "stewardFromLastAuthor"
+                    : null;
+                if (action is null)
+                {
+                    return McpErrors.InvalidArgument("Hromadně zadejte právě jedno: verify, stewardId, nebo stewardFromLastAuthor.");
+                }
                 var bulk = await bus.InvokeAsync<SpaceVerificationResult>(new SetMcpSpaceVerification(spaceToChange,
-                    new SetSpaceVerificationRequest(ids, verify, request.StewardId, stewardFromLastAuthor)), ct);
-                return McpText.Result($"Hromadná změna ověření: změněno {bulk.Updated} stránek, přeskočeno {bulk.Skipped} (bez práva úprav, nepublikované, mimo prostor nebo bez autora).",
-                    new JsonObject { ["updated"] = bulk.Updated, ["skipped"] = bulk.Skipped });
+                    new SetSpaceVerificationRequest(action, ids, request.StewardId)), ct);
+                return McpText.Result($"Hromadná změna ověření: změněno {bulk.Changed} stránek, přeskočeno {bulk.Skipped.Count}" +
+                    (bulk.Skipped.Count > 0 ? " (" + string.Join(", ", bulk.Skipped.Take(20).Select(x => $"{x.PageId}: {x.Reason}")) + ")." : "."),
+                    new JsonObject
+                    {
+                        ["changed"] = bulk.Changed,
+                        ["skipped"] = new JsonArray(bulk.Skipped.Select(x => (JsonNode)new JsonObject { ["pageId"] = x.PageId, ["reason"] = x.Reason }).ToArray())
+                    });
             }
             var view = await bus.InvokeAsync<PageVerificationView>(new SetMcpVerification(page!.Value, request), ct);
             var structured = PageVerificationText.Json(view);
@@ -127,16 +141,16 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
 
     [McpServerTool(Name = "atlas_list_content_health", Title = "Stav obsahu prostoru", ReadOnly = true, Idempotent = true, OpenWorld = false, Destructive = false)]
     [McpToolScope(ApiScopes.Read)]
-    [AssistantDescription("Stav obsahu prostoru: ověření a čtenost stránek, nejdřív čtené a neověřené. spaceId, volitelně filter, mine, sort, days, query, cursor.")]
+    [AssistantDescription("Stav obsahu prostoru: ověření a čtenost stránek, nejdřív čtené a neověřené. spaceId, volitelně state, mine, sort, days, query, cursor.")]
     [Description("Stav obsahu prostoru (pro správce a editory prostoru): počty stránek podle stavu ověření a publikované stránky se stavem, " +
-        "garantem, datem vypršení a čteností (zobrazení a různí čtenáři za období, bez jmen). filter: all, due (k ověření), without_steward, " +
-        "unread (nečtené v období); mine: jen kde jsem garant; sort: due_read (výchozí: nejdřív k ověření, pak nejčtenější), expiry, readers, " +
+        "garantem, datem vypršení a čteností (zobrazení a různí čtenáři za období, bez jmen). state: all, due (k ověření), no-steward, " +
+        "unread (nečtené v období); mine: jen kde jsem garant; sort: priority (výchozí: nejdřív k ověření, pak nejčtenější), expiry, readers, " +
         "published; days: 30, 90 (výchozí), 365. " + States + " " + McpText.TrustNotice)]
     public Task<CallToolResult> ListContentHealthAsync(
         [Description("spaceId prostoru.")] string spaceId,
-        [Description("all, due, without_steward, unread.")] string? filter = null,
+        [Description("all, due, no-steward, unread.")] string? state = null,
         [Description("true = jen stránky, kde jsem garant.")] bool mine = false,
-        [Description("due_read, expiry, readers, published.")] string? sort = null,
+        [Description("priority, expiry, readers, published.")] string? sort = null,
         [Description("Období čtenosti: 30, 90 nebo 365 dní.")] int days = 90,
         [Description("Část názvu stránky.")] string? query = null,
         [Description("Počet položek 1–50, výchozí 20.")] int limit = 20,
@@ -149,23 +163,23 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
             {
                 return McpErrors.InvalidArgument("limit musí být 1 až 50.");
             }
-            var list = await bus.InvokeAsync<ContentHealthList>(new GetMcpContentHealth(new GetContentHealth(space, filter, mine, sort, days, query, cursor, limit)), ct);
+            var list = await bus.InvokeAsync<ContentHealthList>(new GetMcpContentHealth(new GetContentHealth(space, state, mine, sort, days, query, cursor, limit)), ct);
             var text = new StringBuilder();
             var s = list.Summary;
-            text.Append("Stav obsahu: ověřeno ").Append(s.Verified).Append(", brzy vyprší ").Append(s.Expiring).Append(", vypršelo nebo neověřeno ")
-                .Append(s.ExpiredOrUnverified).Append(", bez garanta ").Append(s.WithoutSteward).Append(". Stránek v seznamu: ").Append(list.Total).Append(".\n");
+            text.Append("Stav obsahu: ověřeno ").Append(s.Verified).Append(", brzy vyprší ").Append(s.Expiring).Append(", vypršelo ")
+                .Append(s.Expired).Append(", neověřeno ").Append(s.Unverified).Append(", bez garanta ").Append(s.WithoutSteward).Append(". Stránek v seznamu: ").Append(list.Total).Append(".\n");
             var items = new JsonArray();
             foreach (var item in list.Items)
             {
                 text.Append("- ").Append(McpText.Line(item.Title, 200)).Append(" (pageId ").Append(item.PageId).Append(")\n   cesta: ")
-                    .Append(McpText.Line(item.Path, 400)).Append("\n   stav: ").Append(item.State)
+                    .Append(McpText.Line(string.Join(" › ", item.Path.Append(item.Title)), 400)).Append("\n   stav: ").Append(item.State)
                     .Append(item.VerifiedUntil is { } until ? ", do " + until.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "")
                     .Append(item.ChangedSinceVerification ? ", změněno po ověření" : "")
                     .Append(", garant: ").Append(item.StewardName is { } name ? McpText.Line(name, 100) : "bez garanta")
                     .Append("\n   čtenost za ").Append(days).Append(" dní: ").Append(item.Readers).Append(" čtenářů, ").Append(item.Views).Append(" zobrazení\n");
                 items.Add(new JsonObject
                 {
-                    ["pageId"] = item.PageId, ["title"] = item.Title, ["path"] = item.Path, ["state"] = item.State, ["stewardId"] = item.StewardId,
+                    ["pageId"] = item.PageId, ["title"] = item.Title, ["path"] = new JsonArray(item.Path.Select(x => (JsonNode)JsonValue.Create(x)!).ToArray()), ["state"] = item.State, ["stewardId"] = item.StewardId,
                     ["stewardName"] = item.StewardName, ["verifiedUntil"] = item.VerifiedUntil, ["changedSinceVerification"] = item.ChangedSinceVerification,
                     ["readers"] = item.Readers, ["views"] = item.Views, ["lastViewedAt"] = item.LastViewedAt, ["lastPublishedAt"] = item.LastPublishedAt
                 });
@@ -178,9 +192,9 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
             {
                 ["summary"] = new JsonObject
                 {
-                    ["verified"] = s.Verified, ["expiring"] = s.Expiring, ["expiredOrUnverified"] = s.ExpiredOrUnverified, ["withoutSteward"] = s.WithoutSteward
+                    ["verified"] = s.Verified, ["expiring"] = s.Expiring, ["expired"] = s.Expired, ["unverified"] = s.Unverified, ["withoutSteward"] = s.WithoutSteward
                 },
-                ["total"] = list.Total, ["items"] = items, ["nextCursor"] = list.NextCursor
+                ["enabled"] = list.Enabled, ["total"] = list.Total, ["items"] = items, ["nextCursor"] = list.NextCursor
             };
             return McpText.Result(text.ToString(), structured);
         }, ct);

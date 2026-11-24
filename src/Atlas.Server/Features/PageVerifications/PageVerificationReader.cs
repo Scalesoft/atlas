@@ -47,15 +47,25 @@ public sealed class PageVerificationReader(ISession session, TimeProvider clock)
 
     /// <summary>The state of each listed page whose verification is on (search results, plan §3.3), in one statement; the caller has
     /// already decided the pages may be read.</summary>
-    public static async Task<Dictionary<Guid, string>> StatesAsync(ISession session, List<Guid> pageIds, CancellationToken ct)
+    public static Task<Dictionary<Guid, string>> StatesAsync(ISession session, List<Guid> pageIds, CancellationToken ct)
+        => ReadStatesAsync(Scalars(session.CreateSQLQuery(StatesSql("""p."Id" IN (:pages)"""))).SetParameterList("pages", pageIds.Distinct().ToList()), ct);
+
+    /// <summary>The same for every page of a space (the space tree's link chips), in one statement however large the space.</summary>
+    public static Task<Dictionary<Guid, string>> StatesInSpaceAsync(ISession session, Guid spaceId, CancellationToken ct)
+        => ReadStatesAsync(Scalars(session.CreateSQLQuery(StatesSql("""p."SpaceId"=:space AND NOT p."IsTrashed" """))).SetParameter("space", spaceId), ct);
+
+    private static string StatesSql(string pages) => $"""
+        SELECT p."Id" AS "PageId", coalesce(v."IntervalMonths",s."VerificationIntervalMonths") AS "Interval", v."VerifiedUntil" AS "VerifiedUntil"
+        FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId" LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
+        WHERE {pages} AND NOT p."IsTemplate" AND (s."VerificationIntervalMonths" IS NOT NULL OR v."IntervalMonths">0)
+        """;
+
+    private static NHibernate.ISQLQuery Scalars(NHibernate.ISQLQuery query) => query.AddScalar("PageId", NHibernate.NHibernateUtil.Guid)
+        .AddScalar("Interval", NHibernate.NHibernateUtil.Int16).AddScalar("VerifiedUntil", NHibernate.NHibernateUtil.UtcDateTime);
+
+    private static async Task<Dictionary<Guid, string>> ReadStatesAsync(NHibernate.IQuery query, CancellationToken ct)
     {
-        var rows = await session.CreateSQLQuery("""
-                SELECT p."Id" AS "PageId", coalesce(v."IntervalMonths",s."VerificationIntervalMonths") AS "Interval", v."VerifiedUntil" AS "VerifiedUntil"
-                FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId" LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
-                WHERE p."Id" IN (:pages) AND NOT p."IsTemplate" AND (s."VerificationIntervalMonths" IS NOT NULL OR v."IntervalMonths">0)
-                """).AddScalar("PageId", NHibernate.NHibernateUtil.Guid).AddScalar("Interval", NHibernate.NHibernateUtil.Int16)
-            .AddScalar("VerifiedUntil", NHibernate.NHibernateUtil.UtcDateTime)
-            .SetParameterList("pages", pageIds.Distinct().ToList()).ListAsync<object[]>(ct);
+        var rows = await query.ListAsync<object[]>(ct);
         var now = DateTime.UtcNow;
         return rows.Select(row => (Id: (Guid)row[0], State: PageVerificationStates.Of((short?)row[1], (DateTime?)row[2], now)))
             .Where(x => x.State != PageVerificationStates.Off).ToDictionary(x => x.Id, x => x.State);

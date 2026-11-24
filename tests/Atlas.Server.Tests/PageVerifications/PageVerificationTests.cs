@@ -57,13 +57,13 @@ public sealed class PageVerificationTests
         Assert.Equal(HttpStatusCode.OK, (await reader.GetAsync(url)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await AtlasHttpSite.SendAsync(reader, HttpMethod.Put, url, new { verify = true })).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await AtlasHttpSite.SendAsync(reader, HttpMethod.Put, url, new { stewardId = readerId })).StatusCode);
-        Assert.Equal(1, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, url + "/report-outdated", new { note = "Staré číslo." }),
+        Assert.Equal(1, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, url + "/report", new { note = "Staré číslo." }),
             HttpStatusCode.OK))["notified"]!.GetValue<int>());
-        Assert.Equal(HttpStatusCode.BadRequest, (await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, url + "/report-outdated", new { note = new string('x', 501) })).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, url + "/report", new { note = new string('x', 501) })).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await reader.GetAsync(health)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await stranger.GetAsync(url)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await AtlasHttpSite.SendAsync(stranger, HttpMethod.Put, url, new { verify = true })).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await AtlasHttpSite.SendAsync(stranger, HttpMethod.Post, url + "/report-outdated", new { })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await AtlasHttpSite.SendAsync(stranger, HttpMethod.Post, url + "/report", new { })).StatusCode);
         Assert.NotEqual(HttpStatusCode.OK, (await stranger.GetAsync(health)).StatusCode);
 
         // Writer: verifies, changes the interval and the steward; the steward must read the page.
@@ -85,9 +85,25 @@ public sealed class PageVerificationTests
         var bundle = (await AtlasHttpSite.Json(await reader.GetAsync($"/api/pages/{page.Id}?bundle=true"), HttpStatusCode.OK))["bundle"]!;
         Assert.Equal(PageVerificationStates.Expiring, bundle["verification"]!["state"]!.GetValue<string>());
         Assert.NotNull(bundle["readers"]);
-        var list = await AtlasHttpSite.Json(await writer.GetAsync(health + "?filter=due"), HttpStatusCode.OK);
+        var list = await AtlasHttpSite.Json(await writer.GetAsync(health + "?state=due"), HttpStatusCode.OK);
         Assert.Equal(1, list["summary"]!["expiring"]!.GetValue<int>());
         Assert.Equal(page.Id, Assert.Single(list["items"]!.AsArray())!["pageId"]!.GetValue<string>());
+        // The link chips read the state from the tree and the batch reference check.
+        var tree = await AtlasHttpSite.Json(await reader.GetAsync($"/api/spaces/{space}/tree"), HttpStatusCode.OK);
+        Assert.Equal(PageVerificationStates.Expiring, tree["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verification"]!.GetValue<string>());
+        var references = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, "/api/pages/references", new { ids = new[] { page.Id } }),
+            HttpStatusCode.OK);
+        Assert.Equal(PageVerificationStates.Expiring, Assert.Single(references["items"]!.AsArray())!["verification"]!.GetValue<string>());
+
+        // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader changes nothing.
+        var bulk = $"/api/spaces/{space}/content-health/bulk";
+        var cleared = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
+            new { action = "steward", pageIds = new[] { page.Id, Guid.NewGuid().ToString() }, stewardId = (string?)null }), HttpStatusCode.OK);
+        Assert.Equal((1, 1), (cleared["changed"]!.GetValue<int>(), cleared["skipped"]!.AsArray().Count));
+        Assert.Null((await AtlasHttpSite.Json(await writer.GetAsync(url), HttpStatusCode.OK))["stewardId"]);
+        var refused = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, bulk, new { action = "verify", pageIds = new[] { page.Id } }),
+            HttpStatusCode.OK);
+        Assert.Equal((0, 1), (refused["changed"]!.GetValue<int>(), refused["skipped"]!.AsArray().Count));
 
         // Over MCP: verifying needs the write scope, is marked „přes AI“, and atlas_get_page and the content health show it.
         await f.SetLevelAsync(f.AdminId, "write");

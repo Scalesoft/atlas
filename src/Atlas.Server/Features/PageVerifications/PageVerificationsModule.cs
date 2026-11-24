@@ -39,28 +39,28 @@ public static class PageVerificationsModule
                 => Results.Ok(await bus.InvokeAsync<PageVerificationView>(new SetPageVerification(id, request), ct)))
             .Produces<PageVerificationView>().ProducesProblem(400).ProducesProblem(403).ProducesProblem(404)
             .WithSummary("Verify the page's published version (verify: true, optionally until a later date), set its steward (stewardId: an active " +
-                "user who may read the page, or stewardFromLastAuthor: the author of the last published version) or its interval (intervalMonths 0 = " +
+                "user who may read the page, stewardFromLastAuthor: the author of the last published version, or clearSteward: true) or its interval (intervalMonths 0 = " +
                 "not verified, 3, 6, 12; inheritInterval: true follows the space). Needs the right to edit the page; templates are not verified.");
-        var report = group.MapPost("/pages/{id:guid}/verification/report-outdated", async (Guid id, ReportPageOutdatedRequest request, IMessageBus bus,
+        var report = group.MapPost("/pages/{id:guid}/verification/report", async (Guid id, ReportPageOutdatedRequest request, IMessageBus bus,
                 CancellationToken ct) => Results.Ok(await bus.InvokeAsync<PageOutdatedReport>(new ReportPageOutdated(id, request), ct)))
             .Produces<PageOutdatedReport>().ProducesProblem(400).ProducesProblem(404)
             .WithSummary("Report the page as outdated with an optional note (at most 500 characters): its steward, else up to three editors who " +
                 "last published it, get a notification. Any reader may; nothing on the page changes.");
-        var health = group.MapGet("/spaces/{spaceId:guid}/content-health", async (Guid spaceId, string? filter, bool? mine, string? sort, int? days,
+        var health = group.MapGet("/spaces/{spaceId:guid}/content-health", async (Guid spaceId, string? state, bool? mine, string? sort, int? days,
                 string? q, string? cursor, int? limit, IMessageBus bus, CancellationToken ct)
-                => Results.Ok(await bus.InvokeAsync<ContentHealthList>(new GetContentHealth(spaceId, filter, mine ?? false, sort, days ?? 90, q, cursor,
+                => Results.Ok(await bus.InvokeAsync<ContentHealthList>(new GetContentHealth(spaceId, state, mine ?? false, sort, days ?? 90, q, cursor,
                     limit ?? 50), ct)))
             .Produces<ContentHealthList>().ProducesProblem(400).ProducesProblem(403).ProducesProblem(404)
             .WithSummary("Stav obsahu of a space for its admins and writers: counts by verification state and the published pages with their state, " +
-                "steward, expiry and readership (views and distinct readers, no names). filter: all, due (expiring, expired, unverified), " +
-                "without_steward, unread; mine: only where the caller is the steward; sort: due_read (default: due pages first, then by readers), " +
+                "steward, expiry, ancestors' titles and readership (views and distinct readers, no names); enabled: whether the space verifies. " +
+                "state: all, due (expiring, expired, unverified), no-steward, unread; mine: only where the caller is the steward; sort: priority (default: due pages first, then by readers), " +
                 "expiry, readers, published; days: 30, 90, 365; q: part of the title; limit 1–100; cursor: nextCursor.");
-        var batch = group.MapPost("/spaces/{spaceId:guid}/verification/batch", async (Guid spaceId, SetSpaceVerificationRequest request, IMessageBus bus,
+        var batch = group.MapPost("/spaces/{spaceId:guid}/content-health/bulk", async (Guid spaceId, SetSpaceVerificationRequest request, IMessageBus bus,
                 CancellationToken ct) => Results.Ok(await bus.InvokeAsync<SpaceVerificationResult>(new SetSpaceVerification(spaceId, request), ct)))
             .Produces<SpaceVerificationResult>().ProducesProblem(400).ProducesProblem(404)
-            .WithSummary("Verify or set the steward of up to 500 pages of the space at once (pageIds with verify, stewardId or stewardFromLastAuthor). " +
-                "Without pageIds, stewardFromLastAuthor sets the steward of every verified page of the space that has none. Pages the caller may not " +
-                "edit are skipped and counted.");
+            .WithSummary("Change up to 500 pages of the space at once: action verify, steward (stewardId, null clears it) or stewardFromLastAuthor " +
+                "(the author of the last published version) over pageIds. Without pageIds, stewardFromLastAuthor sets the steward of every verified " +
+                "page of the space that has none. Pages refused (no edit right, never published, …) are listed in skipped with the reason.");
         var readership = group.MapGet("/spaces/{spaceId:guid}/readership", async (Guid spaceId, DateOnly from, DateOnly to, string? filter, string? cursor,
                 IMessageBus bus, CancellationToken ct)
                 => Results.Ok(await bus.InvokeAsync<SpaceReadership>(new GetSpaceReadership(spaceId, from, to, filter, cursor), ct)))

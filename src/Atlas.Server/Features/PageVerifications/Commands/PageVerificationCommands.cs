@@ -42,7 +42,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         List<Guid> ids;
         if (request.PageIds is null)
         {
-            if (request.StewardFromLastAuthor != true || request.Verify is not null || request.StewardId is not null)
+            if (request.Action != "stewardFromLastAuthor")
             {
                 throw new ApiException(400, "Bez výběru stránek lze jen nastavit garanta podle posledního autora.");
             }
@@ -56,8 +56,15 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             throw new ApiException(400, "Najednou lze změnit nejvýše {max} stránek.", args: new Dictionary<string, object?> { ["max"] = MaxBulk });
         }
-        var single = new SetPageVerificationRequest(request.Verify, null, request.StewardId, request.StewardFromLastAuthor);
-        int updated = 0, skipped = 0;
+        var single = request.Action switch
+        {
+            "verify" => new SetPageVerificationRequest(Verify: true),
+            "steward" => request.StewardId is { } steward ? new SetPageVerificationRequest(StewardId: steward) : new SetPageVerificationRequest(ClearSteward: true),
+            "stewardFromLastAuthor" => new SetPageVerificationRequest(StewardFromLastAuthor: true),
+            _ => throw new ApiException(400, "Neznámá hromadná akce ověření.")
+        };
+        var updated = 0;
+        var skipped = new List<SkippedPage>();
         foreach (var id in ids)
         {
             try
@@ -65,7 +72,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 var (page, actor) = await locks.LockPageAsync(id, false, AccessOperation.EditContent, ct);
                 if (page.SpaceId != command.SpaceId)
                 {
-                    skipped++;
+                    skipped.Add(new SkippedPage(id, "404"));
                     continue;
                 }
                 await ApplyAsync(page, actor, single, ct);
@@ -74,7 +81,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             catch (ApiException error) when (error.Status is 400 or 403 or 404)
             {
                 // Refused before anything was written: the page stays, the rest goes on.
-                skipped++;
+                skipped.Add(new SkippedPage(id, error.Code ?? error.Status.ToString(System.Globalization.CultureInfo.InvariantCulture)));
             }
         }
         await session.FlushAsync(ct);
@@ -104,7 +111,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
     /// <summary>Applies the request to a page locked for editing; throws a 400 before anything changes.</summary>
     private async Task ApplyAsync(Page page, UserAccount actor, SetPageVerificationRequest request, CancellationToken ct)
     {
-        if (request is { Verify: not true, StewardId: null, StewardFromLastAuthor: not true, IntervalMonths: null, InheritInterval: not true })
+        if (request is { Verify: not true, StewardId: null, StewardFromLastAuthor: not true, IntervalMonths: null, InheritInterval: not true, ClearSteward: not true })
         {
             throw new ApiException(400, "Zadejte, co se má u ověření stránky změnit.");
         }
@@ -135,6 +142,10 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             row.StewardId = await RequireStewardAsync(page, await LastAuthorAsync(page, ct)
                 ?? throw new ApiException(400, "Stránka nemá publikovanou verzi, podle jejíhož autora by se garant nastavil."), ct);
+        }
+        if (request.ClearSteward == true)
+        {
+            row.StewardId = null;
         }
         if (request.StewardId is { } stewardId)
         {

@@ -1,4 +1,3 @@
-using Atlas.Server.Features.Mcp.Domain;
 using Atlas.Server.Features.PageVerifications.Domain;
 using Atlas.Server.Features.PersonalLibrary;
 using ISession = NHibernate.ISession;
@@ -11,16 +10,16 @@ public sealed record GetPageVerification(Guid PageId);
 /// <summary>
 /// Stav obsahu (plan §6): the space's published pages with their verification and readership, for its admins and writers.
 /// </summary>
-/// <param name="Filter">all, due (expiring, expired, unverified), without_steward or unread (no view in the period).</param>
+/// <param name="State">empty or all, due (expiring, expired, unverified), no-steward or unread (no view in the period).</param>
 /// <param name="Mine">Only pages whose steward is the caller.</param>
-/// <param name="Sort">due_read (default: „Nejdřív čtené a neověřené“), expiry, readers or published.</param>
+/// <param name="Sort">priority (default: „Nejdřív čtené a neověřené“), expiry, readers or published.</param>
 /// <param name="Days">The period of the readership: 30, 90 (default) or 365 days.</param>
 /// <param name="Query">Part of the title.</param>
-public sealed record GetContentHealth(Guid SpaceId, string? Filter = null, bool Mine = false, string? Sort = null, int Days = 90,
+public sealed record GetContentHealth(Guid SpaceId, string? State = null, bool Mine = false, string? Sort = null, int Days = 90,
     string? Query = null, string? Cursor = null, int Limit = 50);
 
 public sealed class PageVerificationQueryHandler(ISession session, PageGate gate, PageVerificationReader reader, IContentAccess access,
-    McpPagePaths paths, TimeProvider clock)
+    TimeProvider clock)
 {
     public async Task<PageVerificationView> Handle(GetPageVerification query, CancellationToken ct)
     {
@@ -41,11 +40,11 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         {
             throw new ApiException(400, "Počet položek musí být 1 až 100.");
         }
-        Func<Row, bool> filter = query.Filter switch
+        Func<Row, bool> filter = query.State switch
         {
             null or "" or "all" => _ => true,
             "due" => row => PageVerificationStates.IsDue(row.State),
-            "without_steward" => row => row.State != PageVerificationStates.Off && row.StewardId is null,
+            "no-steward" => row => row.State != PageVerificationStates.Off && row.StewardId is null,
             "unread" => row => row.Read.Views == 0,
             _ => throw new ApiException(400, "Neznámý filtr stavu obsahu.")
         };
@@ -74,14 +73,14 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         }).ToList();
         var on = rows.Where(row => row.State != PageVerificationStates.Off).ToList();
         var summary = new ContentHealthSummary(on.Count(row => row.State == PageVerificationStates.Verified),
-            on.Count(row => row.State == PageVerificationStates.Expiring),
-            on.Count(row => row.State is PageVerificationStates.Expired or PageVerificationStates.Unverified), on.Count(row => row.StewardId is null));
+            on.Count(row => row.State == PageVerificationStates.Expiring), on.Count(row => row.State == PageVerificationStates.Expired),
+            on.Count(row => row.State == PageVerificationStates.Unverified), on.Count(row => row.StewardId is null));
         var text = query.Query?.Trim();
         var shown = rows.Where(filter).Where(row => !query.Mine || row.StewardId == actor.Id)
             .Where(row => string.IsNullOrEmpty(text) || row.Read.Title.Contains(text, StringComparison.CurrentCultureIgnoreCase));
         var ordered = (query.Sort switch
         {
-            null or "" or "due_read" => shown.OrderByDescending(row => PageVerificationStates.IsDue(row.State)).ThenByDescending(row => row.Read.Readers)
+            null or "" or "priority" => shown.OrderByDescending(row => PageVerificationStates.IsDue(row.State)).ThenByDescending(row => row.Read.Readers)
                 .ThenByDescending(row => row.Read.Views),
             // Unverified first: it has no date and is due already.
             "expiry" => shown.OrderBy(row => row.State == PageVerificationStates.Off).ThenBy(row => row.Until ?? DateTime.MinValue),
@@ -90,13 +89,24 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
             _ => throw new ApiException(400, "Neznámé řazení stavu obsahu.")
         }).ThenBy(row => row.Read.Title, StringComparer.Ordinal).ThenBy(row => row.Read.PageId).ToList();
         var page = ordered.Skip(offset).Take(query.Limit).ToList();
-        var described = page.Count == 0 ? new Dictionary<Guid, string>()
-            : await paths.DescribeAsync(actor, page.ToDictionary(row => row.Read.PageId, row => (space.Name, row.Read.Title)), ct);
-        return new ContentHealthList(summary, page.Select(row => new ContentHealthItem(row.Read.PageId, row.Read.Title,
-                described.GetValueOrDefault(row.Read.PageId) ?? space.Name, row.State, row.StewardId, row.StewardName, row.Until,
+        var byId = reads.ToDictionary(read => read.PageId);
+        return new ContentHealthList(space.VerificationIntervalMonths is not null, summary, page.Select(row => new ContentHealthItem(row.Read.PageId, row.Read.Title,
+                Ancestors(row.Read, byId), row.State, row.StewardId, row.StewardName, row.Until,
                 row.VerifiedVersion is { } verified && row.Read.PublishedVersion > verified, row.Read.Readers, row.Read.Views, row.Read.LastViewedAt,
                 row.Read.LastPublishedAt, row.Read.PublishedVersion, row.VerifiedVersion)).ToArray(),
             ordered.Count, ordered.Count > offset + query.Limit ? (offset + query.Limit).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
+    }
+
+    /// <summary>The titles of the page's readable published ancestors from the root; a parent the reader may not read ends the path.</summary>
+    private static List<string> Ancestors(AnalyticsHandler.SpaceRead page, Dictionary<Guid, AnalyticsHandler.SpaceRead> byId)
+    {
+        var path = new List<string>();
+        var seen = new HashSet<Guid> { page.PageId };
+        for (var parent = page.ParentId; parent is { } id && seen.Add(id) && byId.TryGetValue(id, out var read); parent = read.ParentId)
+        {
+            path.Insert(0, read.Title);
+        }
+        return path;
     }
 
     private sealed record Row(AnalyticsHandler.SpaceRead Read, string State, Guid? StewardId, string? StewardName, DateTime? Until, int? VerifiedVersion);

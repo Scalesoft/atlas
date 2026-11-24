@@ -22,7 +22,8 @@ public sealed class PerformanceBudgetHttpTests(ITestOutputHelper output)
     [
         ("spaces", (_, _) => "/api/spaces", 9),
         // The pages, and one query per other content type in the tree (the site runs with Boards on: its boards; reference nodes).
-        ("tree", (space, _) => $"/api/spaces/{space}/tree", 13),
+        // 5.2: +1, the verification states of the space's pages for the link chips that resolve from the tree.
+        ("tree", (space, _) => $"/api/spaces/{space}/tree", 14),
         ("page", (_, page) => $"/api/pages/{page}", 13),
         // The read that opens a page records the visit in it (3.6-G N7): the page's statements and the visit's own, not a second request.
         ("page-visit", (_, page) => $"/api/pages/{page}?visit=true", 32),

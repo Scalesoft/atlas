@@ -81,8 +81,8 @@ public sealed class ModuleCommandCoverageTests
         [typeof(SetPagePublication)] = ("atlas_set_publication", "PUT /api/v1/pages/{id:guid}/publication"),
         // 5.2 Ověřený obsah (plan §7).
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification)] = ("atlas_set_verification", "PUT /api/v1/pages/{id:guid}/verification"),
-        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetSpaceVerification)] = ("atlas_set_verification", "POST /api/v1/spaces/{spaceId:guid}/verification/batch"),
-        [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportPageOutdated)] = ("atlas_report_outdated", "POST /api/v1/pages/{id:guid}/verification/report-outdated"),
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetSpaceVerification)] = ("atlas_set_verification", "POST /api/v1/spaces/{spaceId:guid}/content-health/bulk"),
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportPageOutdated)] = ("atlas_report_outdated", "POST /api/v1/pages/{id:guid}/verification/report"),
         // „Řadit abecedně“ of a tree level (3.6).
         [typeof(SortTreeLevel)] = ("atlas_sort_pages", "POST /api/v1/spaces/{spaceId:guid}/tree/sort"),
     };

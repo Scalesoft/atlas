@@ -19,6 +19,10 @@ public sealed record PageTreeItem(Guid Id, Guid? ParentId, string? Title, int Ve
     public Guid? AttachedBoardId { get; init; }
     /// <summary>„Řadit abecedně“ of this page: its direct children are shown by title (Domain.TitleOrder).</summary>
     public bool ChildrenByTitle { get; init; }
+    /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the link chips that resolve from the
+    /// tree; absent while off.</summary>
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? Verification { get; init; }
 
     /// <summary>Another content type's leaf under <paramref name="parentId"/> (the visible parent, D8).</summary>
     public static PageTreeItem Of(ContentTreeNode node, Guid? parentId) =>
