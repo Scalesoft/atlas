@@ -4,10 +4,30 @@ Změny Atlasu evidované od zavedení verzování.
 
 Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · Performant Pear`) a pod ním své opravné verze jako menší oddíly (`### 3.5.1 — datum`), od nejstarší.
 
-## 5.1 · Tandem Tangerine (nevydáno)
+## 5.1 · Tandem Tangerine
+
+*5.1.0 — 2026-11-24*
 
 ### Spolupráce
-- Server odebere přítomnost odcházejícího spojení, takže se avatary spolupracovníků nezdvojují.
+- Živé ukazatele spolupracovníků na stránce i nástěnce, kurzor AI při zápisu asistenta nebo agenta přes MCP či API; text agenta se v otevřené stránce vepisuje živě.
+- Server odebere přítomnost odcházejícího spojení (avatary se nezdvojují); rychlé znovupřipojení ukáže člověka hned; identifikátor agenta si spolupracovník nepřivlastní.
+- Ukazatele nepřestavují kurzory editoru při každém pohybu myši; překreslení zapisuje jen to, co se změnilo.
+
+### Kontakty a Mapa znalostí
+- Karta osoby při najetí, vizitka .vcf a offline QR kód vizitky.
+- Mapa znalostí: témata u lidí s úrovní 1–5, soukromé, anonymní a podepsané hodnocení (anonymní čísla po pásmech), přehled tématu, graf kdo–co, MCP nástroje a /api/v1.
+- Vazbu kontaktu na účet (`directoryId`) mění jen správce wiki.
+
+### Hledání
+- Přesná shoda jména zůstává nahoře i po doběhnutí dalších výsledků; kontakty řadí přesnou shodu, pak začátek jména.
+
+### Historie a vydání
+- Historie stránky s grafem příspěvků po lidech, AI a publikacích; obrazovka vydání s ukázkami.
+- Dialogy se zavřou i kliknutím na pozadí.
+
+### Provoz
+- PostgreSQL 19 z oficiálního image `pgvector/pgvector` (kolace builtin C.UTF-8), převod z PostgreSQL 18 skriptem `deploy/postgres/upgrade.sh`; vlastní databázový image zanikl.
+- Při změně verze kolace Atlas při startu jednou přeindexuje databázi.
 
 ## 5.0 · Shared Strawberry
 
