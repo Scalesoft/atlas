@@ -1,7 +1,42 @@
 # Atlas 5.2 — analýza aktualizace JS knihoven (Tiptap, ProseMirror, Yjs a ostatní)
 
-Stav: **analýza, nic se neaktualizovalo** (2026-11-24, základ `develop` po `5.2.0-dev`). Měřeno pokusnými instalacemi ve
-vedlejším worktree (bez commitu, vráceno na `--frozen-lockfile`). Typecheck a vitest `@atlas/markdown` s prioritou BelowNormal.
+Stav: **analýza (2026-11-24) a krok 1 provedený 2026-11-25** (§ 0). Analýza vznikla pokusnými instalacemi ve vedlejším worktree
+(vráceno na `--frozen-lockfile`); typecheck a vitest `@atlas/markdown` s prioritou BelowNormal. Krok 2 (`y-tiptap` 3.3.1) a ostatní
+body jsou dál jen doporučení.
+
+## 0. Krok 1 provedený: Tiptap 3.35.0 a ProseMirror
+
+`@tiptap/*` 3.31.3 → 3.35.0 (peer `^3.35.0`), přes `@tiptap/pm` `prosemirror-model` 1.25.13 a `prosemirror-view` 1.43.1.
+`@tiptap/y-tiptap` zůstává 3.0.9 s patchem. Postup: porovnány zdroje (`src`) všech změněných balíčků Tiptapu mezi 3.31.3
+a 3.35.0 a changelogy ProseMirroru, hledáno, co z toho se dotýká našeho kódu; teprve pak testy.
+
+Co ve zdrojích zasáhlo Atlas a co se s tím stalo:
+
+| Změna upstreamu | Dopad na Atlas | Řešení |
+|---|---|---|
+| **Input rules** (`core/InputRule.ts`): napsaný znak se vloží do dokumentu jako vlastní transakce **před** pravidlem, `range` sahá až za něj, před konverzí `closeHistory`. Cesty bez psaní (compositionend, Enter, `insertContent`) zůstaly po starém | `projector/requirementInline.ts` („do pátku “) předpokládal, že znak v dokumentu není (`range.to - range.from === match.length - 1`): podmínka by byla vždy nepravdivá a fráze by přestala fungovat. Pravidla emoji, math a callout fungují beze změny (čteno, otestováno) | handler pozná psaný znak podle velikosti dokumentu (o 1 delší než dokument editoru) a frázi bere bez něj; test `requirementInline` prošel |
+| Totéž: Ctrl+Z po automatické konverzi (`:smile:`, `$x$ `) | vrací text tak, jak byl napsán, **včetně spouštěcího znaku** (dřív bez něj) | test `chipText` upraven, zapsáno v CHANGELOGu editoru; je to chování, ne chyba |
+| `prosemirror-model` 1.25.12: atributy se validují v `NodeType/MarkType.create` (jen explicitní hodnoty) | neplatný atribut už nejde postavit; y-tiptap takový element **maže ze sdíleného dokumentu**; 2 testy obrázkové politiky; **materializer v .NET** ho dál ukazoval | testy upraveny (filtr transakcí se kryje ručně podvrženým uzlem); manifest schématu má u atributů s vlastním validátorem `validated: true`, `YjsDocumentMaterializer` je odmítne (`InvalidAttributeValue`); 4 případy corpusu (callout `variant`, `concealedContent.reveal`, 2 hostile) jsou nově „odmítnuto“ a vypadly z merge corpusu |
+| `prosemirror-view` 1.43: `mousedown` v editoru vždy `preventDefault`, myš řeší knihovna | test `modules` (stisk mimo formulář) | test hlídá `click`, ne `mousedown`; **v prohlížeči neověřeno** |
+| `prosemirror-view` 1.43: DOM výběr se čte před klávesou | `DomCaretFirst` je asi zbytečný; `flushDomSelection` ale zůstává nutný (test „klik a pak text najednou“ bez něj padá) | nic neodstraněno, kandidát po ověření v prohlížeči |
+| `FindAndReplace` 3.33: první `goToNextResult()` vybere zvýrazněný první výsledek | panel hledání: první Enter výsledek vybere, neskočí na druhý | test upraven; `SearchPanel` ukazuje „1 z N“ a první Enter ho teď opravdu vybere |
+| `Table` 3.35: `TableView.update` při změně atributů tabulky vytvoří node view znovu, `View: null` pro `columnResizing`, nový plugin `preserveCellSelectionOnContextMenu`, `colspan/rowspan = 1` se nevypisuje | naše `MarkdownTable` mapuje pluginy rodiče a nahrazuje `appendTransaction` `tableEditing` (stále platí); překreslení tabulky při změně jejích atributů může rušit overlay (`features/table/overlayView.ts`) | testy prošly; **v prohlížeči neověřeno** |
+| `Collaboration` 3.31.4+: plugin s `filterTransaction`, který u transakce `inputRule` volá `undoManager.stopCapturing()`; `getUndoManager` hází bez `yUndoPlugin` | undo kolaborace a naše `CollaborationHistoryBoundary` | testy kolaborace prošly |
+| `Link` 3.31.4+: `unlinkTrailingWhitespace` v `appendTransaction` autolinku (i pro vzdálené transakce) | mezera za odkazem se z odkazu odebere místně; u vzdálené změny se do Yjs nezapíše (stejná třída jako dřívější přidávání autolinků) | nízké riziko, sledovat |
+| `toggleList` 3.32: převod mezi typy seznamů s různými položkami | `toggleTaskList` na odrážkovém seznamu ho nově převede; sekvence `editor-session` v corpusu se změnila | fixtures `editor-session` záměrně nepřegenerovány (kontrola corpusu na starých datech prochází) |
+| `NodeView.ignoreMutation` 3.31.4+: výběr v listovém node view čte ProseMirror | vlastní node views s vnitřními prvky | testy prošly; **v prohlížeči neověřeno** |
+
+Fixtures: přegenerováno jen to, co upgrade skutečně mění. Opakovaná regenerace materializer corpusu na **čistém** `develop`
+dává změny i bez upgradu (`editor-concurrent`, `fixture-imported-*`: uložená data se od generátoru rozešla), proto jsou ty
+adresáře ponechané. `Atlas.Yjs` writer fixtures: 0 rozdílů z 857 případů, mění se jen verze v metadatech (`prosemirror-model` 1.25.13).
+
+Ověřeno: typecheck editoru i Web, vitest editoru (2 922) a Web (4 584), `architecture.mjs`, rozpočet balíčku, `Atlas.Yjs.Tests` (867),
+`Atlas.Markdown.Sync.Tests` (814). **Neověřeno:** `Atlas.Server.Tests` (testovací Postgres v Podmanu na tomto stroji nepřijímal spojení),
+Playwright e2e, reálný prohlížeč (myš ve view 1.43, tabulky, kurzory, výkon na velké stránce).
+
+Zůstává k rozhodnutí: `TypedTextInput` (kit) i `boardTextInput` (tabule, komentář uvádí chybu jádra 3.31): obě mají testy nebo
+jinou sémantiku, jádro 3.35 samo `**x**` napsané najednou převede, ale „každý znak přes pravidla“ a „všechno kromě posledního“ se liší.
+
 
 ## 1. Shrnutí
 

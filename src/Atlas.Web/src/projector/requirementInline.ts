@@ -174,10 +174,12 @@ export const RequirementInline = Extension.create({
         // Enter runs the rules with "\n": that one is deadlineBeforeEnter's, which lets Enter go on.
         find: text => { const found = text.endsWith("\n") ? null : findDeadline(text, pragueNow().date); return found ? { index: found.index, text: found.text, data: { date: found.value } } : null; },
         handler: ({ state, range, match }) => {
-          // Only what was typed into the document before this space: a phrase inserted at once (an IME, a pasted word) stays text.
-          const heading = editor.isEditable && range.to - range.from === match[0].length - 1 ? titleHeading(state.doc.resolve(range.from)) : null;
+          // Tiptap (3.33+) puts the typed space into the document before the rule runs: `range` ends after it, and the document the rule
+          // sees is one character longer than the editor's. Any other run (an IME commit, a pasted word) is not that: it stays text.
+          const typed = state.doc.content.size - editor.state.doc.content.size === 1 && state.doc.textBetween(range.from, range.to - 1) === match[0].slice(0, -1);
+          const heading = editor.isEditable && typed ? titleHeading(state.doc.resolve(range.from)) : null;
           if (!heading) return null;
-          const before = factsOf(state.doc, heading.id)?.deadline ?? "", start = cutStart(state.doc, range.from, range.to), phrase = state.doc.textBetween(start, range.to);
+          const before = factsOf(state.doc, heading.id)?.deadline ?? "", start = cutStart(state.doc, range.from, range.to), phrase = state.doc.textBetween(start, range.to - 1);
           writeHeadingPhrase(state.tr, heading.id, range, tr => writeHeadingDeadline(tr, heading.id, match.data!.date as string));
           markMarkdownAutoConversion(state.tr, { from: start, to: start, text: phrase, revert: tr => { writeHeadingDeadline(tr, heading.id, before); tr.setMeta(inlineKey, { after: null }); } });
           announceDeadline(editor, heading.id, before, match.data!.date as string);

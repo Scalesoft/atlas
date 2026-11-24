@@ -248,7 +248,8 @@ describe('lazy content modules', () => {
     expect(editor.state.selection).toBeInstanceOf(NodeSelection)
     // Fixed, the next press outside applies it and goes on to where it was aimed.
     type('Fixed')
-    expect(press('.ProseMirror > p').down.defaultPrevented).toBe(false)
+    // (ProseMirror 1.43 handles a mouse press itself and prevents the browser's mousedown, so only the click tells it was not swallowed.)
+    expect(press('.ProseMirror > p').click.defaultPrevented).toBe(false)
     expect(text()).toBe('Fixed'); expect(form()).toBeNull()
 
     // A draft given back (a question about it went back) is a change already: a click outside applies it.

@@ -27,12 +27,15 @@ describe('optional upstream editor tools', () => {
     const input = panel.querySelector<HTMLInputElement>('input[type=search]')!
     input.value = 'cat'; input.dispatchEvent(new Event('input', { bubbles: true }))
     await vi.waitFor(() => expect(editorSearchState(editor).results).toHaveLength(2))
-    const before = editorSearchState(editor).currentIndex
+    const before = editorSearchState(editor).currentIndex, caret = editor.state.selection
     input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
     const enter = new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true, cancelable: true })
     input.dispatchEvent(enter); panel.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
-    expect(enter.defaultPrevented).toBe(false); expect(editorSearchState(editor).currentIndex).toBe(before)
+    expect(enter.defaultPrevented).toBe(false); expect(editorSearchState(editor).currentIndex).toBe(before); expect(editor.state.selection.eq(caret)).toBe(true)
     input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }))
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    // The first Enter goes to the highlighted first match (Tiptap 3.33: it no longer skips it), so the index stays and the match is selected.
+    expect(editor.state.selection.eq(caret)).toBe(false)
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
     expect(editorSearchState(editor).currentIndex).not.toBe(before)
   })

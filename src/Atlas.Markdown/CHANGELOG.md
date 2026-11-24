@@ -5,6 +5,13 @@ while it is below 1.0.0, a minor release may contain breaking changes, which are
 
 ## Unreleased
 
+### Tiptap 3.35 a ProseMirror (Atlas 5.2)
+
+- Tiptap 3.35.0 (peer `^3.35.0`), `prosemirror-model` 1.25.13 a `prosemirror-view` 1.43.1 přes `@tiptap/pm`.
+- Pravidla psaní (input rules) vkládají napsaný znak do dokumentu dřív, než pravidlo běží: `range` pravidla sahá až za něj. Ctrl+Z po automatické konverzi (`:smile:`, `$x$ `) vrací text tak, jak byl napsán, včetně spouštěcího znaku.
+- Manifest schématu: atribut s vlastním validátorem nese `validated: true`. ProseMirror 1.25.12 ho spouští při každém vytvoření uzlu s explicitní hodnotou, takže editor takový uzel z neplatné hodnoty nepostaví a y-tiptap ho smaže ze sdíleného dokumentu; `YjsDocumentMaterializer` ji odmítne stejně (`InvalidAttributeValue`).
+- První Enter v hledání vybere zvýrazněný první výsledek, přeskakovat ho přestalo (Tiptap 3.33).
+
 ### Neutrální názvy (Atlas 5.0)
 
 - **Breaking:** formát rich dokumentu je `atlas-rich` (`RICH_FORMAT` z `./core`); vše, co píše, ho zapisuje. Čtení, validace, migrace a koncepty dál přijímají `scalesoft-rich` (`LEGACY_RICH_FORMAT`, `isRichFormat`, vstupní typy `MarkdownRichInput` a `MarkdownValueInput`).

@@ -1110,19 +1110,23 @@
     },
     {
      "payload": "../yjs-corpus/node-callout/002-attr_callout_variant.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/003-type_into_callout_0.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/004-type_into_callout_1.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/005-type_into_callout_2.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/006-delete_callout.update.bin",
@@ -1588,19 +1592,23 @@
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/002-attr_concealedContent_reveal.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/003-type_into_concealedContent_0.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/004-type_into_concealedContent_1.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/005-type_into_concealedContent_2.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/006-delete_concealedContent.update.bin",
@@ -1926,7 +1934,8 @@
     },
     {
      "payload": "../yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     }
    ]
   },
@@ -1940,7 +1949,8 @@
     },
     {
      "payload": "../yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     }
    ]
   },

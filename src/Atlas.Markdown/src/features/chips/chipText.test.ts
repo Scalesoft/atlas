@@ -72,7 +72,7 @@ describe('an automatic chip', () => {
     expect(editor.getText()).toBe('Viz PX2-1 ')
     expect(types(editor)).toEqual([])
   })
-  it('for typed $x$ and :smile:: Backspace gives the text without the trigger, the trigger again re-makes it, Ctrl+Z only the chip', () => {
+  it('for typed $x$ and :smile:: Backspace gives the text without the trigger, the trigger again re-makes it, Ctrl+Z only the chip (the trigger stays)', () => {
     const { controller, editor } = mount([{ type: 'paragraph' }])
     type(editor, 'Plocha $x^2$ ')
     expect(types(editor)).toEqual(['mathInline'])
@@ -90,7 +90,8 @@ describe('an automatic chip', () => {
     expect(types(editor)).toEqual(['mathInline', 'emoji'])
     controller.dispatch({ type: 'undo' })
     expect(types(editor)).toEqual(['mathInline'])
-    expect(editor.getText()).toMatch(/ a :smile$/u)
+    // Tiptap 3.33+ puts the typed trigger into the document before the rule runs, so Ctrl+Z gives back the text as typed, the closing colon included.
+    expect(editor.getText()).toMatch(/ a :smile:$/u)
   })
   it('the chip that a reverted text was is not made again by anything but the trigger', () => {
     const { editor } = mount([{ type: 'paragraph' }])

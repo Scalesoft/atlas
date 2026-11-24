@@ -41,7 +41,7 @@ Whatever the editor cannot show, or shows only because y-tiptap passes a structu
 | `InvalidDocument` | content or a mark the schema does not accept at that place, a missing required attribute (y-tiptap deletes the element; ProseMirror would rewrap top-level nodes) |
 | `InvalidStructure` | a text directly in the fragment, an element named `text` |
 | `UnsupportedContent` | embeds and shared types inside a text (ProseMirror builds a text node of an object and drops its paragraph's content), hooks, maps or plain values among an element's children, an attribute value that is not a lib0 value |
-| `InvalidAttributeValue` | `undefined`, bigints, binary data or non-finite numbers inside a value, a `__proto__` key, a format value that is no object for a mark with attributes |
+| `InvalidAttributeValue` | `undefined`, bigints, binary data or non-finite numbers inside a value, a `__proto__` key, a format value that is no object for a mark with attributes, an explicit value the attribute's own validator refuses (`validated` in the manifest: ProseMirror validates it when it creates the node, so y-tiptap deletes the element) |
 
 ## Conformance
 
