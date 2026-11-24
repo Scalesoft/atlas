@@ -84,9 +84,31 @@ describe("Obecné", () => {
     expect(view.get("[data-appearance-preview] [data-color]").attributes("data-color")).toBe("green-3");
     await view.get("[data-space-save] [data-save-bar-save]").trigger("click");
     await flushPromises();
-    expect(puts()[0]!.body).toEqual({ name: "Provoz IT", icon: "compass", color: "green-3", description: "Servery", pinPolicy: "Required", commentsEnabled: true, publicationMode: "Automatic", expectedVersion: "v1" });
+    expect(puts()[0]!.body).toEqual({ name: "Provoz IT", icon: "compass", color: "green-3", description: "Servery", pinPolicy: "Required", commentsEnabled: true, publicationMode: "Automatic", verificationIntervalMonths: null, expectedVersion: "v1" });
     expect(context.spaceChanged).toHaveBeenCalledWith(expect.objectContaining({ name: "Provoz IT", version: "v2" }));
     expect(guard.dirty.value).toBe(false);
+  });
+
+  it("switches content verification on with an interval and off again (5.2); an older server leaves it off", async () => {
+    fakeApi((method, url, body) => {
+      if (url.pathname === "/api/spaces/provoz/settings") return method === "PUT" ? { ...settings, ...(body as object), version: "v2" } : settings;
+      return undefined;
+    });
+    const view = await page(SpaceGeneralPage, { spaceId: "provoz" }, "#/spaces/provoz/settings/general");
+    const checked = () => view.get('[data-space-verification] [role="radio"][aria-checked="true"]').attributes("data-value");
+    expect(checked()).toBe("0");
+    await view.get('[data-space-verification] [data-value="6"]').trigger("click");
+    await flushPromises();
+    expect(guard.dirty.value).toBe(true);
+    await view.get("[data-space-save] [data-save-bar-save]").trigger("click");
+    await flushPromises();
+    expect(puts()[0]!.body).toMatchObject({ verificationIntervalMonths: 6, expectedVersion: "v1" });
+    expect(checked()).toBe("6");
+    expect(guard.dirty.value).toBe(false);
+    await view.get('[data-space-verification] [data-value="0"]').trigger("click");
+    await view.get("[data-space-save] [data-save-bar-save]").trigger("click");
+    await flushPromises();
+    expect(puts()[1]!.body).toMatchObject({ verificationIntervalMonths: null });
   });
 
   it("keeps the draft on a conflict until the user chooses Načíst znovu", async () => {
