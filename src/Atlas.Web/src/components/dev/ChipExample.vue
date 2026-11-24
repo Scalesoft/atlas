@@ -67,6 +67,8 @@ import "@atlas/markdown/styles/base.css";
 import "@atlas/markdown/themes/midnight.css";
 import { atlasContentPlugins } from "../../documentWidgets";
 import { editorChrome, useEditorTheme } from "../../editor/editorSetup";
+import PageVerification from "../PageVerification.vue";
+import type { PageVerification as Verification, VerificationState } from "../../pageVerification";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 
@@ -103,6 +105,8 @@ const samples = (): { caption: string; chip: MarkdownChipOptions; selected?: boo
   { caption: "Nerozhodnutý kontakt", chip: { variant: "mention", label: "Jana Nováková", media: avatar("JN", "#8a9aa0"), state: "unresolved", editable: true,
     detail: [{ text: "nejspíš Modelsoft", className: "chip-example-likely" }, { text: " · nebo Example" }], ariaLabel: "Jana Nováková, nerozhodnutý kontakt" } },
   { caption: "Vybraný", chip: { label: "Provozní příručka", icon: "file-text", editable: true }, selected: true },
+  { caption: "Odkaz na ověřenou stránku (5.2)", chip: { tag: "a", href: "#/gallery/chips", label: "Provozní příručka", icon: "shield-check", className: "md-page-reference" } },
+  { caption: "Odkaz na stránku s vypršeným ověřením", chip: { tag: "a", href: "#/gallery/chips", label: "Starý postup", icon: "shield-alert", className: "md-page-reference" } },
   { caption: "Ztlumený (hotovo, nedostupná stránka)", chip: { label: "do 4. 11.", state: "muted" } },
   { caption: "Fokus (Tab sem)", chip: { tag: "button", label: "Provozní příručka", icon: "file-text", editable: true } },
 ];
@@ -118,6 +122,21 @@ function draw(into: HTMLElement | undefined) {
   }));
 }
 onMounted(() => { draw(states.value); draw(darkStates.value); });
+
+// Ověřený obsah (5.2): the page's own status chip with its popover (PageVerification, the component the page uses), in every state, over a local stub.
+const day = 86_400_000, at = (days: number) => new Date(Date.now() + days * day).toISOString();
+const sample = (state: VerificationState, over: Partial<Verification> = {}): Verification => ({ state, stewardId: "u1", stewardName: "Jana Nováková", verifiedAt: at(-60), verifiedUntil: at(120), verifiedVersion: 14, changedSinceVerification: false, verifiedByName: "Petr Dvořák", intervalMonths: null, spaceIntervalMonths: 6, ...over });
+const verifications = ref<{ caption: string; value: Verification; canEdit: boolean }[]>([
+  { caption: "Ověřeno (editor)", value: sample("verified", { changedSinceVerification: true }), canEdit: true },
+  { caption: "Brzy vyprší", value: sample("expiring", { verifiedUntil: at(9) }), canEdit: true },
+  { caption: "Ověření vypršelo (čtenář: Nahlásit neaktuální)", value: sample("expired", { verifiedUntil: at(-3) }), canEdit: false },
+  { caption: "Neověřeno, bez garanta", value: sample("unverified", { stewardId: null, stewardName: null, verifiedAt: null, verifiedUntil: null, verifiedVersion: null, verifiedByName: null }), canEdit: true },
+]);
+const verificationApi = (current: () => Verification) => ({
+  change: async (_page: string, change: { verify?: true; until?: string; stewardId?: string | null }) => sample("verified", { ...current(), ...(change.stewardId !== undefined ? { stewardId: change.stewardId, stewardName: change.stewardId ? "Petra Malá" : null } : {}), ...(change.verify ? { verifiedAt: at(0), verifiedUntil: change.until ?? at(180), changedSinceVerification: false } : {}) }),
+  report: async () => {},
+});
+const verificationPeople = async () => [{ id: "u2", name: "Petra Malá", username: "pmala" }, { id: "u1", name: "Jana Nováková", username: "jnovakova" }];
 const keys = (...steps: string[]) => formatMarkdownShortcut(steps);
 </script>
 
@@ -141,6 +160,15 @@ const keys = (...steps: string[]) => formatMarkdownShortcut(steps);
       description="Rozhodnutý (běžný), nerozhodnutý (čárkovaný rámeček s „?“ a za jménem tlumeně nejpravděpodobnější kandidát a ostatní; volí se klikem nebo Enterem), vybraný (prstenec zvýraznění, také první Backspace u údaje požadavku), ztlumený (hotový požadavek, nedostupná stránka) a fokus (prstenec při Tabu). Barvy a velikosti jsou tokeny --md-chip-*, takže sedí ve světlém i tmavém motivu; pohyb jen přes --md-motion-* a s omezeným pohybem nic nepřechází.">
       <div ref="states" class="md-editor chip-example-states" data-example-chip-states />
       <div ref="darkStates" class="md-editor md-theme-midnight chip-example-states chip-example-dark" data-example-chip-dark />
+    </SettingsSection>
+    <SettingsSection title="Stav ověření stránky"
+      description="Stránka s ověřováním (Nastavení prostoru → Obecné) má u titulku stavový čip, tentýž StatusBadge jako ostatní stavy stránky, ne nový prvek. Ověřeno a Brzy vyprší (Vyprší za 9 dní) jsou tiché, Ověření vypršelo a Neověřeno mají tón upozornění; nic neblokuje čtení ani nepřidává pruh nad text. Klik nebo Enter otevře malé okno: garant, kdo a kdy ověřil, Změněno po ověření s odkazem na porovnání verzí. Editor ověří (klávesa V), ověří do data nebo změní garanta (hledání osob, první výsledek předvybraný, Enter vybere); čtenář nahlásí stránku jako neaktuální s volitelnou poznámkou. Níže je skutečná komponenta nad místním zástupným API; odkazy na stránky s ověřením mají před titulkem štít (viz Stavy).">
+      <div class="chip-example-states" data-example-verification>
+        <figure v-for="item in verifications" :key="item.caption">
+          <PageVerification :page-id="'11111111-1111-4111-8111-111111111111'" :verification="item.value" :can-edit="item.canEdit" is-published :api="verificationApi(() => item.value)" :people="verificationPeople" @change="value => { item.value = value; }" />
+          <figcaption>{{ item.caption }}</figcaption>
+        </figure>
+      </div>
     </SettingsSection>
     <SettingsSection title="Logo a fotka v čipu"
       description="Tatáž zmínka kontaktu (žádný nový druh čipu): firma má před jménem své logo, osoba svou fotku, obojí volitelné. Bez obrázku zůstává dnešní avatar: iniciály, u osoby s účtem na barvě uživatele. Obrázek nahraje uživatel u kontaktu (karta kontaktu v adresáři, na tabuli nebo v panelu kontaktu na stránce: „Logo nebo fotka“) nebo AI přes atlas_upsert_contact (photoBase64); Atlas ho uloží jako malý čtverec (64 px, nejvýš 64 KB) a čip ho ukáže jedním líně načteným obrázkem pevné velikosti, prohlížeč si ho drží natrvalo. Stejné obrázky má kontakt v kartě, strana požadavku („od …“) a seznam Na co čekáme. Dvě různé osoby téhož jména na jedné stránce rozliší za jménem jejich organizace (jinak funkce, oddělení nebo e-mail); odkaz vede vždy na kontakt podle objectId. Obrázky níže jsou neutrální zástupné tvary, ne loga firem.">

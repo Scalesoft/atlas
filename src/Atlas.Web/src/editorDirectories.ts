@@ -10,15 +10,18 @@ import { lexiconOf, lexiconReady } from "./linking/lexicon";
 import { objectApi } from "./objects/objectApi";
 import { referenceAnswers, referencesOnTheWay } from "./linking/pageReferenceAnswers";
 import { buildShellHashEncoded } from "./shellRoute";
+import { verificationMark, type VerificationState } from "./pageVerification";
 
 /** `type` "board": a board of the Boards module (POST /api/pages/references answers it among the pages, UX PG4-4). */
-interface Titled { readonly id: string; readonly title: string; readonly type?: string }
+interface Titled { readonly id: string; readonly title: string; readonly type?: string; readonly verification?: string }
 interface Found extends Titled { readonly spaceId?: string; readonly spaceName?: string; readonly isDraft?: boolean; readonly matchedAlias?: string | null }
 
+/** Ověřený obsah (5.2): the link chip draws the verification's shield before the title (display only, as every `icon`). */
+const markOf = (state: string | undefined) => { const mark = verificationMark(state as VerificationState | undefined); return mark ? { icon: mark.icon } : {}; };
 const pageUrl = (id: string) => buildShellHashEncoded({ view: "page", pageId: id });
 const reference = (page: Titled): MarkdownPageReference => page.type === "board"
   ? { id: page.id, title: page.title, url: buildShellHashEncoded({ view: "board", boardId: page.id }), icon: "layout-dashboard" }
-  : { id: page.id, title: page.title, url: pageUrl(page.id) };
+  : { id: page.id, title: page.title, url: pageUrl(page.id), ...markOf(page.verification) };
 /**
  * F2: a search result in the `[[` list shows its space and whether it is a draft („Provoz · Koncept“). `detail` is
  * display-only (editor 0.9.0): the inserted node and a resolved link never carry it.
@@ -196,11 +199,12 @@ const referenceTtlMs = 30_000;
  * The server answers only the pages (and boards, `type`) the reader may open, with the title it would see, reads no bodies and records no opening;
  * a missing id is unavailable. An id that is not a page id never reaches the server. A failed request fails its links.
  */
+const kept = (id: string, page: Titled): Titled => ({ id, title: page.title, ...(page.type ? { type: page.type } : {}), ...(page.verification ? { verification: page.verification } : {}) });
 function createReferenceVerifier() {
   let waiting: Waiting[] = [];
   const titled = (entry: Waiting, titles: Map<string, Titled>) => {
     const page = titles.get(entry.id.toLowerCase());
-    entry.settle(entry.signal.aborted || page === undefined ? null : { id: entry.id, title: page.title, ...(page.type ? { type: page.type } : {}) });
+    entry.settle(entry.signal.aborted || page === undefined ? null : kept(entry.id, page));
   };
   async function verifyBatch(batch: Waiting[]) {
     // Another editor of the page (the static page and the live editor) may have sent the same ids a moment ago, in the same task.
@@ -221,7 +225,7 @@ function createReferenceVerifier() {
         for (const id of chunk) referenceAnswers.set(id, { at, page: titles.get(id) ?? null });
         for (const entry of asking) {
           const page = titles.get(entry.id.toLowerCase());
-          entry.settle(page === undefined ? null : { id: entry.id, title: page.title, ...(page.type ? { type: page.type } : {}) });
+          entry.settle(page === undefined ? null : kept(entry.id, page));
         }
       } catch (error) {
         for (const entry of asking) entry.fail(error);
@@ -233,7 +237,7 @@ function createReferenceVerifier() {
     if (!pageId.test(id)) return settle(null);
     const known = referenceAnswers.get(id.toLowerCase());
     if (known && Date.now() - known.at < referenceTtlMs)
-      return settle(known.page && { id, title: known.page.title, ...(known.page.type ? { type: known.page.type } : {}) });
+      return settle(known.page && kept(id, known.page));
     if (waiting.length === 0) queueMicrotask(() => {
       const batch = waiting;
       waiting = [];

@@ -1839,6 +1839,8 @@ body {
 .atlas .search-result-main:not(.md-editor):not(.md-editor *) { flex: 1; min-width: 0; }
 .atlas .search-result-title:not(.md-editor):not(.md-editor *),
 .atlas .search-result strong:not(.md-editor):not(.md-editor *) { font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.atlas .search-result-meta .search-verification { flex: none; color: var(--muted); }
+.atlas .search-result-meta .search-verification[data-warn] { color: var(--warning); }
 .atlas .search-result .search-result-meta:not(.md-editor):not(.md-editor *) { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin: 1px 0 0; color: var(--muted); font-size: 11px; }
 .atlas .search-result-context:not(.md-editor):not(.md-editor *),
 .atlas .search-snippet:not(.md-editor):not(.md-editor *) { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 1.35; margin-top: 2px; color: var(--muted); }
