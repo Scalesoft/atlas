@@ -65,7 +65,8 @@ public sealed class SpaceLexiconHttpTests
         Assert.Equal($"\"{lexicon["version"]!.GetValue<string>()}\"", first.Headers.ETag!.Tag);
         Assert.False(lexicon["truncated"]!.GetValue<bool>());
         Assert.Equal([published], lexicon["pages"]!.AsArray().Select(page => page!["id"]!.GetValue<Guid>()));
-        var people = lexicon["people"]!.AsArray().ToDictionary(person => person!["name"]!.GetValue<string>(), person => person!);
+        // The shared site also holds other tests' contacts, whose plain names (two „Jana“) may repeat; this test's own names carry its token.
+        var people = lexicon["people"]!.AsArray().GroupBy(person => person!["name"]!.GetValue<string>()).ToDictionary(group => group.Key, group => group.First()!);
         Assert.DoesNotContain(Named("Skrytý Kontakt"), people.Keys);
         Assert.DoesNotContain(Named("Soukromý Kontakt"), people.Keys);
         Assert.DoesNotContain(Named("Smazaný Kontakt"), people.Keys);

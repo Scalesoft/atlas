@@ -925,7 +925,7 @@ const steps: FlowStep[] = [
     </AppDialog>
     <KeyboardHelpDialog :open="keyboardHelpOpen" :requirement-keymap="requirementKeymap" :board-keymap="boardKeymap" @close="keyboardHelpOpen = false" />
     <AppDialog title="Ukázkový dialog" :open="dialogOpen" @close="dialogOpen = false">
-      <div class="gallery-dialog-body"><FormField label="Název"><Input v-model="name" /></FormField><p>Změna zůstává pouze v paměti galerie.</p><Popover><PopoverTrigger as-child><Button variant="outline">Náhled v dialogu</Button></PopoverTrigger><PopoverContent><p>Popover patří do vrstvy tohoto dialogu. První Escape zavře náhled a vrátí focus; další zavře dialog.</p><Button variant="outline">Akce v náhledu</Button></PopoverContent></Popover></div>
+      <div class="gallery-dialog-body"><FormField label="Název"><Input v-model="name" /></FormField><p>Změna zůstává pouze v paměti galerie.</p><Popover><PopoverTrigger as-child><Button variant="outline">Náhled v dialogu</Button></PopoverTrigger><PopoverContent><p>Popover patří do vrstvy tohoto dialogu. První Escape zavře náhled a vrátí focus; další zavře dialog. Klik mimo dialog (na pozadí) ho zavře stejně jako Escape; tažení výběru ven ne.</p><Button variant="outline">Akce v náhledu</Button></PopoverContent></Popover></div>
       <template #footer><Button variant="outline" @click="dialogOpen = false">Zavřít</Button></template>
     </AppDialog>
     <Toaster position="bottom-right" close-button />

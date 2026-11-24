@@ -221,6 +221,20 @@ function hide(animated = true) {
 }
 // Escape and the close button only ask; the owner decides (it may be busy or dirty).
 function requestClose() { emit("close"); }
+// A click on the backdrop asks too, like any dialog; only a press that starts and ends there, so a text selection dragged
+// out of the dialog does not close it. The backdrop is the <dialog> itself, hit outside its box.
+let pressedBackdrop = false;
+function onBackdrop(event: MouseEvent) {
+  const root = dialog.value;
+  if (!root || event.target !== root) return false;
+  const box = root.getBoundingClientRect();
+  return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
+}
+function backdropDown(event: MouseEvent) { pressedBackdrop = onBackdrop(event); }
+function backdropClick(event: MouseEvent) {
+  if (pressedBackdrop && onBackdrop(event)) requestClose();
+  pressedBackdrop = false;
+}
 // A route change is not a request — the overlay must never survive the page underneath it. A hashchange that leaves the
 // address where the dialog opened is none: the browser's Back fires popstate, then hashchange, and a leave question opened on
 // popstate has already put the address back (U2-2).
@@ -252,6 +266,8 @@ onBeforeUnmount(() => {
     :aria-labelledby="ariaLabel ? undefined : titleId"
     @cancel.prevent="requestClose"
     @keydown.capture="nestedEscape"
+    @pointerdown="backdropDown"
+    @click="backdropClick"
   >
     <header class="app-dialog-header" :class="headerClass">
       <h2 :id="titleId">{{ title }}</h2>

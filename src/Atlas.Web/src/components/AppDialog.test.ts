@@ -51,6 +51,22 @@ it("asks to close through one icon button with the shared label", async () => {
   expect(dialog.open).toBe(false);
 });
 
+it("asks to close on a click on the backdrop, not on one inside or a selection dragged out", async () => {
+  const dialog = open();
+  vi.spyOn(dialog, "getBoundingClientRect").mockReturnValue(new DOMRect(100, 100, 400, 300));
+  const press = (target: Element, x: number, y: number) => {
+    target.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: x, clientY: y }));
+    target.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: x, clientY: y }));
+  };
+  press(wrapper!.get("p").element, 200, 200);
+  press(dialog, 300, 250); // the dialog's own padding
+  dialog.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: 300, clientY: 250 }));
+  dialog.dispatchEvent(new MouseEvent("click", { bubbles: true, clientX: 20, clientY: 20 })); // selection dragged out
+  expect(wrapper!.emitted("close")).toBeUndefined();
+  press(dialog, 20, 20);
+  expect(wrapper!.emitted("close")).toHaveLength(1);
+});
+
 it("closes on a SPA route change", async () => {
   history.replaceState(null, "", "#/pages/a");
   const dialog = open();
