@@ -29,7 +29,7 @@ The interface is available in **Czech and English**. Most design documents are w
 | `src/Atlas.YouTrack` | YouTrack module (read-only) |
 | `src/Atlas.AppHost` | .NET Aspire host for local development (PostgreSQL in a container) |
 | `tests/` | Server, YouTrack, Yjs and synchronisation tests, and Playwright browser tests |
-| `deploy/postgres` | Upgrade of a PostgreSQL 18 database volume to 19 ([description](deploy/postgres/README.md)) |
+| `deploy/postgres` | The database image and the automatic conversion to a new PostgreSQL major in `docker-compose.yml` ([description](deploy/postgres/README.md)) |
 | `docs/` | Architecture, operations and feature documentation (in Czech) |
 | `tooling/` | Release and CI tooling, generators of icons, covers and version marks |
 

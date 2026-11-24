@@ -17,8 +17,10 @@
        Old server -> the old ref's own first-run.spec.ts installs the wiki -> seed-old.mjs seeds realistic data
        through the old public API and a real browser (collaboration) and writes manifest.json.
     4. The old server stops; a table-by-table checksum (old columns only) is taken. The database container is replaced by
-       -PostgresImage on the same volume, after deploy/postgres/upgrade.sh when the PostgreSQL major differs (18 -> 19)
-       (checksums and every B-tree index re-checked with amcheck). The NEW server starts on the same volumes and migrates. Checksums are compared right after startup, SQL
+       -PostgresImage on the same volume. When the PostgreSQL major differs (18 -> 19), `podman compose up -d --wait wiki-db`
+       with this tree's docker-compose.yml converts the volume first, as on every installation: refused while the old server
+       runs, recovered after interrupted runs, a no-op the second time; then the old image opens its untouched data (rollback)
+       and compose refuses the older 19 copy (checksums and every B-tree index re-checked with amcheck). The NEW server starts on the same volumes and migrates. Checksums are compared right after startup, SQL
        invariants are checked (pgvector installed), verify-new.mjs compares every manifest item through the new API and
        browser, then a smoke subset of the current tests/browser runs against the upgraded instance.
     5. Evidence under artifacts/upgrade-podman/<run>/ ; pod, volumes, secrets and the created worktree are removed.
@@ -273,6 +275,21 @@ function Start-Db([string]$image) {
     }
     throw "PostgreSQL ($image) did not become ready."
 }
+# This tree's docker-compose.yml runs the database services on the harness's volume and superuser, as an installation's .env would.
+$composeOverride = Join-Path $outRoot 'compose.override.yml'
+$databaseUser = '{ POSTGRES_USER: atlas, POSTGRES_DB: atlas }'
+Set-Content $composeOverride "services:`n  wiki-db: { environment: $databaseUser }`n  wiki-db-upgrade-dump: { environment: $databaseUser }`n  wiki-db-upgrade: { environment: $databaseUser }`nvolumes:`n  wiki-db-data: { external: true, name: $run-pg }"
+$env:ATLAS_POSTGRES_IMAGE = $PostgresImage; $env:ATLAS_DB_OWNER_PASSWORD = $secrets.db
+$env:PODMAN_COMPOSE_WARNING_LOGS = 'false'
+$composeArgs = @('compose', '-p', $run, '-f', (Join-Path $repo 'docker-compose.yml'), '-f', $composeOverride)
+function Invoke-Compose {
+    & podman @composeArgs @args 2>&1 |
+        Tee-Object -Append -FilePath (Join-Path $outRoot 'compose.log') | Out-Host
+    return $LASTEXITCODE
+}
+function Invoke-InVolume([string]$command) {
+    Invoke-Podman run --rm --network none -v "${run}-pg:/var/lib/postgresql" --entrypoint sh $PostgresImage -c $command
+}
 function Stop-App([string]$label) {
     Invoke-Podman stop -t 20 "$run-app" | Out-Null
     Save-Logs "-$label"
@@ -364,28 +381,57 @@ try {
 
     # Production order (README, "Upgrade na 2.0"): first the database image on the same volume, then the new Atlas.
     $oldServerVersion = Get-SqlValue 'SHOW server_version;'
-    Invoke-Podman stop -t 60 "$run-db" | Out-Null
-    Save-Logs '-old-image'
-    Invoke-Podman rm "$run-db" | Out-Null
-    # A new PostgreSQL major (18 -> 19) is moved on the volume as in production; the old cluster stays beside it.
+    # A new PostgreSQL major is converted on the volume as on every installation: by `docker compose up -d` with this tree's
+    # docker-compose.yml (its one-shot services wiki-db-upgrade-dump and wiki-db-upgrade); the old cluster stays beside it.
     $majors = @($OldPostgresImage, $PostgresImage | ForEach-Object { "$(Invoke-Podman run --rm --entrypoint sh $_ -c 'echo $PG_MAJOR')".Trim() })
     if ($majors[0] -ne $majors[1]) {
-        $env:ENGINE = 'podman'; $env:POSTGRES_USER = 'atlas'
-        # Git Bash on Windows: `bash` on PATH may be the WSL launcher, which would run in the Podman machine.
-        $bash = if ($IsWindows) { Join-Path (Split-Path (Split-Path (Get-Command git).Source)) 'bin/bash.exe' } else { 'bash' }
-        & $bash (Join-Path $repo 'deploy/postgres/upgrade.sh') "$run-pg" $OldPostgresImage $PostgresImage 2>&1 | Tee-Object -FilePath (Join-Path $outRoot 'pg-upgrade.log') | Out-Host
-        $upgradeCode = $LASTEXITCODE
-        Remove-Item Env:ENGINE, Env:POSTGRES_USER
-        Add-Result "database: PostgreSQL $($majors[0]) -> $($majors[1]) by deploy/postgres/upgrade.sh" ($upgradeCode -eq 0) 'pg-upgrade.log'
-        if ($upgradeCode -ne 0) { throw 'deploy/postgres/upgrade.sh failed; see pg-upgrade.log' }
+        $old, $new = $majors
+        $root = '/var/lib/postgresql'
+        # 1. The old server still runs in another container: the conversion refuses and writes nothing.
+        $code = Invoke-Compose up -d --wait wiki-db
+        $untouched = "$(Invoke-InVolume "test -e $root/$new || test -e $root/upgrade-from-$old && echo written || echo untouched")".Trim()
+        Add-Result "conversion: refused while PostgreSQL $old runs in another container" ($code -ne 0 -and $untouched -eq 'untouched') "exit $code, volume: $untouched"
+        # 2. Leftovers of interrupted runs: the old server killed during the dump (its .partial file) and a half-built cluster.
+        Invoke-Podman kill -s KILL "$run-db" | Out-Null
+        Save-Logs '-old-image'
+        Invoke-Podman rm "$run-db" | Out-Null
+        Invoke-InVolume "mkdir -p $root/$new/upgrade $root/upgrade-from-$old && echo $new > $root/$new/upgrade/PG_VERSION && echo cut > $root/upgrade-from-$old/dump.sql.gz.partial" | Out-Null
+        # 3. docker compose up -d converts by itself.
+        $code = Invoke-Compose up -d --wait wiki-db
+        Add-Result "conversion: docker compose up -d converts PostgreSQL $old -> $new after interrupted runs" ($code -eq 0) 'compose.log'
+        if ($code -ne 0) { throw 'The conversion failed; see compose.log' }
+        # 4. A second up converts nothing.
+        $identity = { "$(Invoke-InVolume "pg_controldata $root/$new/docker | grep 'system identifier'")".Trim() }
+        $first = & $identity
+        $code = Invoke-Compose up -d --wait wiki-db
+        $serviceLogs = & podman @composeArgs logs --no-color 2>&1 | Out-String
+        Set-Content (Join-Path $outRoot 'compose-services.log') $serviceLogs
+        $runs = [regex]::Matches($serviceLogs, "dumping PostgreSQL $old|restoring the PostgreSQL $old dump").Count
+        Add-Result 'conversion: a second docker compose up -d changes nothing' ($code -eq 0 -and $first -and (& $identity) -eq $first -and $runs -eq 2) "exit $code, $first, $runs dump/restore runs in all"
+        Invoke-Compose down | Out-Null
+        # 5. Rollback: the old image opens the untouched old cluster; after it ran, up refuses to go on with the older new copy.
+        Start-Db $OldPostgresImage
+        $rolledBack = Get-TableChecksums $columns
+        $rollbackChanges = @($before.Keys | Where-Object { $before[$_].md5 -ne $rolledBack[$_].md5 })
+        Invoke-Podman stop -t 60 "$run-db" | Out-Null
+        Invoke-Podman rm "$run-db" | Out-Null
+        $code = Invoke-Compose up -d --wait wiki-db
+        Add-Result "rollback: the old image opens PostgreSQL $old unchanged; then up refuses the older $new copy" ($rollbackChanges.Count -eq 0 -and $code -ne 0) "changed: $($rollbackChanges -join ', '); up exit $code"
+        # The operator keeps the new cluster as the refusal says.
+        Invoke-InVolume "rm $root/upgrade-from-$old/checkpoint" | Out-Null
+        Invoke-Compose down | Out-Null
+    } else {
+        Invoke-Podman stop -t 60 "$run-db" | Out-Null
+        Save-Logs '-old-image'
+        Invoke-Podman rm "$run-db" | Out-Null
     }
     Start-Db $PostgresImage
     $swapped = Get-TableChecksums $columns
     $swapChanges = @($before.Keys | Where-Object { $before[$_].md5 -ne $swapped[$_].md5 })
     Add-Result 'database image: swapped on the same volume, every table unchanged' ($swapChanges.Count -eq 0) "$OldPostgresImage ($oldServerVersion) -> $PostgresImage ($(Get-SqlValue 'SHOW server_version;')); changed: $($swapChanges -join ', ')"
     # A different C library or collation would order text differently and silently break text B-tree indexes; amcheck proves
-    # every index is ordered under the new image (after upgrade.sh they were built anew). Text sorts as before: by code point,
-    # on musl and with the builtin provider alike (upgrade.sh compares an ordering probe).
+    # every index is ordered under the new image (after the conversion they were built anew). Text sorts as before: by code point,
+    # on musl and with the builtin provider alike.
     Add-Result 'database: collation builtin C.UTF-8 (libc-independent)' ((Get-SqlValue "SELECT datlocprovider::text || ' ' || coalesce(datlocale, '') FROM pg_database WHERE datname = 'atlas';") -eq 'b C.UTF-8') 'pg_database.datlocprovider'
     try {
         $checked = Invoke-Sql @"
@@ -531,6 +577,7 @@ SELECT count(*) FROM (
     if ($Keep) {
         Write-Host "Left running: $base  (remove: podman pod rm -f $run; podman volume rm $run-pg $run-data; podman secret rm $($createdSecrets -join ' '))"
     } else {
+        Invoke-Compose down -v *> $null
         podman pod rm -f $run *> $null
         podman volume rm -f "$run-pg" "$run-data" *> $null
         foreach ($secret in $createdSecrets) { podman secret rm $secret *> $null }

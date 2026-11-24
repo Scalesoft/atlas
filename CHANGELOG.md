@@ -26,7 +26,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - Dialogy se zavřou i kliknutím na pozadí.
 
 ### Provoz
-- PostgreSQL 19 z oficiálního image `pgvector/pgvector` (kolace builtin C.UTF-8), převod z PostgreSQL 18 skriptem `deploy/postgres/upgrade.sh`; vlastní databázový image zanikl.
+- PostgreSQL 19 z oficiálního image `pgvector/pgvector` (kolace builtin C.UTF-8), převod z PostgreSQL 18 proběhne sám při prvním `docker compose up -d` (jednorázové služby `wiki-db-upgrade-dump` a `wiki-db-upgrade`, obecně pro každou další hlavní verzi; data 18 zůstanou pro návrat); vlastní databázový image zanikl.
 - Při změně verze kolace Atlas při startu jednou přeindexuje databázi.
 
 ## 5.0 · Shared Strawberry
