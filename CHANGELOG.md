@@ -22,7 +22,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - Přesná shoda jména zůstává nahoře i po doběhnutí dalších výsledků; kontakty řadí přesnou shodu, pak začátek jména.
 
 ### Historie a vydání
-- Historie stránky s grafem příspěvků po lidech, AI a publikacích; obrazovka vydání s ukázkami.
+- Historie stránky s grafem příspěvků po lidech, AI a publikacích; obrazovka vydání s ukázkami a galerie verzí v Co je nového, která přehraje úvod každé pojmenované verze.
 - Dialogy se zavřou i kliknutím na pozadí.
 
 ### Provoz
