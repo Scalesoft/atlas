@@ -42,7 +42,9 @@ useDemoLoop(root, (at) => {
   const width = root.value!.clientWidth, height = root.value!.clientHeight;
   const budget = point(janaAt.value, true), word = point(annaAt.value), wordEnd = point(annaAt.value, true);
   const janaOut: [number, number] = [-30, 16], annaOut: [number, number] = [width + 30, height - 10];
-  const janaRest: [number, number] = [Math.max(budget[0] + 110, width * .62), budget[1] - 4], annaRest: [number, number] = [Math.max(wordEnd[0] + 90, width * .7), wordEnd[1] + 16];
+  // At rest the pointer and its name label stay whole inside a narrow card too (a phone).
+  const inside = (x: number) => Math.min(x, width - 72);
+  const janaRest: [number, number] = [inside(Math.max(budget[0] + 110, width * .62)), budget[1] - 4], annaRest: [number, number] = [inside(Math.max(wordEnd[0] + 90, width * .7)), wordEnd[1] + 16];
   at(0, () => {
     fading.value = false; jana.value = ""; anna.value = d.before; selected.value = false; carets.value = [false, false];
     glide.to(pointer(0), ...janaOut, true);

@@ -182,6 +182,9 @@ onBeforeUnmount(skip);
 .release-splash-codename {
   display: block; font-family: "Fraunces Variable", Georgia, "Times New Roman", serif; font-size: clamp(38px, 6vw, 64px); font-weight: 600; letter-spacing: -.02em; text-wrap: balance;
   background: linear-gradient(100deg, var(--release-ink-1), var(--release-ink-2) 52%, var(--release-ink-3)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  /* The gradient paints only inside the box, and at line-height 1 the last line's descenders (the g of Tangerine) hang below it:
+     the box reaches under them, the layout keeps its place. */
+  padding-bottom: .2em; margin-bottom: -.2em;
 }
 .release-splash-lead { max-width: 46ch; margin: 14px 0 0; font-size: 17px; line-height: 1.5; }
 .release-splash-since { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
