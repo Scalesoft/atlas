@@ -9,7 +9,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 *5.1.0 — 2026-11-24*
 
 ### Spolupráce
-- Živé ukazatele spolupracovníků na stránce i nástěnce, kurzor AI při zápisu asistenta nebo agenta přes MCP či API; text agenta se v otevřené stránce vepisuje živě.
+- Živé ukazatele spolupracovníků na stránce i tabuli, kurzor AI při zápisu asistenta nebo agenta přes MCP či API; text agenta se v otevřené stránce vepisuje živě.
 - Server odebere přítomnost odcházejícího spojení (avatary se nezdvojují); rychlé znovupřipojení ukáže člověka hned; identifikátor agenta si spolupracovník nepřivlastní.
 - Ukazatele nepřestavují kurzory editoru při každém pohybu myši; překreslení zapisuje jen to, co se změnilo.
 
