@@ -10,6 +10,7 @@ import "@atlas/markdown/themes/midnight.css";
 import { firstPoint, points, type ReleaseNote } from "../../whatsNew/releaseNotes";
 import { releaseLabel } from "../../whatsNew/notice";
 import AtlasIcon from "../AtlasIcon.vue";
+import { Button } from "../ui/button";
 import SettingsSection from "../settings/SettingsSection.vue";
 import ReleaseMark from "./ReleaseMark.vue";
 import t from "../../i18n/components-release";
@@ -18,8 +19,8 @@ import t from "../../i18n/components-release";
  * One named version in the changelog (ReleaseChangelog), driven only by its notes: a settings section with the notes drawn by the
  * editor's read-only renderer. A named release (codename and mark) gets its codename in the heading, its mark faded out behind it
  * and a soft glow. Its patch releases (`patches`, newest first) follow beneath it, smaller: a row each with the version and date,
- * folded when the patch is long (over three points). `current`: the release this server runs („Aktuální verze“). A click on a named
- * release's codename replays its splash (`splash`).
+ * folded when the patch is long (over three points). `current`: the release this server runs („Aktuální verze“). „Přehrát úvod“ or a
+ * click on a named release's codename asks to replay its splash (`splash`; WhatsNewPage opens it in a dialog).
  */
 const props = defineProps<{ note: ReleaseNote; patches?: readonly ReleaseNote[]; current?: string; dark?: boolean; accent?: string }>();
 const emit = defineEmits<{ splash: [] }>();
@@ -36,6 +37,8 @@ const undated = (text: string) => text.replace(/^\*[^*\n]+\*\s*/, "");
         data-release-replay @click="emit('splash')"><span class="release-entry-dash"> — </span>{{ note.codename }}</button>
       <span v-else-if="note.codename" class="release-entry-codename"><span class="release-entry-dash"> — </span>{{ note.codename }}</span>
       <span v-if="current === note.version" class="release-entry-current">{{ t.entry.current }}</span>
+      <Button v-if="note.codename && note.mark" type="button" variant="ghost" size="sm" class="release-entry-play" data-release-play
+        :aria-label="t.entry.replay(note.codename)" @click="emit('splash')">{{ t.entry.play }}</Button>
     </template>
     <ReleaseMark v-if="note.mark" :mark="note.mark" variant="watermark" class="release-entry-mark" />
     <MarkdownRenderer :value="note.text" profile="markdown-safe" :ariaLabel="t.entry.whatsNewIn(label, note.codename)" :class="theme" />
@@ -64,6 +67,7 @@ button.release-entry-codename { padding: 0; border: 0; border-radius: 4px; font-
   transition: filter var(--atlas-motion-base) var(--atlas-ease-out); }
 @media (hover: hover) and (pointer: fine) { button.release-entry-codename:hover { filter: brightness(1.25) saturate(1.2); } }
 :global(html[data-mode="dark"] .release-entry-codename) { background-image: linear-gradient(100deg, #bd9cff, #89b5ff 52%, #63dfd3); }
+.release-entry-play { margin-left: auto; }
 .release-entry-current { margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft, color-mix(in srgb, var(--accent) 14%, transparent)); color: var(--accent); font-size: 12px; font-weight: 600; vertical-align: middle; }
 /* A named release: the mark stands behind the heading's right end and fades out towards the text; the card clips it. */
 .release-entry[data-named] { position: relative; overflow: clip; isolation: isolate;

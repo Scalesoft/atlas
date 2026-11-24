@@ -9,13 +9,12 @@ import { brandMarks } from "../../whatsNew/brandMarks";
  * only appears where that release is presented:
  * - `hero`: large, with the intro, on the splash after the update (ReleaseSplash);
  * - `watermark`: large and faded out by a gradient mask behind a version's heading (ReleaseEntry); the parent positions it;
- * - `icon`: 20 px in the notice about the new release (whatsNew/notice.ts);
- * - `tile`: 72 px on a tile of the release gallery at the top of the changelog (ReleaseChangelog).
+ * - `icon`: 20 px in the notice about the new release (whatsNew/notice.ts).
  * The SVG carries its own motion (outline, unfolding wireframe, quickening light, then a slow sway). It is drawn inline, so the motion
  * starts when the mark appears (an <img> runs on the page's clock and would show it finished); it stands still at once under reduced
  * motion, the system's or Atlas's own (`data-still`). The space is held while the SVG loads.
  */
-const props = withDefaults(defineProps<{ mark: string; variant?: "hero" | "watermark" | "icon" | "tile" }>(), { variant: "hero" });
+const props = withDefaults(defineProps<{ mark: string; variant?: "hero" | "watermark" | "icon" }>(), { variant: "hero" });
 const root = ref<HTMLElement>();
 const svg = ref("");
 const still = ref(false);
@@ -46,7 +45,6 @@ let instances = 0;
 .release-mark[data-variant="hero"] { width: min(280px, 100%); aspect-ratio: 1; }
 /* The body fills about half of the 64-unit square; the icon trims the empty margin so the mark reads at 20 px. */
 .release-mark[data-variant="icon"] { width: 20px; height: 20px; }
-.release-mark[data-variant="tile"] { width: 72px; height: 72px; }
 .release-mark[data-variant="icon"] :deep(svg) { width: 160%; height: 160%; margin: -30%; }
 .release-mark[data-variant="watermark"] {
   width: 240px; height: 240px; opacity: .22;

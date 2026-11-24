@@ -11,36 +11,25 @@ const hotfix = parseReleaseNote("4.2.1", "*10. 3. 2027*\n\n### Opravy\n- Přihl�
 afterEach(() => { document.body.innerHTML = ""; });
 
 describe("WhatsNewPage", () => {
-  it("replays a named release's splash from the changelog, without the since-your-last-release line, and goes back", async () => {
+  it("replays a named release's splash in a dialog over the changelog, without the since-your-last-release line, and closes back", async () => {
     const wrapper = mount(WhatsNewPage, { props: { notes: [hotfix, named], current: "4.2.1" }, attachTo: document.body });
     expect(wrapper.find("[data-release-splash]").exists()).toBe(false);
-    // Only a named release (codename and mark) offers the replay.
+    // Only a named release (codename and mark) offers the replay: „Přehrát úvod“ and its codename.
+    expect(wrapper.findAll("[data-release-play]")).toHaveLength(1);
     expect(wrapper.findAll("[data-release-replay]")).toHaveLength(1);
-    await wrapper.get("[data-release-replay]").trigger("click");
+    await wrapper.get("[data-release-play]").trigger("click");
     await flushPromises();
-    const splash = wrapper.get("[data-release-splash]");
+    const dialog = wrapper.get("dialog.whats-new-replay");
+    expect((dialog.element as HTMLDialogElement).open).toBe(true);
+    const splash = dialog.get("[data-release-splash]");
     expect(splash.get("h1").text()).toBe("Atlas 4.2 Quick Quince");
     expect(splash.get(".release-splash-eyebrow").text()).toBe("Verze · 9. 3. 2027");
     expect(splash.find(".release-splash-since").exists()).toBe(false);
+    // The changelog stays underneath; the splash's „Celý changelog“ (or Esc, or a click outside) closes the dialog.
+    expect(wrapper.find("[data-release='4.2.0']").exists()).toBe(true);
     await splash.get("[data-release-changelog]").trigger("click");
     await flushPromises();
     expect(wrapper.find("[data-release-splash]").exists()).toBe(false);
-    expect(wrapper.find("[data-release='4.2.0']").exists()).toBe(true);
-    wrapper.unmount();
-  });
-
-  it("replays a release from its tile in the release gallery, and Esc goes back to the changelog, not out of it", async () => {
-    const wrapper = mount(WhatsNewPage, { props: { notes: [hotfix, named], current: "4.2.1" }, attachTo: document.body });
-    // Only named releases get a tile.
-    expect(wrapper.findAll("[data-release-tile]").map(tile => tile.attributes("data-release-tile"))).toEqual(["4.2.0"]);
-    expect(wrapper.get("[data-release-tile]").text()).toContain("Quick Quince");
-    await wrapper.get("[data-release-tile]").trigger("click");
-    await flushPromises();
-    const splash = wrapper.get("[data-release-splash]");
-    splash.element.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    await flushPromises();
-    expect(wrapper.find("[data-release-splash]").exists()).toBe(false);
-    expect(wrapper.find("[data-release-tile]").exists()).toBe(true);
     expect(wrapper.emitted("close")).toBeUndefined();
     wrapper.unmount();
   });

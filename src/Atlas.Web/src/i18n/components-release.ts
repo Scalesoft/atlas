@@ -6,13 +6,13 @@ const cs = {
     title: "Co je nového",
     description: "Zásadní změny Atlasu od verze 3.0, nejnovější nahoře.",
     back: "Zpět do Atlasu",
-    gallery: "Galerie verzí",
   },
   cover: {
     aria: (label: string) => `${label}: setřete krytí tahem, nebo stiskněte Enter či mezerník`,
   },
   entry: {
     replay: (codename: string) => `Přehrát úvod verze ${codename}`,
+    play: "Přehrát úvod",
     current: "Aktuální verze",
     whatsNewIn: (label: string, codename?: string) => `Co je nového v ${label}${codename ? ` ${codename}` : ""}`,
     patchesOf: (label: string) => `Opravné verze ${label}`,
