@@ -8,8 +8,8 @@
     <PackageReference Include="PuppeteerSharp" Version="25.15.0" />
     <PackageReference Include="OpenIddict.Client.AspNetCore" Version="7.8.0" /><PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="7.8.0" /><PackageReference Include="OpenIddict.Client.DataProtection" Version="7.8.0" /><PackageReference Include="OpenIddict.Core" Version="7.8.0" /><PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="11.0.0" />
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="11.0.1" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="11.0.1" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.4.0" />
     <PackageReference Include="NHibernate" Version="5.7.1" />
     <PackageReference Include="Npgsql" Version="10.0.3" />
