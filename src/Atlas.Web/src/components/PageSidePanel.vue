@@ -6,7 +6,7 @@ import { api, errorMessage } from "../api";
 import { channelText } from "../channel";
 import tv from "../i18n/verification";
 import { periodQuery, shiftDay, type Readership } from "../activity";
-import { pageVerificationApi, verificationShown, type PageVerification, type PageVerificationApi } from "../pageVerification";
+import { pageVerificationApi, verificationShown, type PageVerification, type PageVerificationApi } from "../verification/pageVerification";
 import { pragueNow } from "@atlas/markdown/core";
 import { formatDate, formatDateTime } from "../formatDate";
 import { historyApi, type PageRevisionSummary } from "../history";

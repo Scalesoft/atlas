@@ -68,7 +68,7 @@ import "@atlas/markdown/themes/midnight.css";
 import { atlasContentPlugins } from "../../documentWidgets";
 import { editorChrome, useEditorTheme } from "../../editor/editorSetup";
 import PageVerification from "../PageVerification.vue";
-import type { PageVerification as Verification, VerificationState } from "../../pageVerification";
+import type { PageVerification as Verification, VerificationState } from "../../verification/pageVerification";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 

@@ -4,7 +4,7 @@ import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue
 import { errorMessage } from "../api";
 import { formatDate } from "../formatDate";
 import { pageAccounts, type PagePerson } from "../contacts/contactSources";
-import { pageVerificationApi, verificationIcon, verificationLabel, verificationShown, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../pageVerification";
+import { pageVerificationApi, verificationIcon, verificationLabel, verificationShown, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
 import AtlasIcon from "./AtlasIcon.vue";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";

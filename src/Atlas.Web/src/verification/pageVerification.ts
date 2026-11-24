@@ -1,6 +1,6 @@
-import { api, post, put } from "./api";
-import t from "./i18n/verification";
-import type { StatusTone } from "./components/settings/types";
+import { api, post, put } from "../api";
+import t from "../i18n/verification";
+import type { StatusTone } from "../components/settings/types";
 
 /**
  * Ověřený obsah (5.2, docs/atlas-5.2-plan.md §2–3 and §7): the state of a page's verification as the server derives it (one function in C#,

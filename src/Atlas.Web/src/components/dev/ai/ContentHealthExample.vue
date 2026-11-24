@@ -7,7 +7,7 @@ import { createSettingsFlash, provideSettingsFlash } from "../../settings/flash"
 import { provideSettingsRoute } from "../../settings/useSettingsRoute";
 import SettingsPage from "../../settings/SettingsPage.vue";
 import SettingsSection from "../../settings/SettingsSection.vue";
-import type { ContentHealth, ContentHealthApi, ContentHealthItem, VerificationState } from "../../../pageVerification";
+import type { ContentHealth, ContentHealthApi, ContentHealthItem, VerificationState } from "../../../verification/pageVerification";
 
 /**
  * „Stav obsahu“ (5.2), a section of Nastavení prostoru → Znalosti. Local data, no server: a small space whose pages are filtered, sorted and

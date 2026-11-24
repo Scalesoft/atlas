@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushPromises } from "@vue/test-utils";
 import { mountPage, testContext } from "../general/testing";
-import type { ContentHealth, ContentHealthItem, ContentHealthQuery } from "../../../pageVerification";
+import type { ContentHealth, ContentHealthItem, ContentHealthQuery } from "../../../verification/pageVerification";
 import SpaceContentHealthPage from "./SpaceContentHealthPage.vue";
 
 const day = 86_400_000;

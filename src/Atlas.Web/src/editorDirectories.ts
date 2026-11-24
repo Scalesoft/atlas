@@ -10,7 +10,7 @@ import { lexiconOf, lexiconReady } from "./linking/lexicon";
 import { objectApi } from "./objects/objectApi";
 import { referenceAnswers, referencesOnTheWay } from "./linking/pageReferenceAnswers";
 import { buildShellHashEncoded } from "./shellRoute";
-import { verificationMark } from "./verificationMark";
+import { verificationMark } from "./verification/verificationMark";
 
 /** `type` "board": a board of the Boards module (POST /api/pages/references answers it among the pages, UX PG4-4). */
 interface Titled { readonly id: string; readonly title: string; readonly type?: string; readonly verification?: string }

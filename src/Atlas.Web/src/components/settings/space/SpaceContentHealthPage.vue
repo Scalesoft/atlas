@@ -4,7 +4,7 @@ import { errorMessage } from "../../../api";
 import { pageAccounts, type PagePerson } from "../../../contacts/contactSources";
 import { formatDate } from "../../../formatDate";
 import t from "../../../i18n/verification";
-import { contentHealthApi, verificationIcon, verificationLabel, verificationTone, type ContentHealth, type ContentHealthApi, type ContentHealthBulk, type ContentHealthDays, type ContentHealthFilter, type ContentHealthItem, type ContentHealthSort } from "../../../pageVerification";
+import { contentHealthApi, verificationIcon, verificationLabel, verificationTone, type ContentHealth, type ContentHealthApi, type ContentHealthBulk, type ContentHealthDays, type ContentHealthFilter, type ContentHealthItem, type ContentHealthSort } from "../../../verification/pageVerification";
 import AppDialog from "../../AppDialog.vue";
 import AtlasIcon from "../../AtlasIcon.vue";
 import LoadingSkeleton from "../../LoadingSkeleton.vue";
