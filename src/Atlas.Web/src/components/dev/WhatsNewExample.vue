@@ -126,8 +126,9 @@ function announce(note = pear, release = note.version, since?: string) {
 
     <h3>ReleaseChangelog: celá historie</h3>
     <p class="whats-new-example-note">
-      Stránka Co je nového kdykoli (paleta, Profil, klik na verzi ve Správě wiki). Klik na kódové jméno větší verze přehraje její splash
-      i s animací, bez řádku „od vaší poslední verze“; Celý changelog vrátí historii.
+      Stránka Co je nového kdykoli (paleta, Profil, klik na verzi ve Správě wiki). Nahoře galerie verzí: dlaždice každé pojmenované verze
+      se značkou (ReleaseMark „tile“, 72 px); klik na ni nebo na kódové jméno v záznamu přehraje splash i s animací a živými ukázkami, bez
+      řádku „od vaší poslední verze“. Esc i Celý changelog pak vrátí historii; Atlas zavře jen uvítání po aktualizaci.
     </p>
     <div ref="changelog"><WhatsNewPage :notes="recent" current="3.5.2" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" /></div>
   </div>

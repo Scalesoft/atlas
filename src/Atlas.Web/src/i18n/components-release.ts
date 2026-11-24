@@ -6,6 +6,7 @@ const cs = {
     title: "Co je nového",
     description: "Zásadní změny Atlasu od verze 3.0, nejnovější nahoře.",
     back: "Zpět do Atlasu",
+    gallery: "Galerie verzí",
   },
   cover: {
     aria: (label: string) => `${label}: setřete krytí tahem, nebo stiskněte Enter či mezerník`,

@@ -29,6 +29,22 @@ describe("WhatsNewPage", () => {
     wrapper.unmount();
   });
 
+  it("replays a release from its tile in the release gallery, and Esc goes back to the changelog, not out of it", async () => {
+    const wrapper = mount(WhatsNewPage, { props: { notes: [hotfix, named], current: "4.2.1" }, attachTo: document.body });
+    // Only named releases get a tile.
+    expect(wrapper.findAll("[data-release-tile]").map(tile => tile.attributes("data-release-tile"))).toEqual(["4.2.0"]);
+    expect(wrapper.get("[data-release-tile]").text()).toContain("Quick Quince");
+    await wrapper.get("[data-release-tile]").trigger("click");
+    await flushPromises();
+    const splash = wrapper.get("[data-release-splash]");
+    splash.element.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await flushPromises();
+    expect(wrapper.find("[data-release-splash]").exists()).toBe(false);
+    expect(wrapper.find("[data-release-tile]").exists()).toBe(true);
+    expect(wrapper.emitted("close")).toBeUndefined();
+    wrapper.unmount();
+  });
+
   it("after an update still welcomes with the newest unseen named release", () => {
     const wrapper = mount(WhatsNewPage, { props: { notes: [hotfix, named], current: "4.2.1", since: "4.1.0" } });
     expect(wrapper.get(".release-splash-eyebrow").text()).toBe("Nová verze · 9. 3. 2027");

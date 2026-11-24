@@ -6,6 +6,7 @@ const en: ReleaseMessages = {
     title: "What's new",
     description: "Major changes to Atlas since version 3.0, newest first.",
     back: "Back to Atlas",
+    gallery: "Release gallery",
   },
   cover: {
     aria: (label) => `${label}: wipe away the cover by dragging, or press Enter or Space`,

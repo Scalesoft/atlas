@@ -7,9 +7,9 @@ import ReleaseSplash from "./release/ReleaseSplash.vue";
 
 // „Co je nového“ (`#/whats-new`). Opened after an update (`since`: the last release this account had seen), it first welcomes with
 // ReleaseSplash when a named release is among the unseen ones; otherwise, and from the splash's „Celý changelog“, it is the full
-// ReleaseChangelog, where a named release's codename replays its splash. An update by patches only of the named release the account
-// knows welcomes as a small update of it. It owns no state beyond that choice. `current`: the release this server runs; `close`:
-// back to Atlas.
+// ReleaseChangelog, where a named release's codename or its tile in the release gallery replays its splash; closing a replayed splash
+// goes back to the changelog. An update by patches only of the named release the account knows welcomes as a small update of it. It
+// owns no state beyond that choice. `current`: the release this server runs; `close`: back to Atlas.
 const props = withDefaults(defineProps<{ current?: string; since?: string; dark?: boolean; accent?: string; notes?: readonly ReleaseNote[] }>(),
   { current: undefined, since: undefined, accent: undefined, notes: () => releaseNotes });
 const emit = defineEmits<{ close: [] }>();
@@ -30,7 +30,7 @@ async function show(next: typeof splash.value) {
 <template>
   <div ref="root" class="whats-new" :class="{ 'is-splash': splash }" data-whats-new>
     <ReleaseSplash v-if="splash" :key="splash.note.version" :note="splash.note" :since="splash.since" :others="splash.others" :patches="splash.patches"
-      @close="emit('close')" @changelog="show(undefined)" />
+      @close="splash.since ? emit('close') : show(undefined)" @changelog="show(undefined)" />
     <ReleaseChangelog v-else :notes="notes" :current="current" :dark="dark" :accent="accent" @splash="show({ note: $event, others: [] })" />
   </div>
 </template>
