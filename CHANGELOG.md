@@ -4,6 +4,27 @@ Změny Atlasu evidované od zavedení verzování.
 
 Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · Performant Pear`) a pod ním své opravné verze jako menší oddíly (`### 3.5.1 — datum`), od nejstarší.
 
+## 5.2 · Upright Ugli (nevydáno)
+
+### Ověřený obsah
+- Stránka má garanta a datum, do kdy je ověřená; prostor ověřování zapíná v nastavení s intervalem 3, 6 nebo 12 měsíců, stránka může mít vlastní interval nebo se neověřovat. Výchozí stav: vypnuto, prostor vypadá jako v 5.1.
+- Stav ověření (ověřeno, brzy vyprší, vypršelo, neověřeno) a „Změněno po ověření“, když je publikovaná novější verze; ověřit smí každý editor stránky, ověřuje se publikovaná verze.
+- Nová stránka v prostoru s ověřováním má garantem autora; hromadně lze garanty nastavit podle autora poslední publikované verze.
+- Garant dostane do Oznámení připomínku 14 dní před vypršením a v den vypršení, každou jen jednou; čtenář může stránku nahlásit jako neaktuální s poznámkou.
+- Ikona stavu ověření ve výsledcích hledání; pořadí výsledků se nemění.
+
+### Čtenost a Stav obsahu
+- Nastavení prostoru → Stav obsahu: počty podle stavu ověření a seznam publikovaných stránek se stavem, garantem a čteností (zobrazení a různí čtenáři za 30, 90 nebo 365 dní, bez jmen), výchozí řazení nejdřív čtené a neověřené.
+- Panel stránky ukazuje počet čtenářů za 90 dní.
+
+### AI a API
+- MCP `atlas_set_verification`, `atlas_list_content_health` a `atlas_report_outdated`; `atlas_get_page` a `atlas_search` nesou stav ověření a vypršelé ověření AI v odpovědi zmíní. Ověření přes MCP nebo API je označené „přes AI“.
+- `/api/v1`: `GET|PUT /pages/{id}/verification`, `POST /pages/{id}/verification/report-outdated`, `GET /spaces/{id}/content-health`, `POST /spaces/{id}/verification/batch`, `GET /spaces/{id}/readership`; `GET /pages/{id}` nese blok `verification`.
+
+### Provoz
+- Migrace 2026112400: tabulka `PageVerification` a sloupec `Space.VerificationIntervalMonths`; žádná konverze dat. Instalační záloha (Git, ZIP) ověření nese, wiki archiv ne.
+- Úloha `content-verification` každý den v 5:15 UTC.
+
 ## 5.1 · Tandem Tangerine
 
 *5.1.0 — 2026-11-24*
