@@ -29,6 +29,16 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - PostgreSQL 19 z oficiálního image `pgvector/pgvector` (kolace builtin C.UTF-8), převod z PostgreSQL 18 proběhne sám při prvním `docker compose up -d` (jednorázové služby `wiki-db-upgrade-dump` a `wiki-db-upgrade`, obecně pro každou další hlavní verzi; data 18 zůstanou pro návrat); vlastní databázový image zanikl.
 - Při změně verze kolace Atlas při startu jednou přeindexuje databázi.
 
+### 5.1.1 — 2026-11-24
+
+#### Závislosti
+- Aspire 13.6.5 → 17.0.0: AppHost na `Microsoft.NET.Sdk` s `Aspire.Hosting.Dotnet`, server přidaný cestou (`AddDotnetProject`); orchestrátor a dashboard z odpovídajícího Aspire CLI (`dotnet tool update -g Aspire.Cli`).
+- Microsoft.Extensions.AI a Microsoft.Extensions.AI.OpenAI 11.0.1.
+- Microsoft.Playwright 1.65.1; PDF export v image na Chromium headless shell 159.0.8154.6 (revize 1255).
+
+#### Testy
+- `McpRequestLimitTests`: příliš velký požadavek posílá `Expect: 100-continue` a čeká na 413 před tělem; na CI už nekončí přerušeným spojením (broken pipe).
+
 ## 5.0 · Shared Strawberry
 
 *5.0.0 — 2026-11-15*
