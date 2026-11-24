@@ -96,9 +96,9 @@ jobs:
             -e POSTGRES_INITDB_ARGS='--locale-provider=builtin --builtin-locale=C.UTF-8' "$image"
           for i in $(seq 1 60); do docker exec atlas-test-pg pg_isready -h 127.0.0.1 -U atlas -d atlas_test && exit 0; sleep 2; done
           docker logs atlas-test-pg; exit 1
-      # The PDF tests print with the Chromium headless shell of Playwright 1.64 (as the Dockerfile installs).
+      # The PDF tests print with the Chromium headless shell of Playwright 1.65 (as the Dockerfile installs).
       - name: Install the Chromium headless shell for the PDF tests
-        run: npx --yes playwright@1.64.1 install --with-deps --only-shell chromium
+        run: npx --yes playwright@1.65.1 install --with-deps --only-shell chromium
       - name: Server, Markdown Sync, Yjs and YouTrack tests
         run: bash tooling/ci/server-tests.sh
       - name: Keep the failure diagnostics

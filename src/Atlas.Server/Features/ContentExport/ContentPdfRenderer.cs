@@ -233,13 +233,13 @@ public sealed class ContentPdfRenderer(IWebHostEnvironment environment, ContentE
 
     /// <summary>
     /// The Chromium headless shell the export prints with: <c>ATLAS_PDF_BROWSER</c> (the image's niced wrapper, Dockerfile), else the
-    /// <c>chromium_headless_shell-1248</c> of Playwright's browser cache (<c>playwright.ps1 install --only-shell chromium</c>) for
+    /// <c>chromium_headless_shell-1255</c> of Playwright's browser cache (<c>playwright.ps1 install --only-shell chromium</c>) for
     /// development and tests.
     /// </summary>
     public static string BrowserPath()
     {
         // The shell revision the Dockerfile ships (CHROMIUM_REVISION), so development and tests print with the same Chromium.
-        const string ChromiumRevision = "1248";
+        const string ChromiumRevision = "1255";
         if (Environment.GetEnvironmentVariable("ATLAS_PDF_BROWSER") is { Length: > 0 } configured) return configured;
         var cache = Environment.GetEnvironmentVariable("PLAYWRIGHT_BROWSERS_PATH") is { Length: > 0 } custom ? custom
             : OperatingSystem.IsWindows() ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ms-playwright")

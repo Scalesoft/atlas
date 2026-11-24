@@ -151,7 +151,7 @@ public sealed class ContentPdfImageScalingTests
                 catch (Atlas.Server.Platform.Validation.ApiException)
                 {
                     // Review P2-10: the reason names what was looked for, so a skipped print test is never mistaken for a passed one.
-                    Skip = "SKIPPED, no real PDF printed: no Chromium headless shell chromium_headless_shell-1248 in the Playwright browser cache (PLAYWRIGHT_BROWSERS_PATH) "
+                    Skip = "SKIPPED, no real PDF printed: no Chromium headless shell chromium_headless_shell-1255 in the Playwright browser cache (PLAYWRIGHT_BROWSERS_PATH) "
                         + "and no ATLAS_PDF_BROWSER. Install it with playwright.ps1 install --only-shell chromium; on CI (CI set) a missing browser fails instead.";
                 }
             }

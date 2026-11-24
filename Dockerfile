@@ -44,13 +44,13 @@ RUN dotnet build src/Atlas.Server/Atlas.Server.csproj --configuration Release \
 # The runtime without the application: the production image below and the server container of tests/browser/e2e-podman.ps1
 # (`podman build --target runtime`, needs no build context). The git backup runs the git CLI over SSH.
 # The PDF export drives the Chromium headless shell over CDP from .NET (PuppeteerSharp): no Node.js in the image. The shell is the
-# build of Playwright 1.64 (Chromium 156): Chrome for Testing for amd64, Playwright's own CDN build (revision 1248) for arm64.
+# build of Playwright 1.65 (Chromium 159): Chrome for Testing for amd64, Playwright's own CDN build (revision 1255) for arm64.
 FROM mcr.microsoft.com/dotnet/aspnet:11.0-resolute AS runtime
 ARG TARGETARCH
-ARG CHROMIUM_VERSION=156.0.8078.4
-ARG CHROMIUM_REVISION=1248
+ARG CHROMIUM_VERSION=159.0.8154.6
+ARG CHROMIUM_REVISION=1255
 # SHA-256 of each download; arm64 must be set (--build-arg) by whoever first fetches that build, the build fails without it.
-ARG CHROMIUM_SHA256_amd64=c3e50596aef52c58f8fda3c6b3411c33d34c88b177b3ed1c2243359fd3b8ba20
+ARG CHROMIUM_SHA256_amd64=77a6442fd3c8acd3bef9e1067fc26f5ef464277d22f0e8cb58dc3e4077a3e458
 ARG CHROMIUM_SHA256_arm64=
 # The packages and fonts Playwright installs for Chromium on Ubuntu 26.04, so the print lays out as before.
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates unzip libatomic1 \
