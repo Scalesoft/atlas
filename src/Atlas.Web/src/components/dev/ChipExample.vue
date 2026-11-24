@@ -163,7 +163,7 @@ const keys = (...steps: string[]) => formatMarkdownShortcut(steps);
     </SettingsSection>
     <SettingsSection title="Stav ověření stránky"
       description="Stránka s ověřováním (Nastavení prostoru → Obecné) má u titulku stavový čip, tentýž StatusBadge jako ostatní stavy stránky, ne nový prvek. Ověřeno a Brzy vyprší (Vyprší za 9 dní) jsou tiché, Ověření vypršelo a Neověřeno mají tón upozornění; nic neblokuje čtení ani nepřidává pruh nad text. Klik nebo Enter otevře malé okno: garant, kdo a kdy ověřil, Změněno po ověření s odkazem na porovnání verzí. Editor ověří (klávesa V), ověří do data nebo změní garanta (hledání osob, první výsledek předvybraný, Enter vybere); čtenář nahlásí stránku jako neaktuální s volitelnou poznámkou. Níže je skutečná komponenta nad místním zástupným API; odkazy na stránky s ověřením mají před titulkem štít (viz Stavy).">
-      <div class="chip-example-states" data-example-verification>
+      <div class="chip-example-states chip-example-live" data-example-verification>
         <figure v-for="item in verifications" :key="item.caption">
           <PageVerification :page-id="'11111111-1111-4111-8111-111111111111'" :verification="item.value" :can-edit="item.canEdit" is-published :api="verificationApi(() => item.value)" :people="verificationPeople" @change="value => { item.value = value; }" />
           <figcaption>{{ item.caption }}</figcaption>
@@ -195,6 +195,8 @@ const keys = (...steps: string[]) => formatMarkdownShortcut(steps);
 .chip-example-editor { border: 1px solid var(--line); border-radius: var(--radius-md, 10px); }
 .chip-example-states { display: flex; flex-wrap: wrap; gap: 16px 24px; padding: 16px; border-radius: var(--radius-md, 10px); background: var(--paper, #fff); color: var(--text); }
 .chip-example-dark { margin-top: 12px; }
+/* The live chips sit on the page's own surface (the states above carry the editor's paper), so they follow the dark theme. */
+.chip-example-live { padding: 0; background: transparent; }
 /* min-width 0 and a shrinkable column: a long chip ellipsizes in its cell at 375 px, as it does in a paragraph. */
 .chip-example-states :deep(figure) { display: grid; grid-template-columns: minmax(0, auto); gap: 6px; justify-items: start; min-width: 0; margin: 0; }
 .chip-example-states :deep(figcaption) { color: var(--text-dim); font-size: 12px; }

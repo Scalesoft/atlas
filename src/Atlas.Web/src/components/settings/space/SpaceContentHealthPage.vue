@@ -45,8 +45,9 @@ const router = useSettingsRoute();
 
 const state = ref<ContentHealthFilter>("");
 const mine = ref("");
-const sort = ref<ContentHealthSort>("priority");
-const days = ref(String(90));
+// A FilterMenu's first option (value "") is its default and does not light the trigger: the default order and the 90 days are those.
+const sort = ref<"" | ContentHealthSort>("");
+const days = ref("");
 const query = ref("");
 const data = shallowRef<ContentHealth>();
 const items = ref<ContentHealthItem[]>([]);
@@ -68,12 +69,13 @@ const stateOptions: ChoiceOption[] = [
 ];
 const mineOptions: ChoiceOption[] = [{ value: "", label: t.health.mineAll, icon: "users" }, { value: "mine", label: t.health.mine, icon: "user" }];
 const sortOptions: ChoiceOption[] = [
-  { value: "priority", label: t.health.sortPriority, icon: "shield-alert" },
+  { value: "", label: t.health.sortPriority, icon: "shield-alert" },
   { value: "expiry", label: t.health.sortExpiry, icon: "calendar" },
   { value: "readers", label: t.health.sortReaders, icon: "users" },
   { value: "published", label: t.health.sortPublished, icon: "history" },
 ];
-const periodOptions: ChoiceOption[] = [30, 90, 365].map((n) => ({ value: String(n), label: t.health.days(n), icon: "clock" }));
+const periodOptions: ChoiceOption[] = [30, 90, 365].map((n) => ({ value: n === 90 ? "" : String(n), label: t.health.days(n), icon: "clock" }));
+const periodDays = () => Number(days.value || 90) as ContentHealthDays;
 
 /** `append`: the next page of the same list; `keep`: the same list read again after an action (the keyboard stays on its row, the selection is spent). */
 async function load(append = false, keep = false) {
@@ -82,7 +84,7 @@ async function load(append = false, keep = false) {
   loading.value = true;
   loadError.value = "";
   try {
-    const result = await props.api.list(props.spaceId, { state: state.value, mine: mine.value === "mine", sort: sort.value, days: Number(days.value) as ContentHealthDays, q: query.value, cursor: append ? data.value?.nextCursor : null }, controller.signal);
+    const result = await props.api.list(props.spaceId, { state: state.value, mine: mine.value === "mine", sort: sort.value || "priority", days: periodDays(), q: query.value, cursor: append ? data.value?.nextCursor : null }, controller.signal);
     if (controller.signal.aborted) return;
     data.value = result;
     items.value = append ? [...items.value, ...result.items] : result.items;
@@ -193,7 +195,7 @@ function rowKey(event: KeyboardEvent, index: number) {
 }
 
 const rowText = (item: ContentHealthItem) => [item.path.length ? item.path.join(t.health.pathSep) : "", t.health.steward(item.stewardName)].filter(Boolean).join(" · ");
-const rowDetail = (item: ContentHealthItem) => [t.health.readers(item.readers, Number(days.value)), t.health.lastPublished(item.lastPublishedAt ? formatDate(item.lastPublishedAt) : null)].join(" · ");
+const rowDetail = (item: ContentHealthItem) => [t.health.readers(item.readers, periodDays()), t.health.lastPublished(item.lastPublishedAt ? formatDate(item.lastPublishedAt) : null)].join(" · ");
 const enabled = computed(() => !data.value || data.value.enabled);
 const empty = computed(() => !!data.value && !loading.value && !items.value.length);
 </script>
