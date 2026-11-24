@@ -158,7 +158,7 @@ async function sendReport() {
           <SearchableChoiceList v-model:query="query" remote :loading="searching" :options="found" :model-value="value.stewardId ?? ''" :label="t.changeSteward" :placeholder="t.stewardSearch" :empty-text="t.stewardEmpty" :max-height="220" @pick="pickSteward" />
           <div class="page-verification-actions">
             <Button variant="ghost" size="sm" type="button" @click="show('main')"><AtlasIcon name="back" :size="15" />{{ t.back }}</Button>
-            <Button v-if="value.stewardId" variant="ghost" size="sm" type="button" :disabled="busy" data-verification-steward-clear @click="run({ stewardId: null })">{{ t.stewardNone }}</Button>
+            <Button v-if="value.stewardId" variant="ghost" size="sm" type="button" :disabled="busy" data-verification-steward-clear @click="run({ clearSteward: true })">{{ t.stewardNone }}</Button>
           </div>
         </template>
 

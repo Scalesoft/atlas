@@ -18,8 +18,7 @@ const verification = (over = {}) => ({ state: "expiring", stewardId: "u1", stewa
 describe("PageSidePanel", () => {
   it("shows the owner, the verification and the 90-day readership, opens the dialog and lets an editor change the interval (5.2)", async () => {
     const verificationApi = { change: vi.fn(async (_: string, change: object) => verification(change) as never), report: vi.fn() };
-    const readers = vi.fn(async () => 12);
-    const wrapper = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification() as never, canEdit: true, verificationApi, readers } });
+    const wrapper = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification() as never, canEdit: true, verificationApi, readers: 12 } });
     await flushPromises();
     expect(wrapper.get("[data-verification-steward]").text()).toBe("Jana Malá");
     expect(wrapper.get("[data-verification-row]").text()).toContain("do 3. 5. 2027");
@@ -34,16 +33,20 @@ describe("PageSidePanel", () => {
     await wrapper.get("[data-page-verification-interval] [data-value='12']").trigger("click");
     await flushPromises();
     expect(verificationApi.change).toHaveBeenCalledWith("p1", { intervalMonths: 12 });
+    await wrapper.setProps({ verification: verification({ intervalMonths: 12 }) as never });
+    await wrapper.get("[data-page-verification-interval] [data-value=inherit]").trigger("click");
+    await flushPromises();
+    expect(verificationApi.change).toHaveBeenLastCalledWith("p1", { inheritInterval: true });
     expect(wrapper.emitted("verification")![0]![0]).toMatchObject({ intervalMonths: 12 });
   });
 
   it("shows a reader only the facts, and nothing of verification while it is off", async () => {
-    const reader = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification({ stewardName: null }) as never, readers: async () => 1 } });
+    const reader = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification({ stewardName: null }) as never, readers: 1 } });
     await flushPromises();
     expect(reader.get("[data-verification-steward]").text()).toBe("bez garanta");
     expect(reader.find("[data-page-verification-interval]").exists()).toBe(false);
     expect(reader.get("[data-verification-readers]").text()).toBe("1 čtenář za 90 dní");
-    const off = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification({ state: "off", spaceIntervalMonths: null }) as never, readers: vi.fn(async () => 5) } });
+    const off = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification({ state: "off", spaceIntervalMonths: null }) as never, readers: undefined } });
     await flushPromises();
     expect(off.find("[data-verification-steward]").exists()).toBe(false);
     expect(off.find("[data-verification-readers]").exists()).toBe(false);

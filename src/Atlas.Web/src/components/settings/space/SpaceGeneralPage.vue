@@ -43,6 +43,8 @@ const fields = ["name", "icon", "color", "description", "pinPolicy", "commentsEn
 // Ověřování obsahu (5.2): Vypnuto (the default) or the interval of the space's pages; the pills carry strings, the draft the months.
 const verificationOptions = [{ value: "0", label: tv.general.off }, ...[3, 6, 12].map((months) => ({ value: String(months), label: tv.months(months) }))];
 const verificationChoice = computed({ get: () => String(draft.verificationIntervalMonths ?? 0), set: (value: string) => { draft.verificationIntervalMonths = Number(value) || null; } });
+/** The server keeps the interval when the key is null or missing: off is sent as 0. */
+const savedInterval = () => draft.verificationIntervalMonths ?? 0;
 const publicationOptions = (Object.keys(publicationLabels) as PublicationMode[]).map((value) => ({ value, label: publicationLabels[value] }));
 /** An older server leaves the comments switch out: comments are on. */
 const baselineOf = (value: SpaceSettings) => ({ ...value, commentsEnabled: value.commentsEnabled ?? true, publicationMode: value.publicationMode ?? "Manual", verificationIntervalMonths: value.verificationIntervalMonths ?? null });
@@ -100,7 +102,7 @@ async function save() {
   saveError.value = "";
   conflict.value = "";
   try {
-    const value = await spaceSettingsApi.save(props.spaceId, { ...draft, name: draft.name.trim(), expectedVersion: baseline.value.version });
+    const value = await spaceSettingsApi.save(props.spaceId, { ...draft, verificationIntervalMonths: savedInterval(), name: draft.name.trim(), expectedVersion: baseline.value.version });
     if (current !== attempt) return;
     // The form never sends the image; keep the one saved meanwhile if the answer leaves it out.
     const saved = { ...value, cover: value.cover ?? cover.value };

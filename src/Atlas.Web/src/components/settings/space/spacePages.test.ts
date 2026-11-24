@@ -84,7 +84,7 @@ describe("Obecné", () => {
     expect(view.get("[data-appearance-preview] [data-color]").attributes("data-color")).toBe("green-3");
     await view.get("[data-space-save] [data-save-bar-save]").trigger("click");
     await flushPromises();
-    expect(puts()[0]!.body).toEqual({ name: "Provoz IT", icon: "compass", color: "green-3", description: "Servery", pinPolicy: "Required", commentsEnabled: true, publicationMode: "Automatic", verificationIntervalMonths: null, expectedVersion: "v1" });
+    expect(puts()[0]!.body).toEqual({ name: "Provoz IT", icon: "compass", color: "green-3", description: "Servery", pinPolicy: "Required", commentsEnabled: true, publicationMode: "Automatic", verificationIntervalMonths: 0, expectedVersion: "v1" });
     expect(context.spaceChanged).toHaveBeenCalledWith(expect.objectContaining({ name: "Provoz IT", version: "v2" }));
     expect(guard.dirty.value).toBe(false);
   });
@@ -108,7 +108,8 @@ describe("Obecné", () => {
     await view.get('[data-space-verification] [data-value="0"]').trigger("click");
     await view.get("[data-space-save] [data-save-bar-save]").trigger("click");
     await flushPromises();
-    expect(puts()[1]!.body).toMatchObject({ verificationIntervalMonths: null });
+    // The server keeps the interval for null or a missing key: off is sent as 0.
+    expect(puts()[1]!.body).toMatchObject({ verificationIntervalMonths: 0 });
   });
 
   it("keeps the draft on a conflict until the user chooses Načíst znovu", async () => {

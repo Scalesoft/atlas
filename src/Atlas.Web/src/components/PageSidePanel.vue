@@ -2,12 +2,10 @@
 import t from "../i18n/components-b";
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import type { MarkdownRichValue } from "@atlas/markdown/core";
-import { api, errorMessage } from "../api";
+import { errorMessage } from "../api";
 import { channelText } from "../channel";
 import tv from "../i18n/verification";
-import { periodQuery, shiftDay, type Readership } from "../activity";
 import { pageVerificationApi, verificationShown, type PageVerification, type PageVerificationApi } from "../verification/pageVerification";
-import { pragueNow } from "@atlas/markdown/core";
 import { formatDate, formatDateTime } from "../formatDate";
 import { historyApi, type PageRevisionSummary } from "../history";
 import { animateAtlas, motionMs, riseIn, RISE_IN_ROWS } from "../motion/aiMotion";
@@ -53,13 +51,12 @@ const props = withDefaults(defineProps<{
   connections?: PageConnectionsApi;
   usage?: UsageApi;
   publicationApi?: PagePublicationApi;
-  /** Ověřený obsah (5.2): the page's verification (the bundle's), whether the reader edits it, and the sources of its changes and of the 90-day reader count. */
+  /** Ověřený obsah (5.2): the page's verification and the 90-day reader count (both the bundle's), whether the reader edits it, and the source of its changes. */
   verification?: PageVerification | null;
   canEdit?: boolean;
   verificationApi?: PageVerificationApi;
-  readers?: (pageId: string, signal: AbortSignal) => Promise<number>;
-}>(), { usage: undefined, publicationApi: () => pagePublicationApi, verification: null, canEdit: false, verificationApi: () => pageVerificationApi,
-  readers: (pageId: string, signal: AbortSignal) => { const today = pragueNow().date; return api<Readership>(`/analytics/pages/${encodeURIComponent(pageId)}?${periodQuery(shiftDay(today, -89), today)}&offset=0`, { signal }).then((value) => value.readers); },
+  readers?: number;
+}>(), { usage: undefined, publicationApi: () => pagePublicationApi, verification: null, canEdit: false, verificationApi: () => pageVerificationApi, readers: undefined,
   document: undefined, updatedAt: null, relatedEnabled: true, refreshKey: 0, history: () => historyApi, sharing: () => sharingApi, connections: () => pageConnectionsApi });
 /** `publication`: the page's publication as read or set here (the header's chip and Publikovat follow its mode). */
 const emit = defineEmits<{ openHistory: [revision?: PageRevisionSummary]; openAccess: []; openPlace: [id: string, typeId: string]; publication: [value: PagePublication]; verification: [value: PageVerification]; openReadership: []; openVerification: [] }>();
@@ -185,29 +182,18 @@ const intervalChoices = computed(() => [
   { value: "0", label: tv.never },
 ]);
 async function setIntervalChoice(choice: string) {
-  const intervalMonths = choice === "inherit" ? null : Number(choice);
+  const intervalMonths = choice === "inherit" ? null : Number(choice) as 0 | 3 | 6 | 12;
   if (verificationSaving.value || intervalMonths === (props.verification?.intervalMonths ?? null)) return;
   verificationSaving.value = true;
   verificationError.value = "";
   try {
-    emit("verification", await props.verificationApi.change(props.pageId, { intervalMonths }));
+    emit("verification", await props.verificationApi.change(props.pageId, intervalMonths === null ? { inheritInterval: true } : { intervalMonths }));
   } catch (failure) {
     verificationError.value = errorMessage(failure);
   } finally {
     verificationSaving.value = false;
   }
 }
-const readerCount = shallowRef<number>();
-let readersRequest: AbortController | undefined;
-watch(() => [props.pageId, props.tab, verificationShown(props.verification)] as const, ([id, tab, on]) => {
-  readersRequest?.abort();
-  readerCount.value = undefined;
-  if (tab !== "outline" || !on) return;
-  const controller = (readersRequest = new AbortController());
-  // A failed count only hides the row: it is a fact beside the text, not something to report.
-  props.readers(id, controller.signal).then((count) => { if (!controller.signal.aborted) readerCount.value = count; }, () => {});
-}, { immediate: true });
-onBeforeUnmount(() => readersRequest?.abort());
 
 const viewers = computed(() => { const counts = access.value?.counts; return counts ? counts.manage + counts.edit + counts.read : 0; });
 const ownAccess = computed(() => {
@@ -232,9 +218,9 @@ const ownAccess = computed(() => {
           </dd>
             <dt>{{ tv.verifiedRow }}</dt>
             <dd data-verification-row>{{ tv.verifiedRowText(verification.verifiedAt ? formatDate(verification.verifiedAt) : null, verification.verifiedUntil ? formatDate(verification.verifiedUntil) : null) }}<template v-if="verification.changedSinceVerification"><br><span class="page-side-warn">{{ tv.changedVersions(verification.verifiedVersion, publishedVersion ?? version) }}</span></template></dd>
-          <template v-if="readerCount !== undefined">
+          <template v-if="readers !== undefined">
             <dt>{{ tv.readership }}</dt>
-            <dd><button type="button" class="page-side-link" :aria-label="tv.readershipOpen" data-verification-readers @click="emit('openReadership')">{{ tv.readershipText(readerCount) }}</button></dd>
+            <dd><button type="button" class="page-side-link" :aria-label="tv.readershipOpen" data-verification-readers @click="emit('openReadership')">{{ tv.readershipText(readers) }}</button></dd>
           </template>
         </template>
       </dl>

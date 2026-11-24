@@ -72,6 +72,8 @@ export interface PageBundle {
   pages?: { items: { id: string; title: string; type?: string; verification?: string }[] } | null;
   /** Ověřený obsah (5.2): the page's verification, so the chip draws at once; absent from a server without it. */
   verification?: import("./verification/pageVerification").PageVerification | null;
+  /** Distinct readers of the page in the last 90 days (the panel's Čtenost row); missing while verification is off. */
+  readers?: number;
   /** The page's live session, for a writer when it opens as is, for a reader of a Živě page (`readOnly`). */
   collaboration?: {
     documentId: string; generation: string; currentVersion: number; readOnly: boolean;

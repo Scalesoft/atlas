@@ -25,16 +25,19 @@ export interface PageVerification {
   /** The space's default interval; null = verification is off in the space. */
   spaceIntervalMonths: number | null;
 }
-/** What `PUT /pages/{id}/verification` takes (the same as `PUT /api/v1/pages/{id}/verification`): only what is named changes; `stewardId: null` clears the owner. */
-export interface VerificationChange { verify?: true; until?: string; stewardId?: string | null; intervalMonths?: number | null }
+/**
+ * What `PUT /pages/{id}/verification` takes (the same as `PUT /api/v1/pages/{id}/verification`): only what is named changes. The server cannot tell
+ * null from a missing key, so the owner is cleared with `clearSteward` and „Podle prostoru“ is `inheritInterval`; `intervalMonths` is 0 (never), 3, 6 or 12.
+ */
+export interface VerificationChange { verify?: true; until?: string; stewardId?: string; clearSteward?: true; intervalMonths?: 0 | 3 | 6 | 12; inheritInterval?: true; stewardFromLastAuthor?: true }
 export interface PageVerificationApi {
   change(pageId: string, change: VerificationChange): Promise<PageVerification>;
   /** „Nahlásit neaktuální“: tells the owner, changes nothing on the page. */
-  report(pageId: string, note: string): Promise<void>;
+  report(pageId: string, note: string): Promise<unknown>;
 }
 export const pageVerificationApi: PageVerificationApi = {
   change: (pageId, change) => put<PageVerification>(`/pages/${encodeURIComponent(pageId)}/verification`, change),
-  report: (pageId, note) => post<void>(`/pages/${encodeURIComponent(pageId)}/verification/report`, note.trim() ? { note: note.trim() } : {}),
+  report: (pageId, note) => post<{ notified: number }>(`/pages/${encodeURIComponent(pageId)}/verification/report`, note.trim() ? { note: note.trim() } : {}),
 };
 
 /** The chip shows only a switched-on verification. */

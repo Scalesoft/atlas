@@ -133,7 +133,7 @@ const verifications = ref<{ caption: string; value: Verification; canEdit: boole
   { caption: "Neověřeno, bez garanta", value: sample("unverified", { stewardId: null, stewardName: null, verifiedAt: null, verifiedUntil: null, verifiedVersion: null, verifiedByName: null }), canEdit: true },
 ]);
 const verificationApi = (current: () => Verification) => ({
-  change: async (_page: string, change: { verify?: true; until?: string; stewardId?: string | null }) => sample("verified", { ...current(), ...(change.stewardId !== undefined ? { stewardId: change.stewardId, stewardName: change.stewardId ? "Petra Malá" : null } : {}), ...(change.verify ? { verifiedAt: at(0), verifiedUntil: change.until ?? at(180), changedSinceVerification: false } : {}) }),
+  change: async (_page: string, change: { verify?: true; until?: string; stewardId?: string; clearSteward?: true }) => sample("verified", { ...current(), ...(change.stewardId || change.clearSteward ? { stewardId: change.stewardId ?? null, stewardName: change.stewardId ? "Petra Malá" : null } : {}), ...(change.verify ? { verifiedAt: at(0), verifiedUntil: change.until ?? at(180), changedSinceVerification: false } : {}) }),
   report: async () => {},
 });
 const verificationPeople = async () => [{ id: "u2", name: "Petra Malá", username: "pmala" }, { id: "u1", name: "Jana Nováková", username: "jnovakova" }];

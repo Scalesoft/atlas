@@ -102,6 +102,17 @@ describe("PageVerification popover", () => {
     expect(service.change).toHaveBeenLastCalledWith("p1", { stewardId: "u2" });
   });
 
+  it("clears the owner with clearSteward, as the server cannot tell null from a missing key", async () => {
+    const service = api();
+    open(sample("verified"), { api: service });
+    await openPopover();
+    pop()!.querySelector<HTMLElement>("[data-verification-steward-change]")!.click();
+    await flushPromises();
+    pop()!.querySelector<HTMLElement>("[data-verification-steward-clear]")!.click();
+    await flushPromises();
+    expect(service.change).toHaveBeenCalledWith("p1", { clearSteward: true });
+  });
+
   it("lets a reader report the page as outdated with a note, and nothing else", async () => {
     const service = api();
     open(sample("expired", { verifiedUntil: at(-3) }), { canEdit: false, api: service });
