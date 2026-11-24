@@ -58,8 +58,10 @@ public sealed class McpRequestLimitTests
         }
 
         // One byte over the limit with a declared length: refused unread, with a reason a person can act on.
+        // Expect: 100-continue, as a careful client sends a large body: the server answers 413 before the body goes out. Without it the
+        // client may still be writing when the server has answered and closed, and finds a broken pipe instead of the answer (CI, 5.1.0).
         using (var oversized = Post(new byte[McpModule.MaximumRequestBytes + 1], secret))
-        using (var refused = await http.SendAsync(oversized))
+        using (var refused = await http.SendAsync(WithExpectContinue(oversized)))
         {
             Assert.Equal(HttpStatusCode.RequestEntityTooLarge, refused.StatusCode);
             var problem = (await refused.Content.ReadFromJsonAsync<JsonNode>())!;
@@ -88,6 +90,12 @@ public sealed class McpRequestLimitTests
             Convert.ToBase64String(content) + "\"}}}";
 
     /// <summary>A stateless JSON-RPC POST as an MCP client sends it, with a declared Content-Length.</summary>
+    private static HttpRequestMessage WithExpectContinue(HttpRequestMessage request)
+    {
+        request.Headers.ExpectContinue = true;
+        return request;
+    }
+
     private static HttpRequestMessage Post(byte[] body, string secret)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, "/mcp") { Content = new ByteArrayContent(body) };
