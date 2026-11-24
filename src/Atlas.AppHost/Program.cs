@@ -15,7 +15,7 @@ var database = postgres.AddDatabase("atlas-db", "atlas");
 var bootstrap = builder.AddParameter("bootstrap-token", new GenerateParameterDefault { MinLength = 48, Special = false }, secret: true, persist: true)
     .WithDescription("Installation token for the first Atlas administrator. Copy privately into the onboarding wizard.");
 
-var atlasService = builder.AddProject<Projects.Atlas_Server>("atlas-service")
+var atlasService = builder.AddDotnetProject("atlas-service", "../Atlas.Server/Atlas.Server.csproj")
     .WithReference(database)
     .WithEnvironment("Setup__BootstrapToken", bootstrap)
     .WithEnvironment("Authentication__Builtin__AllowDevelopmentPasswords", "true")

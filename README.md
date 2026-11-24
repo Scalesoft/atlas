@@ -75,7 +75,8 @@ pnpm --dir src/Atlas.Web run build:editor
 dotnet run --project src/Atlas.AppHost --launch-profile https
 ```
 
-With Podman, set `ASPIRE_CONTAINER_RUNTIME=podman` first. Since 5.1 Aspire keeps its database (PostgreSQL 19) in the new volume
+The AppHost (Aspire 17) takes its orchestrator and dashboard from the matching Aspire CLI (`dotnet tool update -g Aspire.Cli`);
+without an Aspire CLI on the PATH its build fetches the paired one through `dnx`. With Podman, set `ASPIRE_CONTAINER_RUNTIME=podman` first. Since 5.1 Aspire keeps its database (PostgreSQL 19) in the new volume
 `atlas-postgres-19-builtin-data`, so the first start after the update is an empty installation; the former `atlas-postgres-18-data`
 stays untouched (delete it with `podman volume rm` or `docker volume rm` once you no longer need it). The installation token is in the Aspire dashboard (resource
 `atlas-service`, Logs). The editor changes in the same commit as its use; always run pnpm from `src/Atlas.Web`.
