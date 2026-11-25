@@ -241,6 +241,9 @@ public static partial class SearchText
     /// <summary>The readable text of Markdown on one line: <see cref="Excerpt"/> before its cut, also what a snippet is cut from.</summary>
     private static string PlainText(string markdown)
     {
+        // A component of the dialect (```a-contact …) reads as its values: no fence, key or id; a fragment cut inside one as well.
+        markdown = IndentedDialectKey().Replace(DialectFence().Replace(markdown, fence =>
+            DialectItem().Replace(DialectKey().Replace(fence.Groups["body"].Value, DialectValue), "")), DialectValue);
         // An escaped character survives the marker rules below as a private-use stand-in.
         var plain = Escape().Replace(markdown, match => ((char)(0xE000 + match.Groups[1].Value[0])).ToString());
         // A backslash at the end of a line is a hard break, not text.
@@ -287,6 +290,17 @@ public static partial class SearchText
     [GeneratedRegex(@"^[ \t>]*[-*+] \[[ xX-]\] \*\*.*\*\* — ", RegexOptions.CultureInvariant | RegexOptions.NonBacktracking)] private static partial Regex RequirementLine();
     [GeneratedRegex(@" · klíč: [a-z0-9][a-z0-9.-]*", RegexOptions.CultureInvariant | RegexOptions.NonBacktracking)] private static partial Regex RequirementKey();
     // The summary as RequirementText writes it ("**Stav nasazení:** …", RequirementText.SummaryLabel), whole lines.
+    private static string DialectValue(Match key) => HiddenDialectKey().IsMatch(key.Groups["key"].Value) ? "" : key.Groups["value"].Value;
+    [GeneratedRegex(@"^ {0,3}(?<fence>`{3,}|~{3,})a-[\w-]*[^\n]*(?:\n(?<body>.*?))?(?:\n {0,3}\k<fence>[ \t]*(?=\n|\z)|\z)",
+        RegexOptions.Multiline | RegexOptions.Singleline | RegexOptions.CultureInvariant)]
+    private static partial Regex DialectFence();
+    [GeneratedRegex(@"^[ \t]*(?:-[ \t]+)?(?<key>[A-Za-z][\w-]*)[ \t]*:[ \t]*(?<value>.*)$", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
+    private static partial Regex DialectKey();
+    [GeneratedRegex(@"^[ \t]*-[ \t]+", RegexOptions.Multiline | RegexOptions.CultureInvariant)] private static partial Regex DialectItem();
+    [GeneratedRegex(@"^[ \t]{2,}(?:-[ \t]+)?(?<key>[A-Za-z][\w-]*)[ \t]*:[ \t]*(?<value>.*)$", RegexOptions.Multiline | RegexOptions.CultureInvariant)]
+    private static partial Regex IndentedDialectKey();
+    // Ids and technical keys of a component, which no reader needs in a snippet.
+    [GeneratedRegex(@"^(?:\w*Ids?|id|version|kind|photo|internalUser)$", RegexOptions.CultureInvariant)] private static partial Regex HiddenDialectKey();
     [GeneratedRegex(@"(?m)^\*\*Stav nasazení[^\n*]*:\*\*[^\n]*$", RegexOptions.CultureInvariant | RegexOptions.NonBacktracking)] private static partial Regex SummaryLine();
     [GeneratedRegex(@"(?m)^\s{0,3}(?:#{1,6}\s|>\s?|[-*+]\s|\d+[.)]\s)|`{3,}|~{3,}|[*`]{1,3}", RegexOptions.CultureInvariant | RegexOptions.NonBacktracking)]
     private static partial Regex MarkdownMarkers();
