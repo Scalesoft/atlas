@@ -1,0 +1,44 @@
+/* The code header of codeCopyPlugin.ts, loaded with the plugin instead of with the eager refresh-article.css. */
+/* While reading a code block carries its language and „Kopírovat“ (codeCopyPlugin), pinned while the code scrolls sideways. */
+.atlas .document-body pre > .atlas-code-head {
+  position: sticky;
+  left: -16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  margin: -14px -16px 12px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--article-soft-line);
+  color: var(--muted);
+  font-family: var(--font-sans, "DM Sans", system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1;
+  white-space: normal;
+  user-select: none;
+}
+.atlas .document-body .atlas-code-language { flex: 1; min-width: 0; overflow: hidden; font-weight: 600; letter-spacing: 0.04em; text-overflow: ellipsis; text-transform: uppercase; }
+.atlas .document-body .atlas-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .atlas .document-body .atlas-code-copy:hover { background: var(--hover); color: var(--text); } }
+.atlas .document-body .atlas-code-copy[data-state="copied"] { color: var(--success); }
+/* The copy icon answers a successful copy with the pop of the other copy confirmations (CopyField, the link of the top bar). */
+.atlas .document-body .atlas-code-copy[data-state="copied"] svg { animation: st-pop var(--atlas-motion-pop) var(--atlas-ease-out); }
+.atlas .document-body .atlas-code-copy[data-state="failed"] { color: var(--error); }
+.atlas .document-body .atlas-code-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* The status line after a copy is for assistive technology. Inside the document the shared .visually-hidden of
+   shell.css does not apply (it keeps out of .md-editor), so „Kód zkopírován“ showed as a second text beside the
+   button and pushed it about 100 px to the left for the whole confirmation. */
+.atlas .document-body .atlas-code-head > .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

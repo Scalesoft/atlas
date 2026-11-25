@@ -2,6 +2,7 @@ import type { MarkdownPlugin } from "@atlas/markdown/core";
 import shellMore from "../i18n/shell-more";
 import { createIconElement } from "@atlas/markdown/icons";
 import { FEEDBACK_HOLD_MS } from "../motion/aiMotion";
+import "./codeCopyPlugin.css";
 
 /** Names a reader recognises; any other language shows its id in capitals. */
 const LANGUAGE_NAMES: Record<string, string> = {
