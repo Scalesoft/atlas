@@ -14,7 +14,7 @@ public static class CollaboratorColorPreference
             .Where(x => x.UserId == userId && x.ActiveTo == null)
             .Select(x => x.CollaboratorColor)
             .SingleOrDefaultAsync<string>(ct);
-        return CollaboratorPalette.SlotOf(id) is >= 0 and var slot ? CollaboratorPalette.Entries[slot].Light : null;
+        return CollaboratorPalette.LightOf(id);
     }
 
     /// <summary>Every active account's chosen colour (none for "auto"), user id → stamped colour, in one query: the static surfaces (history,
@@ -27,8 +27,8 @@ public static class CollaboratorColorPreference
             .WithSubquery.WhereProperty(x => x.UserId).In(NHibernate.Criterion.QueryOver.Of<UserAccount>().Where(u => u.IsActive).Select(u => u.Id))
             .SelectList(list => list.Select(x => x.UserId).Select(x => x.CollaboratorColor))
             .ListAsync<object[]>(ct);
-        return rows.Select(row => (UserId: (Guid)row[0], Slot: CollaboratorPalette.SlotOf((string)row[1])))
-            .Where(row => row.Slot >= 0).DistinctBy(row => row.UserId)
-            .ToDictionary(row => row.UserId, row => CollaboratorPalette.Entries[row.Slot].Light);
+        // One current row per account (UX_UserAppearancePreference_Current).
+        return rows.Select(row => (UserId: (Guid)row[0], Color: CollaboratorPalette.LightOf((string)row[1])))
+            .Where(row => row.Color is not null).ToDictionary(row => row.UserId, row => row.Color!);
     }
 }

@@ -22,6 +22,9 @@ public static class CollaboratorPalette
     /// <summary>The slot of a palette id, or -1.</summary>
     public static int SlotOf(string? id) => id is null ? -1 : s_entries.FindIndex(entry => entry.Id == id);
 
+    /// <summary>The stamped colour (the light variant) of a palette id; null for "auto" or an unknown id.</summary>
+    public static string? LightOf(string? id) => SlotOf(id) is >= 0 and var slot ? s_entries[slot].Light : null;
+
     /// <summary>The slot of a stamped colour (either variant), or -1.</summary>
     public static int SlotOfColor(string? color) => color is null ? -1 : s_entries.FindIndex(entry => string.Equals(entry.Light, color, StringComparison.OrdinalIgnoreCase) || string.Equals(entry.Dark, color, StringComparison.OrdinalIgnoreCase));
 
