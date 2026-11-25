@@ -7,8 +7,9 @@ Společný kontrakt navazuje na [rozhodnutí o UI komponent](decision-editor-com
 - Kliknutí nebo Enter/Space na úchytu vybere jednotku. U běžného bloku jde o blok, u nadpisu o sekci až po další nadpis stejné nebo vyšší úrovně, u tabulky o celý řádek/sloupec.
 - Shift+klik nebo Shift+Enter rozšíří souvislý výběr od původního úchytu. Další Shift+výběr dovoluje rozsah také zkrátit.
 - Tažení kteréhokoli úchytu uvnitř označené skupiny přesune celou skupinu v původním pořadí. Úchyt mimo výběr bere svou jednotku. Označení textu samo neurčuje skupinu bloků.
-- Výběr vlastní společnou ikonovou lištu nad skupinou. Obsahuje počet bloků, šipky přesunu a u nadpisu volbu rozsahu „Celá sekce / Pouze nadpis“ ve sdíleném menu bez záhlaví. Pravé tlačítko nebo šipka dolů na úchytu vybere skupinu a zaměří lištu. Nativní tooltip a samostatný hover štítek se nezobrazují.
-- Shift+šipky přesouvají stejný rozsah jako tažení: nahoru/dolů pro bloky a řádky, vlevo/vpravo pro sloupce. Přesunutá skupina zůstane vybraná a klávesnicové přesuny lze opakovat.
+- Výběr vlastní společnou ikonovou lištu nad skupinou. Obsahuje počet bloků, šipky přesunu a u nadpisu volbu rozsahu „Celá sekce / Pouze nadpis“ ve sdíleném menu bez záhlaví. Šipka dolů na úchytu vybere skupinu a zaměří lištu. Nativní tooltip a samostatný hover štítek se nezobrazují.
+- Pravé tlačítko, klávesa nabídky nebo Shift+F10 na úchytu otevře nabídku bloku („Co s tím jde dělat“), stejně jako klik na úchyt.
+- Shift+šipky (také Ctrl+Shift+šipky, klávesa přesunu bloku v editoru) přesouvají stejný rozsah jako tažení: nahoru/dolů pro bloky a řádky, vlevo/vpravo pro sloupce. Přesunutá skupina zůstane vybraná a klávesnicové přesuny lze opakovat.
 
 ## Umístění ovladačů
 

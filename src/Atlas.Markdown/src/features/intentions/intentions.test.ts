@@ -86,6 +86,12 @@ describe('„Co s tím jde dělat“ (Ctrl+Space, Alt+Enter)', () => {
     expect(shifted.defaultPrevented).toBe(false)
     expect(menu()).toBeNull()
   })
+  it('a row with a shortcut shows the keys at its end', () => {
+    const { editor } = mount([paragraph(text('Text'))])
+    registerMarkdownIntentions(editor, () => [{ id: 'k', label: 'Se zkratkou', shortcut: 'Ctrl+D', run: () => undefined }])
+    ctrlSpace(editor)
+    expect(menu()!.querySelector('[role=option] kbd')?.textContent).toBe('Ctrl+D')
+  })
   it('a chip next to the caret: „Převést na text“', () => {
     const { editor } = mount([paragraph(text('Viz '), issue)])
     ctrlSpace(editor)

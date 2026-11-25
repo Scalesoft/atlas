@@ -50,6 +50,8 @@ export interface MarkdownIntention {
   readonly keywords?: readonly string[]
   /** The current state (the block's own kind in Změnit na…): marked with a check, never preselected. */
   readonly checked?: boolean
+  /** The keys of the same action elsewhere, written for the platform (`formatMarkdownShortcut`); shown at the row's end. */
+  readonly shortcut?: string
   run(): void | Promise<void>
 }
 export type MarkdownIntentionProvider = (context: MarkdownIntentionContext) => readonly MarkdownIntention[] | Promise<readonly MarkdownIntention[]>
@@ -198,7 +200,7 @@ export function openMarkdownIntentionsMenu(options: {
     if (heading) { heading.textContent = filter ? intentionsStrings.filtered(filter) : ''; heading.hidden = !filter }
     const items = shown()
     if (!items.length && pending) { list.setStatus('loading'); return }
-    list.update(items.map((row): MarkdownSuggestionItem => ({ id: row.id, title: row.label, ...row.description ? { description: row.description } : {}, ...row.icon ? { icon: row.icon } : {}, ...row.checked ? { checked: true } : {} })))
+    list.update(items.map((row): MarkdownSuggestionItem => ({ id: row.id, title: row.label, ...row.description ? { description: row.description } : {}, ...row.icon ? { icon: row.icon } : {}, ...row.checked ? { checked: true } : {}, ...row.shortcut ? { shortcut: row.shortcut } : {} })))
   }
   const add = (more: readonly MarkdownIntention[] | undefined) => {
     const ids = new Set(rows.map(row => row.id))

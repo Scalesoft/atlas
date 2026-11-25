@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { appShortcuts, chordLabel, createShortcutMatcher, helpSections, type AppShortcut } from "./shortcuts";
+import { appShortcuts, chordLabel, createShortcutMatcher, helpSections, hintLabel, type AppShortcut } from "./shortcuts";
 
 afterEach(() => document.body.replaceChildren());
 
@@ -50,9 +50,17 @@ describe("one shortcut registry", () => {
     } finally { vi.restoreAllMocks(); }
   });
 
+  it("writes a hint for a menu row or tooltip as the editor does, the Mac way on a Mac", () => {
+    expect(hintLabel("Mod+Shift+G")).toBe("Ctrl+Shift+G");
+    expect(hintLabel("Mod+Enter")).toBe("Ctrl+Enter");
+    expect(hintLabel("F2")).toBe("F2");
+    vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    try { expect(hintLabel("Mod+Shift+G")).toBe("⌘⇧G"); } finally { vi.restoreAllMocks(); }
+  });
+
   it("groups the help by context, with the editor's own keymap as its section", () => {
     const sections = helpSections([{ keys: "Ctrl B", label: "Tučně", group: "Formát" }]);
-    expect(sections.map(section => section.title)).toEqual(["Kdekoli", "Přejít na", "Stránka", "Seznamy, stromy a nabídky", "Editor"]);
+    expect(sections.map(section => section.title)).toEqual(["Kdekoli", "Přejít na", "Stránka", "Seznamy, stromy a nabídky", "Strom stránek", "Editor"]);
     expect(sections.at(-1)!.entries).toEqual([{ keys: "Ctrl B", label: "Tučně", group: "Formát" }]);
     // Without the editor's export the help still lists the application's keys.
     expect(helpSections([]).map(section => section.title)).not.toContain("Editor");

@@ -40,7 +40,7 @@ export const CZECH_LITERAL_BASELINE: Record<string, number> = {
   "src/components/settings/jobs/jobFormat.ts": 1,
   "src/contracts/editability.ts": 1,
   "src/contracts/interaction.ts": 52,
-  "src/keyboard/shortcuts.ts": 40,
+  "src/keyboard/shortcuts.ts": 35,
   "src/motionLiterals.baseline.ts": 1,
   "src/overview/overviewNode.ts": 2,
   "src/pageSourceDraft.ts": 1,

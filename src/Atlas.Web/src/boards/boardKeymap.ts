@@ -1,13 +1,13 @@
 import type { EditorKeymapEntry } from "../keyboard/editorKeymap";
 import type { BoardTool } from "../components/boards/canvas/boardCanvasContext";
 import t from "../i18n/boards";
+import { macCtrl } from "../keyboard/shortcuts";
 
 /** The tools by their letter on the board's surface (spec §3.1); BoardCanvas reads them, the help below names them. */
 export const boardToolKeys: Readonly<Record<string, BoardTool>> = { v: "select", h: "hand", n: "note", t: "text", s: "shape", f: "frame", l: "connector" };
 
-// shortcut: „Ctrl“ is written as is, a Mac shows it too (the app's rows say ⌘ there, chordLabel); map it when Macs matter.
 // The words are read when the help is drawn (a getter), after the language's texts are in.
-const row = (keys: string | (() => string), text: keyof typeof t.keymap.rows): EditorKeymapEntry => ({ get keys() { return typeof keys === "function" ? keys() : keys; }, get label() { return t.keymap.rows[text]; }, get group() { return t.keymap.group; } });
+const row = (keys: string | (() => string), text: keyof typeof t.keymap.rows): EditorKeymapEntry => ({ get keys() { return macCtrl(typeof keys === "function" ? keys() : keys); }, get label() { return t.keymap.rows[text]; }, get group() { return t.keymap.group; } });
 
 /**
  * The board's keymap for the help overlay („Tabule“, keyboard pass B2), in the shape of the editor's export (`editorKeymap.ts`).
@@ -18,7 +18,7 @@ export const boardKeymap: readonly EditorKeymapEntry[] = [
   row("V H N T S F L", "tools"),
   row("Enter", "insert"),
   row("P I C K", "pick"),
-  row("/", "commands"),
+  row("/ Ctrl F", "commands"),
   row("Ctrl K", "selectionCommands"),
   row("Tab", "next"),
   row("Enter F2", "edit"),

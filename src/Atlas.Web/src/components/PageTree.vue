@@ -17,6 +17,7 @@ import { visibleHeight } from "../lib/visibleHeight";
 import { carriesReference, readReferenceDrop, startObjectDrag, type ReferenceDrop } from "../boards/boardDrop";
 import { isBoardNode, isLeafNode, isPageNode, isReferenceNode, resolveTreeInsert, resolveTreeMove, visibleTreeOrder, type DropPosition, type TreeDrop, type TreePage } from "../treeMove";
 import ActionMenu, { type ActionMenuItem } from "./ActionMenu.vue";
+import { hintLabel } from "../keyboard/shortcuts";
 import SearchHighlight from "./SearchHighlight.vue";
 import { plainTitle, typeInfo } from "../objects/relationsApi";
 import { useToast } from "../composables/useToast";
@@ -143,6 +144,8 @@ function keys(page: TreePage, event: KeyboardEvent) {
   const hasChildren = indexedChildren.value.has(page.id);
   const collapsed = props.collapsedIds.has(page.id);
   if (props.menu && rowKeys(page, event)) { event.preventDefault(); return; }
+  // Ctrl/⌘+Shift+↑/↓ moves the page among its siblings as in the editor; Alt+↑/↓ below stays (Alt+↑/↓ folds in the editor).
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && !event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) { event.preventDefault(); reorder(page, event.key === "ArrowUp" ? -1 : 1); return; }
   if (event.altKey) {
     if (event.ctrlKey || event.metaKey || event.shiftKey || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) return;
     event.preventDefault();
@@ -307,7 +310,7 @@ const menuItems = computed<ActionMenuItem[]>(() => {
   const edit = !!page.canEdit && props.canReorder, readable = page.readable !== false, isPage = isPageNode(page);
   const rows: (ActionMenuItem | false)[] = [
     readable && { id: "open", label: componentsTree.tree.open, icon: "arrow-right", group: "open" },
-    !!page.attachedBoardId && { id: "openAttached", label: componentsTree.tree.openAttached, icon: "layout-dashboard", shortcut: "Ctrl+Enter", group: "open" },
+    !!page.attachedBoardId && { id: "openAttached", label: componentsTree.tree.openAttached, icon: "layout-dashboard", shortcut: hintLabel("Mod+Enter"), group: "open" },
     readable && !!contentItemLink(page) && { id: "copyLink", label: componentsTree.tree.copyLink, icon: "link", group: "open" },
     edit && isPage && { id: "newPage", label: componentsTree.tree.newSubpage, icon: "file-plus", group: "create" },
     edit && isPage && props.boards && { id: "newBoard", label: componentsTree.tree.newBoard, icon: "layout-dashboard", group: "create" },

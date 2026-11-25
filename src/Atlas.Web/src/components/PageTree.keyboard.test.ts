@@ -168,6 +168,12 @@ describe("PageTree keyboard reordering", () => {
     expect(view.emitted("drop")).toEqual([[{ targetId: "a", position: "before", sourceId: "b" }]]);
   });
 
+  it("reorders with Ctrl+Shift+Arrow too, the editor's key for moving a block", async () => {
+    const view = tree([node("a"), node("b")], { canReorder: true });
+    await view.findAll('[role="treeitem"]')[1]!.trigger("keydown", { key: "ArrowUp", ctrlKey: true, shiftKey: true });
+    expect(view.emitted("drop")).toEqual([[{ targetId: "a", position: "before", sourceId: "b" }]]);
+  });
+
   it("moves a page down past its next sibling", async () => {
     const view = tree([node("a"), node("b")], { canReorder: true });
     await view.findAll('[role="treeitem"]')[0]!.trigger("keydown", { key: "ArrowDown", altKey: true });

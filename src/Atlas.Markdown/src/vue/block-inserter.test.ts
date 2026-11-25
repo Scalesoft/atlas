@@ -126,6 +126,19 @@ it('Alt+F10 then Enter on the grip opens the block menu with the keys in the tex
   expect(document.activeElement).toBe(content)
 })
 
+it('Shift+F10 and the right button on the grip open the block menu as a click does (P2)', async () => {
+  const { host, editor, content } = await mount()
+  editor.commands.setTextSelection(9)
+  content.focus()
+  const grip = host.querySelector<HTMLElement>('[data-testid="block-drag-btn"]')!
+  grip.dispatchEvent(new KeyboardEvent('keydown', { key: 'F10', shiftKey: true, bubbles: true, cancelable: true }))
+  expect(document.querySelector('[data-testid=intentions]')).not.toBeNull()
+  content.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+  expect(document.querySelector('[data-testid=intentions]')).toBeNull()
+  grip.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }))
+  expect(document.querySelector('[data-testid=intentions]')).not.toBeNull()
+})
+
 it('Alt+F10 in a table: its row chip, Tab to its column chip and back, never out of the table; Esc to the cell (J6.4, F24)', async () => {
   const { host, editor, content } = await mount()
   const cell = (text: string) => ({ type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })

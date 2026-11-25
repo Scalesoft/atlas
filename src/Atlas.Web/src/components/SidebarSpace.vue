@@ -9,6 +9,7 @@ import type { TreeDrop, TreePage } from "../treeMove";
 import { filterTree } from "../treeFilter";
 import { plainTitle } from "../objects/relationsApi";
 import { useSearchKeys } from "../lib/searchKeys";
+import { opensActions } from "../keyboard/navigation";
 import type { ReferenceDrop } from "../boards/boardDrop";
 import AtlasIcon from "./AtlasIcon.vue";
 import PageTree, { type TreeAction } from "./PageTree.vue";
@@ -362,8 +363,19 @@ watch(() => props.collapsedIds, () => {
 // a top page goes back to the space; ↑ ↓ walk the pinned spaces and their open trees as one list. PageTree moves within a tree;
 // this crosses between a space, its tree and the next space.
 const link = ref<HTMLAnchorElement>();
+const actionsHost = ref<HTMLElement>();
 const STOPS = ".sidebar-space-link, .sidebar-space-tree:not([inert]) .tree-page";
+/** The row's gestures of a tree row (right button, Ctrl+Space, Alt+Enter, Ctrl+., Shift+F10, the menu key) open its „…“ menu: the trigger answers ArrowDown by opening. */
+function openActions(event: Event) {
+  if (props.busy || !(hasActions.value || props.pages?.length)) return;
+  event.preventDefault();
+  actionsHost.value?.querySelector("button")?.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+}
+function onContextMenu(event: MouseEvent) {
+  if (!event.shiftKey) openActions(event); // Shift + right-click: the browser's own menu
+}
 function keys(event: KeyboardEvent) {
+  if (event.target === link.value && opensActions(event)) { openActions(event); return; }
   if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !(event.target instanceof HTMLElement)) return;
   const target = event.target, onLink = target === link.value, page = target.matches(".tree-page");
   if (onLink && (event.key === "ArrowRight" || event.key === "ArrowLeft")) {
@@ -402,6 +414,7 @@ function dragLeave(event: DragEvent) {
       @dragover="emit('rootDragOver', $event)"
       @dragleave="dragLeave"
       @drop.prevent="emit('rootDrop', $event)"
+      @contextmenu="onContextMenu"
     >
       <span class="tree-toggle-col">
         <button
@@ -430,7 +443,7 @@ function dragLeave(event: DragEvent) {
       <!-- On touch there are no letters to type on a row: the magnifier opens the tree's filter. -->
       <button v-if="pages?.length" type="button" class="sidebar-space-find" :aria-label="componentsSidebar.sidebar.findIn(space.name)" data-sidebar-space-find @click="openFilter()">
         <AtlasIcon name="search" :size="14" /></button>
-      <span v-if="hasActions || pages?.length" class="sidebar-space-actions">
+      <span v-if="hasActions || pages?.length" ref="actionsHost" class="sidebar-space-actions">
         <ActionDisclosure :label="componentsSidebar.sidebar.moreActions(space.name)" :disabled="busy">
           <SpaceMenuItems :can-write="canWrite" :can-manage="canManage" :boards="boards" :empty="pages !== undefined && !pages.length" :content-health="space.verificationOn"
             @create-page="emit('createPage')" @create-board="emit('createBoard')" @settings="emit('settings')" @pin-policy="emit('pinPolicy')"

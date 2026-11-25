@@ -32,6 +32,7 @@ export interface AppShortcut {
 }
 
 type HelpGroup = "Kdekoli" | "Přejít na" | "Stránka";
+const tree = "Strom stránek";
 
 export const appShortcuts: readonly AppShortcut[] = [
   { id: "search", chord: "Mod+k", get label() { return t.kb.app.search; }, group: "Kdekoli", where: "anywhere" },
@@ -56,22 +57,25 @@ export const appShortcuts: readonly AppShortcut[] = [
   { id: "save", chord: "Mod+s", get label() { return t.common.saveVersion; }, group: "Stránka", where: "anywhere" },
   // On an open page also in its editor, like Ctrl+K and Ctrl+S (the editor's Najít a nahradit is a button of the panel).
   // Alt C: the page's Diskuse in the dock (the selected text becomes the quote of a new comment); in the editor too, to take the selection.
-  { id: "discussion", chord: "Alt+c", get label() { return t.kb.app.discussion; }, group: "Stránka", where: "anywhere" },
+  { id: "discussion", chord: "Alt+c", get label() { return t.kb.app.discussion; }, group: "Kdekoli", where: "anywhere" },
   { id: "findInPage", chord: "Mod+f", get label() { return t.kb.app.findInPage; }, group: "Stránka", where: "anywhere" },
 ];
+
+/** A help row's „Ctrl“ as the Mac writes it (⌘), for keys the code answers with either. */
+export const macCtrl = (keys: string) => keys.replace(/\bCtrl\b(?! (?:Space|Mezerník))/g, isMac() ? "⌘" : "Ctrl");
 
 /** Keys every list, tree, menu and dialog answers to; they belong to the widgets, the help only names them. */
 const widgetKeys = (): readonly ShortcutEntry[] => [
   { keys: "↑ ↓", label: t.kb.w.prevNext, group: "Seznamy, stromy a nabídky" },
   { keys: "Home End", label: t.kb.w.firstLast, group: "Seznamy, stromy a nabídky" },
-  { keys: "→ ←", label: t.kb.w.treeExpand, group: "Seznamy, stromy a nabídky" },
+  { keys: "→ ←", label: t.kb.w.treeExpand, group: tree },
   { keys: t.kb.w.letters, label: t.kb.w.lettersText, group: "Seznamy, stromy a nabídky" },
-  { keys: "Alt ↑ ↓", label: t.kb.w.moveSiblings, group: "Seznamy, stromy a nabídky" },
-  { keys: "Alt → ←", label: t.kb.w.indent, group: "Seznamy, stromy a nabídky" },
+  { get keys() { return macCtrl("Ctrl Shift ↑ ↓"); }, label: t.kb.w.moveSiblings, group: tree },
+  { keys: "Alt → ←", label: t.kb.w.indent, group: tree },
   { keys: "Ctrl Space", label: t.kb.w.actions, group: "Seznamy, stromy a nabídky" },
-  { keys: "F2", label: t.kb.w.rename, group: "Seznamy, stromy a nabídky" },
-  { keys: "Delete", label: t.kb.w.trash, group: "Seznamy, stromy a nabídky" },
-  { keys: "Ctrl Enter", label: t.kb.w.openBoard, group: "Seznamy, stromy a nabídky" },
+  { keys: "F2", label: t.kb.w.rename, group: tree },
+  { keys: "Delete", label: t.kb.w.trash, group: tree },
+  { get keys() { return macCtrl("Ctrl Enter"); }, label: t.kb.w.openBoard, group: tree },
   { keys: "Enter", label: t.kb.w.enter, group: "Seznamy, stromy a nabídky" },
   { keys: "Tab", label: t.kb.w.tab, group: "Seznamy, stromy a nabídky" },
   { keys: "Esc", label: t.kb.w.esc, group: "Seznamy, stromy a nabídky" },
@@ -86,12 +90,19 @@ const widgetKeys = (): readonly ShortcutEntry[] => [
   { keys: t.kb.w.graphEscKeys, label: t.kb.w.graphEscText, group: "Seznamy, stromy a nabídky" },
 ];
 
-const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+export const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
 /** The chord as the help and the hints write it: „Ctrl K“, „Ctrl Shift P“, „G, pak K“. */
 export function chordLabel(chord: string): string {
   return chord.split(" ").map(step => step.split("+").map(part =>
     part === "Mod" ? (isMac() ? "⌘" : "Ctrl") : part === "Alt" && isMac() ? "⌥" : part.length === 1 ? part.toUpperCase() : part).join(" ")).join(`${t.kb.then} `);
+}
+
+/** One chord ("Mod+Shift+G") as a hint in a menu row or a tooltip: "Ctrl+Shift+G", on a Mac "⌘⇧G" (as the editor's `formatMarkdownShortcut`). */
+export function hintLabel(chord: string): string {
+  const mac = isMac(), arrows: Record<string, string> = { ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→" };
+  const parts = chord.split("+").map(part => (mac ? { Mod: "⌘", Alt: "⌥", Shift: "⇧" }[part] : undefined) ?? (part === "Mod" ? "Ctrl" : arrows[part] ?? (part.length === 1 ? part.toUpperCase() : part)));
+  return parts.join(mac ? "" : "+");
 }
 
 export interface HelpSection { title: string; entries: readonly ShortcutEntry[] }
@@ -105,8 +116,8 @@ export function helpSections(editorKeymap: readonly ShortcutEntry[], requirement
   const withoutAi = (entry: ShortcutEntry): ShortcutEntry => ai ? entry : { ...entry, label: entry.label.replace(/, AI\)/, ")").replace(/, (?:s návrhy AI nahoře|with AI suggestions on top)/, "") };
   const app = appShortcuts.filter(item => ai || item.id !== "assistant").map(item => ({ keys: chordLabel(item.chord), label: item.label, group: item.group as string }));
   const all = [...app, ...widgetKeys()];
-  const groupTitle = (id: string) => ({ "Kdekoli": t.kb.groupAnywhere, "Přejít na": t.kb.groupGoTo, "Stránka": t.kb.groupPage, "Seznamy, stromy a nabídky": t.kb.groupLists } as Record<string, string>)[id] ?? id;
-  const titles = ["Kdekoli", "Přejít na", "Stránka", "Seznamy, stromy a nabídky"];
+  const groupTitle = (id: string) => ({ "Kdekoli": t.kb.groupAnywhere, "Přejít na": t.kb.groupGoTo, "Stránka": t.kb.groupPage, "Seznamy, stromy a nabídky": t.kb.groupLists, [tree]: t.kb.groupTree } as Record<string, string>)[id] ?? id;
+  const titles = ["Kdekoli", "Přejít na", "Stránka", "Seznamy, stromy a nabídky", tree];
   const sections = titles.map(title => ({ title: groupTitle(title), entries: all.filter(entry => entry.group === title) }));
   const own = [{ title: t.kb.editor, entries: editorKeymap.map(withoutAi) }, { title: t.kb.requirements, entries: requirementKeymap }, { title: t.kb.boards, entries: boardKeymap }].filter(section => section.entries.length);
   return [...sections, ...own];
