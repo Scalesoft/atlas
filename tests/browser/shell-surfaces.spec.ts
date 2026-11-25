@@ -88,20 +88,15 @@ test('page and space actions share aligned icons, readable styling and usable di
     const organization = page.getByRole('dialog');
     await expect(organization).toBeVisible();
     await organization.screenshot({ path: `../../artifacts/ux-deep/shell-organization-${viewport.width}.png` });
-    // Obecné and Umístění are tabs of one dialog; each shows its own sections.
+    // The dialog is the location only (no rename, no tabs).
     let sectionIndex = 0;
-    for (const tab of ['Obecné', 'Umístění']) {
-      await organization.getByRole('navigation', { name: 'Nastavení stránky', exact: true }).getByRole('button', { name: tab, exact: true }).click();
-      if (tab === 'Umístění') {
-        // Checkboxes appear once a target space of the transfer is chosen.
-        await organization.getByText('Přesun do jiného prostoru', { exact: true }).click();
-        // The target is a searchable radiogroup of spaces; each tile carries its space id.
-        await organization.getByRole('radiogroup', { name: 'Cílový prostor', exact: true }).locator(`[data-value="${transferTarget}"]`).click();
-        await expect(organization.locator('.organization-check').first()).toBeVisible();
-      }
-      for (const section of await organization.locator('.organization-section:visible').all()) {
-        await section.screenshot({ path: `../../artifacts/ux-deep/shell-organization-section-${sectionIndex++}-${viewport.width}.png` });
-      }
+    // Checkboxes appear once a target space of the transfer is chosen.
+    await organization.getByText('Přesun do jiného prostoru', { exact: true }).click();
+    // The target is a searchable radiogroup of spaces; each tile carries its space id.
+    await organization.getByRole('radiogroup', { name: 'Cílový prostor', exact: true }).locator(`[data-value="${transferTarget}"]`).click();
+    await expect(organization.locator('.organization-check').first()).toBeVisible();
+    for (const section of await organization.locator('.organization-section:visible').all()) {
+      await section.screenshot({ path: `../../artifacts/ux-deep/shell-organization-section-${sectionIndex++}-${viewport.width}.png` });
     }
     await expect(organization.locator('.organization-check').first()).toHaveCSS('flex-direction', 'row');
     await page.keyboard.press('Escape');
