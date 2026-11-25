@@ -19,6 +19,7 @@ import { editorChrome, editorOutline, useEditorTheme } from "../../../editor/edi
 import { markdownProjection } from "../../../pageSourceDraft";
 import { boardTextInput, flattenInlineMarkdown, keepBoardLinks, restingSpellcheck } from "./boardMarkdownText";
 import type { TextBinding } from "./textBinding";
+import { createSavePause } from "../savePause";
 import { placeCaret, type EditPoint } from "../../../boards/boardCaret";
 import "./boardTextSurface.css";
 
@@ -128,8 +129,7 @@ function focusEnd(tries = 60) {
   else controller.value?.focus();
 }
 // A binding that saves while editing gets the text after this pause in typing.
-const savePause = 1000;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
+const savePause = createSavePause(() => save());
 /** The text the binding last received while editing; undefined before the first save. */
 let saved: string | undefined;
 let holding = false;
@@ -143,8 +143,7 @@ function changed(_value: MarkdownRichValue, { origin }: { origin: "local" | "rem
   measureTimer = setTimeout(measure, measurePause);
   if (!props.binding.save) return;
   hold(true);
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(save, savePause);
+  savePause.start();
 }
 
 // One line (a contact's name, a frame title): only the marks it keeps; headings, lists and blocks would only cover what is around it.
@@ -197,7 +196,7 @@ function changedText() {
   return text === initial || (!adapter && text === clean(readProjection ??= project(read))) ? undefined : text;
 }
 function save() {
-  clearTimeout(saveTimer);
+  savePause.cancel();
   // Over the limit nothing goes out: the board keeps saying „Neuloženo“ until the text is shortened.
   if (done || !holding || !props.binding.save || measure()) return;
   const { send } = outgoing(changedText() ?? initial, true);
@@ -249,7 +248,7 @@ function finish(force = false) {
     return;
   }
   if (!force && measure()) { controller.value?.focus(); return; }
-  clearTimeout(saveTimer);
+  savePause.cancel();
   clearTimeout(measureTimer);
   // Taken away over the limit: the full text is kept as a draft, never saved cut to the limit.
   if (force && measure()) {

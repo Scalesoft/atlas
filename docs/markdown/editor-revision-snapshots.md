@@ -51,7 +51,7 @@ A content failure changes controller state to `failed`, disables further control
 
 Revision mode removes automatic full exports from normal content notifications. Explicit snapshots, visible source projections and compatibility lifecycle captures at detach/destroy can still serialize content. Plugins requesting whole-document projections retain their own cost. Performance results must distinguish revision mode from ordinary `v-model`; neither mode provides a durable server receipt by itself.
 
-An optional [local draft adapter](local-draft-snapshots.md) consumes this capability for periodic, explicitly scoped IndexedDB snapshots. It does not change ordinary content event timing.
+
 
 ## Production benchmark, 2026-09-05
 

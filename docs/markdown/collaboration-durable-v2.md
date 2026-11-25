@@ -61,4 +61,4 @@ Bez Vue lze použít `prepareDurableRecovery({ store, scope, branchId, revision,
 
 Navigace může před odpojením komponenty použít `getMarkdownJournalCapability(collaboration)?.flushLocal()`. Capability je dostupná po připojení V2 adapteru ke controlleru; při zániku bindingu se z registru odstraní. `flushLocal()` čeká na zápisy zachycené v okamžiku zavolání, ne na serverové ACK ani na budoucí editace. Při chybě journalu odmítne promise. Stejná metoda je volitelně na V2 `useCollab` handle a přímo na `DurableSignalRYjsProvider`. Při plánované navigaci je správné nejprve zastavit nové editace a počkat na tuto hranici; násilné ukončení procesu nemůže asynchronní guard garantovat.
 
-Pro samostatný editor bez spolupráce slouží odlišný [periodický local draft adapter](local-draft-snapshots.md). Jeho časované checkpointy se nevydávají za V2 journal každé editace.
+

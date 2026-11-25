@@ -477,7 +477,6 @@ validates every collaborative update with the same rules. See [document validati
 
 Large rich documents can use opt-in [revision notifications and explicit snapshots](../../docs/markdown/editor-revision-snapshots.md) through `getMarkdownContentCapability()` or Vue `mode="revision"` with `initialValue`. Default `v-model` behavior remains unchanged; external controllers without the capability return `null`.
 
-The separate `@atlas/markdown/draft` entry provides an optional [periodic local draft adapter](../../docs/markdown/local-draft-snapshots.md) with scoped IndexedDB snapshots and explicit capture/read/discard. It does not replace host saving or automatically restore content.
 
 Block reordering is temporarily unavailable with the current Yjs binding: deleting and copying a block can lose another user's concurrent edits. The grip explains the restriction; text editing and adding blocks remain available. Native move drops are also blocked by the collaboration adapter. Standalone reordering is unaffected. Move review/approval is not implemented; see `docs/collaborative-block-moves-and-review.md` in the repository for the agreed behavior, regression coverage and prerequisites.
 

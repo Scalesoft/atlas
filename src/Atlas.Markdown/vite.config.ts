@@ -69,7 +69,6 @@ const entries: Record<string, string> = {
   'collaboration/signalr': resolve(import.meta.dirname, 'src/collaboration/signalr.ts'),
   'collaboration/recovery-panel': resolve(import.meta.dirname, 'src/collaboration/recovery-panel.ts'),
   'collaboration/simulator': resolve(import.meta.dirname, 'src/collaboration/simulator.ts'),
-  draft: resolve(import.meta.dirname, 'src/draft/index.ts'),
   server: resolve(import.meta.dirname, 'src/server/index.ts'),
 }
 
