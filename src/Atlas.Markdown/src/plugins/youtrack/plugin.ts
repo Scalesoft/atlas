@@ -1,6 +1,6 @@
 import { Extension, posToDOMRect, type Command, type Editor, type JSONContent } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
-import { defineMarkdownCommand, defineMarkdownEntityKind, ISSUE_KEY_PATTERN, markdownRecognitionAt, registerMarkdownOverlay, registerMarkdownRecognizer, type MarkdownPlugin, type MarkdownRecognitionEntry, type MarkdownRecognizer } from '../../core'
+import { defineMarkdownCommand, defineMarkdownEntityKind, ISSUE_KEY_PATTERN, markdownChangeMapping, markdownRecognitionAt, registerMarkdownOverlay, registerMarkdownRecognizer, type MarkdownPlugin, type MarkdownRecognitionEntry, type MarkdownRecognizer } from '../../core'
 import { youtrackStrings } from './strings'
 import { YouTrackIssueNode } from './issueNode'
 import { pickYouTrackIssue, prefetchYouTrackPicker, type YouTrackPickerContext } from './picker'
@@ -162,7 +162,7 @@ export function createYouTrackPlugin(options: YouTrackPluginOptions): MarkdownPl
                 if (change && 'reserve' in change) return change.reserve
                 if (change && 'clear' in change && previous?.id === change.clear) return null
                 if (!previous) return null
-                const mapped = transaction.mapping.mapResult(previous.position, 1)
+                const mapped = markdownChangeMapping(transaction).mapResult(previous.position, 1)
                 return mapped.deleted ? null : { id: previous.id, position: mapped.pos }
               },
             },

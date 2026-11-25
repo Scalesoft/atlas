@@ -682,6 +682,8 @@ it('records or re-checks the materializer corpus against the editor', async () =
 
 function versionOf(name: string): string {
   const lock = fs.readFileSync(local('../../../Atlas.Web/pnpm-lock.yaml'), 'utf8')
-  const match = new RegExp(`\\n  '?${name.replace(/[/+]/g, '\\$&')}@([0-9][^(:'\\s]*)`).exec(lock)
+  // The prosemirror-model y-tiptap builds with; the lock also holds prosemirror-markdown's older copy.
+  const match = name === 'prosemirror-model' ? /@tiptap\/y-tiptap@[^(\s]+\(prosemirror-model@([0-9][^)]*)\)/.exec(lock)
+    : new RegExp(`\\n  '?${name.replace(/[/+]/g, '\\$&')}@([0-9][^(:'\\s]*)`).exec(lock)
   return match?.[1] ?? 'unknown'
 }

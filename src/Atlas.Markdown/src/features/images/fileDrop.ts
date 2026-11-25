@@ -12,6 +12,7 @@ import { runResourceTask } from './resourceQueue'
 import { checkImageFileBudget } from './imageFileBudget'
 import { createFileDropPreview, type FileDropPreviewKind } from './fileDropPreview'
 import { animateMarkdownMotion, markdownMotion } from '../../core/motion'
+import { markdownChangeMapping } from '../../core/changeMapping'
 
 export const markdownFileDropErrorEvent = 'md-file-drop-error'
 export const markdownFileDropStateEvent = 'md-file-drop-state'
@@ -136,8 +137,8 @@ export function createMarkdownFileDropTargetsPlugin(editor: Editor): Plugin<Targ
     state: { init: () => new Map(), apply(transaction, previous) {
       const change = transaction.getMeta(key) as Change | undefined
       if (!transaction.docChanged && !change) return previous
-      const targets = new Map<symbol, number>()
-      for (const [id, position] of previous) { const mapped = transaction.mapping.mapResult(position, 1); if (!mapped.deleted) targets.set(id, mapped.pos) }
+      const targets = new Map<symbol, number>(), mapping = markdownChangeMapping(transaction)
+      for (const [id, position] of previous) { const mapped = mapping.mapResult(position, 1); if (!mapped.deleted) targets.set(id, mapped.pos) }
       if (change && 'position' in change) targets.set(change.id, change.position)
       if (change && 'remove' in change) targets.delete(change.remove)
       return targets

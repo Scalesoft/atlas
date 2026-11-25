@@ -61,6 +61,12 @@ const blockPos = (editor: Editor, text: string) => {
   return found
 }
 const caretInto = (editor: Editor, text: string) => editor.commands.setTextSelection(blockPos(editor, text) + 1)
+/** As y-tiptap 3.3 applies a collaborator's typing: one step replacing the whole top-level block it changed. */
+function remoteInsert(editor: Editor, text: string, at: number) {
+  const from = editor.state.doc.resolve(at).before(1), block = editor.state.doc.nodeAt(from)!
+  const changed = editor.state.tr.insertText(text, at).doc.nodeAt(from)!
+  editor.view.dispatch(editor.state.tr.replaceWith(from, from + block.nodeSize, changed).setMeta('y-sync$', { isChangeOrigin: true }))
+}
 
 const contactText = 'Kontaktujte Jana Nováka z provozu.'
 function contactSource(apply = vi.fn((context: Parameters<MarkdownAssistSuggestion['apply']>[0]) =>
@@ -302,6 +308,19 @@ describe('list and apply', () => {
     expect(editor.getText()).toBe('Kontaktujte Petra Malá z provozu.')
   })
 
+  it('finishes an apply in flight when a collaborator types elsewhere in the same block', async () => {
+    let resume!: () => void
+    const { editor, apply } = await openList(vi.fn(async (context: Parameters<MarkdownAssistSuggestion['apply']>[0]) => {
+      await new Promise<void>(resolve => { resume = resolve })
+      return context.dispatch({ type: 'paste-markdown', text: 'Jan Novák' }, { replaceRange: context.range! })
+    }) as never)
+    key(editor, 'Enter'); await settle()
+    expect(apply).toHaveBeenCalledTimes(1)
+    remoteInsert(editor, ' Díky.', blockPos(editor, 'Jana') + 1 + contactText.length)
+    resume(); await settle()
+    expect(editor.getText()).toBe('Kontaktujte Jan Novák z provozu. Díky.')
+  })
+
   it('retires an applied suggestion and its alternatives for the same words, also when the text stays', async () => {
     // Two actions on one span (link the words, or replace them) and one suggestion elsewhere in the block. Linking
     // keeps the block's text, so the block's entry survives the write; the applied row and its alternative go anyway.
@@ -426,6 +445,22 @@ describe('marker and block', () => {
     expect(marker.getAttribute('data-md-assist-pos')).toBe(String(paragraph + 6))
     expect(assistMarkersFor(editor, listPos + 6)).toEqual([marker])
     expect(assistMarkersFor(editor, listPos)).toEqual([])
+  })
+
+  it('keeps the marker of a list item when a collaborator types into another item of the list', async () => {
+    const { source } = contactSource()
+    const item = (text: string) => ({ type: 'listItem', content: [{ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] }] })
+    const { editor } = mount({ sources: [source] }, { type: 'doc', content: [{ type: 'bulletList', content: [item('Úvod'), item('')] }] })
+    editor.commands.setTextSelection(editor.state.doc.content.size - 3)
+    editor.commands.insertContent(contactText)
+    await vi.advanceTimersByTimeAsync(1500); await settle()
+    const marker = markers()[0]!
+    const paragraph = blockPos(editor, 'Kontaktujte')
+    // y-tiptap replaces the whole list for the collaborator's character in the first item.
+    remoteInsert(editor, '!', blockPos(editor, 'Úvod') + 1 + 'Úvod'.length)
+    await settle()
+    expect(markers()).toEqual([marker])
+    expect(marker.getAttribute('data-md-assist-pos')).toBe(String(paragraph + 1))
   })
 
   it('answers no markers for an editor without the plugin', () => {

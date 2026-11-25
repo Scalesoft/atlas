@@ -3,7 +3,7 @@ import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model'
 import { NodeSelection, Plugin, PluginKey, TextSelection, type EditorState, type Transaction } from '@tiptap/pm/state'
 import { closeMarkdownHistory, dispatchMarkdownHistoryOperation } from '../../engine/historyBoundary'
 import { formatMarkdownShortcut } from '../../core/keyboardShortcuts'
-import { isRemoteTransaction } from '../../core/recognition/gate'
+import { markdownChangeMapping } from '../../core/changeMapping'
 
 /*
  * Chips back to text, one behaviour for every inline chip (a contact, a YouTrack issue, a page reference, an emoji…):
@@ -34,21 +34,6 @@ const conversionKey = new PluginKey<Conversion | null>('markdownAutoConversion')
 interface Range { from: number; to: number }
 interface Reverted extends Range { text: string }
 const revertedKey = new PluginKey<readonly Reverted[]>('markdownRevertedText')
-
-/**
- * The ranges across a collaborative change (someone else's edit, a collaborative undo): y-tiptap applies it as one replace of the
- * blocks it changed, which collapses every mapped range in them, so a range keeps its place outside the part that really changed.
- * shortcut: one changed span per change, so a batch that edits both before and after a range forgets it (the text may become a
- * chip again); upgrade to Yjs relative positions or a mark in the document (E2a) if that shows.
- */
-function acrossRemoteChange<R extends Range>(tr: Transaction, ranges: readonly R[]): readonly R[] {
-  const start = tr.before.content.findDiffStart(tr.doc.content)
-  const end = tr.before.content.findDiffEnd(tr.doc.content)
-  if (start === null || !end) return ranges
-  // Before `start` nothing changed, from `end.a` on everything only moved; where the two overlap (repeated text) either reading holds.
-  const shift = end.b - end.a
-  return ranges.flatMap(range => range.to <= start ? [range] : range.from >= end.a ? [{ ...range, from: range.from + shift, to: range.to + shift }] : [])
-}
 
 /** Whether `from`–`to` overlaps a chip's text turned back on purpose: a recognizer leaves it text. */
 export const isMarkdownRevertedText = (state: EditorState, from: number, to: number): boolean =>
@@ -134,8 +119,8 @@ export const ChipText = Extension.create({
         apply(tr, ranges) {
           const added = tr.getMeta(revertedKey) as Reverted | undefined
           // Text typed right before or after stays outside; an edit inside (other words now) forgets it.
-          const mapped = !tr.docChanged ? ranges : (isRemoteTransaction(tr) ? acrossRemoteChange(tr, ranges)
-            : ranges.map(range => ({ ...range, from: tr.mapping.map(range.from, 1), to: tr.mapping.map(range.to, -1) })))
+          const mapping = markdownChangeMapping(tr)
+          const mapped = !tr.docChanged ? ranges : ranges.map(range => ({ ...range, from: mapping.map(range.from, 1), to: mapping.map(range.to, -1) }))
             .filter(range => range.from < range.to && tr.doc.textBetween(range.from, range.to, ' ', '￼') === range.text)
           return added && added.from < added.to ? [...mapped, added] : mapped
         },

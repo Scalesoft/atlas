@@ -34,6 +34,13 @@ function contents(editor: Editor) {
   return (editor.getJSON() as any).content?.map((node: any) => node.type === 'image' ? node.attrs?.src : node.content?.[0]?.text ?? '')
 }
 
+/** As y-tiptap 3.3 applies a collaborator's typing: one step replacing the whole top-level block it changed. */
+function remoteInsert(editor: Editor, text: string, at: number) {
+  const from = editor.state.doc.resolve(at).before(1), block = editor.state.doc.nodeAt(from)!
+  const changed = editor.state.tr.insertText(text, at).doc.nodeAt(from)!
+  editor.view.dispatch(editor.state.tr.replaceWith(from, from + block.nodeSize, changed).setMeta('y-sync$', { isChangeOrigin: true }))
+}
+
 afterEach(() => {
   editors.splice(0).forEach(editor => { if (!editor.isDestroyed) editor.destroy() })
   vi.restoreAllMocks()
@@ -94,6 +101,18 @@ describe('pending image insertions', () => {
     request.resolve({ url: '/photo.png' })
     expect(await result).toBe(true)
     expect(contents(editor)).toEqual(['beforex', '/photo.png', 'target', 'after'])
+  })
+
+  it('keeps a pending target inside a block a collaborator types into', async () => {
+    const editor = createEditor()
+    const request = deferredUpload()
+    const operation = prepareImageUpload(editor, 11, request.upload)!
+    const result = operation.upload(file)
+    remoteInsert(editor, 'x', 15)
+    expect(operation.signal.aborted).toBe(false)
+    request.resolve({ url: '/photo.png' })
+    expect(await result).toBe(true)
+    expect(contents(editor)).toEqual(['before', 'ta', '/photo.png', 'rgetx', 'after'])
   })
 
   it('maps edits before the target and preserves the current selection on completion', async () => {
