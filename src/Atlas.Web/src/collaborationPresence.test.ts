@@ -1,6 +1,6 @@
 import { Extension, Editor } from "@tiptap/core";
 import Collaboration from "@tiptap/extension-collaboration";
-import CollaborationCaret from "@tiptap/extension-collaboration-caret";
+import { CollaborationCarets } from "@atlas/markdown/collaboration/signalr";
 import Document from "@tiptap/extension-document";
 import Paragraph from "@tiptap/extension-paragraph";
 import Text from "@tiptap/extension-text";
@@ -490,7 +490,7 @@ describe("co-editor pointers", () => {
     const ydoc = new Y.Doc();
     const reader = pointerEditor(ydoc);
     reader.editor.commands.insertContent("Čtyřicet lidí ukazuje na tenhle odstavec najednou.");
-    const sync = ySyncPluginKey.getState(reader.editor.state) as { type: Y.XmlFragment; binding: { mapping: never } };
+    const sync = ySyncPluginKey.getState(reader.editor.state)!;
     const at = (pos: number) => Y.relativePositionToJSON(absolutePositionToRelativePosition(pos, sync.type, sync.binding.mapping));
     const peers = Array.from({ length: 40 }, (_, index) => {
       const peer = new Awareness(new Y.Doc());
@@ -551,7 +551,7 @@ describe("an agent's caret from the server", () => {
     const host = document.createElement("div");
     document.body.append(host);
     const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
-      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+      CollaborationCarets.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
     vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
     const presence = createCollaborationPresence({ onChange: () => {} });
     const abort = new AbortController();
@@ -588,7 +588,7 @@ describe("an agent's write typed in", () => {
     const host = document.createElement("div");
     document.body.append(host);
     const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
-      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+      CollaborationCarets.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
     vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
     const presence = createCollaborationPresence({ onChange: () => {} });
     const abort = new AbortController();
@@ -630,7 +630,7 @@ describe("an agent's write typed in", () => {
     const host = document.createElement("div");
     document.body.append(host);
     const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
-      CollaborationCaret.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+      CollaborationCarets.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
     vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
     const presence = createCollaborationPresence({ onChange: () => {} });
     const abort = new AbortController();

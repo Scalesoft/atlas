@@ -20,7 +20,6 @@ import { createPagesPlugin } from '../plugins/pages'
 import { createTocPlugin } from '../plugins/toc'
 import { createYouTrackPlugin } from '../plugins/youtrack'
 import { moveBlock } from '../features/drag/blockCommands'
-import { CollaborationRemoteSelection } from './remoteSelection'
 import { CollaborationTableRepair } from './tableRepair'
 
 // Differential fuzzer of the collaboration guard's Yjs replica (Atlas.Markdown.Sync YjsDocumentTree): several real
@@ -102,7 +101,7 @@ function open(id: number, initial?: Uint8Array, profile: 'rich' | 'markdown-safe
   })
   const adapter = registerCollaborationAdapter(publish => ({
     // As useCollab binds them.
-    extensions: [Collaboration.configure({ document: doc, field: 'default' }), CollaborationRemoteSelection, CollaborationTableRepair],
+    extensions: [Collaboration.configure({ document: doc, field: 'default' }), CollaborationTableRepair],
     isRemoteTransaction: () => false,
     attachEditor: () => publish({ hydrated: true, writable: true }),
     detachEditor() {}, destroy() {},

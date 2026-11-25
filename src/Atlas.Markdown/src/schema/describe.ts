@@ -19,6 +19,8 @@ export interface MarkdownSchemaAttribute {
   readonly required?: true
   readonly constraint: MarkdownValueConstraint
   readonly enforcement: MarkdownConstraintEnforcement
+  /** Present when the attribute declares its own validator: ProseMirror runs it each time it creates a node or mark with an explicit value, so the editor builds no such node from an invalid one (y-tiptap deletes it from the shared document). */
+  readonly validated?: true
 }
 export interface MarkdownSchemaNode {
   readonly name: string
@@ -124,6 +126,7 @@ export function describeMarkdownSchema(plugins: readonly MarkdownPlugin[], optio
           ...(Object.hasOwn(spec, 'default') ? { default: spec.default as JsonValue } : { required: true as const }),
           constraint,
           enforcement: builtin?.enforcement ?? 'editor',
+          ...(declared ? { validated: true as const } : {}),
         }
       })
     const marks = Object.values(schema.marks)

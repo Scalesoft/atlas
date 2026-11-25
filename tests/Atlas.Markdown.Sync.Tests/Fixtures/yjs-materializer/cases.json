@@ -1,7 +1,7 @@
 {
  "versions": {
   "yjs": "13.6.33",
-  "@tiptap/y-tiptap": "3.0.9",
+  "@tiptap/y-tiptap": "3.3.1",
   "prosemirror-model": "1.25.11"
  },
  "cases": [
@@ -579,7 +579,7 @@
     {
      "payload": "unsupported-text-at-root/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: el.toArray is not a function"
+     "why": "y-tiptap fails: Error: Method unimplemented"
     }
    ]
   },
@@ -590,7 +590,8 @@
     {
      "payload": "unsupported-hook/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: text.toDelta is not a function"
+     "why": "a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)",
+     "refused": true
     }
    ]
   },
@@ -601,7 +602,8 @@
     {
      "payload": "unsupported-map-child/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: text.toDelta is not a function"
+     "why": "a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)",
+     "refused": true
     }
    ]
   },
@@ -612,7 +614,8 @@
     {
      "payload": "unsupported-any-child/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: Cannot read properties of undefined (reading 'right')"
+     "why": "a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)",
+     "refused": true
     }
    ]
   },
@@ -1110,19 +1113,23 @@
     },
     {
      "payload": "../yjs-corpus/node-callout/002-attr_callout_variant.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/003-type_into_callout_0.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/004-type_into_callout_1.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/005-type_into_callout_2.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-callout/006-delete_callout.update.bin",
@@ -1588,19 +1595,23 @@
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/002-attr_concealedContent_reveal.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/003-type_into_concealedContent_0.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/004-type_into_concealedContent_1.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/005-type_into_concealedContent_2.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     },
     {
      "payload": "../yjs-corpus/node-concealedContent/006-delete_concealedContent.update.bin",
@@ -1926,7 +1937,8 @@
     },
     {
      "payload": "../yjs-corpus/hostile/004-secretInlineReference_deep_in_table_cell.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     }
    ]
   },
@@ -1940,7 +1952,8 @@
     },
     {
      "payload": "../yjs-corpus/hostile/005-secret_nested_inside_new_blockquote_subtree.update.bin",
-     "expect": "json"
+     "expect": "error",
+     "why": "y-tiptap deletes content it cannot build"
     }
    ]
   },

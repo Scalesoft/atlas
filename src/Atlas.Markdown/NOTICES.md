@@ -9,8 +9,8 @@ package retains this attribution alongside its own source and distribution.
 > Copyright (c) 2024–present, Tiptap Inc.
 > https://github.com/ueberdosis/tiptap
 
-Used core & extension packages (all MIT, peer range `^3.27.4`; lockfile resolves
-3.31.0 as of 2026-09-02):
+Used core & extension packages (all MIT, peer range `^3.35.0`; lockfile resolves
+3.35.0 as of 2026-11-25):
 
 * `@tiptap/core`
 * `@tiptap/starter-kit`
@@ -38,7 +38,7 @@ Used core & extension packages (all MIT, peer range `^3.27.4`; lockfile resolves
 * `@tiptap/suggestion`
 
 Optional integrations added on 2026-09-05 use the same locked Tiptap release,
-3.31.0 (optional peer range `^3.31.0`):
+3.35.0 (optional peer range `^3.35.0`):
 
 * `@tiptap/extension-find-and-replace`
 * `@tiptap/extension-invisible-characters`

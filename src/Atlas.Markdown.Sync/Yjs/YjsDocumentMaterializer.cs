@@ -22,6 +22,7 @@ public sealed class YjsDocumentMaterializer
 {
     private static readonly Lazy<YjsDocumentMaterializer> BuiltinMaterializer = new(() => new YjsDocumentMaterializer(MarkdownSchemaManifest.Builtin));
     private readonly MarkdownSchemaManifest _schema;
+    private readonly MarkdownDocumentValidator _validator;
     private readonly string _root;
     private readonly long _maxPayloadBytes;
     /// <summary>The JSON of every attribute default, written once.</summary>
@@ -30,12 +31,15 @@ public sealed class YjsDocumentMaterializer
     /// <param name="schema">The editor configuration's schema: <see cref="MarkdownSchemaManifest.Builtin"/>, narrowed with WithPlugins or parsed.</param>
     /// <param name="root">The fragment the editor binds (the Collaboration extension's field).</param>
     /// <param name="maxPayloadBytes">The bound of each payload, the host's <see cref="MarkdownSyncOptions.MaxDocumentBytes"/>.</param>
-    public YjsDocumentMaterializer(MarkdownSchemaManifest schema, string root = "default", long maxPayloadBytes = 4L * 1024 * 1024)
+    /// <param name="validators">Implementations of the structured validators third-party plugins name, as for <see cref="MarkdownDocumentValidator"/>.</param>
+    public YjsDocumentMaterializer(MarkdownSchemaManifest schema, string root = "default", long maxPayloadBytes = 4L * 1024 * 1024,
+        IReadOnlyDictionary<string, MarkdownValueValidator>? validators = null)
     {
         ArgumentNullException.ThrowIfNull(schema);
         ArgumentException.ThrowIfNullOrEmpty(root);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxPayloadBytes);
         _schema = schema;
+        _validator = new MarkdownDocumentValidator(schema, validators);
         _root = root;
         _maxPayloadBytes = maxPayloadBytes;
         foreach (var attribute in schema.Nodes.Values.SelectMany(node => node.Declared).Concat(schema.Marks.Values.SelectMany(mark => mark.Declared)))
@@ -199,10 +203,13 @@ public sealed class YjsDocumentMaterializer
             switch (value(attribute))
             {
                 case byte[] any:
+                    var start = output.Length;
                     JsJson.Any(output, any);
+                    if (attribute.Validated && !sorted) Validate(owner, attribute, output.ToString(start, output.Length - start));
                     break;
                 case JsonElement json:
                     JsJson.Value(output, json, sorted);
+                    if (attribute.Validated && !sorted) Validate(owner, attribute, json);
                     break;
                 default:
                     output.Append(_defaults.GetValueOrDefault(attribute)
@@ -211,6 +218,23 @@ public sealed class YjsDocumentMaterializer
             }
         }
         output.Append('}');
+    }
+
+    /// <summary>
+    /// The validator an attribute declares, which ProseMirror runs on every explicit value when it creates the node or mark (an absent
+    /// attribute takes its default unchecked): y-tiptap cannot build the element then and deletes it, so it is refused here. The
+    /// validator sees the value alone, not the sibling attributes.
+    /// </summary>
+    private void Validate(string owner, SchemaAttribute attribute, string json)
+    {
+        using var document = JsonDocument.Parse(json);
+        Validate(owner, attribute, document.RootElement);
+    }
+
+    private void Validate(string owner, SchemaAttribute attribute, JsonElement value)
+    {
+        if (_validator.CheckAttribute(attribute, value, default) is { } reason)
+            throw new ContentRejectedException(ContentRejectionReason.InvalidAttributeValue, $"{owner}: {attribute.Name} {reason}");
     }
 
     /// <summary>

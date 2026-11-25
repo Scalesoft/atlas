@@ -28,7 +28,7 @@ it('undoes a change with an appended transaction to the caret before it, not aft
   await Promise.resolve()
   // The step's own record, not y-tiptap's recovery heuristics: its caret is the one before the change (y-tiptap stored the end).
   const { undoManager } = yUndoPluginKey.getState(editor.state)!
-  const binding = ySyncPluginKey.getState(editor.state).binding
+  const binding = ySyncPluginKey.getState(editor.state)!.binding
   const stored = undoManager.undoStack.at(-1)!.meta.get(binding) as { anchor: Y.RelativePosition; absAnchor: number }
   expect(stored.absAnchor).toBe(caret)
   expect(relativePositionToAbsolutePosition(binding.doc, binding.type, stored.anchor, binding.mapping)).toBe(caret + inserted.nodeSize)

@@ -111,15 +111,23 @@ export function createAgentReveal(editor: Editor): AgentReveal {
   };
 }
 
-/** What a remote transaction inserted, in its new document. */
+/**
+ * What a remote transaction inserted, in its new document. y-tiptap replaces the whole block a remote change touched, so what each
+ * step wrote is only where its document differs from the one before (blocks it left alone keep their nodes, a quick comparison).
+ */
 function insertedRanges(tr: Transaction) {
   const ranges: { from: number; to: number }[] = [];
-  tr.mapping.maps.forEach((map, index) => map.forEach((_oldFrom, _oldTo, from, to) => {
+  tr.steps.forEach((_step, index) => {
+    const before = tr.docs[index]!.content, after = (tr.docs[index + 1] ?? tr.doc).content;
+    const start = before.findDiffStart(after);
+    if (start === null) return;
+    const end = before.findDiffEnd(after)!;
+    // Repeated content around the change: both ends may overlap the start.
+    const endB = end.b + Math.max(0, start - Math.min(end.a, end.b));
     const rest = tr.mapping.slice(index + 1);
-    const start = rest.map(from, 1);
-    const end = rest.map(to, -1);
-    if (end > start) ranges.push({ from: start, to: end });
-  }));
+    const from = rest.map(start, 1), to = rest.map(endB, -1);
+    if (to > from) ranges.push({ from, to });
+  });
   return ranges.sort((a, b) => a.from - b.from);
 }
 

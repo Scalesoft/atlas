@@ -6,7 +6,7 @@ namespace Atlas.Markdown.Sync;
 
 /// <summary>
 /// Writes ProseMirror documents into the editor's Yjs document without JavaScript, byte for byte as the editor's binding writes them
-/// (Atlas.Yjs: yjs 13.6.33 and @tiptap/y-tiptap 3.0.9 ported): <see cref="Seed"/> is prosemirrorToYDoc, <see cref="Write"/> the
+/// (Atlas.Yjs: yjs 13.6.33 and @tiptap/y-tiptap 3.0.9 ported; byte-identical with 3.3.1 on the recorded cases): <see cref="Seed"/> is prosemirrorToYDoc, <see cref="Write"/> the
 /// server's live write (updateYFragment of the live document towards a target, so unchanged blocks keep their items and concurrent
 /// edits of other blocks merge). The target is normalized as schema.nodeFromJSON normalizes it; its content is not validated here
 /// (the caller validates it with <see cref="YjsDocumentMaterializer"/> and <see cref="MarkdownDocumentValidator"/>). Immutable and

@@ -18,16 +18,15 @@
 
 import { markRaw, ref, type Ref } from 'vue'
 import * as Y from 'yjs'
-import Collaboration from '@tiptap/extension-collaboration'
-import CollaborationCaret from '@tiptap/extension-collaboration-caret'
+import { KeepingCollaboration } from './collaboration'
 import type { AnyExtension, Editor } from '@tiptap/core'
 import { SignalRYjsProvider, type PresenceUser } from './SignalRYjsProvider'
 import { DurableSignalRYjsProvider, type DurableCollaborationOptions } from './DurableSignalRYjsProvider'
 import { awarenessColor } from './awareness-color'
 import { caretAwareness } from './caretAwareness'
+import { CollaborationCarets } from './carets'
 import type { MarkdownDocumentSchema } from '../core/types'
 import { CollaborationHistoryBoundary } from './historyBoundary'
-import { CollaborationRemoteSelection } from './remoteSelection'
 import { CollaborationRemoteRemoval } from './remoteRemoval'
 import { CollaborationTableRepair } from './tableRepair'
 import { assertRecoveryBinding, type MarkdownRecovery } from './recovery/session'
@@ -146,9 +145,8 @@ export function useCollab(opts: UseCollabOptions): CollabHandle {
   const peers = ref<PresenceUser[]>([])
 
   const extensions: AnyExtension[] = [
-    Collaboration.configure({ document: ydoc, field }),
+    KeepingCollaboration.configure({ document: ydoc, field }),
     CollaborationHistoryBoundary,
-    CollaborationRemoteSelection,
     CollaborationTableRepair,
     // J10.6: a colleague removing the block being typed in keeps the text and names them (the provider's presence, once it exists).
     CollaborationRemoteRemoval.configure({ awareness: () => provider?.awareness }),
@@ -189,7 +187,7 @@ export function useCollab(opts: UseCollabOptions): CollabHandle {
     const user = { id: opts.user.id, name: opts.user.name, color }
     if (opts.reader) provider.awareness.setLocalStateField('user', user)
     // Carets redraw only for a caret or a name that changed, not for every other field of the state (a host's pointers).
-    else extensions.push(CollaborationCaret.configure({ provider: { awareness: caretAwareness(provider.awareness) }, user }))
+    else extensions.push(CollaborationCarets.configure({ provider: { awareness: caretAwareness(provider.awareness) }, user }))
   }
 
   function attachEditor(editor: Editor): void {
