@@ -88,6 +88,8 @@ public sealed class PageVerificationTests
         Assert.Equal((PageVerificationStates.Verified, page.Version, false, writerId),
             (verified["state"]!.GetValue<string>(), verified["verifiedVersion"]!.GetValue<int>(), verified["verifiedViaAi"]!.GetValue<bool>(),
                 verified["verifiedById"]!.GetValue<string>()));
+        // The answer carries the panel's Čtenost, so the page does not read its bundle again.
+        Assert.NotNull(verified["readers"]);
         Assert.Equal(PageVerificationStates.Off, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, url, new { intervalMonths = 0 }),
             HttpStatusCode.OK))["state"]!.GetValue<string>());
         Assert.Equal(PageVerificationStates.Verified, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, url, new { inheritInterval = true }),
@@ -111,13 +113,13 @@ public sealed class PageVerificationTests
         Assert.Empty((await AtlasHttpSite.Json(await writer.GetAsync(health + "?state=lapsed"), HttpStatusCode.OK))["items"]!.AsArray());
         // The link chips read the state from the tree and the batch reference check.
         var tree = await AtlasHttpSite.Json(await reader.GetAsync($"/api/spaces/{space}/tree"), HttpStatusCode.OK);
-        Assert.Equal(PageVerificationStates.Expiring, tree["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verification"]!.GetValue<string>());
+        Assert.Equal(PageVerificationStates.Expiring, tree["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verificationState"]!.GetValue<string>());
         var references = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, "/api/pages/references", new { ids = new[] { page.Id } }),
             HttpStatusCode.OK);
-        Assert.Equal(PageVerificationStates.Expiring, Assert.Single(references["items"]!.AsArray())!["verification"]!.GetValue<string>());
+        Assert.Equal(PageVerificationStates.Expiring, Assert.Single(references["items"]!.AsArray())!["verificationState"]!.GetValue<string>());
         // The search hit carries the same string (one contract with the tree and the references).
         var hits = await AtlasHttpSite.Json(await reader.GetAsync("/api/search?q=Postup"), HttpStatusCode.OK);
-        Assert.Equal(PageVerificationStates.Expiring, hits["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verification"]!.GetValue<string>());
+        Assert.Equal(PageVerificationStates.Expiring, hits["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verificationState"]!.GetValue<string>());
 
         // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader is refused.
         var bulk = $"/api/spaces/{space}/content-health/bulk";
@@ -189,6 +191,34 @@ public sealed class PageVerificationTests
             var notice = Assert.Single(notices);
             Assert.Equal((day == now ? NotificationKinds.VerificationExpiring : NotificationKinds.VerificationExpired, day == now ? 1 : 2),
                 (notice.Kind, notice.Count));
+        }
+    }
+
+    /// <summary>O3 by Prague days: a verification until a date (valid to the end of that day) is „brzy vyprší“ on the morning 14 days
+    /// before and „vypršelo“ on the morning of that day, not a day later.</summary>
+    [PostgreSqlFact]
+    public async Task The_job_tells_the_steward_fourteen_days_before_and_on_the_day_of_expiry()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", f.SpaceId);
+        var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(f.SpaceId, null, "Postup", Atlas.Server.Tests.Attachments.AttachmentFixture.Rich("Postup"), "Postup")));
+        await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+        var prague = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
+        var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, prague)).AddDays(30);
+        await f.As<PageVerificationView>(f.Writer, new SetPageVerification(page.Id, new SetPageVerificationRequest(Verify: true, Until: day.ToDateTime(TimeOnly.MinValue))));
+        // The job's morning run, 06:15 in Prague.
+        DateTime Morning(DateOnly date) => TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(new TimeOnly(6, 15)), prague);
+
+        foreach (var (run, kind) in new (DateOnly, string?)[] { (day.AddDays(-15), null), (day.AddDays(-14), NotificationKinds.VerificationExpiring),
+            (day.AddDays(-1), NotificationKinds.VerificationExpiring), (day, NotificationKinds.VerificationExpired) })
+        {
+            while (await f.Host.InvokeAsync<int>(new SendVerificationNotices(Morning(run))) == SendVerificationNoticesHandler.Batch)
+            {
+            }
+            await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+            var notices = (await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(f.Writer,
+                new Atlas.Server.Features.Notifications.Queries.ListNotifications(null))).Items.Where(x => x.SubjectId == page.Id).Select(x => x.Kind).ToList();
+            Assert.Equal(kind is null ? Array.Empty<string>() : [kind], notices);
         }
     }
 
@@ -283,9 +313,9 @@ public sealed class PageVerificationTests
         // The same reader again, at once: the read item stays read, counts nothing and keeps its note.
         var again = await ReportAsync(f.Reader, "Pořád staré.");
         Assert.Equal((true, 1, "Staré číslo."), (again.Read, again.Count, again.Excerpt));
-        // Another reader raises it as before; a report without a note keeps the earlier one.
+        // Another reader raises it as before; their report without a note never shows the first reader's note under their name.
         var other = await ReportAsync(f.Admin, null);
-        Assert.Equal((false, 1, f.Admin.Id, "Staré číslo."), (other.Read, other.Count, other.ActorId, other.Excerpt));
+        Assert.Equal((false, 1, f.Admin.Id, (string?)null), (other.Read, other.Count, other.ActorId, other.Excerpt));
     }
 
     [PostgreSqlFact]
@@ -364,6 +394,8 @@ public sealed class PageVerificationTests
                 await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
             }
         }
+        // The administrator who switched the steward's reminders off still hears of it (the notice has no preference).
+        await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationPreferenceDto>(admin, new Atlas.Server.Features.Notifications.Commands.SetNotificationPreference(NotificationKinds.VerificationDue, false));
         var user = Assert.Single(await f.As<IReadOnlyList<Atlas.Server.Features.Administration.Contracts.UserSummary>>(f.Admin,
             new Atlas.Server.Features.Administration.Queries.ListUsers(Id: f.Writer.Id)));
         await f.As<Atlas.Server.Features.Administration.Contracts.UserSummary>(f.Admin,
@@ -381,9 +413,9 @@ public sealed class PageVerificationTests
 
     /// <summary>The panel's „Čtenost“ and Stav obsahu count the same calendar days in Prague: a view just before the first day of the
     /// period counts in neither (a rolling 90 days would count it in the panel), one at its first moment in both. The space's readership
-    /// over MCP gives the same counts and never a name; a reader of the space may not ask for it.</summary>
+    /// over MCP gives the same counts, the last view as a day only and never a name, its wiki text inside the content boundary; a reader of the space may not ask for it.</summary>
     [PostgreSqlFact]
-    public async Task The_panel_Stav_obsahu_and_the_readership_tool_count_the_same_days()
+    public async Task The_panel_Stav_obsahu_and_the_content_health_tool_count_the_same_days()
     {
         await using var f = await McpSite.CreateAsync();
         var space = await f.FirstSpaceAsync();
@@ -403,13 +435,14 @@ public sealed class PageVerificationTests
         Assert.Equal((1L, 1L), (bundle["readers"]!.GetValue<long>(), Assert.Single(health["items"]!.AsArray())!["readers"]!.GetValue<long>()));
 
         var agent = await f.ClientAsync(await f.AdminTokenAsync("read"));
-        var period = new { spaceId = space, from = today.AddDays(1 - PageVerificationReader.ReaderDays).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd") };
-        var read = await CallAsync(agent, "atlas_list_readership", period);
+        var args = new { spaceId = space, days = PageVerificationReader.ReaderDays };
+        var read = await CallAsync(agent, "atlas_list_content_health", args);
         var item = Assert.Single(Structured(read)["items"]!.AsArray())!;
-        Assert.Equal((page.Id, 1L, 1L), (item["pageId"]!.GetValue<string>(), item["readers"]!.GetValue<long>(), item["views"]!.GetValue<long>()));
+        Assert.Equal((page.Id, 1L, 1L, today.AddDays(1 - PageVerificationReader.ReaderDays).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)),
+            (item["pageId"]!.GetValue<string>(), item["readers"]!.GetValue<long>(), item["views"]!.GetValue<long>(), item["lastViewedAt"]!.GetValue<string>()));
         Assert.DoesNotContain("vzacna", Text(read), StringComparison.Ordinal);
-        Assert.Equal("invalid_argument", ErrorCode(await CallAsync(agent, "atlas_list_readership", new { spaceId = space, from = "včera", to = "dnes" })));
+        Assert.Contains("<wiki-content>", Text(read), StringComparison.Ordinal);
         var asReader = await f.ClientAsync((await IssueAsync(reader, f.Site.Password, ["read"], ["mcp"], "Read")).Secret);
-        Assert.Equal(403, Structured(await CallAsync(asReader, "atlas_list_readership", period))["status"]!.GetValue<int>());
+        Assert.Equal(403, Structured(await CallAsync(asReader, "atlas_list_content_health", args))["status"]!.GetValue<int>());
     }
 }

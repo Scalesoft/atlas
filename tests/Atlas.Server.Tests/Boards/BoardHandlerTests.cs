@@ -375,7 +375,7 @@ public sealed class BoardHandlerTests
     }
 
     /// <summary>A4: an end moved elsewhere is a <c>set</c> of the same connector: stored, read back and broadcast with its id, label
-    /// and style kept; a loop is refused.</summary>
+    /// and style kept (its rules: BoardEditingTests).</summary>
     [PostgreSqlFact]
     public async Task A_connectors_end_moves_to_another_item_as_the_same_connector()
     {
@@ -392,7 +392,6 @@ public sealed class BoardHandlerTests
         Assert.Contains("\"toSide\":\"left\"", read.Props.GetRawText());
         var sent = Assert.Single(Assert.IsType<BoardChangedMessage>(Assert.Single(f.Hub.Sent).Payload).Changes);
         Assert.Equal(("set", link, (Guid?)null, c), (sent.Type, sent.ItemId!.Value, sent.From, sent.To!.Value));
-        await Refused(400, () => f.ApplyAsync(f.Writer, boardId, new BoardChange("set", ItemId: link, From: c)), BoardRejection.Invalid);
     }
 
     private static JsonObject Json(string json) => JsonNode.Parse(json)!.AsObject();

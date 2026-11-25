@@ -1,6 +1,6 @@
 -- 5.2 Ověřený obsah (docs/atlas-5.2-plan.md §2, §8): the space's default interval and one row per page from its first setting. A setting, not
 -- content: the installation backup carries it, the wiki archive does not. Nothing existing changes: every space keeps verification off (NULL)
--- and every page has no row, so its state is „off“. The state is computed in code (PageVerificationState), never here.
+-- and every page has no row, so its state is „off“. The state is computed in code (PageVerificationStates), never here.
 ALTER TABLE "Space" ADD COLUMN "VerificationIntervalMonths" smallint NULL
   CONSTRAINT "CK_Space_VerificationIntervalMonths" CHECK ("VerificationIntervalMonths" IN (3,6,12));
 

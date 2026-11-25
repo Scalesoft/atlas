@@ -9,7 +9,7 @@ vi.mock("../api", async (original) => ({
   ...(await original<typeof import("../api")>()),
   api: vi.fn(async (path: string) => {
     calls.push(path);
-    return path.endsWith("/verification") ? { ...state("verified"), changedSinceVerification: true } : { bundle: { readers: 4 } };
+    return { ...state("verified"), changedSinceVerification: true, readers: 5 };
   }),
 }));
 
@@ -18,23 +18,24 @@ const state = (value: PageVerification["state"]): PageVerification => ({ state: 
 const page = (more: Partial<Page>) => ({ id: "p1", publishedVersion: 1, bundle: { verification: state("off") }, ...more }) as unknown as Page;
 
 describe("usePageVerification", () => {
-  it("reads the Čtenost once when verification is switched on, and the state again after a new version is published", async () => {
+  it("takes the Čtenost from the answer that switches verification on, and reads the state again after a new version is published", async () => {
     const { usePageVerification } = await import("./usePageVerification");
     const shown = shallowRef(page({}));
     const scope = effectScope();
     const view = scope.run(() => usePageVerification(() => shown.value))!;
     expect(view.readers.value).toBeUndefined();
-    view.verification.value = state("unverified");
+    view.verification.value = { ...state("unverified"), readers: 4 };
     await nextTick(); await flushPromises();
-    expect(calls).toEqual(["/pages/p1?bundle=true"]);
     expect(view.readers.value).toBe(4);
     view.verification.value = state("verified");
     await nextTick(); await flushPromises();
-    expect(calls).toHaveLength(1);
+    expect(view.readers.value).toBe(4);
+    expect(calls).toEqual([]);
     shown.value = page({ publishedVersion: 2, bundle: shown.value.bundle });
     await nextTick(); await flushPromises(); await vi.dynamicImportSettled(); await flushPromises();
-    expect(calls).toEqual(["/pages/p1?bundle=true", "/pages/p1/verification"]);
+    expect(calls).toEqual(["/pages/p1/verification"]);
     expect(view.verification.value?.changedSinceVerification).toBe(true);
+    expect(view.readers.value).toBe(5);
     scope.stop();
   });
 });

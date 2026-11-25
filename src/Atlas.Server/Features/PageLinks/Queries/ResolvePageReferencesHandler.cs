@@ -46,6 +46,6 @@ public sealed class ResolvePageReferencesHandler(IContentAccess access, PageLink
         var pages = found.Values.Where(x => x.Type is null).Select(x => x.Id).ToList();
         var states = pages.Count == 0 ? [] : await verifications.StatesAsync(pages, ct);
         return new PageReferenceList(ids.Where(found.ContainsKey)
-            .Select(id => states.TryGetValue(id, out var state) ? found[id] with { Verification = state } : found[id]).ToArray());
+            .Select(id => states.TryGetValue(id, out var state) ? found[id] with { VerificationState = state } : found[id]).ToArray());
     }
 }

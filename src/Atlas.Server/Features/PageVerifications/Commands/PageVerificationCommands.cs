@@ -1,3 +1,4 @@
+using Atlas.Server.Features.Mcp.Commands;
 using Atlas.Server.Features.Notifications;
 using Atlas.Server.Features.PageOrganization.Domain;
 using Atlas.Server.Features.PageVerifications.Domain;
@@ -17,33 +18,33 @@ public sealed record SetSpaceVerification(Guid SpaceId, SetSpaceVerificationRequ
 /// <summary>„Nahlásit neaktuální“: any reader of the page tells its steward; nothing on the page changes.</summary>
 public sealed record ReportPageOutdated(Guid PageId, ReportPageOutdatedRequest Request);
 
-/// <summary>atlas_set_verification: G5 first (the page's space, or the space of a bulk change), then the shared write.</summary>
-public sealed record SetMcpVerification(Guid PageId, SetPageVerificationRequest Request);
-
-/// <summary>atlas_set_verification with spaceId: G5 on the space, then the shared bulk write.</summary>
-public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
-
-/// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
-public sealed record ReportMcpOutdated(ReportPageOutdated Command);
-
+/// <summary>The three writes of verification for the web, /api/v1, MCP and the assistant; on MCP and the assistant G5 first, under the space
+/// lock (a space out of AI is a missing page or space).</summary>
 public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, IContentAccess access, PageGate gate,
-    PageVerificationReader reader, IRequestChannel channel, Outbox outbox, TimeProvider clock)
+    PageVerificationReader reader, IRequestChannel channel, Outbox outbox, TimeProvider clock, McpOrganizationGuard mcp)
 {
     public const int MaxBulk = 500;
     public const int MaxNote = 500;
-    private static readonly TimeZoneInfo Zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
     public async Task<PageVerificationView> Handle(SetPageVerification command, CancellationToken ct)
     {
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockPageSpaceAsync(command.PageId, ct);
+        }
         // A readable page without EditContent answers 403, anything else 404.
         var (page, actor) = await locks.LockPageAsync(command.PageId, false, AccessOperation.EditContent, ct);
         await ApplyAsync(page, actor, command.Request, ct);
         await session.FlushAsync(ct);
-        return await reader.ReadAsync(page.Id, await PublishedVersionAsync(page, ct), ct);
+        return await reader.ReadWithReadersAsync(page.Id, ct);
     }
 
     public async Task<SpaceVerificationResult> Handle(SetSpaceVerification command, CancellationToken ct)
     {
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockSpaceForWriteAsync(command.SpaceId, ct);
+        }
         var request = command.Request;
         var space = await session.GetAsync<Space>(command.SpaceId, ct);
         if (space is null || space.IsTrashed)
@@ -121,23 +122,26 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
 
     public async Task<PageOutdatedReport> Handle(ReportPageOutdated command, CancellationToken ct)
     {
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockPageSpaceSharedAsync(command.PageId, ct);
+        }
         var opened = (await gate.ReadAsync(command.PageId, AccessOperation.ReadContent, ct)).Require();
-        var note = Rules.OptionalText(command.Request.Note, "Poznámka", MaxNote, null);
+        var note = Rules.OptionalText(command.Request.Note, "Poznámka", MaxNote);
         var steward = (await session.GetAsync<PageVerification>(opened.Page.Id, ct))?.StewardId;
         // Only someone who may read the page: anyone else would never see the item (NotificationReads).
         IReadOnlyList<Guid> recipients = steward is { } id && await MayStewardAsync(id, opened.Page.Id, ct)
             ? [id]
-            : (await session.CreateSQLQuery("""
+            : (await session.CreateSQLQuery($"""
                     SELECT x."PublisherId" AS "PublisherId" FROM (
                       SELECT p."PublisherId" AS "PublisherId", max(p."ActiveFrom") AS "Last" FROM "PagePublication" p
-                      JOIN "UserAccount" u ON u."Id"=p."PublisherId" AND u."IsActive"
+                      JOIN "UserAccount" u ON u."Id"=p."PublisherId" AND {PageVerificationStates.StewardInEffectSql("u", "p.\"PageId\"")}
                       WHERE p."PageId"=:page
-                        AND EXISTS (SELECT 1 FROM "EffectivePageAccess" e WHERE e."UserId"=p."PublisherId" AND e."PageId"=p."PageId" AND e."Role">=1)
                       GROUP BY p."PublisherId") x
                     ORDER BY x."Last" DESC LIMIT 3
                     """).AddScalar("PublisherId", NHibernateUtil.Guid).SetParameter("page", opened.Page.Id).ListAsync<Guid>(ct)).ToList();
         var told = recipients.Where(x => x != opened.Actor.Id).ToList();
-        outbox.Notify(new NotificationRequested(NotificationKinds.ReportedOutdated, opened.Page.Id, opened.Actor.Id, told, string.IsNullOrEmpty(note) ? null : note));
+        outbox.Notify(new NotificationRequested(NotificationKinds.ReportedOutdated, opened.Page.Id, opened.Actor.Id, told, note));
         return new PageOutdatedReport(told.Count);
     }
 
@@ -222,11 +226,10 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
     private async Task<Guid> RequireStewardAsync(Page page, Guid stewardId, CancellationToken ct)
         => await MayStewardAsync(stewardId, page.Id, ct) ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
 
-    /// <summary>An active account that may read the page: a steward in effect (<see cref="PageVerificationStates.StewardJoinSql"/>).</summary>
+    /// <summary>An active account that may read the page: a steward in effect (<see cref="PageVerificationStates.StewardInEffectSql"/>).</summary>
     private async Task<bool> MayStewardAsync(Guid userId, Guid pageId, CancellationToken ct)
-        => await session.CreateSQLQuery("""
-                SELECT EXISTS (SELECT 1 FROM "EffectivePageAccess" e JOIN "UserAccount" u ON u."Id"=e."UserId"
-                  WHERE e."UserId"=:user AND e."PageId"=:page AND e."Role">=1 AND u."IsActive") AS "Reads"
+        => await session.CreateSQLQuery($"""
+                SELECT EXISTS (SELECT 1 FROM "UserAccount" u WHERE u."Id"=:user AND {PageVerificationStates.StewardInEffectSql("u", ":page")}) AS "Reads"
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", userId).SetParameter("page", pageId).UniqueResultAsync<bool>(ct);
 
     /// <summary>„Ověřit do“: a time with a zone (Z or an offset) as it is; one without a zone in Europe/Prague, whatever the server's own
@@ -239,7 +242,8 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             return chosen.ToUniversalTime();
         }
         var local = chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen;
-        return TimeZoneInfo.ConvertTimeToUtc(Zone.IsInvalidTime(local) ? local.AddHours(1) : local, Zone);
+        var zone = Queries.SpaceReadership.Prague;
+        return TimeZoneInfo.ConvertTimeToUtc(zone.IsInvalidTime(local) ? local.AddHours(1) : local, zone);
     }
 
     private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)
@@ -290,18 +294,5 @@ public static class PageVerificationStewards
         {
             outbox.Notify(new NotificationRequested(NotificationKinds.StewardDeactivated, space.Key, stewardId, space.Select(x => x.Admin).ToList()));
         }
-    }
-}
-
-/// <summary>5.2 (plan §2.3): a new page of a space that verifies its pages starts with its author as the steward, unverified.</summary>
-public static class PageVerificationStart
-{
-    public static async Task StartAsync(ISession session, Page page, CancellationToken ct)
-    {
-        if (page.IsTemplate || (await session.GetAsync<Space>(page.SpaceId, ct))?.VerificationIntervalMonths is null)
-        {
-            return;
-        }
-        await session.SaveAsync(new PageVerification { PageId = page.Id, StewardId = page.OwnerId }, ct);
     }
 }

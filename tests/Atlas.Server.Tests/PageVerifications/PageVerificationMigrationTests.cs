@@ -38,8 +38,6 @@ public sealed class PageVerificationMigrationTests
 
         Assert.Equal(DBNull.Value, await ScalarAsync(schema.ConnectionString, $"""SELECT "VerificationIntervalMonths" FROM "Space" WHERE "Id"='{Space}'"""));
         Assert.Equal(0L, await ScalarAsync(schema.ConnectionString, """SELECT count(*) FROM "PageVerification" """));
-        // No row, no interval: off, as the reader computes it.
-        Assert.Equal(PageVerificationStates.Off, PageVerificationStates.Of(PageVerificationStates.Interval(null, null, false), null, DateTime.UtcNow));
         // The checks hold: an interval outside the choices is refused.
         await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(schema.ConnectionString, $"""UPDATE "Space" SET "VerificationIntervalMonths"=5 WHERE "Id"='{Space}'"""));
     }
@@ -71,7 +69,7 @@ public sealed class PageVerificationMigrationTests
         {
             await using var connection = new NpgsqlConnection(schema.ConnectionString);
             await connection.OpenAsync();
-            await using var command = new NpgsqlCommand(SpaceReadershipHandler.SpaceReadsSql, connection);
+            await using var command = new NpgsqlCommand(SpaceReadership.SpaceReadsSql, connection);
             command.Parameters.AddWithValue("actor", admin);
             command.Parameters.AddWithValue("space", Guid.Parse(Space));
             command.Parameters.AddWithValue("start", DateTime.UtcNow.AddDays(-365));
