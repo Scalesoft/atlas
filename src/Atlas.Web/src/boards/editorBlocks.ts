@@ -13,6 +13,7 @@ import type { Schema } from "@tiptap/pm/model";
 import { emptyDocument } from "../document";
 import { createDocumentWidgets } from "../documentWidgets";
 import { createPageSource, createPeopleServices, type PeopleServices } from "../editorDirectories";
+import { contactsIn, type ContactHost } from "../contacts/contactLinking";
 import type { OverviewBoardItem } from "../overview/overviewKinds";
 import type { ProjectorHost } from "../projector/requirementsPlugin";
 import type { BoardBlockNode, BoardChange } from "./boardApi";
@@ -114,6 +115,11 @@ export interface BoardBlockHost {
   people?: PeopleServices;
   /** The space's lexicon for recognition in the text (names, page titles, YouTrack keys), as the page's editor reads it. */
   lexicon?: MarkdownLexiconSource;
+  /**
+   * The board as the place of its contacts, as a page is (contactLinking.ts): a person put in links to the directory, „Odebrat“ asks at
+   * the last usage. `count` sees the whole board (`contactsOnBoard`), without the items of `gone` (a deletion about to be sent).
+   */
+  contactHost?: Omit<ContactHost, "count"> & { count(objectId: string, gone?: ReadonlySet<string>): number };
   /** The space's requirement catalog, for „Požadavek z katalogu“ (a board of a space with the projector module). */
   projector?: ProjectorHost;
   /**
@@ -195,7 +201,7 @@ export function boardTextPlugins(host: BoardBlockHost, { entities = true }: { en
   let plugins = sets.get(host);
   if (!plugins) {
     plugins = [createEditorToolsPlugin(),
-      ...createDocumentWidgets({ kind: "edit", ...(host.canWrite ? { canWrite: host.canWrite } : {}), ...(host.pages ? { pages: host.pages } : {}), ...(entities && host.people) })
+      ...createDocumentWidgets({ kind: "edit", ...(host.canWrite ? { canWrite: host.canWrite } : {}), ...(host.pages ? { pages: host.pages } : {}), ...(entities && host.people), ...(entities && host.contactHost && { contactHost: host.contactHost }) })
         .filter(plugin => plugin.id !== "secrets"),
       createYouTrackPlugin({ client: host.youTrack })];
     sets.set(host, plugins);
@@ -220,6 +226,49 @@ export function boardTextDocument(markdown: string): MarkdownRichValue {
   }
   const parsed = parseMarkdownContent(textReader.editor, markdown).toJSON() as MarkdownRichValue["document"];
   return { format: "atlas-rich", version: 1, plugins: textReader.plugins, document: parsed };
+}
+
+type ContactDoc = Parameters<typeof contactsIn>[0];
+/** A stored document's nodes as `contactsIn` walks a live one. */
+function storedDoc(nodes: readonly unknown[] | undefined): ContactDoc {
+  type Visit = Parameters<ContactDoc["descendants"]>[0];
+  const walk = (list: readonly unknown[] | undefined, visit: Visit) => {
+    for (const node of (list ?? []) as BoardBlockNode[]) if (visit({ type: { name: node.type }, attrs: node.attrs ?? {} }) !== false) walk(node.content, visit);
+  };
+  return { descendants: visit => walk(nodes, visit) };
+}
+
+/**
+ * How many references to the directory contact `objectId` the board holds (its `contactHost.count`, K2): contact cards, contacts in
+ * blocks and mentions in the Markdown of its texts. An item whose editor is open under `root` counts from that editor, as a page counts
+ * its live document; the rest from what is stored.
+ */
+export function contactsOnBoard(items: readonly BoardItem[], objectId: string, root?: ParentNode | null): number {
+  const id = objectId.toLowerCase(), live = new Map<string, ContactDoc>();
+  root?.querySelectorAll<HTMLElement & { editor?: Editor }>(".vue-flow__node .ProseMirror").forEach(dom => {
+    const item = dom.closest<HTMLElement>(".vue-flow__node")?.dataset.id;
+    if (item && dom.editor) live.set(item, dom.editor.state.doc);
+  });
+  let count = 0;
+  for (const item of items) {
+    if (item.deleted) continue;
+    const doc = live.get(item.id);
+    if (doc) count += contactsIn(doc, id);
+    else if (item.kind === "object") count += item.props?.typeId === "atlas.contact" && item.props.objectId?.toLowerCase() === id ? 1 : 0;
+    else if (item.props?.block) count += contactsIn(storedDoc([item.props.block]), id);
+    // Only a text that names the id can mention it: the rest is never parsed.
+    else if (item.text?.toLowerCase().includes(id)) count += contactsIn(storedDoc(boardTextDocument(item.text).document.content as readonly unknown[] | undefined), id);
+  }
+  return count;
+}
+
+/** A block as the Markdown a page reads back as the same component (the board's copy, D12); a contact card is a `contactCard` block. */
+export function blockMarkdown(node: BoardBlockNode): string {
+  const controller = createMarkdownEditorController({ profile: "rich", source: { kind: "local", value: blockDocument(asBlockNode(node)) }, plugins: boardBlockPlugins(inertBlockHost), editable: false });
+  try {
+    controller.attachView(document.createElement("div"), { ariaLabel: t.block.view });
+    return controller.getProjection().markdown.trim();
+  } finally { controller.destroy(); }
 }
 
 /** Runs `use` on a detached editor holding an empty document, with `extra` plugins, and destroys it. */

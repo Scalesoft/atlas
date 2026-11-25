@@ -48,6 +48,7 @@ import type { BoardItem } from "../../boards/boardModel";
 import { planGroupMotion, planMotion } from "../../boards/boardMotion";
 import { appPasteContext, dropAccepts, parsePaste, placedContacts, readDrop, type PasteContext, type PasteItem } from "../../boards/boardPaste";
 import type { BoardBlockHost, EditorBlockModule } from "../../boards/editorBlocks";
+import type { BoardDetailTab } from "../../boards/boardDetail";
 import { whenIdle } from "../../idle";
 import { preheatTextEditor } from "./text/textEditorChunk";
 import { freeSpot, nearestInDirection, readingOrder, type Direction } from "../../boards/boardPlacement";
@@ -119,9 +120,9 @@ const props = withDefaults(defineProps<{
   /** The board's id: with it the view and selection are kept for the way back (boardPlace.ts). */
   placeKey?: string;
 }>(), { preselect: null, canEdit: false, remote: () => [], canUndo: false, canRedo: false, settings: () => defaultBoardSettings, pickPage: undefined, pickIssues: undefined, pickContacts: undefined, pasteContext: undefined, resolveIssue: undefined, blockHost: undefined, createPage: undefined });
-/** `openDetail`: the object detail of a page card (its item id), or of the board itself (null). */
+/** `openDetail`: the object detail of a page card or, at its Diskuse, of any item (its item id), or of the board itself (null). */
 /** `change`'s `coalesce`: the editing whose saves (each pause in typing) are one undo step. */
-const emit = defineEmits<{ change: [changes: BoardEdit[], coalesce?: string]; preview: [payload: PresencePayload]; undo: []; redo: []; openPage: [pageId: string, heading?: string, block?: string]; openObject: [id: string, typeId: string]; openDetail: [itemId: string | null]; viewport: [objectIds: string[]]; unsaved: [holding: boolean]; selection: [ids: string[]] }>();
+const emit = defineEmits<{ change: [changes: BoardEdit[], coalesce?: string]; preview: [payload: PresencePayload]; undo: []; redo: []; openPage: [pageId: string, heading?: string, block?: string]; openObject: [id: string, typeId: string]; openDetail: [itemId: string | null, tab?: BoardDetailTab]; viewport: [objectIds: string[]]; unsaved: [holding: boolean]; selection: [ids: string[]] }>();
 
 const flowId = `board-${useId()}`;
 const flow = useVueFlow(flowId);
@@ -1035,13 +1036,14 @@ const followed = (item: BoardViewItem) => {
 /**
  * „Otevřít detail“: a page card's in the board's object detail (the host's dock), an object card's (a contact) in the dock of the
  * object as Obsah and the tree show it (ContentDetail: its card, Umí, Vazby, Použito na, Diskuse), as a page shows a contact.
+ * At `tab` „comments“ (D13) the board's own items too: the board's Diskuse anchored at the item.
  */
-function showDetail(item: BoardViewItem) {
-  if (item.kind === "page") { emit("openDetail", item.id); return; }
+function showDetail(item: BoardViewItem, tab: BoardDetailTab = "overview") {
+  if (item.kind !== "object") { emit("openDetail", item.id, tab); return; }
   const object = liveObjects.get(item.targetResourceId ?? "");
   if (!object?.available) return;
   void import("../../objects/objectDetail").then(({ showObjectDetail }) =>
-    showObjectDetail({ id: object.id, typeId: object.typeId, title: object.title, spaceId: props.blockHost?.links?.spaceId() ?? "" }, { onOpen: openTarget }));
+    showObjectDetail({ id: object.id, typeId: object.typeId, title: object.title, spaceId: props.blockHost?.links?.spaceId() ?? "" }, { onOpen: openTarget }, true, tab));
 }
 /** The live contact of a contact card, for its business card. */
 function contactData(item: BoardViewItem | undefined) {
@@ -1219,12 +1221,13 @@ function connectionPreview(line: ConnectionLineProps) {
 const selectedIds = () => [...selected.value];
 const toaster = useToast();
 /** K2 (spec 2026-10-30 §7): a contact whose last card leaves the board (`removed`, read before the deletion is sent), used nowhere
- * else, may go to the trash (contactLinking.ts). */
+ * else, may go to the trash (contactLinking.ts); one the board's texts or blocks still mention stays (the host's count, 4C). */
 function contactsLeft(removed: readonly string[]): Promise<string[]> {
   if (!props.placeKey) return Promise.resolve([]);
   const gone = new Set(removed), contact = (item: BoardViewItem) => (item.kind === "object" && item.props?.typeId === "atlas.contact" ? item.props.objectId : undefined);
   const left = new Set(items.value.flatMap(item => (gone.has(item.id) ? [] : [contact(item)])));
-  const asked = [...new Set(removed.map(id => byId.value.get(id)).flatMap(item => (item && contact(item) ? [contact(item)!] : [])))].filter(id => !left.has(id))
+  const used = (id: string) => left.has(id) || !!props.blockHost?.contactHost?.count(id, gone);
+  const asked = [...new Set(removed.map(id => byId.value.get(id)).flatMap(item => (item && contact(item) ? [contact(item)!] : [])))].filter(id => !used(id))
     .map(async id => ((await contactRemoved(id, liveObjects.get(id)?.title || t.canvas.contact, { kind: "board", id: props.placeKey! }, 0)) === "trashed" ? [id] : []));
   // The ids that went to the trash: „Zpět“ on the deletion brings them back.
   return Promise.all(asked).then(ids => ids.flat());
@@ -1836,6 +1839,7 @@ const actions: Record<string, () => void> = {
   "selection:group": group, "selection:ungroup": ungroup, "selection:collapse": () => setCollapsed(true), "selection:expand": () => setCollapsed(false),
   "selection:duplicate": duplicate, "selection:delete": removeSelection,
   "selection:detail": () => { const item = single.value && byId.value.get(single.value); if (item) showDetail(item); },
+  "selection:comments": () => { const item = single.value && byId.value.get(single.value); if (item) showDetail(item, "comments"); },
   "selection:vcard": () => { const data = contactData(single.value ? byId.value.get(single.value) : undefined); if (data) void downloadCard(data); },
   "selection:qr": () => { if (single.value) contactCardShare.toggle(single.value); },
   "selection:to-page": () => { if (single.value) void convertToPage(single.value); },
@@ -1911,9 +1915,23 @@ onBeforeUnmount(() => {
 watch(() => flow.nodesSelectionActive.value, active => { if (active) flow.nodesSelectionActive.value = false; });
 
 // Clipboard (spec §3.2): the board's own JSON plus plain text; pasted text and links go through boardPaste.ts.
+// A block and a contact card go to plain text as Markdown, which a page pastes as the component (D12), by the editor's module a board
+// has loaded anyway (BoardView); the relations graph, without a host, never loads it and copies text only.
+let blockText: ((node: BoardBlockNode) => string) | undefined;
+if (props.blockHost) void editorBlocks().then(module => { blockText = module.blockMarkdown; }, () => undefined);
+function markdownOf(item: BoardViewItem): string | undefined {
+  const objectId = item.kind === "object" && item.props?.typeId === "atlas.contact" ? item.props.objectId : undefined;
+  let node = item.kind === "block" ? item.props?.block : undefined;
+  if (objectId) {
+    // The directory's own fields (aliases) never go into a page's snapshot; the page shows the contact live by its id anyway.
+    const { aliases: _aliases, aliasPicks: _picks, ...data } = contactData(item) ?? { name: liveObjects.get(objectId)?.title || t.canvas.contact };
+    node = { type: "contactCard", attrs: { data: { version: 1, contacts: [{ ...data, objectId }] } } };
+  }
+  try { return node && blockText?.(node); } catch { return undefined; }
+}
 function onCopy(event: ClipboardEvent, cut = false) {
   if (typing(event.target) || !event.clipboardData) return;
-  const payload = copyPayload(items.value, withMembers(selectedIds(), items.value));
+  const payload = copyPayload(items.value, withMembers(selectedIds(), items.value), markdownOf);
   if (!payload) return;
   event.preventDefault();
   event.clipboardData.setData("text/plain", payload.text);

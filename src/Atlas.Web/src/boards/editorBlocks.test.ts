@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
-import type { MarkdownCommand } from "@atlas/markdown/core";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { loadMarkdownDialect, type MarkdownCommand } from "@atlas/markdown/core";
 import {
-  asBlockNode, asStoredNode, blockDocument, boardBlockExclusions, boardBlockPlugins, defaultBlockNode, firstBlock, inertBlockHost, isKnownNode,
+  asBlockNode, asStoredNode, blockDocument, blockMarkdown, boardBlockExclusions, boardBlockPlugins, contactsOnBoard, defaultBlockNode, firstBlock, inertBlockHost, isKnownNode,
   boardContextBlockHost, boardTextDocument, toBlockModules, useEditorBlockModules,
 } from "./editorBlocks";
+import type { BoardItem } from "./boardModel";
 
 const command = (id: string) => ({ type: "plugin-command", id }) as unknown as MarkdownCommand;
 
@@ -151,5 +152,42 @@ describe("boardContextBlockHost", () => {
       expect(await boardContextBlockHost("b1").youTrack.resolve!("ATL-1", { signal: new AbortController().signal })).toBeNull();
       expect(String(fetch.mock.calls[0]![0])).toContain("/api/boards/b1/youtrack/resolve?reference=ATL-1");
     } finally { fetch.mockRestore(); }
+  });
+});
+
+describe("the board as the place of its contacts (4C, D12)", () => {
+  beforeAll(() => loadMarkdownDialect(), 60_000);
+  const id = "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", other = "9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d";
+  const card = (itemId: string, objectId: string, extra: Partial<BoardItem> = {}): BoardItem =>
+    ({ id: itemId, kind: "object", x: 0, y: 0, width: 340, height: 80, z: 1, targetResourceId: objectId, props: { typeId: "atlas.contact", objectId }, ...extra });
+  const note = (itemId: string, text: string): BoardItem => ({ id: itemId, kind: "note", x: 0, y: 0, width: 200, height: 200, z: 1, text });
+  const contactBlock = (objectId: string) => ({ type: "contactCard", attrs: { data: { version: 1, contacts: [{ name: "Jana Nováková", objectId }] } } });
+
+  it("counts the contact cards, the contacts in blocks and the mentions in the texts' Markdown, never a deleted item or another contact", () => {
+    const items: BoardItem[] = [
+      card("c", id), card("gone", id, { deleted: true }), card("o", other),
+      { id: "b", kind: "block", x: 0, y: 0, width: 300, height: 120, z: 1, props: { block: contactBlock(id.toUpperCase()) } },
+      note("n", `Ptejte se [Jana](a-contact:?name=Jana&objectId=${id}) nebo [Jana](a-contact:?name=Jana&objectId=${id}).`),
+      note("x", "Nikdo tu není."),
+    ];
+    expect(contactsOnBoard(items, id)).toBe(4);
+    // Only a mention in a text: a card leaving the board does not make the contact unused.
+    expect(contactsOnBoard([note("n", `[Jana](a-contact:?name=Jana&objectId=${id})`)], id)).toBe(1);
+    expect(contactsOnBoard(items, "5d1c8a3e-0000-4000-8000-000000000000")).toBe(0);
+  });
+
+  it("counts an item whose editor is open from that editor, as a page counts its live document", () => {
+    const root = document.createElement("div");
+    root.innerHTML = '<div class="vue-flow__node" data-id="n"><div class="ProseMirror"></div></div>';
+    const live = { descendants: (visit: (node: { type: { name: string }; attrs: Record<string, unknown> }) => void) => visit({ type: { name: "contactInline" }, attrs: { data: { contacts: [{ objectId: id }] } } }) };
+    Object.assign(root.querySelector(".ProseMirror")!, { editor: { state: { doc: live } } });
+    // Stored without the mention, typed in the open editor.
+    expect(contactsOnBoard([note("n", "Ptejte se")], id, root)).toBe(1);
+  });
+
+  it("writes a contact block as the Markdown a page reads back as the same contact block (D12)", () => {
+    const markdown = blockMarkdown(contactBlock(id));
+    expect(markdown).toMatch(/^```a-contact/);
+    expect(firstBlock(boardTextDocument(markdown).document as never)).toMatchObject({ type: "contactCard", attrs: { data: { contacts: [{ name: "Jana Nováková", objectId: id }] } } });
   });
 });

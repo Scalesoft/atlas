@@ -4,7 +4,7 @@ import { computed, markRaw, nextTick, onBeforeUnmount, onUnmounted, provide, rea
 import type { BoardBlockNode, BoardEdit } from "../../boards/boardApi";
 import type { BoardItem } from "../../boards/boardModel";
 import { youtrackResolver, type PickedObject } from "../../boards/boardBlockNodes";
-import { boardContextBlockHost, boardTextDocument, type BoardBlockHost } from "../../boards/editorBlocks";
+import { boardContextBlockHost, boardTextDocument, contactsOnBoard, type BoardBlockHost } from "../../boards/editorBlocks";
 import { useModules } from "../../composables/useModules";
 import { kindOfNode, watchOverviewLevels, type OverviewBoardItem } from "../../overview/overviewKinds";
 import { useToast } from "../../composables/useToast";
@@ -152,6 +152,9 @@ const blockHost: BoardBlockHost = {
   // Asked when a text or block acts: a lost right or a closed board turns its editors read-only in place.
   canWrite: () => writable.value && state.value?.status === "ready",
   links: { spaceId: () => state.value?.spaceId ?? "" },
+  // The board as the place of the contacts in its texts and blocks, as a page is (4C): counted over the whole board, open editors live.
+  contactHost: { place: () => ({ kind: "board", id: props.boardId }),
+    count: (objectId, gone) => contactsOnBoard((state.value?.items ?? []).filter(item => !gone?.has(item.id)), objectId, canvas.value?.$el as Element | undefined) },
   // The overview blocks over the whole board (OverviewReadCard): its items, its id the scope of their levels.
   board: { id: props.boardId, items: () => (state.value?.items ?? []) as readonly OverviewBoardItem[] },
   // The space's requirement catalog for „Požadavek z katalogu“, as a page of the space has it (U3-10).

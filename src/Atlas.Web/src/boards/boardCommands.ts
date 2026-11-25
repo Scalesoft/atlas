@@ -122,10 +122,13 @@ export function actionCommands(context: CommandContext, offer: ItemOffer): Board
   // A contact card's business card and QR code: the toolbar's actions as rows (P2), for a reader too (they change nothing).
   const contact = isContactCard(single) ? [command("selection", "selection:vcard", t.toolbar.contactVcf, "download"),
     command("selection", "selection:qr", t.toolbar.contactQr, "qr-code")] : [];
+  // D13: the one item's Diskuse in the dock, as an object's (a card's object, else the board's anchored at the item); a reader too.
+  const comments = single && single.kind !== "connector" ? [command("selection", "selection:comments", c.comments.title, "quote", c.comments.words)] : [];
   return [
     ...(offer.edit ? [keyed("selection", "selection:edit", c.edit.title, "pencil", c.edit.words, "Enter")] : []),
     ...(offer.open ? [keyed("selection", "selection:open", offer.open, "external-link", c.open.words, "Ctrl+Enter")] : []),
     ...detail,
+    ...comments,
     ...contact,
     ...(offer.link ? [command("selection", "selection:copy-link", c.copyLink.title, "link", c.copyLink.words)] : []),
     ...(context.canEdit ? selectionCommands(context) : []),

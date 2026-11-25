@@ -65,12 +65,22 @@ describe("the board's command panel (objects spec §5.2)", () => {
   it("2B: a contact card offers its detail, business card and QR code as rows, to a reader too; a board's card no detail", () => {
     const contact = item("c", "object", { targetResourceId: "contact-1", props: { typeId: "atlas.contact", objectId: "contact-1" } });
     const rows = (canEdit: boolean, chosen = contact) => actionCommands(context({ canEdit, selection: [chosen] }), {}).map(command => command.id);
-    expect(rows(false)).toEqual(["selection:detail", "selection:vcard", "selection:qr"]);
-    expect(rows(true).slice(0, 3)).toEqual(["selection:detail", "selection:vcard", "selection:qr"]);
+    expect(rows(false)).toEqual(["selection:detail", "selection:comments", "selection:vcard", "selection:qr"]);
+    expect(rows(true).slice(0, 4)).toEqual(["selection:detail", "selection:comments", "selection:vcard", "selection:qr"]);
     // Nothing else opens it: its detail takes Ctrl+Enter.
     expect(actionCommands(context({ selection: [contact] }), {})[0]!.description).toBe("Ctrl+Enter");
     expect(ids({ canEdit: false, selection: [contact] })).toEqual(["selection:detail", "board:settings", "board:detail"]);
-    expect(rows(false, item("b", "object", { targetResourceId: "board-1", props: { typeId: "atlas.board" } }))).toEqual([]);
+    expect(rows(false, item("b", "object", { targetResourceId: "board-1", props: { typeId: "atlas.board" } }))).toEqual(["selection:comments"]);
+  });
+
+  it("D13: one selected item offers its Diskuse, to a reader too; a connector or a selection of several does not", () => {
+    const rows = (selection: BoardItem[], canEdit = false) => actionCommands(context({ canEdit, selection }), {}).map(command => command.id);
+    expect(rows([item("n", "note")])).toEqual(["selection:comments"]);
+    expect(rows([item("p", "page", { targetResourceId: "page-1" })])).toEqual(["selection:detail", "selection:comments"]);
+    expect(rows([item("n", "note")], true)).toContain("selection:comments");
+    expect(rows([item("c", "connector", { from: "a", to: "b" })])).toEqual([]);
+    expect(rows([item("a", "note"), item("b", "note")])).toEqual([]);
+    expect(actionCommands(context({ selection: [item("n", "note")] }), {}).find(command => command.id === "selection:comments")!.title).toBe("Diskuse");
   });
 
   it("finds a command by its title or keywords, without regard to case and accents, the title's start first", () => {
