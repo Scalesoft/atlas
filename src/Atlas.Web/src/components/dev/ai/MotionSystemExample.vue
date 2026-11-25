@@ -394,7 +394,7 @@ onMounted(async () => {
 .ai-ex-loading::before { content: ""; position: absolute; inset: 0 0 auto; height: 40vh; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 12%, transparent), transparent);
   transform: translateY(-40vh); animation: atlas-loading-wave var(--atlas-motion-loop) linear var(--atlas-motion-defer) infinite; }
 @media (prefers-reduced-motion: reduce) { .ai-ex-loading::before { inset: 0; height: auto; background: color-mix(in srgb, var(--accent) 4%, transparent); transform: none; animation: none; } }
-:global([data-atlas-reduced-motion]) .ai-ex-loading::before { inset: 0; height: auto; background: color-mix(in srgb, var(--accent) 4%, transparent); transform: none; animation: none; }
+:global([data-atlas-reduced-motion] .ai-ex-loading::before) { inset: 0; height: auto; background: color-mix(in srgb, var(--accent) 4%, transparent); transform: none; animation: none; }
 </style>
 
 <style>

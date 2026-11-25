@@ -79,7 +79,7 @@ function toggle(key: string) { const next = new Set(opened.value); if (next.has(
 .skill-bars-fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); transform-origin: left; scale: var(--level) 1;
   animation: atlas-bar-grow var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 @media (prefers-reduced-motion: reduce) { .skill-bars-fill { animation: none; } }
-:global([data-atlas-reduced-motion]) .skill-bars-fill { animation: none; }
+:global([data-atlas-reduced-motion] .skill-bars-fill) { animation: none; }
 .skill-bars-value { color: var(--muted); font-size: 11.5px; font-variant-numeric: tabular-nums; text-align: right; }
 .skill-bars-more { justify-self: start; padding: 2px 4px; border: 0; border-radius: 6px; background: transparent; color: var(--accent); font: inherit; font-size: 12px; cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .skill-bars-row:hover { background: var(--hover); } .skill-bars-more:hover { text-decoration: underline; } }

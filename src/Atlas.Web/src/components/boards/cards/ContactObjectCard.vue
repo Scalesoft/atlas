@@ -67,7 +67,7 @@ function key(event: KeyboardEvent) {
 .bcard-contact.nodrag { overflow: auto; }
 .bcard-contact .bcard-error { position: absolute; right: 14px; bottom: 6px; left: 14px; }
 .bcard-contact-drag { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--atlas-radius-sm); color: var(--muted); cursor: grab; opacity: 0; transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out); }
-.bcard-contact:hover .bcard-contact-drag, .bcard-contact:focus-within .bcard-contact-drag, :global(.board-node.is-selected) .bcard-contact-drag { opacity: 1; }
+.bcard-contact:hover .bcard-contact-drag, .bcard-contact:focus-within .bcard-contact-drag, .board-node.is-selected .bcard-contact-drag { opacity: 1; }
 /* No hover on touch: the grip is always there. */
 @media (hover: none) { .bcard-contact-drag { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .bcard-contact-drag { transition: none; } }
