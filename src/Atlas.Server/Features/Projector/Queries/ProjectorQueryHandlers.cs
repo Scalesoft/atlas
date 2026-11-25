@@ -339,6 +339,9 @@ public sealed class GetRequirementDependentsHandler(PageGate gate, RequirementIn
     public async Task<RequirementDependents> Handle(GetRequirementDependents query, CancellationToken ct)
     {
         var page = await ProjectorPages.ReadAsync(gate, query.PageId, ct);
+        // Every page's index (DependentsAsync reads them all), the page's own among them, in one pass in page order: refreshing the page
+        // first and the rest after let two readers each hold a page the other's pass then waited for (40P01).
+        await ProjectorIndex.EnsureFreshAsync(session, null, ct);
         var blockId = ProjectorPages.BlockId(query.BlockId);
         var block = (await index.PageAsync(page.Page.Id, await ProjectorPublishedReads.WorkingAsync(session, page, ct), ct)).FirstOrDefault(x => x.BlockId == blockId)
             ?? throw new ApiException(404, "Požadavek na stránce není; načtěte požadavky stránky znovu.", "requirement_not_found");

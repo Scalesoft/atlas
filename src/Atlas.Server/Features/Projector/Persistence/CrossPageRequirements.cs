@@ -74,12 +74,13 @@ public sealed class CrossPageRequirements(ISession session, IRequestChannel chan
     }
 
     /// <summary>„Co to blokuje“: the blocks the actor may read that require <paramref name="key"/> of <paramref name="pageId"/> from
-    /// another page (<c>key@pageId</c> of a block, <c>pageId#headingId</c> of a requirement heading), in the order of their pages' titles.</summary>
+    /// another page (<c>key@pageId</c> of a block, <c>pageId#headingId</c> of a requirement heading), in the order of their pages' titles.
+    /// Any page may depend on it: the caller has made every page's index fresh first, in the transaction's first refresh
+    /// (<c>ProjectorIndex.EnsureFreshAsync</c> without pages, GetRequirementDependentsHandler), so its page locks are taken in one order.</summary>
     public async Task<IReadOnlyList<RequirementRow>> DependentsAsync(UserAccount actor, Guid pageId, string key, CancellationToken ct)
     {
         // The candidates first (strpos on the raw lists of the cross-page rows, their partial indexes of migrations 2026103196 and 2026110820),
-        // so the access is decided for those pages only. Any page may depend on it: every page's index is made fresh first.
-        await ProjectorIndex.EnsureFreshAsync(session, null, ct);
+        // so the access is decided for those pages only.
         return await ReadAsync(actor, """
             wanted AS (SELECT DISTINCT "PageId" AS "Id" FROM "ProjectorRequirementIndex"
               WHERE ("Requires" LIKE '%@%' AND strpos("Requires",:reference)>0 OR "Requires" LIKE '%#%' AND strpos("Requires",:heading)>0) AND "PageId"<>:page)
