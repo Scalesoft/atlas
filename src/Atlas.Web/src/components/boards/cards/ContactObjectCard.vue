@@ -45,6 +45,8 @@ async function change(patch: ContactPatch) {
 function key(event: KeyboardEvent) {
   if (event.key !== "Escape" || event.defaultPrevented) return;
   event.stopPropagation();
+  // The first Esc takes the code away (from its „Zpět“ or the card), the next ends the editing as ever.
+  if (qr.value) { contactCardShare.set(props.itemId!, false); return; }
   emit("done");
 }
 </script>

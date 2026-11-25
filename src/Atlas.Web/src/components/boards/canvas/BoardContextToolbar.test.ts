@@ -30,6 +30,17 @@ describe("BoardContextToolbar", () => {
     expect(contactCardShare.isOpen("card")).toBe(true);
     await vi.waitFor(() => expect(document.body.querySelector("dialog [data-contact-qr-panel] .contact-qr-code svg")).not.toBeNull());
     contactCardShare.set("card", false);
+    wrapper.unmount();
+
+    // The keyboard path: the editor's toolbar keys walk the buttons (arrows, Home, End), Enter or Space presses one.
+    wrapper = mount(BoardContextToolbar, { props: { items: [card(200)], canEdit: true }, attachTo: document.body });
+    const vcf = wrapper.get<HTMLButtonElement>("[data-board-contact-vcf]"), qr = wrapper.get<HTMLButtonElement>("[data-board-contact-qr]");
+    vcf.element.focus();
+    await vcf.trigger("keydown", { key: "ArrowRight" });
+    expect(document.activeElement).toBe(qr.element);
+    await qr.trigger("keydown", { key: "ArrowLeft" });
+    expect(document.activeElement).toBe(vcf.element);
+    expect(qr.element.tagName).toBe("BUTTON");
   });
 
   // T5: the board's toolbar had worded buttons („Čárkovaně“, „Seskupit“, „Detail“) where a page block's toolbar has icons.

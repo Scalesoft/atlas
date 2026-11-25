@@ -155,9 +155,9 @@ async function photoPicked(file: File | undefined) {
 
 <template>
   <article ref="root" class="contact-card" :class="{ 'is-compact': compact, 'is-editable': editable, 'is-fit': fit, 'is-qr': fit && qr }" data-contact-card @focusin="entered" @focusout="left" @keydown.capture="escapeCapture">
-    <span class="contact-avatar" aria-hidden="true">{{ initials }}<img v-if="contact.photo && contact.photo !== failedPhoto" :src="contact.photo" alt="" loading="lazy" decoding="async"
+    <span class="contact-avatar" aria-hidden="true" :inert="fit && qr ? true : undefined">{{ initials }}<img v-if="contact.photo && contact.photo !== failedPhoto" :src="contact.photo" alt="" loading="lazy" decoding="async"
       class="contact-photo" data-contact-photo @error="failedPhoto = contact.photo ?? ''"></span>
-    <div class="contact-body">
+    <div class="contact-body" :inert="fit && qr ? true : undefined">
       <div class="contact-head">
       <div class="contact-field contact-name" :class="{ 'is-editing': editing === 'name' }" :tabindex="editable && editing !== 'name' ? 0 : undefined"
         :role="editable && editing !== 'name' ? 'button' : undefined" :aria-label="editable && editing !== 'name' ? t.card.edit(labels.name) : undefined"
@@ -296,7 +296,10 @@ async function photoPicked(file: File | undefined) {
 .contact-card.is-fit { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px; container: contact / size; }
 .is-fit .contact-avatar { width: clamp(30px, 24cqh, 52px); height: clamp(30px, 24cqh, 52px); font-size: clamp(12px, 8.5cqh, 18px); }
 .is-fit .contact-head { flex-wrap: nowrap; padding-right: 24px; }
-.is-fit .contact-name { flex: 1; font-size: clamp(16px, 11cqh, 26px); font-weight: 650; line-height: 1.25; }
+.is-fit .contact-avatar { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent); }
+.is-fit .contact-name { flex: 1; font-size: clamp(16px, 11cqh, 26px); font-weight: 650; line-height: 1.22; letter-spacing: -.012em; }
+/* What a larger room brings in arrives with a fade (the levels change as the card is resized); nothing already there moves. */
+.is-fit:not(.is-editable) :is(.contact-lines, .contact-links, .contact-address) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .is-fit:not(.is-editable) .contact-lines { overflow: hidden; max-height: 1.45em; }
 .is-fit .contact-name { overflow-wrap: anywhere; }
 .is-fit:not(.is-editable) :is(.contact-links, .contact-address) { display: none; }
@@ -310,14 +313,18 @@ async function photoPicked(file: File | undefined) {
   .is-fit:not(.is-editable) .contact-links { display: grid; }
   .is-fit:not(.is-editable) .contact-address { display: flex; }
   .is-fit .contact-body { gap: 6px; }
+  /* What the person does, one thing a row without the separators of the one-line form; the ways to reach them under a hairline. */
+  .is-fit:not(.is-editable) .contact-lines { display: grid; gap: 1px; margin-bottom: 4px; }
+  .is-fit:not(.is-editable) .contact-lines > .contact-field + .contact-field::before { content: none; }
+  .is-fit:not(.is-editable) .contact-links { padding-top: 8px; border-top: 1px solid var(--line); }
   .is-fit:not(.is-editable) .contact-lines { max-height: none; }
 }
 /* The QR code takes the card's place: the fields fade and settle back, the code comes in over them and rises from its centre (contactQr.css). */
-.is-fit > :is(.contact-avatar, .contact-body) { transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out), visibility 0s linear 0s; }
-.is-fit.is-qr > :is(.contact-avatar, .contact-body) { opacity: 0; scale: .98; visibility: hidden; transition-delay: 0s, 0s, var(--atlas-motion-base); }
-.contact-qrview { position: absolute; inset: 0; display: flex; align-items: center; gap: 14px; opacity: 0; visibility: hidden; scale: .98;
-  transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out), visibility 0s linear var(--atlas-motion-base); }
-.contact-qrview.is-open { opacity: 1; visibility: visible; scale: 1; transition-delay: 0s; }
+.is-fit > :is(.contact-avatar, .contact-body) { transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out); }
+.is-fit.is-qr > :is(.contact-avatar, .contact-body) { opacity: 0; scale: .98; }
+.contact-qrview { position: absolute; inset: 0; display: flex; align-items: center; gap: 14px; opacity: 0; scale: .98; pointer-events: none;
+  transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out); }
+.contact-qrview.is-open { opacity: 1; scale: 1; pointer-events: auto; }
 .contact-qrview-code { flex: none; width: min(100cqh, 50cqw); aspect-ratio: 1; border-radius: var(--atlas-radius-md); overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line);
   scale: .55; opacity: 0; transition: scale var(--atlas-motion-slow) var(--atlas-ease-out), opacity var(--atlas-motion-base) var(--atlas-ease-out); }
 .is-open > .contact-qrview-code { scale: 1; opacity: 1; }

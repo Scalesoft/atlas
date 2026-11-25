@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import t from "../../../i18n/boards";
 import { computed, ref } from "vue";
+import { lazyComponent } from "../../../lazyComponent";
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "reka-ui";
 import { contactCardShare, showsQrInPlace } from "../../../boards/contactCardShare";
 import { downloadCard } from "../../../contacts/contactShare";
 import type { ContactData } from "../../../contacts/contactData";
 import { liveObjects } from "../../../objects/liveObjects";
-import ContactQr from "../../contacts/ContactQr.vue";
+// Loaded when the code is first asked for: it brings the contact dictionary and the QR drawing, which no toolbar needs before.
+const ContactQr = lazyComponent(() => import("../../contacts/ContactQr.vue"));
 import AppDialog from "../../AppDialog.vue";
 import { boardColors, type BoardColor, type BoardEdgeState, type BoardPropsPatch, type BoardThickness } from "../../../boards/boardApi";
 import { blockLayoutOf, propsOf, type Alignment } from "../../../boards/boardFlow";
