@@ -1,9 +1,8 @@
 import { translate } from ".";
 
-/** Small shared parts of the shell: ActionMenu, AppDialog, Loading*, AtlasVersionInfo, CollaboratorAvatars, CopyPageLink, EditLockToggle,
+/** Small shared parts of the shell: AppDialog, Loading*, AtlasVersionInfo, CollaboratorAvatars, CopyPageLink, EditLockToggle,
  * DocumentTitle, ActivityHeatmap, KeyboardHelpDialog. The Czech source; kept small because these load eagerly. */
 const cs = {
-  actionMenu: { actions: "Co s tím jde dělat" },
   close: "Zavřít",
   loading: "Načítání…",
   versionInfo: { whatsNew: "Co je nového", info: "Informace o verzi", unknown: "neznámá verze" },
