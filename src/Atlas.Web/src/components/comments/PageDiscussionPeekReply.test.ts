@@ -70,6 +70,18 @@ describe("PageDiscussionPeek quick reply", () => {
     expect(editor()!.getText()).toBe("Souhlasím");
   });
 
+  it("folds the reply with Escape and keeps what was typed as the page's comment draft", async () => {
+    wrapper = mount(PageDiscussionPeek, { props: { bubbles: [bubble], reply: vi.fn(async () => undefined), draftScope: "P1", ttl: 100_000 }, attachTo: document.body });
+    await wrapper.get(".peek-reply").trigger("click");
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    editor()!.commands.insertContent("Napůl napsané");
+    await flushPromises();
+    document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    await vi.waitFor(() => expect(document.querySelector(".ProseMirror")).toBeNull());
+    expect(wrapper.emitted("replying")!.at(-1)).toEqual(["a", false]);
+    expect([...drafts.keys()]).toEqual(["comment:p1:"]);
+  });
+
   it("keeps an unsent reply as a draft of the page when the bubble goes, and drops it once sent", async () => {
     wrapper = mount(PageDiscussionPeek, { props: { bubbles: [bubble], reply: vi.fn(async () => undefined), draftScope: "p1", ttl: 100_000 }, attachTo: document.body });
     const view = wrapper;
@@ -80,6 +92,6 @@ describe("PageDiscussionPeek quick reply", () => {
     expect(view.emitted("replying")![0]).toEqual(["a", true]);
     await view.setProps({ bubbles: [] });
     await flushPromises();
-    expect([...drafts.keys()]).toEqual(["comment-reply:p1:a"]);
+    expect([...drafts.keys()]).toEqual(["comment:p1:"]);
   });
 });

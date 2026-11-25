@@ -33,6 +33,7 @@ import {
   watch,
   type ComponentPublicInstance,
 } from "vue";
+import { useElementVisibility } from "@vueuse/core";
 import {
   api,
   ApiError,
@@ -3044,9 +3045,14 @@ const pageDockOpen = computed(() => workspacePanel.open.value && !!pageDockTabs.
 // The discussion is open while the dock shows its Diskuse: then the peek under the avatars hands over to it (never both).
 const discussionOpen = computed(() => pageDockOpen.value && pageDockShown.value && pageDockTab.value === "comments");
 // The discussion button's count and the peek's bubbles are PageDiscussionButton's (lazy, read after the page's text); the open thread tells it its count.
-// On a phone the section under the content is the open thread (the button is hidden there, its count shows in the bottom bar and the ⋯ menu).
+// On a phone the section under the content is the open thread while it is on screen (the button is hidden there; its count, unread ones
+// accented, shows in the bottom bar and the ⋯ menu).
 const discussionButton = ref<InstanceType<typeof PageDiscussionButton>>();
-const discussionThreadOpen = computed(() => discussionOpen.value || phoneLayout.value);
+const phoneDiscussion = ref<ComponentPublicInstance>();
+const phoneDiscussionShown = useElementVisibility(phoneDiscussion);
+const discussionThreadOpen = computed(() => discussionOpen.value || (phoneLayout.value && phoneDiscussionShown.value));
+/** The dock: Alt C over an open dock remembers the text it came from, as opening the dock does, so Escape returns there. */
+const workspaceSidePanel = ref<InstanceType<typeof WorkspaceSidePanel>>();
 /** The comment fields' editor services (`[[`, `@`) of the open page, one host for the button, the section and the dock. */
 const pageCommentHost = computed(() => (page.value && commentHost.value ? commentHost.value(page.value.id, page.value.spaceId) : undefined));
 function pageDockRemembered() {
@@ -3078,6 +3084,7 @@ async function openDiscussion() {
   // The thread's editor services (people, pages) come first, so the first Alt C already has `@`.
   await pageChrome.comments().catch(() => undefined);
   if (picked) requestedQuote.value = picked;
+  workspaceSidePanel.value?.rememberOpener();
   showPageDock("comments");
   rememberPageDock(true);
   if (!picked) { await nextTick(); const side = document.querySelector("[data-page-side=comments]"); if (side) void focusWhenPresent(side, '.comment-composer [contenteditable="true"]', 90); }
@@ -4809,7 +4816,7 @@ onUnmounted(() => {
                 <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="favorite-button text-muted-foreground" :aria-label="personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite" :aria-pressed="personalState?.isFavorite ?? false" :aria-busy="favoritePending" :disabled="!personalState || favoritePending" @click="toggleFavorite"><AtlasIcon name="star" /></Button></TooltipTrigger><TooltipContent>{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</TooltipContent></Tooltip>
                 <ActionDisclosure :label="t.nav.pageActions" :disabled="pending">
                 <ActionDisclosureItem class="mobile-page-action" :disabled="favoritePending || !personalState" @click="toggleFavorite"><AtlasIcon name="star" />{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</ActionDisclosureItem>
-                <ActionDisclosureItem v-if="pageDockTabs" class="mobile-page-action" data-page-discussion-menu @click="toggleDiscussion"><AtlasIcon name="quote" />{{ t.common.discussion }}<span v-if="discussionButton?.count" class="action-hint">{{ discussionButton.count }}</span></ActionDisclosureItem>
+                <ActionDisclosureItem v-if="pageDockTabs" class="mobile-page-action" data-page-discussion-menu @click="toggleDiscussion"><AtlasIcon name="quote" />{{ t.common.discussion }}<span v-if="discussionButton?.unread || discussionButton?.count" class="discussion-count" :data-fresh="discussionButton.unread > 0 || undefined">{{ discussionButton.unread || discussionButton.count }}</span></ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="openPageAccess(page.id)"><AtlasIcon name="users" />{{ t.common.whoHasAccess }}</ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="copyPageLink?.copy()"><AtlasIcon name="link" />{{ t.common.copyLink }}</ActionDisclosureItem>
                 <ActionDisclosureItem v-if="currentSpace && canWrite" class="mobile-page-action" @click="showCreatePage"><AtlasIcon name="plus" />{{ t.common.newPage }}</ActionDisclosureItem>
@@ -5063,10 +5070,10 @@ onUnmounted(() => {
             /></section>
           <PageConnections v-if="editorReady" layout="graph" :page-title="page.title" :document="documentValue" :page-id="page.id" :space-id="page.spaceId" :refresh-key="libraryRefresh" :related-enabled="aiCapabilities.related" />
           <!-- A phone's discussion (no dock there): the same thread as the dock's Diskuse. -->
-          <CommentThread v-if="editorReady && afterContent && phoneLayout" :key="`comments:${page.id}`" class="page-comments" :object-id="page.id" :view-key="`page:${page.id}`" :title="t.common.comments"
+          <CommentThread v-if="editorReady && afterContent && phoneLayout" ref="phoneDiscussion" :key="`comments:${page.id}`" class="page-comments" :object-id="page.id" :view-key="`page:${page.id}`" :title="t.common.discussion"
             :host="pageCommentHost" @count="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" />
           <PageMobileBar v-if="editorReady" :can-ask="canAsk" :lockable="pageCanWrite" :locked="pageLocked" :favorite="personalState?.isFavorite ?? false" :favorite-busy="favoritePending || !personalState"
-            :discussion="pageDockTabs ? discussionButton?.count ?? 0 : null" @read="readFromTop" @ask="launchAssistant(true)" @favorite="toggleFavorite" @lock="toggleLock" @discussion="revealPageComments" />
+            :discussion="pageDockTabs ? discussionButton?.count ?? 0 : null" :unread="discussionButton?.unread ?? 0" @read="readFromTop" @ask="launchAssistant(true)" @favorite="toggleFavorite" @lock="toggleLock" @discussion="revealPageComments" />
         </template>
         <section v-else-if="unavailablePage || unavailableSpace" class="overview page-unavailable" data-page-unavailable>
           <EmptyState v-if="unavailableSpace" data-focus-landing icon="lock" :title="t.nav.spaceUnavailableTitle" :text="t.nav.spaceUnavailableText">
@@ -5131,7 +5138,7 @@ onUnmounted(() => {
         </section>
         </div>
         <!-- One panel: the assistant anywhere, and on a page the dock whose tabs switch between the page tools and the assistant. -->
-        <WorkspaceSidePanel v-if="workspacePanel.content.value" v-model:open="workspacePanel.open.value" :label="workspacePanel.label.value"
+        <WorkspaceSidePanel v-if="workspacePanel.content.value" ref="workspaceSidePanel" v-model:open="workspacePanel.open.value" :label="workspacePanel.label.value"
           :storage-key="pageDockTabs ? `atlas:reading:${user.id}:dock-width` : `atlas:reading:${user.id}:panel-width`"
           :tabs="pageDockTabs ?? workspacePanel.tabs.value" :active-tab="pageDockTabs ? pageDockActive : workspacePanel.activeTab.value"
           :min-width="pageDockTabs ? (pageDockTabs.length > 4 ? 392 : pageDockTabs.length > 3 ? 340 : 300) : 360" :default-width="pageDockTabs ? (pageDockTabs.length > 4 ? 392 : 340) : 400"

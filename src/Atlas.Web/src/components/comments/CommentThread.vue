@@ -10,6 +10,7 @@ import { focusWhenPresent } from "../../keyboard/navigation";
 import { requestedComment, requestedQuote } from "../../comments/commentFocus";
 import { scrollBehavior } from "../../motion/aiMotion";
 import { viewSessions, type ViewHandle, type ViewSessions } from "../../live/viewSession";
+import { themedUserColor } from "../../live/collaboratorColors";
 import { draftKeeper, drafts } from "../../lib/unsavedWork";
 import AtlasIcon from "../AtlasIcon.vue";
 import BoardMarkdown from "../boards/text/BoardMarkdown.vue";
@@ -151,11 +152,23 @@ async function save(comment: ObjectComment, markdown: string) {
   saving.value = true;
   try { await run(() => thread.edit(comment.id, markdown)); void stopEditing(comment.id); } catch { /* shown */ } finally { saving.value = false; }
 }
+let deleted = "";
 async function confirmDelete() {
   const comment = deleting.value;
   if (!comment) return;
   deletingBusy.value = true;
-  try { await run(() => thread.remove(comment.id)); deleting.value = null; } catch { /* shown */ } finally { deletingBusy.value = false; }
+  try { await run(() => thread.remove(comment.id)); deleted = comment.id; deleting.value = null; } catch { /* shown */ } finally { deletingBusy.value = false; }
+}
+// The dialog gives focus back to the deleted comment's bin, which went with it: the keyboard lands on the next comment, else the previous one, else the field.
+function afterDelete() {
+  const id = deleted;
+  deleted = "";
+  if (!id || !root.value) return;
+  const rows = [...root.value.querySelectorAll<HTMLElement>("[data-comment-id]")];
+  const at = rows.findIndex(row => row.dataset.commentId === id);
+  const live = (row: HTMLElement) => !row.hasAttribute("data-deleted");
+  const target = rows.slice(at + 1).find(live) ?? rows.slice(0, Math.max(at, 0)).reverse().find(live) ?? root.value.querySelector<HTMLElement>('.comment-composer [contenteditable="true"]');
+  target?.focus({ preventScroll: true });
 }
 // A new comment not sent yet is kept by its object and place (UX-P-6).
 const draftKey = `comment:${props.objectId.toLowerCase()}:${props.anchor ?? ""}`;
@@ -174,7 +187,8 @@ async function stopWriting() {
   await nextTick();
   if (root.value) void focusWhenPresent(root.value, "[data-comment-start]");
 }
-const hidden = () => status.value === "missing" || (status.value === "ready" && !canPost.value && !items.value.length);
+// The page section goes where comments are off and none were written; a thread in the dock, opened on purpose, says so instead of an empty pane.
+const hidden = () => status.value === "missing" || (!!props.title && status.value === "ready" && !canPost.value && !items.value.length);
 </script>
 
 <template>
@@ -186,7 +200,7 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
         <AtlasIcon name="quote" :size="15" />{{ t.comments.write }}</Button>
     </header>
     <template v-if="status === 'ready'">
-      <CommentComposer v-if="canPost && !folded" ref="composer" :host="host" :busy="posting" :cancelable="!!title && !items.length" :draft-key="draftKey" enter-submits send-icon :hint="t.comments.hintEnter" @submit="post"
+      <CommentComposer v-if="canPost && !folded" ref="composer" :host="host" :busy="posting" :cancelable="!!title && !items.length" :draft-key="draftKey" send-icon @submit="post"
         @cancel="stopWriting" />
       <p v-else-if="!canPost" class="comment-thread-note" data-comments-off>{{ t.comments.off }}</p>
     </template>
@@ -201,7 +215,7 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
         </div>
       </li>
       <li v-for="comment in items" :key="comment.id" class="comment" :data-comment-id="comment.id" :data-deleted="comment.deleted || undefined" :data-target="highlighted === comment.id || undefined" tabindex="-1">
-        <SubjectAvatar kind="user" :name="comment.authorName" size="sm" />
+        <SubjectAvatar kind="user" :name="comment.authorName" :color="themedUserColor(comment.authorId)" size="sm" />
         <div class="comment-main">
           <div class="comment-meta">
             <strong class="comment-author" :title="comment.authorName">{{ comment.authorName }}</strong>
@@ -218,7 +232,7 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
           </div>
           <Transition name="comment-swap" mode="out-in">
             <p v-if="comment.deleted" key="deleted" class="comment-deleted" data-comment-placeholder>{{ t.comments.removed }}</p>
-            <CommentComposer v-else-if="editing === comment.id" key="editing" :initial="comment.body" :submit-label="t.comments.apply" cancelable enter-submits :hint="t.comments.hintEnter" :busy="saving" :host="host"
+            <CommentComposer v-else-if="editing === comment.id" key="editing" :initial="comment.body" :submit-label="t.comments.apply" cancelable :busy="saving" :host="host"
               :aria-label="t.comments.editing" @submit="save(comment, $event)" @cancel="stopEditing(comment.id)" />
             <BoardMarkdown v-else :key="`body-${comment.editedAt}`" class="comment-body" :text="comment.body" :aria-label="t.comments.text" />
           </Transition>
@@ -226,13 +240,13 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
       </li>
     </TransitionGroup>
 
-    <EmptyState v-if="status === 'ready' && !items.length && !title" compact icon="quote" :title="t.comments.emptyTitle" :text="t.comments.emptyText" data-comments-empty />
+    <EmptyState v-if="status === 'ready' && canPost && !items.length && !title" compact icon="quote" :title="t.comments.emptyTitle" :text="t.comments.emptyText" data-comments-empty />
     <Button v-if="hasMore" class="comment-older" variant="outline" size="sm" type="button" :disabled="loadingOlder" :aria-busy="loadingOlder || undefined"
       data-comment-older @click="thread.older().catch(failure => (actionError = errorMessage(failure)))">{{ t.comments.older }}</Button>
     <p v-if="status === 'failed'" class="comment-thread-error" role="alert">
       <AtlasIcon name="triangle-alert" :size="15" />{{ error }} <Button variant="ghost" size="sm" type="button" @click="thread.load()">{{ t.comments.retry }}</Button></p>
 
-    <ConfirmDialog :open="!!deleting" :title="t.comments.deleteTitle" :confirm-label="t.comments.delete" :busy="deletingBusy" @confirm="confirmDelete" @cancel="deleting = null">
+    <ConfirmDialog :open="!!deleting" :title="t.comments.deleteTitle" :confirm-label="t.comments.delete" :busy="deletingBusy" @confirm="confirmDelete" @cancel="deleting = null" @closed="afterDelete">
       <p>{{ t.comments.deleteText }}</p>
     </ConfirmDialog>
   </section>

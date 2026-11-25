@@ -1,4 +1,4 @@
-// Comments in the shell (comments spec §4, §5): the section „Komentáře“ under a page being read, read after the page itself, and
+// Comments in the shell (comments spec §4, §5): the section „Diskuse“ under a page being read, read after the page itself, and
 // comment hits of the search in their own group leading to the page's heading.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
@@ -35,7 +35,7 @@ async function start(hash: string, extra?: Route) {
 }
 
 describe("App: comments", () => {
-  it("shows „Komentáře“ under the page being read on a phone (no dock there), read only after the page; wider, the dock's Diskuse is the one thread", async () => {
+  it("shows „Diskuse“ under the page being read on a phone (no dock there), read only after the page; wider, the dock's Diskuse is the one thread", async () => {
     const wide = await start(pageLink(page.id));
     expect(wide.find("[data-comment-thread]").exists()).toBe(false);
     wide.unmount();
@@ -43,7 +43,7 @@ describe("App: comments", () => {
     const app = await start(pageLink(page.id));
     await vi.waitFor(() => expect(app.find("[data-comment-thread] [data-comment-id]").exists()).toBe(true));
     const thread = app.get("[data-comment-thread]");
-    expect(thread.get(".comment-thread-title").text()).toBe("Komentáře");
+    expect(thread.get(".comment-thread-title").text()).toBe("Diskuse");
     expect(thread.text()).toContain("Petr Svoboda");
     expect(thread.get(".comment-body strong").text()).toBe("krok");
     expect(requested.indexOf(`/api/objects/${page.id}/comments`)).toBeGreaterThan(requested.indexOf(`/api/pages/${page.id}`));
@@ -51,9 +51,9 @@ describe("App: comments", () => {
     expect(app.findComponent({ name: "CommentThread" }).props("host")).toMatchObject({ pages: expect.anything(), people: expect.anything() });
     // One send behaviour everywhere: the paper plane, Enter sends there too.
     expect(thread.find(".send-button").exists()).toBe(true);
-    // The phone's bar has Diskuse with the thread's count; the feed read no list of its own (the thread is the open one there).
+    // The phone's bar has Diskuse with the count; while the section is off screen (jsdom sees nothing on screen) the feed reads, so a
+    // colleague's new comment would show there as unread.
     await vi.waitFor(() => expect(app.get("[data-page-mobile-discussion]").attributes("aria-label")).toBe("Diskuse, komentářů: 1"));
-    expect(requested.filter(path => path === `/api/objects/${page.id}/comments`)).toHaveLength(1);
   });
 
   it("shows comment hits of the search as their own group leading to the page's heading", async () => {

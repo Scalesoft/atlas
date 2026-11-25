@@ -21,7 +21,7 @@ describe("PageMobileBar", () => {
     expect(writer.get("[data-page-mobile-lock]").attributes("aria-label")).toBe("Zamknout úpravy");
   });
 
-  it("offers the page's Diskuse with its comment count on a phone", async () => {
+  it("offers the page's Diskuse with its comment count on a phone, the unread ones accented", async () => {
     const bar = mount(PageMobileBar, { props: { discussion: 3 } });
     const discussion = bar.get("[data-page-mobile-discussion]");
     expect(discussion.text()).toContain("Diskuse");
@@ -29,7 +29,13 @@ describe("PageMobileBar", () => {
     expect(discussion.get(".page-mobile-count").text()).toBe("3");
     await discussion.trigger("click");
     expect(bar.emitted("discussion")).toHaveLength(1);
-    await bar.setProps({ discussion: 0 });
+    expect(discussion.get(".page-mobile-count").attributes("data-fresh")).toBeUndefined();
+    // A colleague's new comment: the unread count, accented, as on the top bar's button.
+    await bar.setProps({ discussion: 12, unread: 1 });
+    expect(bar.get(".page-mobile-count").text()).toBe("1");
+    expect(bar.get(".page-mobile-count").attributes("data-fresh")).toBeDefined();
+    expect(bar.get("[data-page-mobile-discussion]").attributes("aria-label")).toBe("Diskuse, komentářů: 12, nepřečtených: 1");
+    await bar.setProps({ discussion: 0, unread: 0 });
     expect(bar.get("[data-page-mobile-discussion]").attributes("aria-label")).toBe("Diskuse");
   });
 });

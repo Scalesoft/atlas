@@ -66,8 +66,6 @@ const en: ComponentsSearchMessages = {
     peek: { label: "New comments", from: (name: string, text: string) => `${name}: ${text}`, reply: "Reply", replyTo: (name: string) => `Reply to ${name}…`, hide: "Hide" },
     send: "Send",
     sendEnter: "Send (Enter)",
-    sendCtrl: "Send (Ctrl+Enter)",
-    hint: "Ctrl+Enter sends",
     hintEnter: "Enter sends, Shift+Enter adds a line",
     today: "today",
     noteDay: "Day of the note",
