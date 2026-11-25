@@ -122,10 +122,12 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
                 var bulk = await bus.InvokeAsync<SpaceVerificationResult>(new SetMcpSpaceVerification(spaceToChange,
                     new SetSpaceVerificationRequest(action, ids, request.StewardId)), ct);
                 return McpText.Result($"Hromadná změna ověření: změněno {bulk.Changed} stránek, přeskočeno {bulk.Skipped.Count}" +
-                    (bulk.Skipped.Count > 0 ? " (" + string.Join(", ", bulk.Skipped.Take(20).Select(x => $"{x.PageId}: {x.Reason}")) + ")." : "."),
+                    (bulk.Skipped.Count > 0 ? " (" + string.Join(", ", bulk.Skipped.Take(20).Select(x => $"{x.PageId}: {x.Reason}")) + ")." : ".") +
+                    (bulk.More ? " Zbývají další stránky bez garanta, spusťte znovu." : ""),
                     new JsonObject
                     {
                         ["changed"] = bulk.Changed,
+                        ["more"] = bulk.More,
                         ["skipped"] = new JsonArray(bulk.Skipped.Select(x => (JsonNode)new JsonObject { ["pageId"] = x.PageId, ["reason"] = x.Reason }).ToArray())
                     });
             }

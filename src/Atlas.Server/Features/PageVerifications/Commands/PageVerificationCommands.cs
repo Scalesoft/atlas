@@ -54,6 +54,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         var actor = await locks.LockForWriteAsync(space.Id, ct);
         await access.RequireSpaceAsync(space.Id, SpaceRole.Writer, ct);
         List<Guid> ids;
+        var more = false;
         if (request.PageIds is null)
         {
             if (request.Action != "stewardFromLastAuthor")
@@ -61,6 +62,8 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 throw new ApiException(400, "Bez výběru stránek lze jen nastavit garanta podle posledního autora.");
             }
             ids = await WithoutStewardAsync(space, actor, ct);
+            more = ids.Count > MaxBulk;
+            ids = ids.Take(MaxBulk).ToList();
         }
         else
         {
@@ -113,7 +116,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             }
         }
         await session.FlushAsync(ct);
-        return new SpaceVerificationResult(updated, skipped);
+        return new SpaceVerificationResult(updated, skipped, more);
     }
 
     public async Task<PageOutdatedReport> Handle(ReportPageOutdated command, CancellationToken ct)
@@ -254,7 +257,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             : null;
 
     /// <summary>The space's published pages that are verified (own or inherited interval), have no steward in effect and the actor may edit
-    /// (EffectivePageAccess), at most <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
+    /// (EffectivePageAccess), at most <see cref="MaxBulk"/> and one more that tells there are more; each is checked again under its lock.</summary>
     private async Task<List<Guid>> WithoutStewardAsync(Space space, UserAccount actor, CancellationToken ct)
         => (await session.CreateSQLQuery($"""
                 SELECT p."Id" AS "Id" FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId"
@@ -265,7 +268,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                   AND {PageVerificationStates.IntervalSql}>0 AND st."Id" IS NULL
                 ORDER BY p."Id" LIMIT :limit
                 """).AddScalar("Id", NHibernateUtil.Guid).SetParameter("space", space.Id).SetParameter("actor", actor.Id)
-            .SetParameter("limit", MaxBulk).ListAsync<Guid>(ct)).ToList();
+            .SetParameter("limit", MaxBulk + 1).ListAsync<Guid>(ct)).ToList();
 }
 
 /// <summary>5.2 (plan §2.3): a deactivated account is nobody's steward any more („bez garanta“); the administrators of each space where it

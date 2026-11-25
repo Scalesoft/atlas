@@ -40,7 +40,8 @@ public sealed record SkippedPage(Guid PageId, string Reason);
 
 /// <param name="Changed">Pages changed.</param>
 /// <param name="Skipped">Pages left as they were, with the reason.</param>
-public sealed record SpaceVerificationResult(int Changed, IReadOnlyList<SkippedPage> Skipped);
+/// <param name="More">Without pageIds: more pages without a steward than one run takes (500); run it again.</param>
+public sealed record SpaceVerificationResult(int Changed, IReadOnlyList<SkippedPage> Skipped, bool More = false);
 
 /// <summary>„Nahlásit neaktuální“: an optional note of the reader (at most 500 characters) for the steward.</summary>
 public sealed record ReportPageOutdatedRequest(string? Note = null);
