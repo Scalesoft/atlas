@@ -51,6 +51,9 @@ describe("App: comments", () => {
     expect(app.findComponent({ name: "CommentThread" }).props("host")).toMatchObject({ pages: expect.anything(), people: expect.anything() });
     // One send behaviour with the dock: Enter sends there too.
     expect(app.findComponent({ name: "CommentThread" }).props("quick")).toBe(true);
+    // The phone's bar has Diskuse with the thread's count; the feed read no list of its own (the thread is the open one there).
+    await vi.waitFor(() => expect(app.get("[data-page-mobile-discussion]").attributes("aria-label")).toBe("Diskuse, komentářů: 1"));
+    expect(requested.filter(path => path === `/api/objects/${page.id}/comments`)).toHaveLength(1);
   });
 
   it("shows comment hits of the search as their own group leading to the page's heading", async () => {
