@@ -227,10 +227,17 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", userId).SetParameter("page", pageId).UniqueResultAsync<bool>(ct);
 
     /// <summary>„Ověřit do“: a time with a zone (Z or an offset) as it is; one without a zone in Europe/Prague, whatever the server's own
-    /// zone, and a bare date (the web's date field, „2027-03-01“ over MCP) valid through the end of that day.</summary>
-    public static DateTime Until(DateTime chosen) => chosen.Kind != DateTimeKind.Unspecified
-        ? chosen.ToUniversalTime()
-        : TimeZoneInfo.ConvertTimeToUtc(chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen, Zone);
+    /// zone, and a bare date (the web's date field, „2027-03-01“ over MCP) valid through the end of that day. A time in the spring gap
+    /// (02:00–03:00 on the day the clocks go forward) does not exist there: it is the same time an hour later.</summary>
+    public static DateTime Until(DateTime chosen)
+    {
+        if (chosen.Kind != DateTimeKind.Unspecified)
+        {
+            return chosen.ToUniversalTime();
+        }
+        var local = chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen;
+        return TimeZoneInfo.ConvertTimeToUtc(Zone.IsInvalidTime(local) ? local.AddHours(1) : local, Zone);
+    }
 
     private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)
         => (await session.GetAsync<PageVerification>(pageId, ct))?.StewardId is { } steward && await MayStewardAsync(steward, pageId, ct);

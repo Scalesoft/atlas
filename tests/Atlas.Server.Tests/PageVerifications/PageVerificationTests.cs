@@ -47,6 +47,8 @@ public sealed class PageVerificationTests
         // A time without a zone is Prague's; one with a zone is taken as it is.
         Assert.Equal(new DateTime(2027, 3, 1, 9, 0, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 1, 10, 0, 0)));
         Assert.Equal(new DateTime(2027, 3, 1, 10, 0, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 1, 10, 0, 0, DateTimeKind.Utc)));
+        // 02:30 on the day the clocks go forward does not exist in Prague: 03:30 summer time, not an internal error.
+        Assert.Equal(new DateTime(2027, 3, 28, 1, 30, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 28, 2, 30, 0)));
     }
 
     [PostgreSqlFact]
