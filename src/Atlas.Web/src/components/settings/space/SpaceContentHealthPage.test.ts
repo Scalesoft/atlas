@@ -42,7 +42,7 @@ describe("Stav obsahu", () => {
     expect(lastQuery(api).state).toBe("no-steward");
     await view.get('[data-health-tile="expired"]').trigger("click");
     await flushPromises();
-    expect(lastQuery(api).state).toBe("due");
+    expect(lastQuery(api).state).toBe("lapsed");
 
     api.list.mockResolvedValueOnce(health([]));
     await view.get("[data-health-search]").setValue("vpn");
@@ -50,6 +50,58 @@ describe("Stav obsahu", () => {
     await flushPromises();
     expect(view.find("[data-health-row]").exists()).toBe(false);
     expect(view.text()).toContain("Nic, co by odpovídalo filtru");
+  });
+
+  it("gives each tile its own filter, marks the lit one and shows everything again on a second click", async () => {
+    const { api, view } = open();
+    await flushPromises();
+    for (const [key, state] of [["verified", "verified"], ["expiring", "expiring"], ["expired", "lapsed"], ["noSteward", "no-steward"]] as const) {
+      await view.get(`[data-health-tile="${key}"]`).trigger("click");
+      await flushPromises();
+      expect(lastQuery(api).state).toBe(state);
+      expect(view.get(`[data-health-tile="${key}"]`).attributes("aria-pressed")).toBe("true");
+      expect(view.findAll('[data-health-tile][aria-pressed="true"]')).toHaveLength(1);
+    }
+    await view.get('[data-health-tile="noSteward"]').trigger("click");
+    await flushPromises();
+    expect(lastQuery(api).state).toBe("");
+    expect(view.findAll('[data-health-tile][aria-pressed="true"]')).toHaveLength(0);
+  });
+
+  it("keeps the keyboard on its row after V reads the list again, so V, down, V goes on row by row", async () => {
+    const { api, view } = open();
+    await flushPromises();
+    const list = () => view.findAll<HTMLElement>("[data-health-row]");
+    list()[0]!.element.focus();
+    // The list comes back re-sorted: the verified row moved away, another stands at the index.
+    api.list.mockImplementationOnce(async () => health([rows[1]!, rows[2]!, rows[3]!]));
+    await list()[0]!.trigger("keydown", { key: "v" });
+    await flushPromises();
+    expect(document.activeElement).toBe(list()[0]!.element);
+    expect(list()[0]!.attributes("data-page")).toBe("p2");
+    await list()[0]!.trigger("keydown", { key: "ArrowDown" });
+    await list()[1]!.trigger("keydown", { key: "v" });
+    await flushPromises();
+    expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: ["p3"] });
+  });
+
+  it("asks before verifying many pages at once", async () => {
+    const many = Array.from({ length: 12 }, (_, n) => item(n + 1));
+    const { api, view } = open();
+    await flushPromises();
+    api.list.mockImplementation(async () => health(many));
+    await view.get("[data-health-search]").setValue("x");
+    await vi.waitFor(() => expect(api.list).toHaveBeenCalledTimes(2), { timeout: 1500 });
+    await flushPromises();
+    await view.get("[data-health-all]").trigger("click");
+    await flushPromises();
+    await view.get("[data-health-verify]").trigger("click");
+    await flushPromises();
+    expect(api.bulk).not.toHaveBeenCalled();
+    expect(document.querySelector("dialog[open]")!.textContent).toContain("Ověřit 12 stránek?");
+    [...document.querySelectorAll<HTMLElement>("dialog[open] button")].find((b) => b.textContent?.trim() === "Ověřit")!.click();
+    await flushPromises();
+    expect(api.bulk).toHaveBeenCalledTimes(1);
   });
 
   it("selects pages and verifies them in bulk, then reads the list again", async () => {

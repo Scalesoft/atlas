@@ -53,7 +53,7 @@ public static class PageVerificationsModule
             .Produces<ContentHealthList>().ProducesProblem(400).ProducesProblem(403).ProducesProblem(404)
             .WithSummary("Stav obsahu of a space for its admins and writers: counts by verification state and the published pages with their state, " +
                 "steward, expiry, ancestors' titles and readership (views and distinct readers, no names); enabled: whether the space verifies. " +
-                "state: all, due (expiring, expired, unverified), no-steward, unread; mine: only where the caller is the steward; sort: priority (default: due pages first, then by readers), " +
+                "state: all, due (expiring, expired, unverified), verified, expiring, lapsed (expired or unverified), no-steward, unread; mine: only where the caller is the steward; sort: priority (default: due pages first, then by readers), " +
                 "expiry, readers, published; days: 30, 90, 365; q: part of the title; limit 1–100; cursor: nextCursor.");
         var batch = group.MapPost("/spaces/{spaceId:guid}/content-health/bulk", async (Guid spaceId, SetSpaceVerificationRequest request, IMessageBus bus,
                 CancellationToken ct) => Results.Ok(await bus.InvokeAsync<SpaceVerificationResult>(new SetSpaceVerification(spaceId, request), ct)))

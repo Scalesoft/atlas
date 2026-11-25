@@ -7,6 +7,13 @@ import { isCommentsChange } from "./commentThread";
 /** A colleague's new comment as the peek under the avatars shows it. */
 export interface DiscussionBubble { id: string; authorId: string; authorName: string; text: string }
 
+/** A quick reply starts with a mention of the bubble's author (the editor's contact form with the account, which notifies them), so it reads as an answer to them. */
+export const replyTo = (bubble: Pick<DiscussionBubble, "authorId" | "authorName">, markdown: string) => {
+  const name = bubble.authorName.replace(/[\\[\]]/g, (char) => `\\${char}`);
+  const query = `name=${encodeURIComponent(bubble.authorName)}&internalUser.id=${encodeURIComponent(bubble.authorId)}&internalUser.name=${encodeURIComponent(bubble.authorName)}`;
+  return `[${name}](a-contact:?${query}) ${markdown}`;
+};
+
 /** At most this many bubbles wait for the peek; the older ones are still counted as unread. */
 export const maxBubbles = 5;
 

@@ -33,7 +33,7 @@ describe("PageVerification chip", () => {
     ["verified", "Ověřeno", "neutral"],
     ["expiring", "Vyprší za 9 dní", "neutral"],
     ["expired", "Ověření vypršelo", "warning"],
-    ["unverified", "Neověřeno", "warning"],
+    ["unverified", "Neověřeno", "neutral"],
   ])("draws %s as %s in tone %s without a bar above the text", (state, text, tone) => {
     open(sample(state, state === "expiring" ? { verifiedUntil: at(8.5) } : {}));
     expect(chip()!.textContent).toContain(text);
@@ -129,5 +129,13 @@ describe("PageVerification popover", () => {
     expect(service.report).toHaveBeenCalledWith("p1", "Postup už neplatí");
     expect(pop()!.querySelector("[data-verification-reported]")).not.toBeNull();
     expect(service.change).not.toHaveBeenCalled();
+    // The keyboard moves to the status, the popover closes by itself, and the page cannot be reported again this session.
+    expect(document.activeElement).toBe(pop()!.querySelector("[data-verification-reported]"));
+    await vi.waitFor(() => expect(pop()).toBeNull(), { timeout: 3000 });
+    await openPopover();
+    pop()!.querySelector<HTMLElement>("[data-verification-report]")!.click();
+    await flushPromises();
+    expect(pop()!.querySelector("[data-verification-note]")).toBeNull();
+    expect(pop()!.querySelector("[data-verification-reported]")).not.toBeNull();
   });
 });

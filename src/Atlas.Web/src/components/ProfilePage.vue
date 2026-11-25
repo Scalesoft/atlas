@@ -322,6 +322,7 @@ const systemDark = ref(colorQuery?.matches ?? false);
 const systemChanged = (event: MediaQueryListEvent) => (systemDark.value = event.matches);
 colorQuery?.addEventListener?.("change", systemChanged);
 onUnmounted(() => colorQuery?.removeEventListener?.("change", systemChanged));
+const autoColor = computed(() => collaboratorChoices.find((choice) => choice.id === automaticCollaboratorColorId(props.userId)));
 const previewMode = computed(() => (appearance.mode === "system" ? (systemDark.value ? "dark" : "light") : appearance.mode));
 // Omezit animace: off follows the device, so the row says what the device asks for.
 const motionQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : undefined;
@@ -530,6 +531,7 @@ async function saveAndLeave() {
               <SettingsRow icon="account" :label="text.collaboratorColor.label" :help="text.collaboratorColor.help" :label-for="false">
                 <div class="collaborator-color" data-appearance="collaborator-color">
                   <OptionPills v-model="collaboratorColorMode" :options="colorModeOptions" :label="text.collaboratorColor.label" hide-label :disabled="appearancePending" data-appearance="collaborator-color-mode" />
+                  <p v-if="collaboratorColorMode === 'auto' && autoColor" class="collaborator-auto" data-appearance="collaborator-color-auto"><i class="collaborator-auto-dot" :style="{ background: autoColor.swatch[previewMode === 'dark' ? 'dark' : 'light'] }" aria-hidden="true" />{{ text.collaboratorColor.autoResult(autoColor.label) }}</p>
                   <InlineReveal :open="collaboratorColorMode === 'custom'">
                     <AccentPicker v-model="collaboratorColor" :accents="collaboratorChoices" :mode="previewMode" :label="text.collaboratorColor.swatches" :disabled="appearancePending" data-appearance="collaborator-color-swatches" />
                   </InlineReveal>
@@ -604,6 +606,8 @@ async function saveAndLeave() {
 
 <style scoped>
 .collaborator-color { display: grid; gap: 12px; min-width: 0; }
+.collaborator-auto { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; }
+.collaborator-auto-dot { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--line); }
 .profile-page { min-width: 0; width: 100%; }
 /* The foot of the rail: Odhlásit se under a quiet rule (board 12). The rule belongs to the row, so the button itself
    keeps the base Button's height, radius, hover, focus and press instead of the flat 36 px block refresh.css gave a direct child. */

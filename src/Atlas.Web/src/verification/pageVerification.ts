@@ -42,8 +42,9 @@ export const pageVerificationApi: PageVerificationApi = {
 
 /** The chip shows only a switched-on verification. */
 export const verificationShown = (value: Pick<PageVerification, "state"> | null | undefined): value is PageVerification => !!value && value.state !== "off";
-export const verificationTone = (state: VerificationState): StatusTone => (state === "expired" || state === "unverified" ? "warning" : "neutral");
-export const verificationIcon = (state: VerificationState) => (state === "expired" || state === "unverified" ? "shield-alert" : "shield-check");
+// Unverified is neutral: right after verification is switched on every page is, and a reader must not see a warning on all of them.
+export const verificationTone = (state: VerificationState): StatusTone => (state === "expired" ? "warning" : "neutral");
+export const verificationIcon = (state: VerificationState) => (state === "expired" ? "shield-alert" : "shield-check");
 /** Whole days from `now` to `until` (rounded up, never below 0). */
 export const daysLeft = (until: string, now = Date.now()) => Math.max(0, Math.ceil((Date.parse(until) - now) / 86_400_000));
 /** „Ověřeno“, „Vyprší za 9 dní“, „Ověření vypršelo“, „Neověřeno“. */
@@ -53,7 +54,7 @@ export function verificationLabel(value: Pick<PageVerification, "state" | "verif
 }
 
 /** Stav obsahu of a space (§5.2, §6): a page per row with its state and counts of readers, never names. */
-export type ContentHealthFilter = "" | "due" | "no-steward" | "unread";
+export type ContentHealthFilter = "" | "due" | "verified" | "expiring" | "lapsed" | "no-steward" | "unread";
 export type ContentHealthSort = "priority" | "expiry" | "readers" | "published";
 export type ContentHealthDays = 30 | 90 | 365;
 export interface ContentHealthQuery { state: ContentHealthFilter; mine: boolean; sort: ContentHealthSort; days: ContentHealthDays; q: string; cursor?: string | null }

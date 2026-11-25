@@ -10,6 +10,7 @@ const en: ProfileMessages = {
       label: "Language",
       help: "The language of menus, dialogs and messages, also on the sign-in and shared pages. Page content is not translated. Atlas reloads once you save.",
       auto: "Automatic",
+      autoResult: (name) => `Assigned colour: ${name}`,
       cs: "Čeština",
       en: "English",
     },

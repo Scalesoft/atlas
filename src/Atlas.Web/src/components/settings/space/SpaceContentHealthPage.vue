@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { errorMessage } from "../../../api";
 import { pageAccounts, type PagePerson } from "../../../contacts/contactSources";
 import { formatDate } from "../../../formatDate";
 import t from "../../../i18n/verification";
 import { contentHealthApi, verificationIcon, verificationLabel, verificationTone, type ContentHealth, type ContentHealthApi, type ContentHealthBulk, type ContentHealthDays, type ContentHealthFilter, type ContentHealthItem, type ContentHealthSort } from "../../../verification/pageVerification";
 import AppDialog from "../../AppDialog.vue";
+import ConfirmDialog from "../ConfirmDialog.vue";
 import AtlasIcon from "../../AtlasIcon.vue";
 import LoadingSkeleton from "../../LoadingSkeleton.vue";
 import { Button } from "../../ui/button";
@@ -64,6 +65,9 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 const stateOptions: ChoiceOption[] = [
   { value: "", label: t.health.filterStateAll, icon: "filter" },
   { value: "due", label: t.health.filterDue, icon: "shield-alert", tone: "warning" },
+  { value: "verified", label: t.health.filterVerified, icon: "shield-check" },
+  { value: "expiring", label: t.health.filterExpiring, icon: "clock" },
+  { value: "lapsed", label: t.health.filterLapsed, icon: "shield-alert", tone: "warning" },
   { value: "no-steward", label: t.health.filterNoSteward, icon: "user" },
   { value: "unread", label: t.health.filterUnread, icon: "eye-off" },
 ];
@@ -105,14 +109,14 @@ const summary = computed(() => data.value?.summary);
 const tiles = computed(() => {
   const s = summary.value;
   return [
-    { key: "verified", label: t.health.tiles.verified, value: s?.verified ?? 0, icon: "shield-check", tone: "success" as const, filter: "" as ContentHealthFilter },
-    { key: "expiring", label: t.health.tiles.expiring, value: s?.expiring ?? 0, icon: "clock", tone: undefined, filter: "due" as ContentHealthFilter },
-    { key: "expired", label: t.health.tiles.expired, value: (s?.expired ?? 0) + (s?.unverified ?? 0), icon: "shield-alert", tone: "warning" as const, filter: "due" as ContentHealthFilter },
+    { key: "verified", label: t.health.tiles.verified, value: s?.verified ?? 0, icon: "shield-check", tone: "success" as const, filter: "verified" as ContentHealthFilter },
+    { key: "expiring", label: t.health.tiles.expiring, value: s?.expiring ?? 0, icon: "clock", tone: undefined, filter: "expiring" as ContentHealthFilter },
+    { key: "expired", label: t.health.tiles.expired, value: (s?.expired ?? 0) + (s?.unverified ?? 0), icon: "shield-alert", tone: "warning" as const, filter: "lapsed" as ContentHealthFilter },
     { key: "noSteward", label: t.health.tiles.noSteward, value: s?.withoutSteward ?? 0, icon: "user", tone: undefined, filter: "no-steward" as ContentHealthFilter },
   ];
 });
-/** A tile sets the filter it counts: Ověřeno shows everything again (the verified ones come last in the default order), the others narrow. */
-const pickTile = (filter: ContentHealthFilter) => { state.value = filter; };
+/** A tile sets the filter it counts (the server knows each one); a second click on the lit tile shows everything again. */
+const pickTile = (filter: ContentHealthFilter) => { state.value = state.value === filter ? "" : filter; };
 
 // Selection and the bulk actions.
 const chosen = computed(() => items.value.filter((item) => selected.value.has(item.pageId)));
@@ -124,22 +128,33 @@ const target = () => (chosen.value.length ? chosen.value : items.value[active.va
 
 async function bulk(request: ContentHealthBulk, done: (n: number) => string) {
   if (busy.value || !request.pageIds.length) return;
+  // The verified row leaves or moves when the list is read again; the keyboard must stay on its place (V, ↓, V row by row).
+  const inList = !!(document.activeElement as HTMLElement | null)?.closest?.("[data-health-row]");
   busy.value = true;
   actionError.value = "";
   try {
     const result = await props.api.bulk(props.spaceId, request);
     flash.notify([done(result.changed), result.skipped.length ? t.health.skipped(result.skipped.length) : ""].filter(Boolean).join(" "), { icon: "shield-check" });
     await load(false, true);
+    if (inList) { await nextTick(); root.value?.querySelectorAll<HTMLElement>("[data-health-row]")[active.value]?.focus(); }
   } catch (failure) {
     actionError.value = errorMessage(failure);
   } finally {
     busy.value = false;
   }
 }
-const verify = (rows = target()) => bulk({ action: "verify", pageIds: rows.map((row) => row.pageId) }, t.health.verifiedDone);
+/** Verification has no bulk undo (a date is set, the previous one is not kept), so a large selection asks first. */
+const confirmAbove = 10;
+const confirming = ref<ContentHealthItem[]>([]);
+const runVerify = (rows: ContentHealthItem[]) => bulk({ action: "verify", pageIds: rows.map((row) => row.pageId) }, t.health.verifiedDone);
+const verify = async (rows = target()) => {
+  if (rows.length > confirmAbove) confirming.value = rows;
+  else await runVerify(rows);
+};
+async function confirmVerify() { const rows = confirming.value; confirming.value = []; await runVerify(rows); }
 const fromAuthor = () => bulk({ action: "stewardFromLastAuthor", pageIds: target().map((row) => row.pageId) }, t.health.stewardDone);
 
-// The owner picker: the accounts of the first page of the rows (a space has no list of its own), the first result preselected, Enter applies it.
+// The owner picker: the accounts with access to all the rows (a space has no list of its own), the first result preselected, Enter applies it.
 const pickerRows = ref<ContentHealthItem[]>([]);
 const pickerOpen = ref(false);
 const people = ref<ChoiceOption[]>([]);
@@ -150,11 +165,12 @@ let peopleTimer: ReturnType<typeof setTimeout> | undefined;
 async function findPeople() {
   peopleRequest?.abort();
   const controller = (peopleRequest = new AbortController());
-  const first = pickerRows.value[0];
-  if (!first) return;
+  if (!pickerRows.value.length) return;
   searching.value = true;
   try {
-    const found = await props.people(first.pageId, peopleQuery.value.trim(), controller.signal);
+    // Only people who may read every picked page (the first 20; the server reports any page it still skips).
+    const lists = await Promise.all(pickerRows.value.slice(0, 20).map((row) => props.people(row.pageId, peopleQuery.value.trim(), controller.signal)));
+    const found = lists[0]!.filter((person) => lists.every((list) => list.some((other) => other.id === person.id)));
     if (!controller.signal.aborted) people.value = found.map((person) => ({ value: person.id, label: person.name, description: person.username ?? person.email ?? undefined, icon: "user" }));
   } catch {
     if (!controller.signal.aborted) people.value = [];
@@ -210,7 +226,7 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
       </EmptyState>
       <template v-else>
         <div class="health-tiles" data-health-tiles>
-          <StatTile v-for="tile in tiles" :key="tile.key" compact :label="tile.label" :value="String(tile.value)" :icon="tile.icon" :tone="tile.value ? tile.tone : undefined" href="#" :data-health-tile="tile.key" :aria-label="t.health.tilesFilter(tile.label)" @click.prevent="pickTile(tile.filter)" />
+          <StatTile v-for="tile in tiles" :key="tile.key" compact :label="tile.label" :value="String(tile.value)" :icon="tile.icon" :tone="tile.value ? tile.tone : undefined" href="#" :data-health-tile="tile.key" role="button" :aria-pressed="state === tile.filter" :class="{ 'is-active': state === tile.filter }" :aria-label="t.health.tilesFilter(tile.label)" @click.prevent="pickTile(tile.filter)" />
         </div>
         <SettingsSection :title="t.health.section" icon="shield-check" :count="items.length">
           <div class="health-filters">
@@ -252,6 +268,9 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
         </SettingsSection>
       </template>
     </SettingsPage>
+    <ConfirmDialog :open="confirming.length > 0" :title="t.health.confirmTitle(confirming.length)" :confirm-label="t.health.verify" confirm-icon="shield-check" :destructive="false" :busy="busy" @confirm="confirmVerify" @cancel="confirming = []">
+      <p>{{ t.health.confirmText }}</p>
+    </ConfirmDialog>
     <AppDialog :title="t.health.stewardPick" :open="pickerOpen" @close="pickerOpen = false">
       <SearchableChoiceList v-model:query="peopleQuery" remote :loading="searching" :options="people" :label="t.health.stewardPick" :placeholder="t.stewardSearch" :empty-text="t.stewardEmpty" :max-height="260" @pick="pickSteward" />
     </AppDialog>
@@ -261,7 +280,8 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
 <style scoped>
 .health-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 @container settings-shell (max-width: 760px) { .health-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.health-tiles :deep(a.stat-tile) { cursor: pointer; }
+.health-tiles :deep(a.stat-tile) { cursor: pointer; transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
+.health-tiles :deep(a.stat-tile.is-active) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
 .health-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .health-filters .search-field { flex: 1 1 220px; }
 .health-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0 4px; font-size: 13px; }

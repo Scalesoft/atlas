@@ -11,6 +11,7 @@ const cs = {
       label: "Jazyk",
       help: "Jazyk nabídek, dialogů a hlášek, také na přihlášení a sdílených stránkách. Obsah stránek se nepřekládá. Po uložení se Atlas znovu načte.",
       auto: "Automaticky",
+      autoResult: (name: string) => `Přidělená barva: ${name}`,
       // A language is named in itself, in every dictionary.
       cs: "Čeština",
       en: "English",
