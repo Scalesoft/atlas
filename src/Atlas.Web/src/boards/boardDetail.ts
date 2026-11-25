@@ -18,7 +18,7 @@ export function relationsOf(items: readonly BoardViewItem[], itemId: string): Bo
   });
 }
 
-/** The tabs of the detail in the dock (BoardObjectDetail). */
+/** The tabs of the detail in the dock (BoardObjectDetail); the shared ones in the page dock's order (… Historie, Diskuse). */
 export type BoardDetailTab = "overview" | "description" | "relations" | "usage" | "comments" | "history";
 const tab = (id: BoardDetailTab) => ({ id, get label() { return t.detail.tabs[id]; } });
-export const boardDetailTabs: { id: BoardDetailTab; label: string }[] = (["overview", "description", "relations", "usage", "comments", "history"] as const).map(tab);
+export const boardDetailTabs: { id: BoardDetailTab; label: string }[] = (["overview", "description", "relations", "usage", "history", "comments"] as const).map(tab);

@@ -209,7 +209,7 @@ describe("Obsah list", () => {
     await app.get(`[data-content-id="${ids.board}"] .content-changed`).trigger("click");
     expect(panel.open.value).toBe(true);
     expect(objectDetailShown()).toBe(true);
-    expect(panel.tabs.value?.map(tab => tab.id)).toEqual(["overview", "relations", "usage", "comments", "history"]);
+    expect(panel.tabs.value?.map(tab => tab.id)).toEqual(["overview", "relations", "usage", "history", "comments"]);
   });
 
   it("makes every row draggable as its object, a page also as a page", async () => {

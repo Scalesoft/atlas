@@ -5,6 +5,11 @@ import t from "../i18n/shell";
 const CONFIRMATION_MS = 4000;
 const FAILURE_MS = 8000;
 
+/** The „Zpět“ of the newest toast that offers one, while that toast is on screen (`undoLatest`). */
+let latestUndo: { id: string | number; run: () => void } | undefined;
+/** The toast went (its time ran out, it was dismissed or replaced without a „Zpět“). */
+const gone = ({ id }: { id: string | number }) => { if (latestUndo?.id === id) latestUndo = undefined; };
+
 export interface ToastOptions {
   /** Renders an "Zpět" action on the toast. Omit for a plain confirmation. */
   undo?: () => void;
@@ -24,6 +29,8 @@ export interface Toaster {
   warning(message: string): void;
   /** Removes every toast, e.g. when the account that raised them signs out. */
   dismissAll(): void;
+  /** Ctrl+Z outside a field, an editor and a board (App.vue globalKeys): runs the „Zpět“ of the undo toast still on screen and closes it; false when none is shown. */
+  undoLatest(): boolean;
 }
 
 /**
@@ -41,13 +48,19 @@ export interface Toaster {
 export function useToast(): Toaster {
   return {
     success(message, options) {
-      toast.success(message, {
+      const undo = options?.undo;
+      // Once only: the toast's button and Ctrl+Z are the same „Zpět“.
+      const run = undo && (() => { if (latestUndo?.run === run) latestUndo = undefined; undo(); });
+      const id = toast.success(message, {
         duration: CONFIRMATION_MS,
         id: options?.id,
-        action: options?.undo
-          ? { label: t.undo, onClick: options.undo }
+        onDismiss: gone,
+        onAutoClose: gone,
+        action: run
+          ? { label: t.undo, onClick: run }
           : options?.action ? { label: options.action.label, onClick: options.action.run } : undefined,
       });
+      if (run) latestUndo = { id, run }; else gone({ id });
     },
     progress(message, id) {
       toast.loading(message, { id, duration: Infinity });
@@ -63,6 +76,12 @@ export function useToast(): Toaster {
     },
     dismissAll() {
       toast.dismiss();
+    },
+    undoLatest() {
+      if (!latestUndo) return false;
+      toast.dismiss(latestUndo.id);
+      latestUndo.run();
+      return true;
     },
   };
 }
