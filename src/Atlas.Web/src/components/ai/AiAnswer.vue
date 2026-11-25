@@ -107,6 +107,12 @@ function splitTail(tokens: SentenceToken[]): { tokens: SentenceToken[]; tail: Se
   const head = last.text.slice(0, word.index);
   return { tokens: [...tokens.slice(0, -1), ...(head ? [{ kind: "text" as const, text: head }] : [])], tail: [{ kind: "text", text: word[0] }] };
 }
+/** The finished answer lists the sources its sentences cite; the rest stay in its provenance („Podklady odpovědi“). */
+const listed = computed(() => {
+  const numbers = new Set(props.sentences.flatMap((sentence) => sentence.sources));
+  const used = props.sources.filter((source) => numbers.has(source.number));
+  return used.length ? used : props.sources;
+});
 const rows = computed(() => props.sentences.map((sentence) => {
   const citations = cited(sentence);
   const tokens = tokenizeSentence(sentence.text);
@@ -323,10 +329,10 @@ onMounted(() => {
             </InlineReveal>
           </div>
           <details v-if="sources.length && collapsibleSources && !provenance" class="ai-answer-fold" data-ai-sources-fold>
-            <summary>{{ t.answer.sourcesToggle(sources.length) }}</summary>
+            <summary>{{ t.answer.sourcesToggle(listed.length) }}</summary>
             <AiSourceList
               class="ai-answer-tray"
-              :sources="sources"
+              :sources="listed"
               :highlighted="highlighted"
               @highlight="highlight"
               @open-source="(source, newTab) => emit('open-source', source, newTab)"
@@ -336,7 +342,7 @@ onMounted(() => {
             <span class="ai-answer-sources-label" aria-hidden="true">{{ t.answer.sourcesLabel }}</span>
             <AiSourceList
               class="ai-answer-tray"
-              :sources="sources"
+              :sources="listed"
               :highlighted="highlighted"
               :hidden-numbers="hiddenNumbers"
               @highlight="highlight"

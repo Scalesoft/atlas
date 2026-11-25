@@ -150,6 +150,17 @@ describe("AiAnswer content", () => {
     expect(document.querySelectorAll("[data-cite]")).toHaveLength(0);
   });
 
+  it("lists the cited sources under a finished answer and leaves the uncited ones to its provenance", () => {
+    mountAnswer({ state: "done", sources: [source(1), source(2), source(3), source(4)], sentences: [{ text: "Stav [3] a dodávka [4].", sources: [3, 4] }] });
+    const chips = () => [...document.querySelectorAll(".ai-answer-sources [data-source-chip]")].map((chip) => chip.getAttribute("data-source-chip"));
+    expect(chips()).toEqual(["3", "4"]);
+    expect(document.querySelector("[data-ai-provenance]")!.textContent).toContain("4 zdroje");
+    wrapper!.unmount();
+    // an answer that cites nothing it was given keeps the whole list
+    mountAnswer({ state: "done", sources: [source(1), source(2)], sentences: [{ text: "Věta.", sources: [] }] });
+    expect(chips()).toEqual(["1", "2"]);
+  });
+
   it("lights the sentence, citation and chip of a source on hover and reports it to the parent", async () => {
     mountAnswer({ state: "done" });
     const cite = document.querySelector<HTMLElement>("[data-cite='2']")!;
