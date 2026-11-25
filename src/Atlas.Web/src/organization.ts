@@ -53,7 +53,7 @@ export const treeReferenceApi = {
 };
 /** The last read of each space's tree, whoever asked (the shell's load too), for `recentTree`. */
 const recentTrees = new Map<string, { at: number; tree: Promise<OrganizationTree> }>();
-/** How long a read tree stands for a lookup: the shell reads it again on a page switch only after as long (App.vue TREE_FRESH_MS). */
+/** How long a read tree stands for a lookup; a tree the shell follows is read again on every TreeChanged meanwhile (App.vue treeFollows). */
 const RECENT_TREE_MS = 30_000;
 function remember(spaceId: string, tree: Promise<OrganizationTree>) {
   recentTrees.set(spaceId, { at: Date.now(), tree });

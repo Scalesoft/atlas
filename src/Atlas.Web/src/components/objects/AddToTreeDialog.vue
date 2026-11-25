@@ -13,9 +13,10 @@ import { Button } from "../ui/button";
 /**
  * „Přidat do stromu…“: the keyboard path of dropping an object on the page tree. It uses the tree's own location picker and add-reference
  * command (treeReferenceApi.add, the same call the drop makes); the reference goes to the end of the chosen page's children or of the space root.
+ * A loaded tree shows it by itself (the server's TreeChanged).
  */
 const props = defineProps<{ open: boolean; object: DraggedObject | null }>();
-const emit = defineEmits<{ close: []; added: [spaceId: string] }>();
+const emit = defineEmits<{ close: [] }>();
 const toaster = useToast();
 const spaces = ref<Space[]>([]), spaceId = ref(""), items = ref<OrganizationTreeItem[]>([]), parentId = ref("");
 const loading = ref(false), saving = ref(false), failed = ref("");
@@ -47,7 +48,7 @@ async function add() {
   try {
     await treeReferenceApi.add(spaceId.value, { targetId: props.object.id, anchor: props.object.anchor ?? null, parentId: parentId.value || null, beforeId: null });
     toaster.success(t.addToTree.added);
-    emit("added", spaceId.value); emit("close");
+    emit("close");
   } catch (failure) {
     failed.value = failure instanceof ApiError && failure.status === 404 ? t.addToTree.refused : errorMessage(failure);
   } finally { saving.value = false; }
