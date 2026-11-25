@@ -90,7 +90,7 @@ useDemoLoop(root, (at) => {
 .demo-verify-pop {
   position: absolute; top: 40px; left: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
   box-shadow: var(--refresh-card-shadow-hover, 0 6px 18px rgb(0 0 0 / .08));
-  opacity: 0; scale: .98; transform-origin: top left; pointer-events: none;
+  opacity: 0; scale: var(--st-pop-from, .98); transform-origin: top left; pointer-events: none;
   transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out);
 }
 .demo-verify-pop.is-open { opacity: 1; scale: 1; }
