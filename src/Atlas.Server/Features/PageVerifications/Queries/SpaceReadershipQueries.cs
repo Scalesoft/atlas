@@ -65,6 +65,20 @@ public sealed class SpaceReadershipHandler(ISession session, IContentAccess acce
             LEFT JOIN "PagePublication" pp ON pp."PageId"=v."Id" AND pp."ActiveTo" IS NULL
             """;
 
+    /// <summary>
+    /// Distinct readers of one page over the last <paramref name="days"/> calendar days in Prague (the panel's „Čtenost“): the same period
+    /// as <see cref="LastDays"/> gives Stav obsahu, so both show the same number for the page.
+    /// </summary>
+    public static async Task<long> PageReadersAsync(ISession session, Guid pageId, int days, DateTime now, CancellationToken ct)
+    {
+        var (start, end) = LastDays(days, now);
+        return await session.CreateSQLQuery("""
+                SELECT count(DISTINCT v."UserId") AS "Readers" FROM "PageView" v WHERE v."PageId"=:page AND v."ViewedAt">=:start AND v."ViewedAt"<:end
+                """).AddScalar("Readers", NHibernate.NHibernateUtil.Int64).SetParameter("page", pageId)
+            .SetParameter("start", start, NHibernate.NHibernateUtil.UtcDateTime).SetParameter("end", end, NHibernate.NHibernateUtil.UtcDateTime)
+            .UniqueResultAsync<long>(ct);
+    }
+
     /// <summary>Stav obsahu and the space's readership: its admins and everyone who may write in it (plan §6).</summary>
     public static async Task<UserAccount> RequireSpaceEditorAsync(IContentAccess access, Guid spaceId, CancellationToken ct)
     {

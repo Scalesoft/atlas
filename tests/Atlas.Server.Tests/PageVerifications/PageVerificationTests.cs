@@ -141,4 +141,27 @@ public sealed class PageVerificationTests
                 (notice.Kind, notice.Count));
         }
     }
+
+    /// <summary>The panel's „Čtenost“ and Stav obsahu count the same calendar days in Prague: a view just before the first day of the
+    /// period counts in neither (a rolling 90 days would count it in the panel), one at its first moment in both.</summary>
+    [PostgreSqlFact]
+    public async Task The_panel_and_Stav_obsahu_count_the_same_days()
+    {
+        await using var f = await McpSite.CreateAsync();
+        var space = await f.FirstSpaceAsync();
+        await f.Site.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=@space""", ("space", Guid.Parse(space)));
+        var page = await PageAsync(f.Admin, space, "Postup", Rich(Paragraph("Text.")), "Text.");
+        var (reader, readerId) = await f.UserAsync("vzacna");
+        await f.GrantAsync(space, readerId, "Reader");
+        var prague = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, prague));
+        var first = TimeZoneInfo.ConvertTimeToUtc(today.AddDays(1 - PageVerificationReader.ReaderDays).ToDateTime(TimeOnly.MinValue), prague);
+        await f.Site.ExecuteAsync("""
+            INSERT INTO "PageView"("Id","PageId","UserId","ViewedAt") VALUES (gen_random_uuid(),@page,@reader,@first),(gen_random_uuid(),@page,@admin,@before)
+            """, ("page", Guid.Parse(page.Id)), ("reader", Guid.Parse(readerId)), ("admin", Guid.Parse(f.AdminId)), ("first", first), ("before", first.AddMinutes(-1)));
+
+        var bundle = (await AtlasHttpSite.Json(await reader.GetAsync($"/api/pages/{page.Id}?bundle=true"), HttpStatusCode.OK))["bundle"]!;
+        var health = await AtlasHttpSite.Json(await f.Admin.GetAsync($"/api/spaces/{space}/content-health?days={PageVerificationReader.ReaderDays}"), HttpStatusCode.OK);
+        Assert.Equal((1L, 1L), (bundle["readers"]!.GetValue<long>(), Assert.Single(health["items"]!.AsArray())!["readers"]!.GetValue<long>()));
+    }
 }
