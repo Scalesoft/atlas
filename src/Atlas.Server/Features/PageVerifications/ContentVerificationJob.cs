@@ -14,7 +14,7 @@ public sealed record SendVerificationNotices(DateTime Now);
 /// <summary>
 /// The stewards of pages whose verification expires within 14 days or has expired get one notice per stage (O3), with the stage written
 /// in the same transaction as the outbox message: a repeated run, or a run after a crash, sends nothing a page has had. A page verified
-/// again starts at stage 0 (PageVerificationHandler). Only verified pages (interval on, not a template, untrashed) with an active steward.
+/// again starts at stage 0 (PageVerificationHandler). Only verified pages (interval on, not a template, untrashed) with a steward in effect (active and able to read the page).
 /// </summary>
 public sealed class SendVerificationNoticesHandler(ISession session, Outbox outbox)
 {
@@ -28,8 +28,8 @@ public sealed class SendVerificationNoticesHandler(ISession session, Outbox outb
                 FROM "PageVerification" v
                 JOIN "Page" p ON p."Id"=v."PageId"
                 JOIN "Space" s ON s."Id"=p."SpaceId"
-                JOIN "UserAccount" u ON u."Id"=v."StewardId" AND u."IsActive"
-                WHERE NOT p."IsTrashed" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL AND {PageVerificationStates.IntervalSql}>0
+                {PageVerificationStates.StewardJoinSql}
+                WHERE st."Id" IS NOT NULL AND NOT p."IsTrashed" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL AND {PageVerificationStates.IntervalSql}>0
                   AND (v."VerifiedUntil"<=:now AND v."NoticeStage"<2 OR v."VerifiedUntil"<=:soon AND v."NoticeStage"<1)
                 ORDER BY v."PageId" LIMIT :batch
                 FOR UPDATE OF v SKIP LOCKED

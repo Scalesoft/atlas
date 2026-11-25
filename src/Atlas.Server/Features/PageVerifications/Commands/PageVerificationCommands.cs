@@ -120,15 +120,17 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
     {
         var opened = (await gate.ReadAsync(command.PageId, AccessOperation.ReadContent, ct)).Require();
         var note = Rules.OptionalText(command.Request.Note, "Poznámka", MaxNote, null);
-        var row = await session.GetAsync<PageVerification>(opened.Page.Id, ct);
-        var steward = row?.StewardId is { } id ? await session.GetAsync<UserAccount>(id, ct) : null;
-        IReadOnlyList<Guid> recipients = steward is { IsActive: true }
-            ? [steward.Id]
+        var steward = (await session.GetAsync<PageVerification>(opened.Page.Id, ct))?.StewardId;
+        // Only someone who may read the page: anyone else would never see the item (NotificationReads).
+        IReadOnlyList<Guid> recipients = steward is { } id && await MayStewardAsync(id, opened.Page.Id, ct)
+            ? [id]
             : (await session.CreateSQLQuery("""
                     SELECT x."PublisherId" AS "PublisherId" FROM (
                       SELECT p."PublisherId" AS "PublisherId", max(p."ActiveFrom") AS "Last" FROM "PagePublication" p
                       JOIN "UserAccount" u ON u."Id"=p."PublisherId" AND u."IsActive"
-                      WHERE p."PageId"=:page GROUP BY p."PublisherId") x
+                      WHERE p."PageId"=:page
+                        AND EXISTS (SELECT 1 FROM "EffectivePageAccess" e WHERE e."UserId"=p."PublisherId" AND e."PageId"=p."PageId" AND e."Role">=1)
+                      GROUP BY p."PublisherId") x
                     ORDER BY x."Last" DESC LIMIT 3
                     """).AddScalar("PublisherId", NHibernateUtil.Guid).SetParameter("page", opened.Page.Id).ListAsync<Guid>(ct)).ToList();
         var told = recipients.Where(x => x != opened.Actor.Id).ToList();
@@ -215,13 +217,14 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
 
     /// <summary>The steward must be an active account that may read the page (O4: one without edit rights is reminded, but cannot verify).</summary>
     private async Task<Guid> RequireStewardAsync(Page page, Guid stewardId, CancellationToken ct)
-    {
-        var reads = await session.CreateSQLQuery("""
+        => await MayStewardAsync(stewardId, page.Id, ct) ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
+
+    /// <summary>An active account that may read the page: a steward in effect (<see cref="PageVerificationStates.StewardJoinSql"/>).</summary>
+    private async Task<bool> MayStewardAsync(Guid userId, Guid pageId, CancellationToken ct)
+        => await session.CreateSQLQuery("""
                 SELECT EXISTS (SELECT 1 FROM "EffectivePageAccess" e JOIN "UserAccount" u ON u."Id"=e."UserId"
                   WHERE e."UserId"=:user AND e."PageId"=:page AND e."Role">=1 AND u."IsActive") AS "Reads"
-                """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", stewardId).SetParameter("page", page.Id).UniqueResultAsync<bool>(ct);
-        return reads ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
-    }
+                """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", userId).SetParameter("page", pageId).UniqueResultAsync<bool>(ct);
 
     /// <summary>„Ověřit do“: a time with a zone (Z or an offset) as it is; one without a zone in Europe/Prague, whatever the server's own
     /// zone, and a bare date (the web's date field, „2027-03-01“ over MCP) valid through the end of that day.</summary>
@@ -230,7 +233,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         : TimeZoneInfo.ConvertTimeToUtc(chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen, Zone);
 
     private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)
-        => (await session.GetAsync<PageVerification>(pageId, ct))?.StewardId is { } steward && (await session.GetAsync<UserAccount>(steward, ct))?.IsActive == true;
+        => (await session.GetAsync<PageVerification>(pageId, ct))?.StewardId is { } steward && await MayStewardAsync(steward, pageId, ct);
 
     /// <summary>The author of the last published version (PageRevision.AuthorId), null when never published.</summary>
     private async Task<Guid?> LastAuthorAsync(Page page, CancellationToken ct)
@@ -243,14 +246,14 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             ? await session.QueryOver<PageRevision>().Where(x => x.Id == revision).Select(x => x.Version).SingleOrDefaultAsync<int?>(ct)
             : null;
 
-    /// <summary>The space's published pages that are verified (own or inherited interval), have no active steward and the actor may edit
+    /// <summary>The space's published pages that are verified (own or inherited interval), have no steward in effect and the actor may edit
     /// (EffectivePageAccess), at most <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
     private async Task<List<Guid>> WithoutStewardAsync(Space space, UserAccount actor, CancellationToken ct)
         => (await session.CreateSQLQuery($"""
                 SELECT p."Id" AS "Id" FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId"
                 JOIN "EffectivePageAccess" e ON e."PageId"=p."Id" AND e."UserId"=:actor AND e."Role">=2
                 LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
-                LEFT JOIN "UserAccount" st ON st."Id"=v."StewardId" AND st."IsActive"
+                {PageVerificationStates.StewardJoinSql}
                 WHERE p."SpaceId"=:space AND NOT p."IsTrashed" AND p."PublishedRevisionId" IS NOT NULL
                   AND {PageVerificationStates.IntervalSql}>0 AND st."Id" IS NULL
                 ORDER BY p."Id" LIMIT :limit

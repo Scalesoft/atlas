@@ -5,7 +5,7 @@ namespace Atlas.Server.Features.PageVerifications;
 /// The first seven are the plan's contract; the rest is what the chip's popover and the page panel show.
 /// </summary>
 /// <param name="State">off, unverified, verified, expiring or expired (<see cref="Domain.PageVerificationStates"/>).</param>
-/// <param name="StewardId">The steward's account (garant); null without one or when the account is deactivated („bez garanta“).</param>
+/// <param name="StewardId">The steward's account (garant); null without one, or when the account is deactivated or cannot read the page („bez garanta“).</param>
 /// <param name="ChangedSinceVerification">„Změněno po ověření“: the published version is newer than the verified one.</param>
 /// <param name="VerifiedViaAi">„přes AI“: verified over MCP, the personal API or the assistant, by the account named.</param>
 /// <param name="IntervalMonths">The page's own interval; null inherits <paramref name="SpaceIntervalMonths"/>, 0 = „Neověřovat“.</param>

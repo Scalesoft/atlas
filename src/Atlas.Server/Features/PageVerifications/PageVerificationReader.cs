@@ -12,14 +12,14 @@ public sealed class PageVerificationReader(ISession session, TimeProvider clock)
     /// <param name="publishedVersion">The version readers read (PageDto.PublishedVersion), null when never published.</param>
     public async Task<PageVerificationView> ReadAsync(Guid pageId, int? publishedVersion, CancellationToken ct)
     {
-        // One statement (the page view's SQL budget): the space's interval, the row and both names. A deactivated steward reads as none.
-        var rows = await session.ReadRowsAsync("""
+        // One statement (the page view's SQL budget): the space's interval, the row and both names. A steward not in effect (deactivated, or unable to read the page) reads as none.
+        var rows = await session.ReadRowsAsync($"""
                 SELECT p."IsTemplate" AS "IsTemplate", s."VerificationIntervalMonths" AS "SpaceInterval", v."IntervalMonths" AS "Interval",
                     st."Id" AS "StewardId", st."DisplayName" AS "StewardName", v."VerifiedAt" AS "VerifiedAt", v."VerifiedUntil" AS "VerifiedUntil",
                     v."VerifiedVersion" AS "VerifiedVersion", vb."Id" AS "VerifiedById", vb."DisplayName" AS "VerifiedByName", v."VerifiedChannel" AS "Channel"
                 FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId"
                 LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
-                LEFT JOIN "UserAccount" st ON st."Id"=v."StewardId" AND st."IsActive"
+                {PageVerificationStates.StewardJoinSql}
                 LEFT JOIN "UserAccount" vb ON vb."Id"=v."VerifiedById"
                 WHERE p."Id"=:page
                 """, new Dictionary<string, object> { ["page"] = pageId }, read => new
