@@ -299,6 +299,7 @@ import { revealInRow, vScrollEdges } from "./lib/scrollEdges";
 import { installScrollMemory } from "./lib/scrollMemory";
 import { truncatedTitle } from "./lib/truncatedTitle";
 import { clearOnEscape } from "./lib/searchKeys";
+import { forgetUnsavedWork, hasUnsavedWork } from "./lib/unsavedWork";
 import { createCheckpointScheduler, untilQuiet } from "./editor/pageAutosave";
 import { contactApi } from "./contacts/contactApi";
 import { forgetPageReferences, seedPageReferences } from "./linking/pageReferenceAnswers";
@@ -1585,11 +1586,13 @@ function askComponentDraft(fromHistory: boolean, resume?: () => void) {
   const target = location.href;
   if (fromHistory) { searchUrl(false); history.pushState(null, "", currentRoute()); }
   const go = resume ?? (() => { history.pushState(null, "", target); void historyNavigation(); });
-  void (async () => {
-    if (detailDirty.value && !((await editor.value?.resolveDetailDraft()) ?? true)) return;
-    if (sourceDirty.value && !((await editor.value?.resolveSourceDraft()) ?? true)) return;
-    goOn({ resume: go });
-  })();
+  void resolveComponentDrafts().then(resolved => { if (resolved) goOn({ resume: go }); });
+}
+/** Each component with an unconfirmed input asks about it; true once none is left (applied or dropped). */
+async function resolveComponentDrafts() {
+  if (detailDirty.value && !((await editor.value?.resolveDetailDraft()) ?? true)) return false;
+  if (sourceDirty.value && !((await editor.value?.resolveSourceDraft()) ?? true)) return false;
+  return true;
 }
 /**
  * Everything that belongs to the signed-in account, in one place. Logout and a session the
@@ -1600,6 +1603,8 @@ function askComponentDraft(fromHistory: boolean, resume?: () => void) {
  */
 function resetSessionState() {
   sessionGeneration++;
+  // Drafts typed outside the page's editor (a comment, a note) belong to the account, never to the next one in the tab.
+  forgetUnsavedWork();
   useAiCapabilities().stop();
   modules.stop();
   assistant.reset(); searchAnswer.resetSession(); workspacePanel.reset();
@@ -1965,7 +1970,7 @@ function startTreeDrag(spaceId: string, source: TreePage, event: DragEvent) {
   if (pending.value || moduleSetup.value || !source.canEdit || treeVersions.value[spaceId] === undefined) { event.preventDefault(); return; }
   // A page's own unsaved changes save by themselves and a move in the tree leaves its content alone (3.6); a settings form does not.
   if (settingsDirty.value) {
-    event.preventDefault(); error.value = t.toast.saveBeforeMove; return;
+    event.preventDefault(); toaster.error(t.toast.saveBeforeMove); return;
   }
   treeDrag.value = { spaceId, id: source.id, version: treeVersions.value[spaceId]!, type: source.type };
 }
@@ -2109,7 +2114,7 @@ function dropTree(spaceId: string, destination: TreeDrop) {
   const byKeyboard = !!destination.sourceId;
   endTreeDrag();
   if (!source || source.spaceId !== spaceId || pending.value || moduleSetup.value) return;
-  if (settingsDirty.value) { error.value = t.toast.saveBeforeMove; return; }
+  if (settingsDirty.value) { toaster.error(t.toast.saveBeforeMove); return; }
   const space = spaces.value.find(item => item.id === spaceId);
   if (!space || (!user.value?.isWikiAdmin && space.role === "Reader")) return;
   const move = resolveTreeMove(pagesBySpace.value[spaceId] ?? [], source.id, destination);
@@ -3002,11 +3007,9 @@ function openPageHistory(revision?: PageRevisionSummary | Event) {
   historyInitialRevision.value = revision && "version" in revision ? revision : undefined;
   historyOpen.value = true;
 }
-// Restoring over component input in progress asks through the house ConfirmDialog; the answer resolves here.
-const restoreConfirm = ref<((proceed: boolean) => void) | null>(null);
-function answerRestoreConfirm(proceed: boolean) { restoreConfirm.value?.(proceed); restoreConfirm.value = null; }
 async function beforeHistoryRestore() {
-  const allowed = !!page.value && pageCanWrite.value && !pending.value && (!documentDraft() || await new Promise<boolean>(resolve => { restoreConfirm.value = resolve; }));
+  // Component input in progress asks through its component, as when leaving the page.
+  const allowed = !!page.value && pageCanWrite.value && !pending.value && (!documentDraft() || await resolveComponentDrafts());
   if (!allowed) return false;
   // The restored revision replaces the document; a confirmed discard must not leave a "lost block" draft behind.
   if (detailDirty.value) editor.value?.discardDetailDraft();
@@ -4347,7 +4350,7 @@ function globalKeys(event: KeyboardEvent) {
 }
 function beforeUnload(event: BeforeUnloadEvent) {
   // Live edits the server has not acknowledged yet (reconnecting, offline or refused) exist only in this tab.
-  if ((collaborationStatus.value?.pendingChanges ?? 0) > 0 || (!!writeRevoked.value?.unsaved && !writeRevoked.value.copied) || documentDraft() ||titleDirty() || settingsDirty.value || pdfExportDirty.value || pdfExportBusy.value || profileDirty.value || appearanceDirty.value || profilePending.value || profileBusy.value || templateDirty.value || templateBusy.value) {
+  if ((collaborationStatus.value?.pendingChanges ?? 0) > 0 || (!!writeRevoked.value?.unsaved && !writeRevoked.value.copied) || documentDraft() || hasUnsavedWork() || titleDirty() || settingsDirty.value || pdfExportDirty.value || pdfExportBusy.value || profileDirty.value || appearanceDirty.value || profilePending.value || profileBusy.value || templateDirty.value || templateBusy.value) {
     event.preventDefault();
     event.returnValue = "";
   }
@@ -4506,7 +4509,7 @@ onUnmounted(() => {
           <span class="brand-mark"><AtlasBrandLogo motion="static" /></span>
           {{ wikiName }}
         </div>
-        <template v-if="loading"><h1 id="entry-title" class="sr-only">{{ t.nav.connectionHeading }}</h1><p role="status"><AtlasIcon name="refresh" class="atlas-spinner" /> {{ t.nav.connecting }}</p></template>
+        <template v-if="loading"><h1 id="entry-title" class="sr-only">{{ t.nav.connectionHeading }}</h1><LoadingNote :label="t.nav.connecting" /></template>
         <template v-else-if="!status || !status.databaseReady"
           ><h1 id="entry-title">{{ t.nav.setupHeading }}</h1>
           <p>
@@ -5094,7 +5097,7 @@ onUnmounted(() => {
             @settings="openSettings(spaceSettingsHash(currentSpace!.id))" @new-page="showCreatePage" @new-board="showCreateBoard" />
           <!-- Obsah (once Stránky) and O prostoru are for everyone who can open the space; Ke schválení has no address of its own. -->
           <div ref="spaceTabsRow" v-scroll-edges:x class="space-tabs" role="tablist" :aria-label="t.nav.spaceViews" @keydown="tablistKeys">
-            <button type="button" role="tab" data-space-tab="pages" :aria-selected="spaceView === 'pages'" :tabindex="spaceView === 'pages' ? 0 : -1" :class="{ active: spaceView === 'pages' }" @click="showSpaceTab('pages')">{{ t.common.contents }}<!-- Only Obsah's own count: the tree's number first jumped to it once the summary came (F3, 175 → 294). --><span v-if="contentCounts[currentSpace.id] !== undefined" class="space-tab-count">{{ contentCounts[currentSpace.id]!.toLocaleString("cs-CZ") }}</span></button>
+            <button type="button" role="tab" data-space-tab="pages" :aria-selected="spaceView === 'pages'" :tabindex="spaceView === 'pages' ? 0 : -1" :class="{ active: spaceView === 'pages' }" @click="showSpaceTab('pages')">{{ t.common.contents }}<!-- Only Obsah's own count: the tree's number first jumped to it once the summary came (F3, 175 → 294). --><span v-if="contentCounts[currentSpace.id] !== undefined" class="space-tab-count">{{ formatNumber(contentCounts[currentSpace.id]!) }}</span></button>
             <button type="button" role="tab" data-space-tab="contacts" :aria-selected="spaceView === 'contacts'" :tabindex="spaceView === 'contacts' ? 0 : -1" :class="{ active: spaceView === 'contacts' }" @click="showSpaceTab('contacts')">{{ t.cmd.contacts }}</button>
             <button v-if="unlinkedCounts[currentSpace.id] || spaceView === 'unlinked'" type="button" role="tab" data-space-tab="unlinked" :aria-selected="spaceView === 'unlinked'" :tabindex="spaceView === 'unlinked' ? 0 : -1" :class="{ active: spaceView === 'unlinked' }" @click="showSpaceTab('unlinked')">{{ t.nav.unlinkedMentions }}<span v-if="unlinkedCounts[currentSpace.id]" class="space-tab-count">{{ unlinkedCounts[currentSpace.id] }}</span></button>
             <button type="button" role="tab" data-space-tab="about" :aria-selected="spaceView === 'about'" :tabindex="spaceView === 'about' ? 0 : -1" :class="{ active: spaceView === 'about' }" @click="showSpaceTab('about')">{{ t.nav.aboutSpace }}</button>
@@ -5197,10 +5200,6 @@ onUnmounted(() => {
     </ConfirmDialog>
     <DiscardChangesDialog v-if="discardSeen && page && publication?.publishedRevisionId" :open="discardOpen" :title="t.dlg.discardTitle" :page-id="page.id" :published-revision-id="publication.publishedRevisionId" :version="page.version"
       :dark="dark" :accent="appearance.accent" :prepare="saveBeforeDiscard" :before-restore="beforeHistoryRestore" @close="discardOpen = false" @restored="discarded" />
-    <ConfirmDialog v-if="restoreConfirm" :open="!!restoreConfirm" :title="t.dlg.restoreTitle" :confirm-label="t.dlg.restoreAction" confirm-icon="history"
-      @confirm="answerRestoreConfirm(true)" @cancel="answerRestoreConfirm(false)">
-      <p>{{ t.toast.confirmRestore }}</p>
-    </ConfirmDialog>
     <ConfirmDialog v-if="boardOpen" :open="boardTrashOpen" :title="t.dlg.boardTrashTitle" :confirm-label="t.common.moveToTrash" confirm-icon="trash"
       :busy="boardTrashBusy" :error="boardTrashError || undefined" @confirm="trashBoard" @cancel="boardTrashOpen = false">
       <p><strong>{{ boardTitle }}</strong> {{ t.dlg.boardTrashText }}</p>

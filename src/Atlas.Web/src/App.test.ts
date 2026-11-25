@@ -9,6 +9,7 @@ import { useAssistant } from "./assistant/useAssistant";
 import { emptyDocument } from "./document";
 import { MARKDOWN_LEAVE_START_EVENT } from "./keyboard/editorEvents";
 import { treeExpansionKey } from "./treeExpansion";
+import { draftKeeper, drafts, holdUnsavedWork } from "./lib/unsavedWork";
 import DocumentEditor, { codeBlockHighlightingReady } from "./components/DocumentEditor.vue";
 import { jsonResponse as response, memoryStorage, mountApp as mountShell, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "./testing/appHarness";
 // These shell tests exercise local draft/publication responses. Transport and
@@ -802,6 +803,29 @@ describe("navigation responses belong to the authenticated account", () => {
     await app.get(".sidebar-space-link").trigger("click"); await flushPromises();
     expect(app.get('[aria-label="Sbalit Parent"]').attributes("aria-expanded")).toBe("true");
     expect(app.find('[aria-label="Rozbalit Parent"]').exists()).toBe(false);
+  });
+  it("asks before the tab closes while a view holds unsaved work outside the page (a comment being typed, a board's queue)", async () => {
+    await mountApp(requestMock());
+    const closing = () => { const event = new Event("beforeunload", { cancelable: true }); window.dispatchEvent(event); return event.defaultPrevented; };
+    expect(closing()).toBe(false);
+    const release = holdUnsavedWork(() => true);
+    onTestFinished(release);
+    expect(closing()).toBe(true);
+    release();
+    expect(closing()).toBe(false);
+  });
+  it("forgets the previous account's drafts typed outside the page on sign-out, so the next account never sees them", async () => {
+    const fetchMock = requestMock(path => {
+      if (path === "/api/auth/logout") return Promise.resolve(new Response(null, { status: 204 }));
+      if (path === "/api/auth/methods") return Promise.resolve(response({ builtinEnabled: true, providers: [] }));
+      if (path === "/api/auth/login") return Promise.resolve(response(reader));
+    });
+    const app = await mountApp(fetchMock);
+    onTestFinished(() => drafts.clear());
+    draftKeeper()(`comment:${page.id}`, "PRIVATE COMMENT DRAFT");
+    expect(drafts.size).toBe(1);
+    await switchToReader(app);
+    expect(drafts.size).toBe(0);
   });
   it("shows none of the previous account's personal state or backup warning to the next account", async () => {
     const second = { id: "user-2", username: "second", displayName: "Second Admin", isWikiAdmin: true, appearance: { layout: "connected", accent: "blue", mode: "system" } };

@@ -17,6 +17,7 @@ import { provideReauthEnvironment } from "../settings/useReauth";
 import { createApiReauthEnvironment } from "../settings/security/apiReauth";
 import { createSecurityState } from "../settings/security/securityState";
 import { loadModules, moduleEntry, moduleIcon, type ModuleDescriptor } from "../settings/general/moduleRegistry";
+import { holdUnsavedWork } from "../../lib/unsavedWork";
 
 /**
  * The module steps of the first-run setup ("Připojte své nástroje"): one tab per module that is
@@ -101,14 +102,9 @@ async function finish() {
   }
 }
 function reloadPage() { window.location.reload(); }
-function beforeUnload(event: BeforeUnloadEvent) {
-  if (dirty.value) event.preventDefault();
-}
-onMounted(() => {
-  void load();
-  window.addEventListener("beforeunload", beforeUnload);
-});
-onUnmounted(() => window.removeEventListener("beforeunload", beforeUnload));
+onMounted(() => void load());
+// A module form's draft is unsaved work the shell asks about before the tab closes.
+onUnmounted(holdUnsavedWork(() => dirty.value));
 </script>
 
 <template>
