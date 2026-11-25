@@ -13,7 +13,7 @@ public sealed record GetMcpContentHealth(GetContentHealth Query);
 /// <summary>
 /// Stav obsahu (plan §6): the space's published pages with their verification and readership, for its admins and writers.
 /// </summary>
-/// <param name="State">empty or all, due (expiring, expired, unverified), no-steward or unread (no view in the period).</param>
+/// <param name="State">empty or all, due (expiring, expired, unverified), verified, expiring, lapsed (expired or unverified), no-steward or unread (no view in the period).</param>
 /// <param name="Mine">Only pages whose steward is the caller.</param>
 /// <param name="Sort">priority (default: „Nejdřív čtené a neověřené“), expiry, readers or published.</param>
 /// <param name="Days">The period of the readership: 30, 90 (default) or 365 days.</param>
@@ -47,6 +47,9 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         {
             null or "" or "all" => _ => true,
             "due" => row => PageVerificationStates.IsDue(row.State),
+            "verified" => row => row.State == PageVerificationStates.Verified,
+            "expiring" => row => row.State == PageVerificationStates.Expiring,
+            "lapsed" => row => row.State is PageVerificationStates.Expired or PageVerificationStates.Unverified,
             "no-steward" => row => row.State != PageVerificationStates.Off && row.StewardId is null,
             "unread" => row => row.Read.Views == 0,
             _ => throw new ApiException(400, "Neznámý filtr stavu obsahu.")

@@ -19,6 +19,7 @@ const cs = {
       label: "Moje barva",
       help: "Barva vašeho kurzoru, avataru a ukazatele, když s vámi na stránce nebo tabuli pracují další. Je-li vaše barva mezi přítomnými obsazená, Atlas vám přidělí nejbližší volnou; kdo přišel dřív, svou barvu si ponechá.",
       auto: "Automaticky",
+      autoResult: (name: string) => `Přidělená barva: ${name}`,
       custom: "Vlastní",
       swatches: "Barva kurzoru a avataru",
     },

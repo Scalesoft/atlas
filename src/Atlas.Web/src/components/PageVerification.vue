@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import t from "../i18n/verification";
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, shallowRef, watch } from "vue";
 import { errorMessage } from "../api";
 import { formatDate } from "../formatDate";
 import { pageAccounts, type PagePerson } from "../contacts/contactSources";
@@ -31,13 +31,17 @@ const props = withDefaults(defineProps<{
 }>(), { api: () => pageVerificationApi, people: (pageId: string, text: string, signal: AbortSignal) => pageAccounts(pageId)(text, signal) });
 const emit = defineEmits<{ change: [value: PageVerification]; openHistory: [] }>();
 
+// Pages reported in this session: a page cannot be reported again and again.
+const reportedPages = reactive(new Set<string>());
+
 type View = "main" | "steward" | "date" | "report";
 const open = defineModel<boolean>("open", { default: false });
 const view = ref<View>("main");
 const busy = ref(false);
 const error = ref("");
-const reported = ref(false);
 const note = ref("");
+const reported = computed(() => reportedPages.has(props.pageId));
+let closing: ReturnType<typeof setTimeout> | undefined;
 const until = ref("");
 const root = ref<HTMLElement>();
 
@@ -70,7 +74,7 @@ async function show(next: View) {
   await nextTick();
   root.value?.querySelector<HTMLElement>("[data-step-focus], input, textarea, button:not([disabled])")?.focus();
 }
-watch(open, (isOpen) => { if (!isOpen) { view.value = "main"; error.value = ""; reported.value = false; note.value = ""; } });
+watch(open, (isOpen) => { if (!isOpen) { view.value = "main"; error.value = ""; note.value = ""; } });
 watch(() => props.pageId, () => { open.value = false; });
 
 /** V verifies, as the popover's hint says; not while a field has the keys. */
@@ -101,7 +105,7 @@ async function lookup() {
   }
 }
 watch([query, view], () => { if (view.value !== "steward") return; clearTimeout(timer); timer = setTimeout(() => void lookup(), query.value ? 180 : 0); });
-onBeforeUnmount(() => { search?.abort(); clearTimeout(timer); });
+onBeforeUnmount(() => { search?.abort(); clearTimeout(timer); clearTimeout(closing); });
 const pickSteward = (id: string) => void run({ stewardId: id });
 
 function openUntil() {
@@ -114,8 +118,12 @@ async function sendReport() {
   error.value = "";
   try {
     await props.api.report(props.pageId, note.value);
-    reported.value = true;
+    reportedPages.add(props.pageId);
     note.value = "";
+    // The sent form is gone: the keyboard moves to the status, which the screen reader reads, and the popover closes by itself.
+    await nextTick();
+    root.value?.querySelector<HTMLElement>("[data-verification-reported]")?.focus();
+    closing = setTimeout(() => { open.value = false; }, 1500);
   } catch (failure) {
     error.value = errorMessage(failure) || t.failed;
   } finally {
@@ -171,7 +179,7 @@ async function sendReport() {
         </form>
 
         <form v-else class="page-verification-form" @submit.prevent="sendReport">
-          <p v-if="reported" class="page-verification-note" role="status" data-verification-reported><AtlasIcon name="circle-check" :size="15" />{{ t.reportSent }}</p>
+          <p v-if="reported" class="page-verification-note" role="status" tabindex="-1" data-verification-reported><AtlasIcon name="circle-check" :size="15" />{{ t.reportSent }}</p>
           <template v-else>
             <label class="page-verification-field"><span>{{ t.reportNote }}</span><Textarea v-model="note" maxlength="500" rows="3" data-step-focus data-verification-note /></label>
             <div class="page-verification-actions">

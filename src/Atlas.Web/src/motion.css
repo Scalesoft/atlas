@@ -616,9 +616,9 @@
 /* The page discussion's peek (PageDiscussionPeek): a colleague's comment drops in as a bubble from the corner of the avatars, one after
    another (the stagger of the list); it leaves up when its time runs out, and flies right toward the dock while the discussion opens
    (`data-docked`). The distances are tokens and --st-pop-from is 1 under reduced motion: only the fades stay. */
-.peek-enter-active { animation: atlas-peek-in var(--atlas-motion-pop) var(--atlas-ease-out) both; animation-delay: calc(var(--peek-index, 0) * var(--st-stagger, 40ms)); }
-.peek-leave-active { animation: st-rise-out var(--atlas-motion-base) var(--atlas-ease-out) both; }
-.peek-leave-active[data-sent], .discussion-peek[data-docked] .peek-leave-active { animation: atlas-peek-dock var(--atlas-motion-slow) var(--atlas-ease-in) both; animation-delay: calc(var(--peek-index, 0) * var(--st-stagger, 40ms)); }
+.peek-enter-active { animation: atlas-peek-in var(--atlas-motion-pop) var(--atlas-ease-out) both; animation-delay: calc(var(--peek-index, 0) * 40ms * var(--atlas-motion-scale, 1)); }
+.peek-leave-active { position: absolute; inset-inline: 0; animation: st-rise-out var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.peek-leave-active[data-sent], .discussion-peek[data-docked] .peek-leave-active { animation: atlas-peek-dock var(--atlas-motion-slow) var(--atlas-ease-in) both; animation-delay: calc(var(--peek-index, 0) * 40ms * var(--atlas-motion-scale, 1)); }
 .peek-move { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout); }
 @keyframes atlas-peek-in {
   from { opacity: 0; transform: translate(calc(var(--atlas-rise) * 1.5), calc(var(--atlas-rise) * -2)) scale(var(--st-pop-from, .8)); }

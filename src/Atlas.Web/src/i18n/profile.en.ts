@@ -17,6 +17,7 @@ const en: ProfileMessages = {
       label: "My colour",
       help: "The colour of your caret, avatar and pointer when others work on the page or board with you. If your colour is taken by someone present, Atlas gives you the nearest free one; whoever came first keeps theirs.",
       auto: "Automatic",
+      autoResult: (name) => `Assigned colour: ${name}`,
       custom: "Custom",
       swatches: "Caret and avatar colour",
     },

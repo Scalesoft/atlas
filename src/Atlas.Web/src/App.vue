@@ -74,7 +74,7 @@ import { readDocument } from "./document";
 import { afterPaint, whenIdle } from "./idle";
 import { PagePrefetchMap } from "./lib/pagePrefetchMap";
 // A placeholder has the shape of what it stands in for: a form is a field and a button, a dialog is the open dialog (so nothing moves when it arrives).
-import { dialogSkeleton, formSkeleton, skeletonOf } from "./components/loadingPlaceholders";
+import { badgePlaceholder, dialogSkeleton, formSkeleton, skeletonOf } from "./components/loadingPlaceholders";
 const PageCreationFlow = lazyComponent(() => import("./components/PageCreationFlow.vue"), { loading: formSkeleton });
 import { pageSourceApi, pageSourceFailure, type PageSourceSaveResult } from "./pageSource";
 import { searchRequestPath as buildSearchRequestPath } from "./searchRequest";
@@ -276,7 +276,7 @@ const PagePdfExportStatus = lazyComponent(() => import("./components/PagePdfExpo
 const PagePdfDownloadDialog = lazyComponent(() => import("./components/PagePdfDownloadDialog.vue"));
 const PageHistoryPanel = lazyComponent(() => import("./components/PageHistoryPanel.vue"), { loading: dialogSkeleton(t.common.pageHistory, "side") });
 // Ověřený obsah (5.2): the chip at the title; it draws from the bundle, so its chunk is the only wait.
-const PageVerification = lazyComponent(() => import("./components/PageVerification.vue"));
+const PageVerification = lazyComponent(() => import("./components/PageVerification.vue"), { loading: badgePlaceholder });
 const PageReadership = lazyComponent(() => import("./components/PageReadership.vue"), { loading: dialogSkeleton(t.common.readership, "side", "min(880px, calc(100vw - 64px))") });
 const PageConnections = lazyComponent(pageChrome.connections);
 // Comments are secondary data: their component loads after the article and reads only near the viewport (Fast first).

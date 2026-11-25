@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BoardBlockHost } from "../../boards/editorBlocks";
 import { commentApi } from "../../comments/commentApi";
-import { usePageDiscussionFeed } from "../../comments/pageDiscussionFeed";
+import { replyTo, usePageDiscussionFeed, type DiscussionBubble } from "../../comments/pageDiscussionFeed";
 import { chordLabel } from "../../keyboard/shortcuts";
 import t from "../../i18n/shell";
 import AtlasIcon from "../AtlasIcon.vue";
@@ -13,15 +13,15 @@ import PageDiscussionPeek from "./PageDiscussionPeek.vue";
  * The page's discussion at the top bar (App's `page-discussion-anchor`): the button of the dock's Diskuse (it toggles it; Alt C does the same)
  * with the comments' count over its corner, accented while a colleague's new comments are unread, and under it the peek with their latest
  * words (PageDiscussionPeek). The count and the bubbles come from the page's feed, read after the page's text; `open` (the dock shows
- * the Diskuse) hands the bubbles over to it. A bubble's „Odpovědět“ posts a comment to the page (`host`: the comment field's `@`, `[[`). One lazy part, so the first screen carries none of it. `pageId` undefined: nothing is read.
+ * the Diskuse) hands the bubbles over to it. A bubble's „Odpovědět“ posts a comment to the page that mentions the bubble's author (`host`: the comment field's `@`, `[[`). One lazy part, so the first screen carries none of it. `pageId` undefined: nothing is read.
  */
 const props = defineProps<{ pageId?: string; selfId?: string; open: boolean; host?: BoardBlockHost }>();
 const emit = defineEmits<{ toggle: []; open: [] }>();
 const feed = usePageDiscussionFeed(() => props.pageId, { selfId: () => props.selfId, open: () => props.open });
 defineExpose({ /** The open thread knows its count at once, also after the reader's own comment. */ set: feed.set });
 /** A quick reply from the peek: a comment of the page like any other; the notice of the view session brings it to the open threads. */
-async function reply(markdown: string) {
-  await commentApi.post(props.pageId!, markdown);
+async function reply(markdown: string, bubble: DiscussionBubble) {
+  await commentApi.post(props.pageId!, replyTo(bubble, markdown));
   feed.set(feed.count.value + 1);
 }
 const badge = () => feed.unread.value || feed.count.value;
