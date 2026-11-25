@@ -644,7 +644,8 @@ test.describe('AI search, related pages and outages against a fake model server'
       const seed=await mutate(context,'/api/pages/'+seeded.exact!.id+'/tags',{names:[...oldTags.tags.map((tag:any)=>tag.name),'Obnova provozu'],expectedTagIds:oldTags.tags.map((tag:any)=>tag.id)},'put');expect(seed.status()).toBe(200);
       await page.goto('/#/pages/'+seeded.recovery!.id);const before=await getJson(context,'/api/pages/'+seeded.recovery!.id+'/tags');
       await page.getByRole('button',{name:/^(Přidat|Upravit) tagy$/}).click();
-      const dialog=page.getByRole('dialog',{name:'Tagy stránky',exact:true});await dialog.locator('[data-tag-suggest]').click();
+      // The tag panel is an anchored popover named by its trigger (Reka: aria-labelledby), no longer the Tagy stránky dialog.
+      const dialog=page.getByRole('dialog',{name:/^(Přidat|Upravit) tagy$/});await dialog.locator('[data-tag-suggest]').click();
       await expect(dialog.locator('[data-suggestion-apply]')).toBeVisible();
       const names=await dialog.locator('.tag-suggestion-value').allTextContents();expect(names.length).toBeGreaterThan(0);
       // The proposal alone writes nothing; the author's „Použít“ is the confirmation, and tags save as they go (P5), so no further button.
