@@ -143,7 +143,8 @@ public static class McpModule
             .WithTools<Atlas.Server.Features.Entities.EntityMcpTools>()
             .WithTools<Atlas.Server.Features.Contacts.ContactMcpTools>()
             .WithTools<Atlas.Server.Features.Skills.SkillMcpTools>()
-            .WithTools<NotificationMcpTools>();
+            .WithTools<NotificationMcpTools>()
+            .WithTools<Atlas.Server.Features.PageVerifications.PageVerificationMcpTools>();
         return services;
     }
 

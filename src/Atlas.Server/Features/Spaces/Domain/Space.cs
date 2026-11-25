@@ -33,4 +33,7 @@ public class Space
     /// <summary>3.6-I: the „Publikace“ its pages inherit (how pages are published in the space); a page may have its own.</summary>
     [JsonIgnore]
     public virtual Pages.Domain.PublicationMode PublicationMode { get; set; } = Pages.Domain.PublicationMode.Manual;
+    /// <summary>5.2 „Ověřování obsahu“: the interval (3, 6, 12 months) its pages inherit; null = verification is off in the space.</summary>
+    [JsonIgnore]
+    public virtual short? VerificationIntervalMonths { get; set; }
 }

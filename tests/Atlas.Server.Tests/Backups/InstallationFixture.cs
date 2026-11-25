@@ -121,6 +121,10 @@ internal sealed class InstallationFixture : IAsyncDisposable
             INSERT INTO "Tag"("Id","Name","NormalizedName","CreatedAt","CreatedById") VALUES (@tag, 'Síť', 'sit', now(), @writer);
             INSERT INTO "PageTag"("Id","PageId","TagId","CreatedById","CreatedAt","ActiveFrom") VALUES (gen_random_uuid(), @page, @tag, @writer, now(), now());
             INSERT INTO "PageDecoration"("PageId","RevisionId","Icon","Color") SELECT @page, "Id", 'server', 'teal' FROM "PageRevision" WHERE "PageId" = @page AND "ActiveTo" IS NULL;
+            -- 5.2 Ověřený obsah: the space's interval and a verified page with its steward.
+            UPDATE "Space" SET "VerificationIntervalMonths" = 6 WHERE "Id" = @space;
+            INSERT INTO "PageVerification"("PageId","StewardId","IntervalMonths","VerifiedById","VerifiedAt","VerifiedUntil","VerifiedVersion","VerifiedChannel","NoticeStage")
+              VALUES (@page, @writer, 3, @writer, now(), now() + interval '3 months', 1, 'web', 1);
             INSERT INTO "PageCollaboration"("PageId","Generation","BaseRevisionId","Sequence","SnapshotSequence")
               SELECT @page, gen_random_uuid(), "Id", 1, 0 FROM "PageRevision" WHERE "PageId" = @page AND "ActiveTo" IS NULL
               ON CONFLICT ("PageId") DO UPDATE SET "Sequence" = "PageCollaboration"."Sequence" + 1;

@@ -7,7 +7,8 @@ import t from "../../i18n/components-search";
  * The inbox „Oznámení“ (inbox spec 2026-10-29): one list of mentions and shares per account, read under the reader's current rights.
  * Loaded with the inbox; only the badge (../../notifications.ts) is part of the first screen.
  */
-export type NotificationKind = "comment.mention" | "page.mention" | "item.shared" | "item.share_changed" | "item.unshared" | "job.failed";
+export type NotificationKind = "comment.mention" | "page.mention" | "item.shared" | "item.share_changed" | "item.unshared" | "job.failed"
+  | "page.verification_due" | "page.verification_expiring" | "page.verification_expired" | "page.reported_outdated";
 export interface NotificationItem {
   /** `subjectType` null: an ended share the reader may not open any more, told without its title. */
   id: string; kind: NotificationKind | string; subjectId: string; subjectType: string | null; subjectTitle: string;
@@ -39,9 +40,14 @@ export const kindLabels = (): Record<NotificationKind, { title: string; action: 
   "item.unshared": { title: t.notifications.sharingEnded, action: t.notifications.removedAccess, icon: "shared" },
   // To the wiki administrators, from no one: the row says what happened, the subject is the job.
   "job.failed": { title: t.notifications.jobFailed, action: "", icon: "alert" },
+  // 5.2: the steward's reminders, from no one (their preference is page.verification_due), and a reader's report with its note as the excerpt.
+  "page.verification_due": { title: t.notifications.verificationReminders, action: "", icon: "shield-check" },
+  "page.verification_expiring": { title: t.notifications.verificationExpiring, action: "", icon: "shield-check" },
+  "page.verification_expired": { title: t.notifications.verificationExpired, action: "", icon: "alert" },
+  "page.reported_outdated": { title: t.notifications.outdatedReports, action: t.notifications.reportedOutdated, icon: "alert" },
 });
 /** The kinds a preference switches; a share's change and end follow „Sdílení“. */
-export const preferenceKinds: NotificationKind[] = ["comment.mention", "page.mention", "item.shared"];
+export const preferenceKinds: NotificationKind[] = ["comment.mention", "page.mention", "item.shared", "page.verification_due", "page.reported_outdated"];
 /** What the row names: the subject's title, or for an ended share only that it was one. */
 export const subjectTitle = (item: Pick<NotificationItem, "subjectType" | "subjectTitle">) =>
   item.subjectType === null ? t.notifications.noAccess : item.subjectTitle;

@@ -51,6 +51,12 @@ public sealed class SaveSpaceSettingsHandler
         // Živě decides who reads the live documents: their readers are re-authorized at the commit (AccessChanges).
         if (mode != space.PublicationMode) m_accessChanges.Changed();
         space.PublicationMode = mode;
+        if (request.VerificationIntervalMonths is { } months)
+        {
+            space.VerificationIntervalMonths = months == 0 ? null
+                : PageVerifications.Domain.PageVerificationStates.Intervals.Contains(months) ? (short)months
+                : throw new ApiException(400, "Vyberte interval ověření 3, 6 nebo 12 měsíců, nebo ověřování vypněte.");
+        }
         // Flush now so the metadata revision is written (ContentRowEffects) before we read it back.
         await m_session.FlushAsync(ct);
         return await CurrentSettings.ReadAsync(m_session, command.SpaceId, ct);

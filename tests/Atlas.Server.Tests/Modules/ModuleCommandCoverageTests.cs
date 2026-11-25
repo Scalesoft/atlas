@@ -29,7 +29,7 @@ public sealed class ModuleCommandCoverageTests
     /// <summary>The command namespaces of V3 modules; add one when a module gets user commands.</summary>
     private static readonly string[] CommandNamespaces = [typeof(SetCatalogPage).Namespace!, typeof(AddTreeReference).Namespace!, typeof(ApplyBoardBatch).Namespace!,
         typeof(CreateObject).Namespace!, typeof(SetItemGrant).Namespace!, typeof(MarkNotificationsRead).Namespace!, typeof(MergeContacts).Namespace!, typeof(RunJobNow).Namespace!, typeof(NameVersion).Namespace!,
-        typeof(Atlas.Server.Features.Skills.Commands.RateSkill).Namespace!];
+        typeof(Atlas.Server.Features.Skills.Commands.RateSkill).Namespace!, typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification).Namespace!];
 
     /// <summary>3.6 commands of a page from namespaces that also hold the platform's own records (the collaboration relay, the page save).</summary>
     private static readonly Type[] PageCommands = [typeof(UndoRevisionChange), typeof(SetPagePublication), typeof(SortTreeLevel)];
@@ -79,6 +79,10 @@ public sealed class ModuleCommandCoverageTests
         [typeof(Atlas.Server.Features.Skills.Commands.LinkTopics)] = ("atlas_link_topics", "PUT /api/v1/skills/topics/{id:guid}/parents"),
         [typeof(UndoRevisionChange)] = ("atlas_undo_change", "POST /api/v1/pages/{id:guid}/history/{revisionId:guid}/undo"),
         [typeof(SetPagePublication)] = ("atlas_set_publication", "PUT /api/v1/pages/{id:guid}/publication"),
+        // 5.2 Ověřený obsah (plan §7).
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification)] = ("atlas_set_verification", "PUT /api/v1/pages/{id:guid}/verification"),
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetSpaceVerification)] = ("atlas_set_verification", "POST /api/v1/spaces/{spaceId:guid}/content-health/bulk"),
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportPageOutdated)] = ("atlas_report_outdated", "POST /api/v1/pages/{id:guid}/verification/report"),
         // „Řadit abecedně“ of a tree level (3.6).
         [typeof(SortTreeLevel)] = ("atlas_sort_pages", "POST /api/v1/spaces/{spaceId:guid}/tree/sort"),
     };

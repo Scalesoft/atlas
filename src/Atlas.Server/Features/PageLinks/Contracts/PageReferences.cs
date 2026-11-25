@@ -9,4 +9,9 @@ public sealed record PageReferenceList(IReadOnlyList<PageReference> Items);
 
 /// <param name="Type">Another content type's resource (<c>board</c>, IContentReferenceParticipant); null, and not written, for a page.</param>
 public sealed record PageReference(Guid Id, string Title,
-    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Type = null);
+    [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? Type = null)
+{
+    /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the link chip; absent while off.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Verification { get; init; }
+}

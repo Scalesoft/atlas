@@ -69,7 +69,9 @@ public sealed class NotificationReads(ISession session, RelationNodes nodes, Obj
                 Utc(row.GetDateTime(8)), row.GetBoolean(9), OptionalId(row, 15), OptionalText(row, 16) is { } body ? SearchText.Excerpt(body, ExcerptLength) : null)
             : new NotificationDto(row.GetGuid(0), row.GetString(1), row.GetGuid(2), null, "", null, null, null, OptionalId(row, 4), OptionalText(row, 5),
                 row.GetInt32(6), Utc(row.GetDateTime(7)), Utc(row.GetDateTime(8)), row.GetBoolean(9)), ct);
-        var items = rows.Take(PageSize).ToList();
+        // 5.2: a report's note travels in the anchor and is shown as the item's excerpt; the link opens the page itself.
+        var items = rows.Take(PageSize).Select(item => item.Kind == NotificationKinds.ReportedOutdated && item.SubjectType is not null
+            ? item with { Excerpt = item.Anchor, Anchor = null } : item).ToList();
         return new NotificationList(items, rows.Count > PageSize ? items[^1].Id : null, await UnreadAsync(recipient, admin, ct));
     }
 

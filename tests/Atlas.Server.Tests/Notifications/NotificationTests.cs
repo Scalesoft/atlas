@@ -144,7 +144,8 @@ public sealed class NotificationTests
         await using var f = await CommentsFixture.CreateAsync(outbox: true);
         var board = await f.BoardAsync();
         await f.As<NotificationPreferenceDto>(f.Reader, new SetNotificationPreference(NotificationKinds.CommentMention, false));
-        Assert.Equal([(NotificationKinds.CommentMention, false), (NotificationKinds.PageMention, true), (NotificationKinds.ItemShared, true)],
+        Assert.Equal([(NotificationKinds.CommentMention, false), (NotificationKinds.PageMention, true), (NotificationKinds.ItemShared, true),
+            (NotificationKinds.VerificationDue, true), (NotificationKinds.ReportedOutdated, true)],
             (await f.As<NotificationPreferences>(f.Reader, new GetNotificationPreferences())).Items.Select(x => (x.Kind, x.Enabled)));
         await BoardsFixture.Refused(400, () => f.As<NotificationPreferenceDto>(f.Reader, new SetNotificationPreference("spam", false)), "invalid_notification_kind");
 

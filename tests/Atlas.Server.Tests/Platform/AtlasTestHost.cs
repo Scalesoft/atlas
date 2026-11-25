@@ -174,6 +174,7 @@ internal sealed class AtlasTestHost : IAsyncDisposable
                 services.AddSkills();
                 services.AddPageLinks();
                 services.AddPageDecorations();
+                Atlas.Server.Features.PageVerifications.PageVerificationsModule.AddPageVerifications(services);
                 services.AddRelations();
                 services.AddExternalSharing();
                 services.AddAi();
