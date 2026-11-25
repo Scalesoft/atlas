@@ -22,6 +22,21 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - `/api/v1`: `GET|PUT /pages/{id}/verification`, `POST /pages/{id}/verification/report`, `GET /spaces/{id}/content-health`, `POST /spaces/{id}/content-health/bulk`, `GET /spaces/{id}/readership`; `GET /pages/{id}` nese blok `verification`.
 - Diskuse pro AI: MCP `atlas_list_comments`, `atlas_post_comment`, `atlas_edit_comment` a `atlas_delete_comment` (odpověď, zmínka, úprava vlastního a smazání jako na webu: autor, nebo správce objektu), `/api/v1`: `GET|POST /objects/{id}/comments`, `PUT|DELETE /objects/{id}/comments/{commentId}`.
 
+### Diskuse na stránce
+- Diskuse stránky je stejné vlákno jako diskuse tabule (`CommentThread`) v panelu stránky; nový komentář se na chvíli ukáže pod avatary s rychlou odpovědí, po vysunutí panelu nahoře zmizí. Alt C otevře diskusi, na telefonu oddíl pod obsahem.
+- Jedno odesílání komentářů na stránce, tabuli i u objektu: Enter odešle, Shift+Enter nový řádek, `SendButton` s vlaštovkou (i v asistentovi).
+
+### Barvy spolupracovníků
+- Jedna paleta dvanácti barev pro kurzory, avatary a ukazatele, ve světlé i tmavé variantě; Moje barva v profilu. Barvy přiděluje server za stránku i tabuli (`CollaboratorColors`), dva lidé nikdy nemají stejnou; `GET /api/collaborator-colors` (jen aktivní účty).
+
+### Tabule
+- Karta kontaktu se přizpůsobí velikosti (jméno, role, vizitka); vizitka .vcf a QR kód v panelu nástrojů tabule místo na kartě, QR se načte až při použití.
+- Konec spojnice lze přetáhnout na jiný objekt (i dotykem), ostatní vidí náhled čáry; L na vybrané spojnici přepojí její konec, Shift+L začátek.
+
+### Závislosti
+- Tiptap 3.35.0, ProseMirror (model 1.25.13, view 1.43.1), y-tiptap 3.3.1 bez vlastní záplaty; vzdálené změny mapují pozice podle toho, co se opravdu změnilo.
+- Npgsql 11 (zůstává `AtlasNpgsqlDriver`), Scalar.AspNetCore 3, Wolverine 6.65, OpenIddict 7.9; pnpm 12.23, Vue 3.5.46, vitest 5.1.1, @scalar/api-reference 1.83; GitHub Actions na aktuálních hlavních verzích.
+
 ### Provoz
 - Migrace 2026112400: tabulka `PageVerification` a sloupec `Space.VerificationIntervalMonths`; žádná konverze dat. Instalační záloha (Git, ZIP) ověření nese, wiki archiv ne.
 - Úloha `content-verification` každý den v 5:15 UTC.
