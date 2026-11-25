@@ -7,7 +7,7 @@ import { MOTION_LITERAL_ALLOWLIST, MOTION_LITERAL_BASELINE } from "./motionLiter
 /*
  * Guard of the motion unification:
  * components write no durations, delays or easings of their own and no @keyframes; they use the tokens of
- * src/motion.css and the primitives of src/motion/aiMotion.ts. The two sources (motion.css, styles/ai.css) are
+ * src/motion.css and the primitives of src/motion/aiMotion.ts. The sources (motion.css, styles/ai.css and its lazy part styles/aiBusy.css) are
  * exempt; an exception that stays (keep: funkční / smyčka práce / podpis) is in the allowlist with its reason.
  *
  * Everything that existed when the guard came (M0) is frozen in the baseline. Packages M1–M4 convert it and
@@ -17,7 +17,7 @@ import { MOTION_LITERAL_ALLOWLIST, MOTION_LITERAL_BASELINE } from "./motionLiter
 
 const root = process.cwd();
 const sourceRoot = resolve(root, "src");
-const SOURCES = new Set(["src/motion.css", "src/styles/ai.css"]);
+const SOURCES = new Set(["src/motion.css", "src/styles/ai.css", "src/styles/aiBusy.css"]);
 
 export interface Finding {
   file: string;

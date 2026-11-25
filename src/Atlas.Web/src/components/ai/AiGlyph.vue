@@ -8,7 +8,7 @@ export const AI_GLYPH_WORKING: readonly AiGlyphState[] = ["thinking", "searching
 </script>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import AtlasIcon from "../AtlasIcon.vue";
 
 /**
@@ -28,19 +28,31 @@ import AtlasIcon from "../AtlasIcon.vue";
  *   `writing` pulses with the text; these are the working loops and stop with the result;
  * - `done` gathers the small stars into the big one, ticks and is whole again, once; `suggest` glows once;
  * - `unavailable` is grey with an amber dot and never moves.
+ * - while working, each loop's end tosses in another of 24 busy variants of the stars at random (aiGlyphBusy.ts,
+ *   styles/aiBusy.css, loaded with the first working glyph); `move` pins one of them (the gallery).
  * Reduced motion keeps only a slow fade of the working states (styles/ai.css).
  *
  * Production model surfaces are enumerated by aiGlyphBoundary.guard.test.ts; the gallery
  * (#/gallery/ai) shows their actual components.
  */
-const props = withDefaults(defineProps<{ working?: boolean; size?: number | AiGlyphSize; state?: AiGlyphState }>(), { working: false, size: 16, state: undefined });
+const props = withDefaults(defineProps<{ working?: boolean; size?: number | AiGlyphSize; state?: AiGlyphState; move?: number }>(), { working: false, size: 16, state: undefined, move: undefined });
 const resolved = computed<AiGlyphState>(() => props.state ?? (props.working ? "thinking" : "idle"));
 const working = computed(() => AI_GLYPH_WORKING.includes(resolved.value));
+const root = ref<HTMLElement>();
+watchEffect((onCleanup) => {
+  const element = root.value;
+  const pinned = props.move;
+  if (!element || !(working.value || pinned)) return;
+  let live = true;
+  let stop: (() => void) | undefined;
+  void import("./aiGlyphBusy").then(({ cycleBusy }) => { if (live && !pinned) stop = cycleBusy(element); });
+  onCleanup(() => { live = false; stop?.(); });
+});
 const px = computed(() => (typeof props.size === "number" ? props.size : AI_GLYPH_SIZES[props.size] ?? 16));
 </script>
 
 <template>
-  <span class="ai-glyph" data-ai-glyph :data-state="resolved" :data-working="working || undefined" :style="{ '--ai-glyph-size': `${px}px` }" aria-hidden="true">
+  <span ref="root" class="ai-glyph" data-ai-glyph :data-state="resolved" :data-move="move" :data-working="working || undefined" :style="{ '--ai-glyph-size': `${px}px` }" aria-hidden="true">
     <AtlasIcon name="sparkles" :size="px" class="ai-glyph-mark" :class="{ 'atlas-ai-twinkle': resolved === 'thinking' }" />
     <svg v-if="resolved === 'done'" class="ai-glyph-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 12.5l3.5 3.5 7.5-8" /></svg>
   </span>

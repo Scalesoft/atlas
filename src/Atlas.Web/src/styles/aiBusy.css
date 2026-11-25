@@ -1,0 +1,48 @@
+/* The busy variants of the AI glyph (components/ai/aiGlyphBusy.ts, loaded only once a glyph works).
+   While a model works the glyph tosses in a different move of its stars every loop, in random order: one keyframe set
+   below, a variant only sets the poses (--a* the big star, --b* the plus, --c* the dot, --s* both small stars) at a
+   quarter, half, three quarters and the end of the loop. Every variant leaves the stars at rest at the loop's end (the
+   end pose may be a turn the drawing cannot tell from rest), so the next one joins without a jump; so do the working
+   loops of styles/ai.css. --vb: view-box turns and scales the small stars round the glyph's centre instead of their own.
+   Transform only, the tokens' loop, and reduced motion stops all of it (styles/ai.css keeps the breathing fade). */
+@keyframes atlas-ai-busy {
+  0% { transform: none; }
+  25% { transform: var(--v1, none); }
+  50% { transform: var(--v2, none); }
+  75% { transform: var(--v3, none); }
+  100% { transform: var(--v4, none); }
+}
+[data-ai-glyph][data-working][data-move] .ai-glyph-mark > :nth-child(n) {
+  transform-box: var(--vb, fill-box);
+  transform-origin: center;
+  animation: atlas-ai-busy var(--atlas-motion-loop) var(--ve, var(--atlas-ease-inout)) infinite;
+  --v1: var(--b1, var(--s1)); --v2: var(--b2, var(--s2)); --v3: var(--b3, var(--s3)); --v4: var(--b4, var(--s4));
+}
+[data-ai-glyph][data-working][data-move] .ai-glyph-mark > :first-child { --v1: var(--a1); --v2: var(--a2); --v3: var(--a3); --v4: var(--a4); }
+[data-ai-glyph][data-working][data-move] .ai-glyph-mark > circle { --v1: var(--c1, var(--s1)); --v2: var(--c2, var(--s2)); --v3: var(--c3, var(--s3)); --v4: var(--c4, var(--s4)); }
+
+/* The order is AI_GLYPH_MOVES in aiGlyphBusy.ts. */
+[data-move="1"] { --a1: translateY(1px) scale(1.08, .88); --a2: translateY(-3px) scale(.95, 1.08); --a3: translateY(.6px) scale(1.04, .96); --s2: translateY(-2.5px); }
+[data-move="2"] { --a1: rotate(-12deg); --a2: rotate(45deg); --a3: rotate(100deg); --a4: rotate(90deg); }
+[data-move="3"] { --vb: view-box; --ve: linear; --s1: rotate(90deg); --s2: rotate(180deg); --s3: rotate(270deg); --s4: rotate(360deg); }
+[data-move="4"] { --vb: view-box; --ve: linear; --s1: rotate(-90deg); --s2: rotate(-180deg); --s3: rotate(-270deg); --s4: rotate(-360deg); --a1: scale(.92); --a2: scale(1.06); --a3: scale(.92); }
+[data-move="5"] { --a2: scale(1, .1); }
+[data-move="6"] { --b1: scale(1, .1); --c3: scale(1, .1); }
+[data-move="7"] { --b1: scale(1.6); --b2: scale(.6); --c2: scale(1.7); --c3: scale(.6); --a3: scale(1.12); }
+[data-move="8"] { --a1: scale(1.18); --a2: scale(.94); --a3: scale(1.08); --s1: scale(.8); --s2: scale(1.2); --s3: scale(.9); }
+[data-move="9"] { --a1: rotate(-18deg); --a2: rotate(14deg); --a3: rotate(-8deg); }
+[data-move="10"] { --vb: view-box; --s2: scale(1.35); --a2: scale(.86); }
+[data-move="11"] { --vb: view-box; --s2: scale(.55); --a2: scale(1.15); }
+[data-move="12"] { --vb: view-box; --s1: rotate(90deg); --s2: rotate(180deg); --s3: rotate(180deg); --s4: rotate(360deg); }
+[data-move="13"] { --a1: translateY(-3px) rotate(30deg); --a2: translateY(-3.5px) rotate(70deg); --a3: translateY(.5px) rotate(95deg); --a4: translateY(0) rotate(90deg); }
+[data-move="14"] { --a1: translateX(-1.2px); --a2: translateX(1.2px); --a3: translateX(-.8px); --s1: translateX(1px); --s2: translateX(-1px); --s3: translateX(.6px); }
+[data-move="15"] { --a1: scale(.8, 1.2); --a2: scale(1.15, .85); --a3: scale(.95, 1.05); }
+[data-move="16"] { --vb: view-box; --s1: scale(1.45); --s2: scale(1.45); --s3: scale(.92); --a1: scale(.9); --a2: scale(1.12); }
+[data-move="17"] { --s1: scale(0); --s2: scale(0); --s3: scale(1.25); }
+[data-move="18"] { --vb: view-box; --ve: linear; --s1: rotate(180deg); --s2: rotate(360deg); --s3: rotate(540deg); --s4: rotate(720deg); --a1: rotate(-30deg); --a2: rotate(-45deg); --a3: rotate(-60deg); --a4: rotate(-90deg); }
+[data-move="19"] { --a1: rotate(-20deg) translateX(-1px); --a2: rotate(-20deg) translateX(-1px); --a3: rotate(10deg) translateX(0); --s1: translateX(-1.5px); --s2: translateX(-1.5px); }
+[data-move="20"] { --a1: rotate(-15deg) translateY(-1.5px); --a2: rotate(15deg) translateY(0); --a3: rotate(-10deg) translateY(-1.5px); --s1: translateY(-1.5px); --s3: translateY(-1.5px); }
+[data-move="21"] { --a1: scale(.7); --a2: scale(.7); --a3: scale(1.15); --s1: scale(1.5); --s2: scale(1.5); --s3: scale(.8); }
+[data-move="22"] { --b1: translateY(-2.5px); --a2: translateY(-2.5px); --c3: translateY(-2.5px); }
+[data-move="23"] { --a1: rotate(45deg); --a2: rotate(45deg) scale(1.15); --a3: rotate(90deg) scale(1); --a4: rotate(90deg); }
+[data-move="24"] { --vb: view-box; --ve: linear; --c1: rotate(90deg); --c2: rotate(180deg); --c3: rotate(270deg); --c4: rotate(360deg); --b2: scale(1.3); }

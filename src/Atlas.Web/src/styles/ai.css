@@ -1,7 +1,7 @@
 /* The visual language of AI and suggestions follows the owner's motion prototype.
    Version 2.6 strengthens the gestures so they read at actual button sizes.
    Durations and easings are the tokens of motion.css; one-off movement goes through
-   src/motion/aiMotion.ts. No other stylesheet writes these keyframes.
+   src/motion/aiMotion.ts. No other stylesheet writes these keyframes, except their lazy part styles/aiBusy.css.
 
    twinkle and shimmer mean "the model is working". They are the only allowed loops, they stop
    with the result, and rule-based suggestions never use them (they show a spinner). The one exception is the answer
@@ -181,7 +181,7 @@
 [data-ai-glyph][data-state="searching"] .ai-glyph-mark > :not(:first-child) {
   transform-box: fill-box;
   transform-origin: center;
-  animation: atlas-ai-sparkle var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
+  animation: atlas-ai-greet-spark var(--atlas-motion-loop) var(--atlas-ease-inout) infinite;
 }
 [data-ai-glyph][data-state="searching"]::after {
   content: "";
@@ -293,10 +293,11 @@
 
 @keyframes atlas-ai-orbit { to { rotate: 360deg; } }
 @keyframes atlas-ai-working-halo { 0%, 100% { opacity: .25; scale: .7; } 50% { opacity: .75; scale: 1.2; } }
-@keyframes atlas-ai-think { 0%, 100% { rotate: -12deg; scale: .92; } 50% { rotate: 16deg; scale: 1.1; } }
-@keyframes atlas-ai-breathe { 0%, 100% { scale: .86; } 50% { scale: 1.16; } }
-@keyframes atlas-ai-pulse { 0%, 100% { scale: .94; rotate: -6deg; } 35% { scale: 1.2; rotate: 8deg; } 65% { scale: 1; rotate: 0deg; } }
-@keyframes atlas-ai-write-spark { 0%, 100% { opacity: .4; scale: .65; translate: 0 1.5px; } 45% { opacity: 1; scale: 1.15; translate: 0 -1.5px; } }
+/* The working loops start and end at rest, so a busy variant (styles/aiBusy.css) takes over at a loop's end without a jump. */
+@keyframes atlas-ai-think { 0%, 100% { rotate: 0deg; scale: 1; } 25% { rotate: -12deg; scale: .92; } 75% { rotate: 16deg; scale: 1.1; } }
+@keyframes atlas-ai-breathe { 0%, 100% { scale: 1; } 25% { scale: .86; } 75% { scale: 1.16; } }
+@keyframes atlas-ai-pulse { 0%, 100% { scale: 1; rotate: 0deg; } 40% { scale: 1.2; rotate: 8deg; } 70% { scale: .94; rotate: -6deg; } }
+@keyframes atlas-ai-write-spark { 0%, 100% { opacity: 1; scale: 1; translate: 0 0; } 25% { opacity: .4; scale: .65; translate: 0 1.5px; } 70% { opacity: 1; scale: 1.15; translate: 0 -1.5px; } }
 @keyframes atlas-ai-sparkle { 0%, 100% { opacity: .3; scale: .55; } 50% { opacity: 1; scale: 1.15; } }
 @keyframes atlas-ai-done-pop { 0%, 26% { scale: 1; opacity: 1; } 36% { scale: 1.32; opacity: 1; } 46% { scale: 1; opacity: 1; } 56%, 80% { scale: .4; opacity: 0; } 100% { scale: 1; opacity: 1; } }
 @keyframes atlas-ai-done-gather { 0%, 8% { translate: 0 0; scale: 1; opacity: 1; } 30% { translate: var(--ai-gather); scale: .2; opacity: 0; } 82% { translate: 0 0; scale: .2; opacity: 0; } 100% { translate: 0 0; scale: 1; opacity: 1; } }
