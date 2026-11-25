@@ -7,13 +7,14 @@ import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import { useModules } from "./composables/useModules";
 import { jsonResponse as response, mountApp, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "./testing/appHarness";
 
-const imported = vi.hoisted(() => ({ view: 0, goToPeer: [] as number[] }));
+const imported = vi.hoisted(() => ({ view: 0, goToPeer: [] as number[], calls: [] as string[] }));
 vi.mock("./components/boards/BoardView.vue", async () => {
   imported.view++;
   const { defineComponent, h, onMounted, ref } = await import("vue");
   return { __esModule: true, default: defineComponent({ props: ["boardId"], emits: ["meta", "peers", "openPage", "sessionExpired"], setup: (props, { emit, expose }) => {
     const locked = ref(false);
-    expose({ goToPeer: (id: number) => imported.goToPeer.push(id), locked, lockPulse: ref(0), toggleLock: () => { locked.value = !locked.value; } });
+    expose({ goToPeer: (id: number) => imported.goToPeer.push(id), locked, lockPulse: ref(0), toggleLock: () => { locked.value = !locked.value; },
+      discussionOpen: ref(false), host: {}, toggleDiscussion: () => imported.calls.push("discussion"), toggleDock: () => imported.calls.push("dock") });
     onMounted(() => {
       emit("meta", { spaceId: "space-1", title: props.boardId === "b1" ? "Plán" : "Nová", canEdit: true });
       emit("peers", [{ clientId: 1, id: "user-3", name: "Kolegyně", color: "#a00", cursorAvailable: true }]);
@@ -39,7 +40,7 @@ const tree = { spaceId: "space-1", version: 4, items: [
 
 let wrapper: VueWrapper | undefined;
 let requests: { path: string; method: string; body?: unknown }[] = [];
-afterEach(() => { wrapper?.unmount(); wrapper = undefined; useModules().stop(); resetBrowser(); imported.goToPeer = []; });
+afterEach(() => { wrapper?.unmount(); wrapper = undefined; useModules().stop(); resetBrowser(); imported.goToPeer = []; imported.calls = []; });
 async function settle() { await vi.dynamicImportSettled(); await flushPromises(); await flushPromises(); await vi.dynamicImportSettled(); await flushPromises(); }
 async function settleMenu() { await flushPromises(); await new Promise(resolve => setTimeout(resolve, 40)); await flushPromises(); }
 const menuItem = (selector: string) => document.querySelector<HTMLElement>(`[role=menu] ${selector}`);
@@ -122,6 +123,17 @@ describe("App: module Boards", () => {
     // The avatars sit where a page's do and lead to the colleague on the canvas.
     await actions.get('[data-client-id="1"]').trigger("click");
     expect(imported.goToPeer).toEqual([1]);
+  });
+
+  it("gives a board the page's Diskuse: the same button with its count in the top bar, Alt C, the ⋯ item and the dock toggle", async () => {
+    const app = await start("#/boards/b1", ["pages", "boards"], path => (path === "/api/objects/b1/comments" ? response({ items: [], hasMore: false, count: 2, canPost: true }) : undefined));
+    await settle();
+    const actions = app.get("[data-board-actions]");
+    expect(actions.get("[data-page-discussion-count]").text()).toBe("2");
+    await actions.get("[data-page-discussion]").trigger("click");
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "c", code: "KeyC", altKey: true, bubbles: true, cancelable: true }));
+    await actions.get(".page-dock-toggle").trigger("click");
+    expect(imported.calls).toEqual(["discussion", "discussion", "dock"]);
   });
 
   it("finds the board's space from the board itself when opened by its address", async () => {

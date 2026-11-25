@@ -9,7 +9,7 @@ const comment = (id: string, authorId = "colleague", body = `Text **${id}**`): O
   editedAt: null, deleted: false, canEdit: false, canDelete: false,
 });
 
-function setup(pages: ObjectComment[][]) {
+function setup(pages: ObjectComment[][], viewKey?: string) {
   const answers = [...pages];
   const api = {
     page: vi.fn(async () => { const items = answers.shift() ?? []; return { items, hasMore: false, count: items.filter(item => !item.deleted).length, canPost: true }; }),
@@ -21,8 +21,8 @@ function setup(pages: ObjectComment[][]) {
   const page = ref<string | undefined>("p1");
   const open = ref(false);
   const scope = effectScope();
-  const feed = scope.run(() => usePageDiscussionFeed(() => page.value, { selfId: () => "ME", open: () => open.value }, api, views))!;
-  return { api, page, open, scope, feed, notify: (change: unknown = { kind: "comments" }) => listener.changed?.(change, 2), close, stop };
+  const feed = scope.run(() => usePageDiscussionFeed(() => page.value, { selfId: () => "ME", open: () => open.value, viewKey: () => viewKey }, api, views))!;
+  return { api, page, open, scope, feed, views: views as { open: ReturnType<typeof vi.fn> }, notify: (change: unknown = { kind: "comments" }) => listener.changed?.(change, 2), close, stop };
 }
 const settle = () => new Promise(resolve => setTimeout(resolve));
 
@@ -149,5 +149,18 @@ describe("usePageDiscussionFeed: a reply being written, and late answers", () =>
     waiting[0]!(1); // the older one comes late
     await settle();
     expect(feed.count.value).toBe(5);
+  });
+
+  it("hears the page's view session by default and a board's own when given, and knows whether one may comment only once read", async () => {
+    const page = setup([[comment("a")]]);
+    expect(page.views.open).toHaveBeenCalledWith("page:p1");
+    expect(page.feed.canPost.value).toBeUndefined();
+    await settle();
+    expect(page.feed.canPost.value).toBe(true);
+    const board = setup([[comment("a")]], "board:p1");
+    expect(board.views.open).toHaveBeenCalledWith("board:p1");
+    await settle();
+    board.notify({ kind: "comments", count: 4, latestId: "z" });
+    expect(board.feed.count.value).toBe(4);
   });
 });

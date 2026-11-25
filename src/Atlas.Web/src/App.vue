@@ -212,7 +212,8 @@ const boardId = ref<string>();
 /** What the board view reports once the board has loaded: its space, title and whether the reader may change it. */
 const boardFrame = shallowRef<{ spaceId: string; title: string; canEdit: boolean }>();
 const boardPeers = shallowRef<CollaborationPeer[]>([]);
-const boardView = ref<{ goToPeer: (clientId: number) => void; locked: boolean; lockPulse: number; toggleLock: () => void }>();
+const boardView = ref<{ goToPeer: (clientId: number) => void; locked: boolean; lockPulse: number; toggleLock: () => void;
+  discussionOpen: boolean; toggleDiscussion: () => void; toggleDock: () => void; host: import("./boards/editorBlocks").BoardBlockHost }>();
 const copyBoardLink = ref<InstanceType<typeof CopyPageLink>>();
 const boardTrashOpen = ref(false), boardTrashBusy = ref(false), boardTrashError = ref("");
 // Another board (or none): nothing of the previous one stays open or reported.
@@ -3104,6 +3105,8 @@ function revealPageComments() {
   void focusWhenPresent(section, '[data-comment-start], .comment-composer [contenteditable="true"]', 90);
 }
 function toggleDiscussion() {
+  // A board's Diskuse the same way (its button in the top bar, Alt C, the ⋯ menu): BoardView's dock; the view is there only while a board is open.
+  if (boardView.value) return boardView.value.toggleDiscussion();
   if (phoneLayout.value) return revealPageComments();
   // Text selected in the page is quoted into the open Diskuse instead of closing it.
   if (!discussionOpen.value || selectedInPage()) return void openDiscussion();
@@ -3116,6 +3119,7 @@ function selectPageDockTab(id: string) {
   else showPageDock(id as PageSideTab);
 }
 function togglePageDock() {
+  if (boardView.value) return boardView.value.toggleDock();
   if (pageDockOpen.value) { workspacePanel.hide(); rememberPageDock(false); }
   else { showPageDock(pageDockTab.value); rememberPageDock(true); }
 }
@@ -4307,7 +4311,7 @@ function runShortcut(id: AppShortcutId, event: KeyboardEvent): boolean {
       return true;
     }
     case "discussion":
-      if (modal || !documentOpen.value || !pageDockTabs.value) return false;
+      if (modal || (!boardView.value && (!documentOpen.value || !pageDockTabs.value))) return false;
       toggleDiscussion();
       return true;
     case "treeFilter": return !modal && treeFilterShortcut();
@@ -4822,7 +4826,7 @@ onUnmounted(() => {
                 <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="favorite-button text-muted-foreground" :aria-label="personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite" :aria-pressed="personalState?.isFavorite ?? false" :aria-busy="favoritePending" :disabled="!personalState || favoritePending" @click="toggleFavorite"><AtlasIcon name="star" /></Button></TooltipTrigger><TooltipContent>{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</TooltipContent></Tooltip>
                 <ActionDisclosure :label="t.nav.pageActions" :disabled="pending">
                 <ActionDisclosureItem class="mobile-page-action" :disabled="favoritePending || !personalState" @click="toggleFavorite"><AtlasIcon name="star" />{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</ActionDisclosureItem>
-                <ActionDisclosureItem v-if="pageDockTabs" class="mobile-page-action" data-page-discussion-menu @click="toggleDiscussion"><AtlasIcon name="quote" />{{ t.common.discussion }}<span v-if="discussionButton?.unread || discussionButton?.count" class="discussion-count" :data-fresh="discussionButton.unread > 0 || undefined">{{ discussionButton.unread || discussionButton.count }}</span></ActionDisclosureItem>
+                <ActionDisclosureItem v-if="pageDockTabs" class="mobile-page-action" data-page-discussion-menu @click="toggleDiscussion"><AtlasIcon name="quote" />{{ t.common.discussion }}<span v-if="discussionButton?.badge" class="discussion-count" :data-fresh="discussionButton.unread > 0 || undefined">{{ discussionButton.badge }}</span></ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="openPageAccess(page.id)"><AtlasIcon name="users" />{{ t.common.whoHasAccess }}</ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="copyPageLink?.copy()"><AtlasIcon name="link" />{{ t.common.copyLink }}</ActionDisclosureItem>
                 <ActionDisclosureItem v-if="currentSpace && canWrite" class="mobile-page-action" @click="showCreatePage"><AtlasIcon name="plus" />{{ t.common.newPage }}</ActionDisclosureItem>
@@ -4873,6 +4877,8 @@ onUnmounted(() => {
             <!-- A board's actions where a page has its own (interaction spec §6): who else is here, the link, the star and the menu. -->
             <div v-else-if="boardOpen && !libraryTab && !administrationOpen" class="document-actions" data-board-actions>
                 <CollaboratorAvatars v-if="browserOnline" :peers="boardPeers" @navigate="boardView?.goToPeer($event)" />
+                <!-- The board's Diskuse as a page's: the same button, count and peek, toggling the dock's Diskuse (Alt C too). -->
+                <span class="page-discussion-anchor"><PageDiscussionButton v-if="boardView" ref="discussionButton" :page-id="boardId!" board :self-id="user?.id" :open="boardView.discussionOpen" :docked="workspacePanel.open.value" :host="boardView.host" @toggle="toggleDiscussion" @open="toggleDiscussion" /></span>
                 <div class="document-secondary-actions">
                 <CopyPageLink ref="copyBoardLink" :href="boardLink(boardId!)" :label="t.cmd.copyBoardLink" />
                 <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="favorite-button text-muted-foreground" :aria-label="personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite" :aria-pressed="personalState?.isFavorite ?? false" :aria-busy="favoritePending" :disabled="!personalState || favoritePending" @click="toggleFavorite"><AtlasIcon name="star" /></Button></TooltipTrigger><TooltipContent>{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</TooltipContent></Tooltip>
@@ -4881,6 +4887,7 @@ onUnmounted(() => {
                 <ActionDisclosureItem class="mobile-page-action" @click="openSearch"><AtlasIcon name="search" />{{ t.common.searchWiki }}</ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" :disabled="favoritePending || !personalState" @click="toggleFavorite"><AtlasIcon name="star" />{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="copyBoardLink?.copy()"><AtlasIcon name="link" />{{ t.common.copyLink }}</ActionDisclosureItem>
+                <ActionDisclosureItem class="mobile-page-action" data-page-discussion-menu @click="toggleDiscussion"><AtlasIcon name="quote" />{{ t.common.discussion }}<span v-if="discussionButton?.badge" class="discussion-count" :data-fresh="discussionButton.unread > 0 || undefined">{{ discussionButton.badge }}</span></ActionDisclosureItem>
                 <!-- Where a page has Uspořádat: a board is placed in the tree the same way (its versions come later, spec §6 P2; it has no access of its own). -->
                 <ActionDisclosureItem v-if="boardFrame?.canEdit" data-board-move :disabled="pending" @click="organizationOpen = 'board'"><AtlasIcon name="organize" />{{ t.common.move }}</ActionDisclosureItem>
                 <ActionDisclosureItem v-if="boardFrame?.canEdit" data-board-trash :disabled="pending" @click="boardTrashOpen = true; boardTrashError = ''"><AtlasIcon name="trash" />{{ t.common.moveToTrashMore }}</ActionDisclosureItem>
@@ -4890,6 +4897,7 @@ onUnmounted(() => {
                 <div v-if="boardFrame?.canEdit && boardView" class="document-primary-actions">
                   <EditLockToggle :locked="boardView.locked" :pulse="boardView.lockPulse" :shortcut="t.nav.shortcutNotInText" @toggle="boardView.toggleLock()" />
                 </div>
+                <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="page-dock-toggle text-muted-foreground" :aria-label="t.common.sidePanel" :aria-pressed="workspacePanel.open.value" @click="togglePageDock"><AtlasIcon name="panel-right-close" /></Button></TooltipTrigger><TooltipContent>{{ t.common.sidePanel }}</TooltipContent></Tooltip>
             </div>
             <Button variant="ghost" size="icon-sm"
               class="mobile-menu text-muted-foreground"

@@ -30,14 +30,16 @@ export const maxBubbles = 2;
  */
 export function usePageDiscussionFeed(
   pageId: () => string | undefined,
-  options: { selfId: () => string | undefined; open: () => boolean },
+  /** `viewKey`: the view session that tells the object's comment notices (a board's own `board:{id}`); the page's `page:{id}` by default. */
+  options: { selfId: () => string | undefined; open: () => boolean; viewKey?: () => string | undefined },
   api: Pick<CommentApi, "page" | "counts"> = commentApi,
   views: Pick<ViewSessions, "open"> = viewSessions(),
 ) {
   const count = shallowRef(0);
   const unread = shallowRef(0);
   const bubbles = shallowRef<DiscussionBubble[]>([]);
-  const canPost = shallowRef(false);
+  /** Undefined until the first read of the comments tells it. */
+  const canPost = shallowRef<boolean>();
   /** Bubbles with a quick reply open: the room made for a new one never takes them. */
   const pinned = new Set<string>();
   const trim = (list: DiscussionBubble[]) => {
@@ -86,7 +88,7 @@ export function usePageDiscussionFeed(
       if (options.open() || (typeof told === "number" && seeded && (latestId == null || known.has(String(latestId))))) return;
       void read();
     };
-    const handle = views.open(`page:${id}`);
+    const handle = views.open(options.viewKey?.() ?? `page:${id}`);
     const stop = handle.watch(id, { changed: notice, missed: () => { if (!options.open()) void read(); } });
     // Closed again: what the thread showed is seeded, never a bubble.
     const stopOpen = watch(options.open, open => { if (!open) { seeded = false; void read(); } });
@@ -97,7 +99,7 @@ export function usePageDiscussionFeed(
     unread: unread as Readonly<Ref<number>>,
     bubbles: bubbles as Readonly<Ref<readonly DiscussionBubble[]>>,
     /** The reader may write comments here (a quick reply is offered only then). */
-    canPost: canPost as Readonly<Ref<boolean>>,
+    canPost: canPost as Readonly<Ref<boolean | undefined>>,
     /** A quick reply is open on the bubble (or closed again): it is never pushed out by newer ones. */
     pin(id: string, on: boolean) { if (on) pinned.add(id); else pinned.delete(id); },
     /** The open thread knows its count at once (also after the reader's own comment). */

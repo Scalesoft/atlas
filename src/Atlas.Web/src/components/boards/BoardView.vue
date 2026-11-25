@@ -187,8 +187,6 @@ function goToPeer(clientId: number) {
   const user = state.value?.remote.find(person => peerIds.get(person.userId) === clientId);
   if (user?.cursor) canvas.value?.centreOn(user.cursor);
 }
-// The lock's switch stands in the shell's top bar where a page has it (F21); the state and its E stay here.
-defineExpose({ goToPeer, locked, lockPulse, toggleLock });
 
 // The levels of the kinds the board holds an overview of (overviewKinds.ts): data-overview-<kind> on the board's root, one state per
 // board and kind for all its overviews, so the kind's components on the canvas change with them (contact blocks…). A board without an
@@ -231,7 +229,6 @@ watch(() => state.value?.status === "ready" && session.view, view => {
   if (view && !stopComments) stopComments = view.watch(props.boardId, { changed: change => { if (isCommentsChange(change)) readCounts(); } });
 }, { immediate: true });
 onBeforeUnmount(() => { stopComments?.(); countsRead?.abort(); });
-const boardComments = computed(() => countOf(props.boardId));
 const detail = reactive({
   item: null as BoardViewItem | null, items: [] as readonly BoardViewItem[], boardTitle: "", tab: "overview" as BoardDetailTab,
   boardId: props.boardId, commentCount: 0, host: markRaw(blockHost), onComments: counted,
@@ -261,6 +258,14 @@ function openDetail(itemId: string | null, tab: BoardDetailTab = "overview") {
 watch(() => [state.value?.items, state.value?.title], syncDetail);
 watch(() => workspacePanel.activeTab.value, tab => { if (detailShown() && tab) detail.tab = tab as BoardDetailTab; });
 onBeforeUnmount(() => { if (detailShown()) workspacePanel.hide(); });
+/** The board's own Diskuse is in the dock: the shell's discussion button (the page's PageDiscussionButton) is pressed and hands its peek over. */
+const discussionOpen = computed(() => detailShown() && !detail.item && detail.tab === "comments");
+// The lock's switch, the discussion button and the dock toggle stand in the shell's top bar where a page has them (F21); the state and its E stay here.
+defineExpose({ goToPeer, locked, lockPulse, toggleLock, discussionOpen, host: blockHost,
+  /** The discussion button and Alt C, as on a page: the board's Diskuse in the dock, or the dock closed when it shows it. */
+  toggleDiscussion: () => (discussionOpen.value ? workspacePanel.hide() : openDetail(null, "comments")),
+  /** The top bar's dock toggle, as on a page: the board's detail, or the dock closed. */
+  toggleDock: () => (workspacePanel.open.value ? workspacePanel.hide() : openDetail(null)) });
 function showItem(itemId: string) {
   const item = state.value?.items.find(entry => entry.id === itemId);
   if (item) canvas.value?.centreOn({ x: item.x + item.width / 2, y: item.y + item.height / 2 });
@@ -353,9 +358,6 @@ function redo() { steps++; session.redo(); }
         <!-- A page's own board (the deployment board) says whose it is and leads back; its cards follow the page. -->
         <a v-if="state!.ownerPageId" class="board-view-owner" :href="pageLink(state!.ownerPageId)" data-board-owner-page @click="openOwnerPage">
           <AtlasIcon name="file-text" :size="15" />{{ t.view.deploymentPage }}</a>
-        <Button variant="outline" size="sm" type="button" data-board-discussion @click="openDetail(null, 'comments')">
-          <AtlasIcon name="quote" :size="15" />{{ t.view.discussion }}<span v-if="boardComments" class="board-view-comments" :aria-label="t.view.commentsAria(boardComments)">{{ boardComments }}</span>
-        </Button>
         <BoardRemoved v-if="writable && state!.status === 'ready'" :board-id="boardId" @restore="apply([{ type: 'restore', itemId: $event }])" />
       </header>
       <ConflictNote v-if="state!.rejected" :text="state!.rejected" @dismiss="session.dismissRejection()" />
@@ -396,10 +398,9 @@ function redo() { steps++; session.redo(); }
 .board-view-owner { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 13px; font-weight: 600; text-decoration: none; }
 .board-view-owner:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 @media (hover: hover) and (pointer: fine) { .board-view-owner:hover { text-decoration: underline; } }
-.board-view-comments { padding: 0 6px; border-radius: 999px; background: var(--hover); color: var(--muted); font-size: 11.5px; font-weight: 600; line-height: 18px; }
 /* A phone keeps the page's 16 px from the edges. */
 @container workspace-content (max-width: 680px) { .board-view { padding: 12px 16px 16px; } }
-/* On a phone the title takes the first row and the controls one row of their own: the state on the left, the lock and Diskuse on the right (the lock was left alone on a wrapped row, 3.6 review F30). */
+/* On a phone the title takes the first row and the controls one row of their own: the state on the left, the rest on the right (the lock was left alone on a wrapped row, 3.6 review F30). */
 @container workspace-content (max-width: 680px) {
   .board-view .board-view-header > .document-title { flex-basis: 100%; }
   .board-view-header > [data-board-status] { margin-right: auto; }
