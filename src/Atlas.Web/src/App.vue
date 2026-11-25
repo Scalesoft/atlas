@@ -3063,10 +3063,16 @@ function showPageDock(tab: PageSideTab, focus = true) {
  * selected in the page becomes the quote of a new comment, and the caret goes into the field (Escape closes the dock and returns to the text).
  * The peek under the avatars hands over to it: its bubbles fly out while the dock slides in. The button and Alt C toggle it.
  */
+function selectedInPage() {
+  const selection = window.getSelection();
+  return selection && !selection.isCollapsed && documentBody.value?.contains(selection.anchorNode) ? selection.toString() : "";
+}
 async function openDiscussion() {
   if (!documentOpen.value || !pageDockTabs.value) return false;
-  const selection = window.getSelection();
-  const picked = selection && !selection.isCollapsed && documentBody.value?.contains(selection.anchorNode) ? quoteMarkdown(selection.toString()) : "";
+  // A phone has no second thread in the dock: its Diskuse is the section under the content.
+  if (phoneLayout.value) { workspacePanel.hide(); revealPageComments(); return true; }
+  const selected = selectedInPage();
+  const picked = selected ? quoteMarkdown(selected) : "";
   // The thread's editor services (people, pages) come first, so the first Alt C already has `@`.
   await pageChrome.comments().catch(() => undefined);
   if (picked) requestedQuote.value = picked;
@@ -3084,7 +3090,8 @@ function revealPageComments() {
 }
 function toggleDiscussion() {
   if (phoneLayout.value) return revealPageComments();
-  if (!discussionOpen.value) return void openDiscussion();
+  // Text selected in the page is quoted into the open Diskuse instead of closing it.
+  if (!discussionOpen.value || selectedInPage()) return void openDiscussion();
   workspacePanel.hide();
   rememberPageDock(false);
 }
@@ -4318,7 +4325,8 @@ function globalKeys(event: KeyboardEvent) {
   // A reader's read-only text (Tab lands on it) types nothing: the letters stay shortcuts there.
   const inPage = event.target instanceof Node && !!documentBody.value?.contains(event.target)
     && !(event.target instanceof Element && event.target.closest('[contenteditable="false"]'));
-  if ((editorActive.value || inPage) && !event.ctrlKey && !event.metaKey) return;
+  // Alt C (`anywhere`) passes: it takes the selection from the page being edited too.
+  if ((editorActive.value || inPage) && !event.ctrlKey && !event.metaKey && shortcut.where !== "anywhere") return;
   // E unlocks only as a deliberate first key; while typing it pulses the lock like the other letters.
   if (shortcut.id === "edit" && typing && pageLocked.value && documentOpen.value && pageCanWrite.value) { lockPulse.value++; event.preventDefault(); return; }
   if (!runShortcut(shortcut.id, event)) return;
@@ -4365,7 +4373,12 @@ async function historyNavigation() {
     await openProfile(route.tab, true);
   }
   else if (route.view === "pageAccess") await openPageAccess(route.pageId, route.tab, true);
-  else if (route.view === "page") { requestedComment.value = route.comment; await openPage(route.pageId, false, true, route.heading, undefined, route.block); }
+  else if (route.view === "page") {
+    requestedComment.value = route.comment;
+    await openPage(route.pageId, false, true, route.heading, undefined, route.block);
+    // A comment link (a mention's notification) opens the dock's Diskuse, which reveals it; a phone's thread is the section under the content.
+    if (route.comment && !phoneLayout.value && pageDockTabs.value) showPageDock("comments", false);
+  }
   else if (route.view === "space") {
     const space = spaces.value.find(item => item.id === route.spaceId);
     if (space) await selectSpace(space, true, route.tab ?? "pages"); else { home(true); unavailableSpace.value = route.spaceId; }
@@ -4970,7 +4983,7 @@ onUnmounted(() => {
             <div class="document-meta" :data-writable="(pageCanWrite && browserOnline) || undefined">
               <AssistantLauncher variant="page" :page-reading="assistantPageReading" :can-ask="canAsk" @launch="launchAssistant(true)" />
               <StatusBadge v-if="catalogPage" tone="info" icon="book-open" size="sm" :label="t.nav.catalogBadge" data-page-catalog />
-              <PageVerification v-if="verification && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
+              <PageVerification v-if="verification && verification.state !== 'off' && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
               <Button v-if="page.isTemplate && canManageTemplates" variant="ghost" size="sm" @click="openSpaceTemplates(currentSpace!.id)">{{ t.nav.templateManage }}</Button>
               <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" :data-transient="documentStatusTransient || undefined" role="status" aria-live="polite" aria-atomic="true">
                 <StatusBadge v-if="documentStatusTransient" :key="documentStatusText" tone="success" :label="documentStatusText" confirmed />

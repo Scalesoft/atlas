@@ -89,11 +89,11 @@ function start() {
   });
 }
 // A comment asked for by address (a notification of a mention): the thread reads at once, older pages until it holds the comment,
-// scrolls to it, highlights it for a moment and puts the keyboard on it. Only the page's own thread (titled) answers.
+// scrolls to it, highlights it for a moment and puts the keyboard on it. Only the page's own thread (the phone's titled section, the dock's quoting one) answers.
 const highlighted = ref("");
 async function revealRequested() {
   const id = requestedComment.value;
-  if (!id || !props.title || status.value !== "ready") return;
+  if (!id || !(props.title || props.quotes) || status.value !== "ready") return;
   requestedComment.value = undefined;
   try { for (let pages = 0; pages < 10 && hasMore.value && !items.value.some(comment => comment.id === id); pages++) await thread.older(); } catch { /* the thread shows what it has */ }
   await nextTick();

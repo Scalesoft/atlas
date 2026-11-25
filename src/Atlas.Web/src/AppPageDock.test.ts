@@ -27,12 +27,15 @@ const page: Page = { id: "page-1", spaceId: "space-1", parentId: null, title: "N
 const { values: memory, storage } = memoryStorage();
 let wrapper: VueWrapper | undefined;
 let assistantCapable = false;
-async function start(role = "Writer", width = 1440) {
+let pageExtra: Partial<Page> = {};
+let comments: unknown[] = [];
+async function start(role = "Writer", width = 1440, url = "/#/pages/page-1") {
   Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: width });
   const team: Route = path => {
     if (path === "/api/auth/me") return response({ id: "user-1", username: "u", displayName: "Uživatel", isWikiAdmin: false, appearance: { layout: "connected", accent: "ocean", mode: "system" } });
     if (path === "/api/spaces") return response([{ id: "space-1", name: "Tým", role, icon: "book", color: "blue" }]);
-    if (path === "/api/pages/page-1") return response({ ...page, canEdit: role !== "Reader" });
+    if (path === "/api/pages/page-1") return response({ ...page, ...pageExtra, canEdit: role !== "Reader" });
+    if (path.startsWith("/api/objects/page-1/comments")) return response({ items: comments, hasMore: false, count: comments.length, canPost: true });
     if (path === "/api/spaces/space-1/tree") return response({ spaceId: "space-1", version: 1, items: [{ ...page, sortOrder: 1024, canEdit: role !== "Reader" }] });
     if (path === "/api/spaces/space-1/pages") return response([page]);
     if (path === "/api/ai/capabilities") return response({ assistant: assistantCapable });
@@ -43,13 +46,13 @@ async function start(role = "Writer", width = 1440) {
     if (path.startsWith("/api/pages/page-1/access")) return response({ spaceId: "space-1", spaceName: "Tým", isPublished: true, canManage: false, items: [], hasMore: false,
       myAccess: { userId: "user-1", displayName: "Uživatel", username: "u", role, isWikiAdmin: false, canReadPublished: true, canReadDraft: true, canEdit: role !== "Reader", sources: [] } });
   };
-  wrapper = mountApp({ url: "/#/pages/page-1", fetch: routedFetch(team, sessionRoutes, quietRoutes) });
+  wrapper = mountApp({ url, fetch: routedFetch(team, sessionRoutes, quietRoutes) });
   for (let i = 0; i < 5; i++) await flushPromises();
   return wrapper;
 }
 const dock = () => document.querySelector<HTMLElement>('[role="complementary"][aria-label="Boční panel stránky"]');
 const tab = (name: string) => [...document.querySelectorAll<HTMLButtonElement>("[role=tab]")].find((button) => button.textContent?.trim() === name);
-beforeEach(() => { memory.clear(); assistantCapable = false; vi.stubGlobal("localStorage", storage); });
+beforeEach(() => { memory.clear(); assistantCapable = false; pageExtra = {}; comments = []; vi.stubGlobal("localStorage", storage); });
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; useWorkspacePanel().reset(); useAiCapabilities().stop(); useAssistant().reset(); resetBrowser(); Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1024 }); });
 
 describe("page dock", () => {
@@ -132,12 +135,36 @@ describe("page dock", () => {
 
   it("opens the page's Diskuse in the dock with Alt C, also with the focus in the page, and closes it with Alt C again", async () => {
     await start();
-    const press = () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", code: "KeyC", altKey: true, bubbles: true, cancelable: true }));
+    // Pressed in the page's editor, where a writer types (Alt C went down with the plain letters there).
+    const text = () => document.querySelector(".document-body .ProseMirror p")!;
+    const press = () => text().dispatchEvent(new KeyboardEvent("keydown", { key: "c", code: "KeyC", altKey: true, bubbles: true, cancelable: true }));
     press();
     await vi.waitFor(() => expect(tab("Diskuse")!.getAttribute("aria-selected")).toBe("true"), { timeout: 4000 });
     await vi.waitFor(() => expect(dock()!.querySelector("[data-comment-thread]")).not.toBeNull(), { timeout: 4000 });
+    // With text selected in the page Alt C quotes it into the open Diskuse instead of closing it.
+    window.getSelection()!.selectAllChildren(text());
+    press();
+    for (let i = 0; i < 3; i++) await flushPromises();
+    expect(tab("Diskuse")!.getAttribute("aria-selected")).toBe("true");
+    window.getSelection()!.removeAllRanges();
     press();
     await vi.waitFor(() => expect(dock()).toBeNull(), { timeout: 4000 });
+  });
+
+  it("lands a comment link in the dock's Diskuse, even when the reader closed the dock, and puts the keyboard on the comment", async () => {
+    comments = [{ id: "c1", authorId: "user-2", authorName: "Kolega", body: "Podívej se", anchor: null, createdAt: "2026-09-23T08:00:00Z", editedAt: null, deleted: false, canEdit: false, canDelete: false }];
+    memory.set("atlas:reading:user-1:dock", "closed");
+    await start("Writer", 1440, "/#/pages/page-1?comment=c1");
+    await vi.waitFor(() => expect(tab("Diskuse")?.getAttribute("aria-selected")).toBe("true"), { timeout: 4000 });
+    await vi.waitFor(() => expect(document.activeElement?.getAttribute("data-comment-id")).toBe("c1"), { timeout: 4000 });
+    expect(document.activeElement!.hasAttribute("data-target")).toBe(true);
+  });
+
+  it("shows no verification chip, not even its placeholder, while the space has verification off", async () => {
+    pageExtra = { bundle: { verification: { state: "off" } } } as unknown as Partial<Page>;
+    await start();
+    await vi.waitFor(() => expect(document.querySelector(".document-header")).not.toBeNull(), { timeout: 4000 });
+    expect(document.querySelector("[data-badge-placeholder], [data-page-verification-chip]")).toBeNull();
   });
 
   it("offers no history tab to a reader and does not open by itself on a narrow screen", async () => {
