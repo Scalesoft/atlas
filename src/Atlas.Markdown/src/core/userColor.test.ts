@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import { COLLABORATOR_COLORS, collaboratorColor, markdownUserColor, markdownUserColorSlot } from './userColor'
+import { COLLABORATOR_COLORS, collaboratorColor, markdownInitials, markdownUserColor, markdownUserColorSlot } from './userColor'
 
 const luminance = (hex: string) => {
   const [r, g, b] = [1, 3, 5].map(i => Number.parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
@@ -26,4 +26,12 @@ it('starts from the hash of the user id (the server\'s CollaboratorPalette.Auto,
   expect(collaboratorColor('#1863b6', true)).toBe('#2e76cb')
   expect(collaboratorColor('#2e76cb', false)).toBe('#1863b6')
   expect(collaboratorColor('#7c3aed', true)).toBe('#7c3aed') // an agent's or a host's own colour stays
+})
+
+it('has one initials rule: first letters of the first two words, Markdown stripped, one word one letter', () => {
+  expect(markdownInitials('Jan Pavel Novák')).toBe('JP')
+  expect(markdownInitials('**Jan** [Novák](a-contact:?name=x)')).toBe('JN')
+  expect(markdownInitials('  madonna ')).toBe('M')
+  expect(markdownInitials('')).toBe('')
+  expect(markdownInitials(undefined)).toBe('')
 })

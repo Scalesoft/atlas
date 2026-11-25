@@ -30,7 +30,7 @@ const people = computed(() => shares(changes.value));
   <span class="hv-detail">v{{ item.version }}<span v-if="changes && !step"> · {{ changes.blocks }} {{ t.version.blocks }}</span><span v-if="!step && item.checkpoints && item.checkpoints > 1"> · {{ t.version.saves(item.checkpoints) }}</span><span v-if="item.isCurrent"> · {{ t.version.current }}</span><span v-if="item.isPublished"> · {{ t.version.published }}</span><span v-else-if="item.lastPublishedAt"> · {{ t.version.wasPublished }}</span></span>
   <span v-if="item.changeSummary" class="hv-note history-version-summary" :title="item.changeSummary">{{ item.changeSummary }}</span>
   <span v-for="line in lines" :key="line" class="hv-line" data-history-change>{{ line }}</span>
-  <span v-if="people.length > 1 && !step" class="hv-people"><span v-for="person in people" :key="person.id" class="hv-person" :title="t.version.share(person.name, person.share)"><SubjectAvatar kind="user" :name="person.name" size="sm" :color="themedUserColor(person.id)" />{{ t.version.percent(person.share) }}</span></span>
+  <span v-if="people.length > 1 && !step" class="hv-people"><span v-for="person in people" :key="person.id" class="hv-person" :title="t.version.share(person.name, person.share)"><SubjectAvatar kind="user" :name="person.name" size="xs" :color="themedUserColor(person.id)" />{{ t.version.percent(person.share) }}</span></span>
 </template>
 
 <style scoped>
@@ -50,7 +50,6 @@ time { color: var(--muted); }
 .hv-line { grid-column: 2 / -1; font-size: 11px; color: var(--text); overflow-wrap: anywhere; }
 .hv-people { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 10px; color: var(--muted); }
 .hv-person { display: inline-flex; align-items: center; gap: 4px; }
-.hv-person :deep(.subject-avatar) { width: 18px; height: 18px; font-size: 8px; }
 .addition { color: var(--success, #23794b); }
 .deletion { color: var(--error); }
 </style>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { markdownInitials } from "@atlas/markdown/core/userColor";
+import { locale } from "../i18n";
 import AtlasIcon from "./AtlasIcon.vue";
 import AiGlyph from "./ai/AiGlyph.vue";
 import { isAgentUser } from "../live/agentUser";
@@ -21,8 +23,7 @@ const extraPeers = computed(() => props.peers.slice(4));
 
 function initials(name: string) {
   // An agent writing for a person (3.6-H, "Jana Nováková · AI (MCP: laptop)") wears the person's initials.
-  const words = name.split(" · ")[0].trim().split(/\s+/).filter(Boolean);
-  return (words.length > 1 ? `${words[0][0]}${words.at(-1)![0]}` : words[0]?.[0] ?? "?").toLocaleUpperCase();
+  return markdownInitials(name.split(" · ")[0], locale) || "?";
 }
 function peerLabel(peer: CollaborationPeer) {
   if (peer.activity) return peer.activity;

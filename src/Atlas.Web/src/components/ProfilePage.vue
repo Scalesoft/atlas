@@ -4,6 +4,7 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { api, ApiError, errorMessage, type Appearance } from "../api";
 import { formatDateTime } from "../formatDate";
 import { locale, type LanguageChoice } from "../i18n";
+import { markdownInitials } from "@atlas/markdown/core/userColor";
 import t from "../i18n/profile";
 import AtlasVersionInfo from "./AtlasVersionInfo.vue";
 import { profilePageOf, themeAccents, type ProfileAccount, type ProfileTab, type ReadingWidth } from "../profile";
@@ -246,10 +247,7 @@ const sessionFacts = computed<SummaryItem[]>(() => {
 });
 // The header of Účet a vzhled (board 12): initials, the saved name, login · kind of account · role, and the way to
 // link a company account where the wiki has a provider to link (Zabezpečení → Propojená přihlášení).
-const initialsOf = (value: string) => {
-  const words = value.trim().split(/\s+/).filter(Boolean);
-  return (words.length > 1 ? words.slice(0, 2).map((word) => word[0]).join("") : value.trim().slice(0, 2)).toLocaleUpperCase(locale);
-};
+const initialsOf = (value: string) => markdownInitials(value, locale);
 const identityName = computed(() => account.value?.displayName ?? "");
 const identityMeta = computed(() => {
   const source = account.value?.source;

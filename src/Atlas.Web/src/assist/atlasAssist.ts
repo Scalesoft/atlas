@@ -2,6 +2,8 @@
 import "@atlas/markdown/assist/style.css";
 import { assistMarkersFor } from "@atlas/markdown/assist";
 import { watch } from "vue";
+import { markdownInitials } from "@atlas/markdown/core/userColor";
+import { locale } from "../i18n";
 import { suggestionTypes } from "../aiPreferences";
 import t from "../i18n/assist";
 import secrets from "../i18n/secrets";
@@ -425,7 +427,7 @@ class SuggestionBuilder {
         kind: "contact.inline",
         title: t.contact.replaceTitle(written),
         description: contactLine(contact),
-        avatar: { initials: (contact.internalUser?.name ?? contact.name).split(/\s+/).map(word=>word[0]).slice(0,2).join("") },
+        avatar: { initials: markdownInitials(contact.internalUser?.name ?? contact.name, locale) },
         icon: "user",
         range: this.range(hit),
         reason,
@@ -436,7 +438,7 @@ class SuggestionBuilder {
         kind: "contact.card",
         title: t.contact.cardBelowTitle,
         description: contactLine(contact),
-        avatar: { initials: (contact.internalUser?.name ?? contact.name).split(/\s+/).map(word=>word[0]).slice(0,2).join("") },
+        avatar: { initials: markdownInitials(contact.internalUser?.name ?? contact.name, locale) },
         icon: "users",
         range: this.range(hit),
         reason,
