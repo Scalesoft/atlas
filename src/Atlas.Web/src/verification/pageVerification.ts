@@ -31,11 +31,14 @@ export interface PageVerification {
  */
 export interface VerificationChange { verify?: true; until?: string; stewardId?: string; clearSteward?: true; intervalMonths?: 0 | 3 | 6 | 12; inheritInterval?: true; stewardFromLastAuthor?: true }
 export interface PageVerificationApi {
+  /** The state read again (a new version was published: „Změněno po ověření“ follows). */
+  read(pageId: string): Promise<PageVerification>;
   change(pageId: string, change: VerificationChange): Promise<PageVerification>;
   /** „Nahlásit neaktuální“: tells the owner, changes nothing on the page. */
   report(pageId: string, note: string): Promise<unknown>;
 }
 export const pageVerificationApi: PageVerificationApi = {
+  read: (pageId) => api<PageVerification>(`/pages/${encodeURIComponent(pageId)}/verification`),
   change: (pageId, change) => put<PageVerification>(`/pages/${encodeURIComponent(pageId)}/verification`, change),
   report: (pageId, note) => post<{ notified: number }>(`/pages/${encodeURIComponent(pageId)}/verification/report`, note.trim() ? { note: note.trim() } : {}),
 };
