@@ -111,7 +111,7 @@ async function send(bubble: DiscussionBubble, markdown: string) {
       <button v-if="reply && replying !== bubble.id" type="button" class="peek-reply" @click="startReply(bubble, $event)"><AtlasIcon name="quote" :size="13" />{{ t.comments.peek.reply }}</button>
       <button type="button" class="peek-hide" :aria-label="t.comments.peek.hide" :title="t.comments.peek.hide" @click="emit('dismiss', bubble.id)"><AtlasIcon name="close" :size="12" /></button>
       <div v-if="reply && replying === bubble.id" class="peek-compose" data-peek-reply>
-        <CommentComposer :host="host" :busy="sending" :draft-key="draftKey(bubble)" cancelable enter-submits send-icon :placeholder="t.comments.peek.replyTo(bubble.authorName)" :aria-label="t.comments.peek.replyTo(bubble.authorName)" :hint="t.comments.hintEnter"
+        <CommentComposer :host="host" :busy="sending" :draft-key="draftKey(bubble)" cancelable send-icon :placeholder="t.comments.peek.replyTo(bubble.authorName)" :aria-label="t.comments.peek.replyTo(bubble.authorName)"
           @submit="send(bubble, $event)" @cancel="stopReply(bubble)" />
         <p v-if="failure" class="peek-failure" role="alert">{{ failure }}</p>
       </div>

@@ -22,14 +22,13 @@ import { pragueNow, historyStampText } from "@atlas/markdown/core";
 /**
  * The text field of a comment (CommentThread's own part): the page editor with a page's configuration and content plugins
  * (`boardTextPlugins`: `[[` links, YouTrack, `@` mentions when the host has people), so writing a comment is writing in a page.
- * Ctrl+Enter (⌘+Enter) sends; the Markdown sent is what a page saves, cleaned to what the server takes. After a send the host
+ * Enter sends and Shift+Enter writes a new line, everywhere (a suggestion list that is shown keeps its Enter); the Markdown sent is what a page saves, cleaned to what the server takes. After a send the host
  * calls `reset()`; `cancelable` adds „Zrušit“ (editing a comment, or folding a page's empty discussion), and Escape cancels too
  * (a draft with „Použít“, P3: it is discarded and the comment keeps what it was). The whole field is the editor's surface, so a click
  * anywhere in it writes. With `draftKey` (a new comment) the typed text counts as unsaved work and is kept under that key when the
  * field goes, to come back with the next field (UX-P-6), unless „Zrušit“ or Escape threw it away (the host drops a kept draft once
- * its comment is sent). With `enterSubmits` (a requirement's note, quick like 3.4's) Enter sends and Shift+Enter writes a new line; with
- * `sendIcon` puts a paper-plane button (SendButton) in the field's corner instead of the text button, dim while the field is empty and
- * accent with text, for a quick reply that Enter sends (the page's discussion and its peek); with `dayChip` a chip „dnes ▾“ picks the day of the note (sent as the second argument of `submit`) and returns to today after each send.
+ * its comment is sent). `sendIcon` puts a paper-plane button (SendButton) in the field's corner instead of the text button, dim while the field is empty and
+ * accent with text (the discussions and the peek's quick reply); with `dayChip` (a requirement's note) a chip „dnes ▾“ picks the day of the note (sent as the second argument of `submit`) and returns to today after each send.
  */
 const props = withDefaults(defineProps<{
   initial?: string;
@@ -41,11 +40,10 @@ const props = withDefaults(defineProps<{
   ariaLabel?: string;
   draftKey?: string;
   hint?: string;
-  enterSubmits?: boolean;
   dayChip?: boolean;
   sendIcon?: boolean;
 }>(), { initial: "", placeholder: () => t.comments.placeholder, submitLabel: () => t.comments.send, cancelable: false, busy: false, host: () => inertBlockHost, ariaLabel: () => t.comments.text, draftKey: undefined,
-  hint: () => t.comments.hint, enterSubmits: false, dayChip: false, sendIcon: false });
+  hint: () => t.comments.hintEnter, dayChip: false, sendIcon: false });
 const emit = defineEmits<{ submit: [markdown: string, date?: string]; cancel: [] }>();
 const today = pragueNow().date;
 const day = ref(today);
@@ -83,8 +81,7 @@ function keydown(event: KeyboardEvent) {
   }
   // A suggestion list that is shown takes Enter; a hidden one elsewhere in the card (the dependencies' search) does not.
   const listed = [...document.querySelectorAll(".md-suggestion-list")].some(list => list.getClientRects().length);
-  const plain = props.enterSubmits && !event.shiftKey && !event.altKey && !listed;
-  if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey || plain) || event.isComposing) return;
+  if (event.key !== "Enter" || event.shiftKey || event.altKey || listed || event.isComposing) return;
   event.preventDefault();
   event.stopPropagation();
   submit();
@@ -122,7 +119,7 @@ defineExpose({ reset, submit, dispatch, quote });
     <!-- @vue-generic {'rich'} --><MarkdownEditor v-model="draft" profile="rich" variant="compact" :ariaLabel="ariaLabel" :plugins="plugins" :lexicon="host.lexicon" :placeholder="placeholder"
       :outline="editorOutline" v-bind="editorChrome" :show-block-add-button="false" :fullscreenable="false" @created="created"
       :class="[theme, 'atlas-document-editor', 'board-text', 'comment-composer-editor']" />
-    <SendButton v-if="sendIcon" class="comment-composer-send" :ready="canSend" :busy="busy" :label="enterSubmits ? t.comments.sendEnter : t.comments.sendCtrl" data-comment-submit />
+    <SendButton v-if="sendIcon" class="comment-composer-send" :ready="canSend" :busy="busy" :label="t.comments.sendEnter" data-comment-submit />
     </div>
     <div class="comment-composer-actions">
       <span v-if="dayChip" class="comment-composer-day">
@@ -159,6 +156,6 @@ defineExpose({ reset, submit, dispatch, quote });
 .comment-composer-day-chip { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 12px; padding: 2px 10px; cursor: pointer; }
 .comment-composer-day-input { position: absolute; inset: 0; opacity: 0; pointer-events: none; }
 .comment-composer-hint { margin-right: auto; color: var(--muted); font-size: 12px; }
-/* A touch screen has no Ctrl+Enter: there the button sends (UX PG4-5). */
+/* The hint is for a hardware keyboard; on a touch screen the button sends (UX PG4-5). */
 @media not (pointer: fine) { .comment-composer-hint { display: none; } }
 </style>
