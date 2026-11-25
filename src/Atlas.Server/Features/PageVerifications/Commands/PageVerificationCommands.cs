@@ -206,7 +206,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 SELECT EXISTS (SELECT 1 FROM "EffectivePageAccess" e JOIN "UserAccount" u ON u."Id"=e."UserId"
                   WHERE e."UserId"=:user AND e."PageId"=:page AND e."Role">=1 AND u."IsActive") AS "Reads"
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", stewardId).SetParameter("page", page.Id).UniqueResultAsync<bool>(ct);
-        return reads ? stewardId : throw new ApiException(400, "Garantem může být jen aktivní uživatel, který smí stránku číst.");
+        return reads ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
     }
 
     /// <summary>The author of the last published version (PageRevision.AuthorId), null when never published.</summary>
