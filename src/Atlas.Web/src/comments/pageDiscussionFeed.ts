@@ -34,6 +34,13 @@ export function usePageDiscussionFeed(
   const count = shallowRef(0);
   const unread = shallowRef(0);
   const bubbles = shallowRef<DiscussionBubble[]>([]);
+  const canPost = shallowRef(false);
+  /** Bubbles with a quick reply open: the room made for a new one never takes them. */
+  const pinned = new Set<string>();
+  const trim = (list: DiscussionBubble[]) => {
+    while (list.length > maxBubbles) { const at = list.findIndex(bubble => !pinned.has(bubble.id)); if (at < 0) break; list.splice(at, 1); }
+    return list;
+  };
   const seen = () => { unread.value = 0; bubbles.value = []; };
   watch(options.open, open => { if (open) seen(); });
   watch(pageId, (id, _before, onCleanup) => {
@@ -43,11 +50,15 @@ export function usePageDiscussionFeed(
     let alive = true;
     const known = new Set<string>();
     let seeded = false;
+    let latest = 0;
     const read = async () => {
+      const mine = ++latest;
       try {
         const page = await api.page(id);
-        if (!alive) return;
+        // An older answer arriving after a newer one must not overwrite it.
+        if (!alive || mine !== latest) return;
         count.value = page.count;
+        canPost.value = page.canPost;
         const arrived = page.items.filter(comment => !known.has(comment.id) && !comment.deleted);
         page.items.forEach(comment => known.add(comment.id));
         if (!seeded) { seeded = true; return; }
@@ -55,7 +66,7 @@ export function usePageDiscussionFeed(
         const others = arrived.filter(comment => comment.authorId.toLowerCase() !== options.selfId()?.toLowerCase()).reverse();
         if (!others.length) return;
         unread.value += others.length;
-        bubbles.value = [...bubbles.value, ...others.map(comment => ({ id: comment.id, authorId: comment.authorId, authorName: comment.authorName, text: plainTitle(comment.body).slice(0, 160) }))].slice(-maxBubbles);
+        bubbles.value = trim([...bubbles.value, ...others.map(comment => ({ id: comment.id, authorId: comment.authorId, authorName: comment.authorName, text: plainTitle(comment.body).slice(0, 160) }))]);
       } catch { /* quiet */ }
     };
     void read();
@@ -67,6 +78,10 @@ export function usePageDiscussionFeed(
     count: count as Readonly<Ref<number>>,
     unread: unread as Readonly<Ref<number>>,
     bubbles: bubbles as Readonly<Ref<readonly DiscussionBubble[]>>,
+    /** The reader may write comments here (a quick reply is offered only then). */
+    canPost: canPost as Readonly<Ref<boolean>>,
+    /** A quick reply is open on the bubble (or closed again): it is never pushed out by newer ones. */
+    pin(id: string, on: boolean) { if (on) pinned.add(id); else pinned.delete(id); },
     /** The open thread knows its count at once (also after the reader's own comment). */
     set(value: number) { count.value = value; },
     /** A bubble went (its time ran out, or it was dismissed); it stays counted as unread. */

@@ -94,3 +94,35 @@ describe("usePageDiscussionFeed", () => {
     s.scope.stop();
   });
 });
+
+describe("usePageDiscussionFeed: a reply being written, and late answers", () => {
+  it("never pushes out a bubble whose quick reply is open", async () => {
+    const s = setup([[comment("a")], [comment("bb"), comment("a")], [comment("ccc"), comment("bb"), comment("a")], [comment("dddd"), comment("ccc"), comment("bb"), comment("a")]]);
+    await settle();
+    s.notify();
+    await settle();
+    s.feed.pin("bb", true);
+    s.notify();
+    await settle();
+    s.notify();
+    await settle();
+    expect(s.feed.bubbles.value.map(bubble => bubble.id)).toEqual(["bb", "dddd"]);
+    s.feed.pin("bb", false);
+    expect(s.feed.canPost.value).toBe(true);
+  });
+
+  it("ignores an older answer that arrives after a newer one", async () => {
+    const waiting: ((count: number) => void)[] = [];
+    const api = { page: vi.fn(() => new Promise<{ items: ObjectComment[]; hasMore: boolean; count: number; canPost: boolean }>(resolve => waiting.push(count => resolve({ items: [], hasMore: false, count, canPost: true })))) };
+    let listener: { changed?(change: unknown, version: number): void } = {};
+    const views = { open: vi.fn(() => ({ watch: (_id: string, next: typeof listener) => { listener = next; return vi.fn(); }, close: vi.fn() })) } as never;
+    const feed = effectScope().run(() => usePageDiscussionFeed(() => "p1", { selfId: () => "ME", open: () => false }, api, views))!;
+    listener.changed?.(null, 2);
+    expect(waiting).toHaveLength(2);
+    waiting[1]!(5); // the newer read answers first
+    await settle();
+    waiting[0]!(1); // the older one comes late
+    await settle();
+    expect(feed.count.value).toBe(5);
+  });
+});

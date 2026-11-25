@@ -38,5 +38,5 @@ const badge = () => feed.unread.value || feed.count.value;
     </TooltipTrigger>
     <TooltipContent>{{ t.common.discussion }} · {{ chordLabel("Alt+c") }}</TooltipContent>
   </Tooltip>
-  <PageDiscussionPeek :bubbles="feed.bubbles.value" :docked="open" :host="host" :reply="reply" @open="emit('open')" @dismiss="feed.dismiss" />
+  <PageDiscussionPeek :bubbles="feed.bubbles.value" :docked="open" :host="host" :reply="feed.canPost.value ? reply : undefined" :draft-scope="pageId" @open="emit('open')" @dismiss="feed.dismiss" @replying="feed.pin" />
 </template>

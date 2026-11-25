@@ -4,6 +4,7 @@ import { errorMessage } from "../../api";
 import { inertBlockHost, type BoardBlockHost } from "../../boards/editorBlocks";
 import { focusWhenPresent } from "../../keyboard/navigation";
 import { lazyComponent } from "../../lazyComponent";
+import { drafts } from "../../lib/unsavedWork";
 import type { DiscussionBubble } from "../../comments/pageDiscussionFeed";
 import { themedCollaboratorColor, userColor } from "../../live/collaboratorColors";
 import AtlasIcon from "../AtlasIcon.vue";
@@ -32,8 +33,10 @@ const props = withDefaults(defineProps<{
   /** Sends a quick reply to the page's discussion; none: no reply here (the bubble only opens the discussion). */
   reply?: (markdown: string, bubble: DiscussionBubble) => Promise<void>;
   host?: BoardBlockHost;
-}>(), { docked: false, ttl: 6000, reply: undefined, host: () => inertBlockHost });
-const emit = defineEmits<{ open: []; dismiss: [id: string] }>();
+  /** The page: a reply written here is kept as an unsent draft under it (it survives the bubble). */
+  draftScope?: string;
+}>(), { docked: false, ttl: 6000, reply: undefined, host: () => inertBlockHost, draftScope: "" });
+const emit = defineEmits<{ open: []; dismiss: [id: string]; replying: [id: string, on: boolean] }>();
 
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 let held = false;
@@ -55,9 +58,11 @@ watch(() => props.bubbles.map(bubble => bubble.id), ids => {
 }, { immediate: true });
 onBeforeUnmount(clear);
 
+const draftKey = (bubble: DiscussionBubble) => `comment-reply:${props.draftScope}:${bubble.id}`;
 async function startReply(bubble: DiscussionBubble, event: Event) {
   const row = (event.currentTarget as HTMLElement).closest("li");
   replying.value = bubble.id;
+  emit("replying", bubble.id, true);
   failure.value = "";
   clearTimeout(timers.get(bubble.id)); timers.delete(bubble.id);
   await nextTick();
@@ -65,6 +70,7 @@ async function startReply(bubble: DiscussionBubble, event: Event) {
 }
 async function stopReply(bubble: DiscussionBubble) {
   replying.value = "";
+  emit("replying", bubble.id, false);
   await nextTick();
   const row = document.querySelector(`[data-peek-bubble][data-bubble-id="${CSS.escape(bubble.id)}"]`);
   if (row) void focusWhenPresent(row, ".peek-reply", 30);
@@ -77,7 +83,9 @@ async function send(bubble: DiscussionBubble, markdown: string) {
     await props.reply!(markdown, bubble);
     sent.value = bubble.id;
     replying.value = "";
+    emit("replying", bubble.id, false);
     await nextTick();
+    drafts.delete(draftKey(bubble)); // the field kept its text as it went; a sent reply is no draft
     emit("dismiss", bubble.id);
   } catch (error) {
     failure.value = errorMessage(error);
@@ -101,7 +109,7 @@ async function send(bubble: DiscussionBubble, markdown: string) {
       <button v-if="reply && replying !== bubble.id" type="button" class="peek-reply" @click="startReply(bubble, $event)"><AtlasIcon name="quote" :size="13" />{{ t.comments.peek.reply }}</button>
       <button type="button" class="peek-hide" :aria-label="t.comments.peek.hide" :title="t.comments.peek.hide" @click="emit('dismiss', bubble.id)"><AtlasIcon name="close" :size="12" /></button>
       <div v-if="reply && replying === bubble.id" class="peek-compose" data-peek-reply>
-        <CommentComposer :host="host" :busy="sending" cancelable enter-submits send-icon :placeholder="t.comments.peek.replyTo(bubble.authorName)" :aria-label="t.comments.peek.replyTo(bubble.authorName)" :hint="t.comments.hintEnter"
+        <CommentComposer :host="host" :busy="sending" :draft-key="draftKey(bubble)" cancelable enter-submits send-icon :placeholder="t.comments.peek.replyTo(bubble.authorName)" :aria-label="t.comments.peek.replyTo(bubble.authorName)" :hint="t.comments.hintEnter"
           @submit="send(bubble, $event)" @cancel="stopReply(bubble)" />
         <p v-if="failure" class="peek-failure" role="alert">{{ failure }}</p>
       </div>
