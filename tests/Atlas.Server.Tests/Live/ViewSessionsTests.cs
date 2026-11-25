@@ -146,6 +146,70 @@ public sealed class ViewSessionsTests
         Assert.Equal(first, await ColorOfAsync(admin, reader));              // and the freed colour can be had again
     }
 
+    /// <summary>A page's carets (its live document, CollaborationModule's ColorScope) and its object presence (its view session) hand out
+    /// colours from one table: the person who holds a colour in the editor has it in the presence too, and no one else on the page gets it.</summary>
+    [PostgreSqlFact]
+    public async Task A_pages_live_document_and_view_session_hand_out_colours_from_one_table()
+    {
+        await using var t = await ViewTest.CreateAsync();
+        var f = t.Fixture;
+        var space = await f.Host.SeedSpaceAsync("Colours", (f.Admin, SpaceRole.Writer), (f.Writer, SpaceRole.Writer));
+        var page = await t.PublishedPageAsync(f.Admin, space, "Colours");
+        await f.As<Atlas.Server.Platform.Validation.Appearance>(f.Writer, new UpdateAppearance(Atlas.Server.Platform.Validation.Appearance.Default with { CollaboratorColor = "teal" }));
+        var teal = CollaboratorPalette.Entries[CollaboratorPalette.SlotOf("teal")].Light;
+        // The admin's caret holds teal in the page's live document (a generation of it), as the Markdown hub assigns it.
+        var scope = f.Host.Services.GetRequiredService<MarkdownSyncOptions>().ColorScope($"page:{page:N}:{Guid.NewGuid():N}");
+        Assert.Equal(teal, f.Host.Services.GetRequiredService<CollaboratorColors>().Assign(scope, "markdown-connection", f.Admin.Id.ToString(), teal));
+        var admin = t.Connect(f.Admin);
+        var writer = t.Connect(f.Writer);
+        await t.Views.JoinAsync(admin, "page:" + page, default);
+        await t.Views.JoinAsync(writer, "page:" + page, default);
+
+        var mark = t.Mark();
+        await t.Views.SendPresenceAsync(writer, page, s_cursor);
+        await t.Views.SendPresenceAsync(admin, page, s_cursor);
+        Assert.NotEqual(teal, Assert.Single(t.Since<ObjectPresenceMessage>(mark, admin, "ObjectPresence")).Color);   // taken by the caret
+        Assert.Equal(teal, Assert.Single(t.Since<ObjectPresenceMessage>(mark, writer, "ObjectPresence")).Color);     // the caret's own
+    }
+
+    /// <summary>A card on two boards: a recipient sees the sender in the colour the recipient's own board gave them (not the one of the
+    /// board they work from, which someone else may have on this board), and a changed „Moje barva“ shows with the next presence.</summary>
+    [PostgreSqlFact]
+    public async Task Presence_takes_the_recipients_view_colour_and_a_changed_preference_restamps_live_sessions()
+    {
+        await using var t = await ViewTest.CreateAsync();
+        var f = t.Fixture;
+        var space = await f.Host.SeedSpaceAsync("Cards", (f.Admin, SpaceRole.Writer), (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+        var page = await t.PublishedPageAsync(f.Admin, space, "Card");
+        var first = await f.CreateBoardAsync(f.Admin);
+        var second = await f.CreateBoardAsync(f.Admin);
+        await f.ApplyAsync(f.Admin, first, BoardsFixture.PageCard(Guid.NewGuid(), page));
+        await f.ApplyAsync(f.Admin, second, BoardsFixture.PageCard(Guid.NewGuid(), page));
+        var prefer = Atlas.Server.Platform.Validation.Appearance.Default with { CollaboratorColor = "teal" };
+        await f.As<Atlas.Server.Platform.Validation.Appearance>(f.Admin, new UpdateAppearance(prefer));
+        await f.As<Atlas.Server.Platform.Validation.Appearance>(f.Writer, new UpdateAppearance(prefer));
+        var teal = CollaboratorPalette.SlotOf("teal");
+        var admin = t.Connect(f.Admin);
+        var writer = t.Connect(f.Writer);
+        var reader = t.Connect(f.Reader);
+        await t.Views.JoinAsync(writer, "board:" + second, default);        // teal on the second board
+        await t.Views.JoinAsync(admin, "board:" + first, default);          // teal on the first, where the admin works from
+        await t.Views.JoinAsync(admin, "board:" + second, default);         // the next free one on the second
+        await t.Views.JoinAsync(reader, "board:" + second, default);
+
+        var mark = t.Mark();
+        await t.Views.SendPresenceAsync(admin, page, s_cursor);
+        // Not teal, the admin's colour on the first board they work from: the writer is teal here.
+        Assert.Equal(CollaboratorPalette.Entries[(teal + 1) % CollaboratorPalette.Count].Light, Assert.Single(t.Since<ObjectPresenceMessage>(mark, reader, "ObjectPresence")).Color);
+
+        // A colour no one else on the second board has (the writer teal, the reader its automatic one).
+        var free = CollaboratorPalette.Entries.Where((_, slot) => slot != teal && slot != CollaboratorPalette.Auto(f.Reader.Id.ToString())).Last();
+        await f.As<Atlas.Server.Platform.Validation.Appearance>(f.Admin, new UpdateAppearance(prefer with { CollaboratorColor = free.Id }));
+        mark = t.Mark();
+        await t.Views.SendPresenceAsync(admin, page, s_cursor);
+        Assert.Equal(free.Light, Assert.Single(t.Since<ObjectPresenceMessage>(mark, reader, "ObjectPresence")).Color);
+    }
+
     /// <summary>A page edited in its own view shows up on the board that holds its card, and the other way round: one object, one
     /// presence, wherever it is shown. The colleague's view travels only to who may read it; the viewport decides the detail.</summary>
     [PostgreSqlFact]

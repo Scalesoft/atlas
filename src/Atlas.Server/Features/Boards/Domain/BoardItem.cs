@@ -39,7 +39,8 @@ public class BoardItem
         return item;
     }
 
-    /// <summary>Takes over a state the rules produced; identity, board, kind, target and ends never change after creation. True when
+    /// <summary>Takes over a state the rules produced; identity, board, kind and target never change after creation (a connector's ends
+    /// do, by a <c>set</c>). True when
     /// what the board's search document or its references read changed: the text, what search reads of the props, or the item's presence.</summary>
     public virtual bool Apply(BoardItemState state)
     {
@@ -62,6 +63,8 @@ public class BoardItem
         IsDeleted = state.IsDeleted;
         PropsJson = state.Props;
         ParentId = state.ParentId;
+        FromItemId = state.FromItemId;
+        ToItemId = state.ToItemId;
         return indexed;
     }
 }

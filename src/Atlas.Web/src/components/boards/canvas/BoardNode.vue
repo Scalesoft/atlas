@@ -353,6 +353,15 @@ watch(() => props.data.motion?.key, play, { flush: "post" });
 /* Nor on a card the neighbour highlighting dims: its handles sticking out of its box kept its opacity from flattening into the
    board's layer, as a group's name did (one compositing layer per card). A dimmed card is not the one under the pointer. */
 .board-canvas[data-highlighting] .board-node:not([data-highlight], .is-single) .board-handle { visibility: hidden; }
+/* A finger needs 44 px: the handle keeps its look, an invisible area takes the touch, reaching into the card and not out of it, where a
+   connector's end is grabbed (its circle lies outside the card, BoardCanvas's edge-updater-radius). */
+@media (pointer: coarse) {
+  .board-node .board-handle::before { content: ""; position: absolute; inset: -14px; }
+  .board-node .board-handle[data-side="top"]::before { top: 0; bottom: -28px; }
+  .board-node .board-handle[data-side="bottom"]::before { top: -28px; bottom: 0; }
+  .board-node .board-handle[data-side="left"]::before { left: 0; right: -28px; }
+  .board-node .board-handle[data-side="right"]::before { left: -28px; right: 0; }
+}
 .board-node .board-resize-handle { width: 10px; height: 10px; border: 1.5px solid var(--accent); border-radius: 3px; background: var(--surface); animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .board-node .board-resize-line { border-color: var(--accent); }
 /* The side edges of a component that flows are its only resize controls: a strip wider than their line takes the pointer. */

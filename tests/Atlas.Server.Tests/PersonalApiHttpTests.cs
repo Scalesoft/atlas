@@ -21,7 +21,12 @@ public sealed class PersonalApiHttpTests
     {
         await using var site = await AtlasHttpSite.CreateAsync("atlas_scalar_");
         using var client = site.Client();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/scalar/")).StatusCode);
+        // The shell, with or without a document name, and the document need a session (checked after the Scalar.AspNetCore 3 upgrade); Scalar serves its own
+        // bundled scripts and icon anonymously by design, they hold nothing of the wiki.
+        foreach (var path in new[] { "/scalar/", "/scalar/v1", "/openapi/v1.json" })
+        {
+            Assert.Equal((path, HttpStatusCode.Unauthorized), (path, (await client.GetAsync(path)).StatusCode));
+        }
         await site.CompleteSetupAsync(client);
         var response = await client.GetAsync("/scalar/");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

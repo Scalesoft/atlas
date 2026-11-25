@@ -1,8 +1,6 @@
 import type { Editor } from '@tiptap/core'
-import { NodeSelection, Plugin, PluginKey, Selection, type Transaction } from '@tiptap/pm/state'
-import type { Node as PMNode } from '@tiptap/pm/model'
+import { NodeSelection, Plugin, PluginKey, Selection } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
-import { ReplaceStep } from '@tiptap/pm/transform'
 import { checkFileBudget, imageSource, resourcePolicyFor } from './resourcePolicy'
 import { runResourceTask } from './resourceQueue'
 import { checkImageFileBudget, imageFileDimensions } from './imageFileBudget'
@@ -14,6 +12,7 @@ import {
 } from './uploadService'
 import { imagesStrings } from '../../ui/strings/images'
 import { createFileDropPreview } from './fileDropPreview'
+import { markdownChangeMapping } from '../../core/changeMapping'
 
 type TargetId = symbol
 type Targets = ReadonlyMap<TargetId, number>
@@ -43,24 +42,6 @@ export function cancelImageUploads(editor: Editor): void {
   scopes.get(editor)?.cancelAll()
 }
 
-/** A collaborative update (y-prosemirror) replaces the whole document in one step, so every position in it maps as deleted. */
-function rewritesWholeDocument(transaction: Transaction, doc: PMNode): boolean {
-  const step = transaction.steps.length === 1 ? transaction.steps[0] : undefined
-  return step instanceof ReplaceStep && step.from === 0 && step.to === doc.content.size
-}
-
-/**
- * Across such a rewrite a position keeps its place outside the part that really changed (UX PG4-6: a server's echo right
- * after the slash command cancelled the image picker, ~1 run in 2). Inside the changed part it is gone, as with any edit.
- */
-function mapAcrossRewrite(before: PMNode, after: PMNode, position: number): { pos: number; deleted: boolean } {
-  const start = before.content.findDiffStart(after.content)
-  if (start === null || position <= start) return { pos: position, deleted: false }
-  let { a, b } = before.content.findDiffEnd(after.content)!
-  if (a < start) { b += start - a; a = start }
-  return position >= a ? { pos: position + b - a, deleted: false } : { pos: position, deleted: true }
-}
-
 /** Pure transaction mapping also sees appended and collaborative transactions. */
 export function createImageUploadTargetsPlugin(editor: Editor): Plugin<Targets> {
   // Anchors belong to this mounted plugin, never to a subsequently rebuilt view.
@@ -77,13 +58,14 @@ export function createImageUploadTargetsPlugin(editor: Editor): Plugin<Targets> 
     },
     state: {
       init: () => new Map(),
-      apply(transaction, previous, before, after) {
+      apply(transaction, previous) {
         const change = transaction.getMeta(targetKey) as TargetChange | undefined
         if (!transaction.docChanged && !change) return previous
-        const targets = new Map<TargetId, number>()
-        const rewrite = rewritesWholeDocument(transaction, before.doc)
+        // A collaborator's change or a server's echo moves a target only by what really changed (UX PG4-6: an echo right after the
+        // slash command cancelled the image picker, ~1 run in 2).
+        const targets = new Map<TargetId, number>(), mapping = markdownChangeMapping(transaction)
         for (const [id, position] of previous) {
-          const mapped = rewrite ? mapAcrossRewrite(before.doc, after.doc, position) : transaction.mapping.mapResult(position, 1)
+          const mapped = mapping.mapResult(position, 1)
           if (!mapped.deleted) targets.set(id, mapped.pos)
         }
         if (change && 'add' in change) targets.set(change.add.id, change.add.position)

@@ -27,6 +27,13 @@ public static class NotificationKinds
     /// <summary>5.2 „Nahlásit neaktuální“: a reader reports the page outdated to its steward (else up to three editors who last published
     /// it); the reader's note is stored in the anchor and read as the item's excerpt; repeated reports aggregate into one item.</summary>
     public const string ReportedOutdated = "page.reported_outdated";
+    /// <summary>5.2 (plan §2.3): the actor's deactivated account was the steward of verified pages of the space (the subject), told to its
+    /// administrators once per space (topic <see cref="VerificationDue"/>); shown while the reader administers the space.</summary>
+    public const string StewardDeactivated = "space.steward_deactivated";
+
+    /// <summary>How long the same actor's repeat of the kind on one item neither counts nor makes it unread again: a reader who reports a
+    /// page again and again does not re-raise the steward's item (5.2 review L1). Zero for the other kinds.</summary>
+    public static TimeSpan QuietPeriod(string kind) => kind == ReportedOutdated ? TimeSpan.FromMinutes(10) : TimeSpan.Zero;
 
     /// <summary>The kinds a preference names; a share's change and end follow the switch of <see cref="ItemShared"/>.</summary>
     public static readonly IReadOnlyList<string> All = [CommentMention, PageMention, ItemShared, VerificationDue, ReportedOutdated];
@@ -34,7 +41,7 @@ public static class NotificationKinds
     /// <summary>The preference and aggregation topic of a kind: the three share kinds are one topic, so a share that changes or ends
     /// replaces its earlier item instead of leaving it beside the new one.</summary>
     public static string Topic(string kind) => kind is ItemShareChanged or ItemUnshared ? ItemShared
-        : kind is VerificationExpiring or VerificationExpired ? VerificationDue
+        : kind is VerificationExpiring or VerificationExpired or StewardDeactivated ? VerificationDue
         : kind;
 
     /// <summary>The subject of a job's failures: one per job id, so they aggregate into one item.</summary>

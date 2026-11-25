@@ -11,8 +11,8 @@
 //     editors sharing one injected `ydoc` still converge (the Collaboration
 //     extension observes the shared doc) — the zero-server gallery demo.
 //   • networked (`hubUrl` set): a SignalRYjsProvider relays opaque Yjs updates
-//     over the /hubs/tiptap hub and rides an awareness channel for presence +
-//     remote carets (CollaborationCaret). The consumer calls `attachEditor` once
+//     over the /hubs/markdown hub and rides an awareness channel for presence +
+//     remote carets (CollaborationCarets, carets.ts). The consumer calls `attachEditor` once
 //     the editor is created (needed for seeding + snapshot markdown rendering),
 //     which also starts the connection.
 
@@ -22,7 +22,6 @@ import { KeepingCollaboration } from './collaboration'
 import type { AnyExtension, Editor } from '@tiptap/core'
 import { SignalRYjsProvider, type PresenceUser } from './SignalRYjsProvider'
 import { DurableSignalRYjsProvider, type DurableCollaborationOptions } from './DurableSignalRYjsProvider'
-import { awarenessColor } from './awareness-color'
 import { caretAwareness } from './caretAwareness'
 import { CollaborationCarets } from './carets'
 import type { MarkdownDocumentSchema } from '../core/types'
@@ -31,11 +30,10 @@ import { CollaborationRemoteRemoval } from './remoteRemoval'
 import { CollaborationTableRepair } from './tableRepair'
 import { assertRecoveryBinding, type MarkdownRecovery } from './recovery/session'
 
+/** Who edits. No colour: the server stamps each participant's (CollaboratorColors) and drops a client's own. */
 export interface CollabUser {
   id: string
   name: string
-  /** Caret colour; defaults to a deterministic per-id palette colour. */
-  color?: string
 }
 
 export type CollabStatus = 'local' | 'connecting' | 'connected' | 'reconnecting' | 'offline'
@@ -131,7 +129,6 @@ export function useCollab(opts: UseCollabOptions): CollabHandle {
   const field = opts.field ?? 'default'
   // Before the provider subscribes to the doc: the server's own state is no local change to send back.
   if (opts.initialState) Y.applyUpdate(ydoc, opts.initialState)
-  const color = opts.user.color ?? awarenessColor(opts.user.id)
 
   const status = ref<CollabStatus>(opts.hubUrl ? 'connecting' : 'local')
   const synced = ref(!opts.hubUrl) // local mode is synced by construction
@@ -183,8 +180,8 @@ export function useCollab(opts: UseCollabOptions): CollabHandle {
       ? new DurableSignalRYjsProvider({ ...providerOptions, schema: opts.schema!, durable: opts.durable, allowOfflineEditing: opts.allowOfflineEditing })
       : new SignalRYjsProvider(providerOptions)
     // Remote carets + selections. Extra `id` rides the awareness `user` field so
-    // PresenceStack can key + colour peers consistently with their caret.
-    const user = { id: opts.user.id, name: opts.user.name, color }
+    // PresenceStack can key peers; the server adds the colour.
+    const user = { id: opts.user.id, name: opts.user.name }
     if (opts.reader) provider.awareness.setLocalStateField('user', user)
     // Carets redraw only for a caret or a name that changed, not for every other field of the state (a host's pointers).
     else extensions.push(CollaborationCarets.configure({ provider: { awareness: caretAwareness(provider.awareness) }, user }))

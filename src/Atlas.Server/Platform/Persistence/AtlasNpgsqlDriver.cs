@@ -68,14 +68,14 @@ public sealed class AtlasNpgsqlDriver : NHibernate.Driver.NpgsqlDriver
 }
 
 /// <summary>
-/// Sessions auto-prepare (<see cref="AtlasDatabase.WithAutoPrepare"/>), and Npgsql 10.0.3 marks an auto-prepared statement prepared at
+/// Sessions auto-prepare (<see cref="AtlasDatabase.WithAutoPrepare"/>), and Npgsql 10.0.3 and 11.0.0 (upstream issue npgsql/npgsql#6391, open) mark an auto-prepared statement prepared at
 /// ParseComplete, before its row description: when the run that prepares it fails while PostgreSQL plans it (a cancelled request, a
 /// timeout, an error at Bind), the statement stays "prepared" without a description, and every later run of it on that pooled
 /// connection misreads the protocol ("Received unexpected backend message DataRow", "No resultset is currently being traversed").
 /// So a command that fails closes its own prepared statements right away: the Close message also works in the aborted transaction,
 /// and the next run prepares the statement afresh. Every command on a session's connection that can return rows goes through this:
 /// NHibernate's (<see cref="AtlasNpgsqlDriver"/>) and the raw reads (<see cref="SessionExtensions.ReadRowsAsync"/>, RelationAnchor.ReadAllAsync,
-/// ContentRowEffects). Remove it once an Npgsql release fixes the order (PlatformTests).
+/// ContentRowEffects). Remove it once an Npgsql release fixes the order: without it PlatformTests.A_read_cancelled_while_planned_leaves_the_session_connection_usable fails every time on 11.0.0.
 /// </summary>
 public static class PreparedStatements
 {

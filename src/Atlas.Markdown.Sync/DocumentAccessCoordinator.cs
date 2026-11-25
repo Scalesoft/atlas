@@ -163,7 +163,7 @@ public sealed class DocumentAccessCoordinator(
         peer.CanWrite = access.CanWrite;
         if (!access.CanRead)
         {
-            doc.Peers.TryRemove(peer.ConnectionId, out _);
+            if (doc.Peers.TryRemove(peer.ConnectionId, out _)) registry.ReleaseColor(doc, peer.ConnectionId);
             // Group membership is cleanup only. Every publication selects authorized IDs.
             RemoveGroupMembership(peer.ConnectionId, doc.DocumentId);
         }

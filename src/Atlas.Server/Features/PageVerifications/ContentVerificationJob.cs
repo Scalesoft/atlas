@@ -23,14 +23,13 @@ public sealed class SendVerificationNoticesHandler(ISession session, Outbox outb
     /// <returns>The pages of this batch; fewer than <see cref="Batch"/> means nothing is left.</returns>
     public async Task<int> Handle(SendVerificationNotices command, CancellationToken ct)
     {
-        var due = await session.ReadRowsAsync("""
+        var due = await session.ReadRowsAsync($"""
                 SELECT v."PageId" AS "PageId", v."StewardId" AS "StewardId", v."VerifiedUntil" AS "VerifiedUntil"
                 FROM "PageVerification" v
                 JOIN "Page" p ON p."Id"=v."PageId"
                 JOIN "Space" s ON s."Id"=p."SpaceId"
                 JOIN "UserAccount" u ON u."Id"=v."StewardId" AND u."IsActive"
-                WHERE NOT p."IsTrashed" AND NOT p."IsTemplate" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL
-                  AND coalesce(v."IntervalMonths",s."VerificationIntervalMonths",0)>0
+                WHERE NOT p."IsTrashed" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL AND {PageVerificationStates.IntervalSql}>0
                   AND (v."VerifiedUntil"<=:now AND v."NoticeStage"<2 OR v."VerifiedUntil"<=:soon AND v."NoticeStage"<1)
                 ORDER BY v."PageId" LIMIT :batch
                 FOR UPDATE OF v SKIP LOCKED

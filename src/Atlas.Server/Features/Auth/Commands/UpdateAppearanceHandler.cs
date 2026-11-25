@@ -1,3 +1,4 @@
+using Atlas.Markdown.Sync;
 using NHibernate;
 using Atlas.Server.Features.Auth.Domain;
 using ISession = NHibernate.ISession;
@@ -9,9 +10,11 @@ public sealed class UpdateAppearanceHandler
     private readonly ISession m_session;
     private readonly ICurrentActor m_actor;
     private readonly IAtlasLocks m_locks;
+    private readonly CollaboratorColors m_colors;
 
-    public UpdateAppearanceHandler(ISession session, ICurrentActor actor, IAtlasLocks locks)
+    public UpdateAppearanceHandler(ISession session, ICurrentActor actor, IAtlasLocks locks, CollaboratorColors colors)
     {
+        m_colors = colors;
         m_session = session;
         m_actor = actor;
         m_locks = locks;
@@ -53,6 +56,13 @@ public sealed class UpdateAppearanceHandler
             CollaboratorColor = command.Appearance.CollaboratorColor,
             ActiveFrom = boundary
         }, ct);
+        if (current?.CollaboratorColor != command.Appearance.CollaboratorColor)
+        {
+            // Before the commit: a failed one only moves live colours, it loses nothing. The editor re-announces its awareness at once
+            // (live/collaboratorColors.ts), other surfaces with their next presence.
+            var slot = CollaboratorPalette.SlotOf(command.Appearance.CollaboratorColor);
+            m_colors.Restamp(actor.Id.ToString(), slot >= 0 ? CollaboratorPalette.Entries[slot].Light : null);
+        }
         return command.Appearance;
     }
 }

@@ -8,7 +8,6 @@ import type {
 import { api, checkSessionAfterLiveFailure } from "./api";
 import t from "./i18n/shell";
 import { markdownProjection } from "./pageSourceDraft";
-import { userColor } from "./live/objectPresence";
 /**
  * The page editor's own hub (/hubs/markdown, Atlas.Markdown's transport) knows nothing of the shell's session: a session that ended
  * shows there only as a lost or failed connection. Each time its connection is lost or fails, the session is checked as the live
@@ -142,7 +141,8 @@ export function collaborationCheckpointReady(state: MarkdownEditorState) {
 const signalrTransport = () => import("@atlas/markdown/collaboration/signalr");
 void signalrTransport().catch(() => {});
 export type BundledCollaboration = NonNullable<NonNullable<import("./api").Page["bundle"]>["collaboration"]>;
-const presenceOf = (identity: CollaborationIdentity) => ({ id: identity.id, name: identity.displayName, color: userColor(identity.id) });
+// No colour: the server stamps the person's (their „Moje barva“ unless someone present has it) on what others receive.
+const presenceOf = (identity: CollaborationIdentity) => ({ id: identity.id, name: identity.displayName });
 /**
  * The shared session from the page bundle's state (3.6, one editor): the editor builds from it at once and takes input before the hub
  * joins; the join only adds what came after. No lease request: the bundle carries the state exactly when the lease would return this

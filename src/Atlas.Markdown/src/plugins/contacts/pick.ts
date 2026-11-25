@@ -1,6 +1,6 @@
 import type { Command, Editor } from '@tiptap/core'
 import { TextSelection, type EditorState, type Transaction } from '@tiptap/pm/state'
-import { dispatchMarkdownHistoryOperation } from '../../core'
+import { dispatchMarkdownHistoryOperation, markdownChangeMapping } from '../../core'
 import { normalizeContact, type ContactsPluginOptions, type MarkdownContact } from './data'
 
 /** Longest selected text that „Udělat kontakt“ takes as a name. */
@@ -54,7 +54,7 @@ export function pickInto(options: ContactsPluginOptions, node: Node, { query = '
     const asInline = selected ? true : inline ?? $from.parent.content.size > 0
     let position = selected?.from ?? $from.pos, end = selected?.to ?? position
     const abort = new AbortController()
-    const follow = ({ transaction }: { transaction: Transaction }) => { position = transaction.mapping.map(position); end = Math.max(position, transaction.mapping.map(end, -1)) }
+    const follow = ({ transaction }: { transaction: Transaction }) => { const mapping = markdownChangeMapping(transaction); position = mapping.map(position); end = Math.max(position, mapping.map(end, -1)) }
     const stop = () => abort.abort()
     const done = () => { editor.off('transaction', follow); editor.off('destroy', stop) }
     // After this command's own transaction: `position` is already in its document.

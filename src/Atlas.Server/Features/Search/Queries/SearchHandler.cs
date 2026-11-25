@@ -12,13 +12,13 @@ public sealed class SearchHandler
     private readonly Atlas.Server.Features.Ai.Access.AiPolicyResolver m_policy;
     private readonly ISearchMissRecorder m_misses;
     private readonly ContentParticipants m_participants;
-    private readonly NHibernate.ISession m_session;
+    private readonly PageVerifications.PageVerificationReader m_verifications;
 
     public SearchHandler(IContentAccess access, SearchSql sql, ISearchMissRecorder misses, Atlas.Server.Features.Ai.Access.AiPolicyResolver policy,
-        ContentParticipants participants, NHibernate.ISession session)
+        ContentParticipants participants, PageVerifications.PageVerificationReader verifications)
     {
         m_access = access;
-        m_session = session;
+        m_verifications = verifications;
         m_sql = sql;
         m_policy = policy;
         m_misses = misses;
@@ -146,7 +146,7 @@ public sealed class SearchHandler
             var excluded = await m_sql.ExcludedFromAiAsync(items.Select(item => item.SpaceId).ToHashSet(), ct);
             items.RemoveAll(item => excluded.Contains(item.SpaceId));
         }
-        if (items.Count > 0 && await PageVerifications.PageVerificationReader.StatesAsync(m_session, items.Select(item => item.Id).ToList(), ct) is { Count: > 0 } states)
+        if (items.Count > 0 && await m_verifications.StatesAsync(items.Select(item => item.Id).ToList(), ct) is { Count: > 0 } states)
         {
             for (var i = 0; i < items.Count; i++)
             {

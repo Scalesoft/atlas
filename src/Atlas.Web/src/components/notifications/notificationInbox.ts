@@ -1,6 +1,7 @@
 import { api, post, put } from "../../api";
 import { contentItemLink, pageCommentLink } from "../../pageLinks";
 import { unreadNotificationsApi } from "../../notifications";
+import { spaceSettingsHash } from "../../settingsRoutes";
 import t from "../../i18n/components-search";
 
 /**
@@ -8,7 +9,7 @@ import t from "../../i18n/components-search";
  * Loaded with the inbox; only the badge (../../notifications.ts) is part of the first screen.
  */
 export type NotificationKind = "comment.mention" | "page.mention" | "item.shared" | "item.share_changed" | "item.unshared" | "job.failed"
-  | "page.verification_due" | "page.verification_expiring" | "page.verification_expired" | "page.reported_outdated";
+  | "page.verification_due" | "page.verification_expiring" | "page.verification_expired" | "page.reported_outdated" | "space.steward_deactivated";
 export interface NotificationItem {
   /** `subjectType` null: an ended share the reader may not open any more, told without its title. */
   id: string; kind: NotificationKind | string; subjectId: string; subjectType: string | null; subjectTitle: string;
@@ -45,6 +46,8 @@ export const kindLabels = (): Record<NotificationKind, { title: string; action: 
   "page.verification_expiring": { title: t.notifications.verificationExpiring, action: "", icon: "shield-check" },
   "page.verification_expired": { title: t.notifications.verificationExpired, action: "", icon: "alert" },
   "page.reported_outdated": { title: t.notifications.outdatedReports, action: t.notifications.reportedOutdated, icon: "alert" },
+  // To the space's administrators, from the deactivated steward: the subject is the space, the link its Stav obsahu.
+  "space.steward_deactivated": { title: t.notifications.stewardDeactivated, action: t.notifications.stewardDeactivatedAction, icon: "shield-check" },
 });
 /** The kinds a preference switches; a share's change and end follow „Sdílení“. */
 export const preferenceKinds: NotificationKind[] = ["comment.mention", "page.mention", "item.shared", "page.verification_due", "page.reported_outdated"];
@@ -55,11 +58,13 @@ export function kindOf(kind: string) {
   return kindLabels()[kind as NotificationKind] ?? { title: kind, action: "", icon: "notifications" };
 }
 
-/** The subject at its anchor (a page's heading), a failed job at its page in Správa wiki (the anchor is its id); undefined for a type the
+/** The subject at its anchor (a page's heading), a failed job at its page in Správa wiki (the anchor is its id), a space at its Stav obsahu;
+ * undefined for a type the
  * shell does not open by address. */
 export function notificationLink(item: Pick<NotificationItem, "subjectId" | "subjectType" | "anchor" | "commentId">) {
   if (item.subjectType === "atlas.job") return item.anchor ? `#/settings/general/jobs/${encodeURIComponent(item.anchor)}` : undefined;
   if (!item.subjectType) return undefined;
+  if (item.subjectType === "atlas.space") return spaceSettingsHash(item.subjectId, "content-health");
   if (item.commentId && item.subjectType === "atlas.page") return pageCommentLink(item.subjectId, item.commentId);
   return contentItemLink({ id: item.subjectId, type: "reference", targetId: item.subjectId, targetTypeId: item.subjectType, anchor: item.anchor });
 }

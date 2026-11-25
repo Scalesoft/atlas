@@ -9,7 +9,7 @@
   "Ověřování je u této stránky vypnuté.": "Verification is switched off for this page.",
   "Ověřit lze jen publikovanou stránku. Nejdřív ji publikujte.": "Only a published page can be verified. Publish it first.",
   "Ověřit lze do data v budoucnosti, nejvýše za pět let.": "A page can be verified until a date in the future, at most five years ahead.",
-  "Garantem může být jen aktivní uživatel, který smí stránku číst.": "Only an active user who may read the page can be its owner.",
+  "Tento uživatel nemůže být garantem této stránky.": "This user cannot be the owner of this page.",
   "Poznámka": "Note",
   "Vyberte období 30, 90 nebo 365 dní.": "Choose a period of 30, 90 or 365 days.",
   "Počet položek musí být 1 až 100.": "The number of items must be 1 to 100.",

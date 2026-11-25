@@ -1,4 +1,5 @@
-import type { BoardSide, Geometry } from "./boardApi";
+import { getBezierPath, getStraightPath, type Position } from "@vue-flow/core";
+import type { BoardRoute, BoardSide, Geometry } from "./boardApi";
 
 /**
  * Where a connector runs (the elbow route): out of its start side and into its end side in right angles, around the cards in the
@@ -190,6 +191,24 @@ export function parallelOffsets(edges: readonly { id: string; source: string; ta
   const offsets = new Map<string, number>();
   for (const ids of pairs.values()) if (ids.length > 1) ids.forEach((id, index) => offsets.set(id, (index - (ids.length - 1) / 2) * gap));
   return offsets;
+}
+
+/**
+ * A connector's path and its label's point, as an edge and the preview of one being drawn route it (BoardEdge, BoardConnectorPreview):
+ * curved and straight as Vue Flow draws them, the elbow around `boxes` (its own ends and the cards near them) with rounded corners.
+ */
+export function connectorPath(route: BoardRoute, source: Port, target: Port, boxes: readonly Geometry[]): [string, number, number] {
+  const ends = { sourceX: source.x, sourceY: source.y, targetX: target.x, targetY: target.y, sourcePosition: source.side as Position, targetPosition: target.side as Position };
+  if (route === "curved") { const [path, x, y] = getBezierPath(ends); return [path, x, y]; }
+  if (route === "straight") { const [path, x, y] = getStraightPath(ends); return [path, x, y]; }
+  const points = routeElbow(source, target, boxes);
+  const middle = pointAtHalf(points);
+  return [roundedPath(points, 12), middle.x, middle.y];
+}
+/** The cards an elbow between two ports goes around: in a box around both, a card's width wider, without its own ends, at most 60. */
+export function cardsNear<T extends Geometry & { id: string }>(cards: readonly T[], source: Point, target: Point, ends: readonly (string | undefined)[]): T[] {
+  const near = { x: Math.min(source.x, target.x) - 320, y: Math.min(source.y, target.y) - 320, right: Math.max(source.x, target.x) + 320, bottom: Math.max(source.y, target.y) + 320 };
+  return boxesIn(cards, near).filter(box => !ends.includes(box.id)).slice(0, 60);
 }
 
 /** A port moved along its side (across the direction it leaves in). */

@@ -12,6 +12,7 @@ namespace Atlas.Markdown.Sync;
 public sealed class DocumentRegistry(
     IDocumentStore store,
     MarkdownSyncOptions options,
+    CollaboratorColors colors,
     ILogger<DocumentRegistry> log)
 {
     private readonly ConcurrentDictionary<string, LiveDocument> _docs = new(StringComparer.Ordinal);
@@ -28,6 +29,22 @@ public sealed class DocumentRegistry(
     /// <summary>Get the live document shell, creating an empty one if absent. Callers load/mutate under its gate.</summary>
     internal LiveDocument GetOrCreate(string documentId)
         => _docs.GetOrAdd(documentId, static id => new LiveDocument(id));
+
+    /// <summary>Gives a peer joining <paramref name="doc"/> its colour, from the scope the document shares with the host's other live
+    /// surfaces (<see cref="MarkdownSyncOptions.ColorScope"/>); it keeps it until it leaves or restamps. Call under the gate.</summary>
+    internal void AssignColor(LiveDocument doc, string connectionId, CollabUser user)
+        => colors.Assign(options.ColorScope(doc.DocumentId), ColorHolder(doc, connectionId), user.Id, user.Color);
+
+    /// <summary>The colour the peer holds now (<see cref="CollaboratorColors.Restamp"/> may have changed it since its join).</summary>
+    internal string? ColorOf(LiveDocument doc, string connectionId)
+        => colors.Find(options.ColorScope(doc.DocumentId), ColorHolder(doc, connectionId));
+
+    /// <summary>The peer left <paramref name="doc"/>: its colour is free again. Call under the gate, wherever a peer is removed.</summary>
+    internal void ReleaseColor(LiveDocument doc, string connectionId)
+        => colors.Release(options.ColorScope(doc.DocumentId), ColorHolder(doc, connectionId));
+
+    // One connection may hold two generations of a page (one scope) for a moment; each releases only its own.
+    private static string ColorHolder(LiveDocument doc, string connectionId) => connectionId + " " + doc.DocumentId;
 
     internal LiveDocument? TryGet(string documentId)
         => _docs.TryGetValue(documentId, out var doc) ? doc : null;

@@ -2,8 +2,9 @@
 //
 // ONE palette (collaboratorColors.json, also embedded by Atlas.Markdown.Sync, whose server assigns the colour per live session):
 // the 12 hues of the appearance catalog in an order where neighbours differ clearly, each with a light and a dark variant. The server
-// stamps the light variant as a literal "#rrggbb" (y-tiptap appends an alpha to it for selections); `collaboratorColor` swaps it for
-// the dark variant on a dark surface. Literal values, not `var(--…)`: the caret DOM lives outside a component scope where tokens resolve.
+// stamps the light variant as a literal "#rrggbb"; `collaboratorColor` gives either variant (carets carry both, collaboration.css picks
+// by the surface). Literal values, not `var(--…)`: the caret DOM lives outside a component scope where tokens resolve. Also the light
+// subpath `@atlas/markdown/core/userColor`, for a host's first screen that must not load the editor.
 import palette from './collaboratorColors.json'
 
 export interface CollaboratorColor { id: string; light: string; dark: string }
@@ -28,6 +29,3 @@ export function collaboratorColor(color: string, dark: boolean): string {
   const entry = COLLABORATOR_COLORS.find(item => item.light === color || item.dark === color)
   return entry ? (dark ? entry.dark : entry.light) : color
 }
-
-/** The full palette's light variants, for the picker and the legend. */
-export const MARKDOWN_USER_PALETTE: readonly string[] = COLLABORATOR_COLORS.map(item => item.light)

@@ -8,6 +8,7 @@ using Atlas.Server.Features.PageVerifications.Domain;
 using Atlas.Server.Tests.Boards;
 using Atlas.Server.Tests.Mcp;
 using Atlas.Server.Tests.Platform;
+using Npgsql;
 using Xunit;
 using static Atlas.Server.Tests.Mcp.McpSite;
 
@@ -32,6 +33,20 @@ public sealed class PageVerificationTests
         Assert.Equal(0, PageVerificationStates.Interval(0, 6, false));
         Assert.Equal(6, PageVerificationStates.Interval(null, 6, false));
         Assert.Null(PageVerificationStates.Interval(3, 6, true));
+    }
+
+    [Fact]
+    public void A_date_without_a_time_is_verified_through_that_day_in_Prague()
+    {
+        // Winter (UTC+1) and summer (UTC+2): the last microsecond of the day there, so the chip still shows that day.
+        var winter = PageVerificationHandler.Until(new DateTime(2027, 3, 1));
+        Assert.Equal(new DateTime(2027, 3, 1, 23, 0, 0, DateTimeKind.Utc).AddTicks(-10), winter);
+        Assert.Equal(new DateTime(2027, 7, 1, 22, 0, 0, DateTimeKind.Utc).AddTicks(-10), PageVerificationHandler.Until(new DateTime(2027, 7, 1)));
+        Assert.Equal(PageVerificationStates.Expiring, PageVerificationStates.Of(6, winter, new DateTime(2027, 3, 1, 22, 59, 59, DateTimeKind.Utc)));
+        Assert.Equal(PageVerificationStates.Expired, PageVerificationStates.Of(6, winter, new DateTime(2027, 3, 1, 23, 0, 0, DateTimeKind.Utc)));
+        // A time without a zone is Prague's; one with a zone is taken as it is.
+        Assert.Equal(new DateTime(2027, 3, 1, 9, 0, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 1, 10, 0, 0)));
+        Assert.Equal(new DateTime(2027, 3, 1, 10, 0, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 1, 10, 0, 0, DateTimeKind.Utc)));
     }
 
     [PostgreSqlFact]
@@ -102,15 +117,13 @@ public sealed class PageVerificationTests
         var hits = await AtlasHttpSite.Json(await reader.GetAsync("/api/search?q=Postup"), HttpStatusCode.OK);
         Assert.Equal(PageVerificationStates.Expiring, hits["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verification"]!.GetValue<string>());
 
-        // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader changes nothing.
+        // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader is refused.
         var bulk = $"/api/spaces/{space}/content-health/bulk";
         var cleared = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
             new { action = "steward", pageIds = new[] { page.Id, Guid.NewGuid().ToString() }, stewardId = (string?)null }), HttpStatusCode.OK);
         Assert.Equal((1, 1), (cleared["changed"]!.GetValue<int>(), cleared["skipped"]!.AsArray().Count));
         Assert.Null((await AtlasHttpSite.Json(await writer.GetAsync(url), HttpStatusCode.OK))["stewardId"]);
-        var refused = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, bulk, new { action = "verify", pageIds = new[] { page.Id } }),
-            HttpStatusCode.OK);
-        Assert.Equal((0, 1), (refused["changed"]!.GetValue<int>(), refused["skipped"]!.AsArray().Count));
+        Assert.Equal(HttpStatusCode.Forbidden, (await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, bulk, new { action = "verify", pageIds = new[] { page.Id } })).StatusCode);
 
         // Over MCP: verifying needs the write scope, is marked „přes AI“, and atlas_get_page and the content health show it.
         await f.SetLevelAsync(f.AdminId, "write");
@@ -119,6 +132,20 @@ public sealed class PageVerificationTests
         var writing = await f.ClientAsync((await IssueAsync(f.Admin, f.Site.Password, ["read", "write"], ["mcp"], "Write")).Secret);
         Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, verify = true })).IsError != true);
         Assert.True((await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["verifiedViaAi"]!.GetValue<bool>());
+        // The steward is set and cleared over MCP as on the web.
+        Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, stewardId = readerId })).IsError != true);
+        Assert.Equal(readerId, (await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["stewardId"]!.GetValue<string>());
+        Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, clearSteward = true })).IsError != true);
+        Assert.Null((await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["stewardId"]);
+        Assert.Equal("invalid_argument", ErrorCode(await CallAsync(writing, "atlas_set_verification",
+            new { spaceId = space, pageIds = new[] { page.Id }, stewardId = readerId, clearSteward = true })));
+        // „Ověřit do“ a bare date: through the end of that day in Europe/Prague, the same over MCP and on the web.
+        var day = DateTime.UtcNow.AddMonths(4).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var endOfDay = PageVerificationHandler.Until(DateTime.ParseExact(day, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+        Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, verify = true, until = day })).IsError != true);
+        Assert.Equal(endOfDay, (await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["verifiedUntil"]!.GetValue<DateTime>().ToUniversalTime());
+        Assert.Equal(endOfDay, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, url, new { verify = true, until = day }),
+            HttpStatusCode.OK))["verifiedUntil"]!.GetValue<DateTime>().ToUniversalTime());
         Assert.Equal(PageVerificationStates.Verified,
             Structured(await CallAsync(reading, "atlas_get_page", new { pageId = page.Id }))["verification"]!["state"]!.GetValue<string>());
         Assert.Equal(1, Structured(await CallAsync(reading, "atlas_list_content_health", new { spaceId = space }))["summary"]!["verified"]!.GetValue<int>());
@@ -147,5 +174,192 @@ public sealed class PageVerificationTests
             Assert.Equal((day == now ? NotificationKinds.VerificationExpiring : NotificationKinds.VerificationExpired, day == now ? 1 : 2),
                 (notice.Kind, notice.Count));
         }
+    }
+
+    [PostgreSqlFact]
+    public async Task The_bulk_change_needs_the_space_write_right_and_selects_only_pages_the_actor_may_edit()
+    {
+        await using var f = await McpSite.CreateAsync();
+        var space = await f.FirstSpaceAsync();
+        await f.Site.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=@space""", ("space", Guid.Parse(space)));
+        var open = await PageAsync(f.Admin, space, "Postup", Rich(Paragraph("Text.")), "Text.");
+        var restricted = await PageAsync(f.Admin, space, "Mzdy", Rich(Paragraph("Text.")), "Text.");
+        await f.Site.ExecuteAsync("""UPDATE "Page" SET "OwnAccess"=true WHERE "Id"=@page""", ("page", Guid.Parse(restricted.Id)));
+        await f.Site.ExecuteAsync("""UPDATE "PageVerification" SET "StewardId"=NULL""");
+        var (reader, readerId) = await f.UserAsync("reader", "write");
+        await f.GrantAsync(space, readerId, "Reader");
+        var (writer, writerId) = await f.UserAsync("writer");
+        await f.GrantAsync(space, writerId, "Writer");
+        var (stranger, _) = await f.UserAsync("stranger");
+        var bulk = $"/api/spaces/{space}/content-health/bulk";
+        var all = new { action = "stewardFromLastAuthor" };
+
+        // A page row held FOR UPDATE elsewhere: a refused caller still answers at once, so it neither selected nor locked a page, and
+        // its answer names none.
+        await using (var holder = new NpgsqlConnection(f.Site.ConnectionString))
+        {
+            await holder.OpenAsync();
+            await using var hold = await holder.BeginTransactionAsync();
+            await using (var locking = new NpgsqlCommand("""SELECT 1 FROM "Page" WHERE "Id"=@page FOR UPDATE""", holder, hold))
+            {
+                locking.Parameters.AddWithValue("page", Guid.Parse(open.Id));
+                await locking.ExecuteScalarAsync();
+            }
+            foreach (var (client, payload, status) in new (HttpClient, object, HttpStatusCode)[]
+            {
+                (stranger, all, HttpStatusCode.NotFound), (stranger, new { action = "verify", pageIds = new[] { open.Id } }, HttpStatusCode.NotFound),
+                (reader, all, HttpStatusCode.Forbidden),
+            })
+            {
+                var send = AtlasHttpSite.SendAsync(client, HttpMethod.Post, bulk, payload);
+                Assert.Same(send, await Task.WhenAny(send, Task.Delay(TimeSpan.FromSeconds(20))));
+                var response = await send;
+                Assert.Equal(status, response.StatusCode);
+                var body = await response.Content.ReadAsStringAsync();
+                Assert.DoesNotContain(open.Id, body, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(restricted.Id, body, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        // Over MCP the same: G5 lets the reader in, the space's write right does not.
+        var mcp = await f.ClientAsync((await IssueAsync(reader, f.Site.Password, ["read", "write"], ["mcp"], "Write")).Secret);
+        var refused = await CallAsync(mcp, "atlas_set_verification", new { spaceId = space, stewardFromLastAuthor = true });
+        Assert.True(refused.IsError);
+        Assert.DoesNotContain(open.Id, Text(refused), StringComparison.OrdinalIgnoreCase);
+
+        // A writer: the restricted page is neither changed nor listed among the skipped.
+        var result = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk, all), HttpStatusCode.OK);
+        Assert.Equal(1, result["changed"]!.GetValue<int>());
+        Assert.Empty(result["skipped"]!.AsArray());
+        Assert.Equal(f.AdminId, (await AtlasHttpSite.Json(await writer.GetAsync($"/api/pages/{open.Id}/verification"), HttpStatusCode.OK))["stewardId"]!.GetValue<string>());
+        Assert.Null((await AtlasHttpSite.Json(await f.Admin.GetAsync($"/api/pages/{restricted.Id}/verification"), HttpStatusCode.OK))["stewardId"]);
+        // A page of another space named by id is missing here, untouched.
+        var other = await PageAsync(f.Admin, await f.SpaceAsync("Jiný"), "Cizí", Rich(Paragraph("Text.")), "Text.");
+        var foreign = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
+            new { action = "verify", pageIds = new[] { other.Id } }), HttpStatusCode.OK);
+        Assert.Equal((0, "404"), (foreign["changed"]!.GetValue<int>(), Assert.Single(foreign["skipped"]!.AsArray())!["reason"]!.GetValue<string>()));
+        // „Podle posledního autora“ over chosen pages fills in a missing steward, it never replaces one.
+        await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, $"/api/pages/{open.Id}/verification", new { stewardId = writerId }), HttpStatusCode.OK);
+        var kept = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
+            new { action = "stewardFromLastAuthor", pageIds = new[] { open.Id } }), HttpStatusCode.OK);
+        Assert.Equal((0, "has_steward"), (kept["changed"]!.GetValue<int>(), Assert.Single(kept["skipped"]!.AsArray())!["reason"]!.GetValue<string>()));
+        Assert.Equal(writerId, (await AtlasHttpSite.Json(await writer.GetAsync($"/api/pages/{open.Id}/verification"), HttpStatusCode.OK))["stewardId"]!.GetValue<string>());
+    }
+
+    [PostgreSqlFact]
+    public async Task A_reader_reporting_again_does_not_raise_the_stewards_item_again()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", f.SpaceId);
+        var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(f.SpaceId, null, "Postup", Atlas.Server.Tests.Attachments.AttachmentFixture.Rich("Postup"), "Postup")));
+        await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+        async Task<Atlas.Server.Features.Notifications.Contracts.NotificationDto> ReportAsync(Atlas.Server.Platform.Identity.UserAccount reporter, string? note)
+        {
+            await f.As<PageOutdatedReport>(reporter, new ReportPageOutdated(page.Id, new ReportPageOutdatedRequest(note)));
+            await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+            return Assert.Single((await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(f.Writer,
+                new Atlas.Server.Features.Notifications.Queries.ListNotifications(null))).Items, x => x.SubjectId == page.Id);
+        }
+
+        var first = await ReportAsync(f.Reader, "Staré číslo.");
+        Assert.Equal("Staré číslo.", first.Excerpt);
+        await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationsMarked>(f.Writer,
+            new Atlas.Server.Features.Notifications.Commands.MarkNotificationsRead(first.Id));
+        // The same reader again, at once: the read item stays read, counts nothing and keeps its note.
+        var again = await ReportAsync(f.Reader, "Pořád staré.");
+        Assert.Equal((true, 1, "Staré číslo."), (again.Read, again.Count, again.Excerpt));
+        // Another reader raises it as before; a report without a note keeps the earlier one.
+        var other = await ReportAsync(f.Admin, null);
+        Assert.Equal((false, 1, f.Admin.Id, "Staré číslo."), (other.Read, other.Count, other.ActorId, other.Excerpt));
+    }
+
+    [PostgreSqlFact]
+    public async Task The_SQL_interval_is_the_CSharp_interval()
+    {
+        short?[] values = [null, 0, 3, 6, 12];
+        var cases = (from own in values from space in values from template in new[] { false, true } select (own, space, template)).ToArray();
+        static string Value(short? value) => value is { } x ? $"{x}::smallint" : "NULL::smallint";
+        await using var schema = await DisposableSchema.CreateMigratedAsync("atlas_verification_interval_");
+        await using var connection = new NpgsqlConnection(schema.ConnectionString);
+        await connection.OpenAsync();
+        // The fragment reads its aliases p, v and s: here each is a view of one case row.
+        await using var command = new NpgsqlCommand($"""
+            SELECT c.n, {PageVerificationStates.IntervalSql}, {PageVerificationStates.IntervalSql}>0
+            FROM (VALUES {string.Join(",", cases.Select((x, n) => $"({n},{(x.template ? "true" : "false")},{Value(x.own)},{Value(x.space)})"))})
+              AS c(n, "IsTemplate", "IntervalMonths", "VerificationIntervalMonths")
+            CROSS JOIN LATERAL (SELECT c."IsTemplate") p("IsTemplate")
+            CROSS JOIN LATERAL (SELECT c."IntervalMonths") v("IntervalMonths")
+            CROSS JOIN LATERAL (SELECT c."VerificationIntervalMonths") s("VerificationIntervalMonths")
+            """, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+        var checkedCases = 0;
+        while (await reader.ReadAsync())
+        {
+            var (own, space, template) = cases[reader.GetInt32(0)];
+            var expected = PageVerificationStates.Interval(own, space, template);
+            Assert.Equal(expected, reader.IsDBNull(1) ? (int?)null : reader.GetInt16(1));
+            Assert.Equal(expected > 0, !reader.IsDBNull(2) && reader.GetBoolean(2));
+            checkedCases++;
+        }
+        Assert.Equal(cases.Length, checkedCases);
+    }
+
+    [PostgreSqlFact]
+    public async Task A_new_steward_gets_the_reminder_the_previous_one_already_had()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", f.SpaceId);
+        var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(f.SpaceId, null, "Postup", Atlas.Server.Tests.Attachments.AttachmentFixture.Rich("Postup"), "Postup")));
+        await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+        var now = DateTime.UtcNow;
+        await f.As<PageVerificationView>(f.Writer, new SetPageVerification(page.Id, new SetPageVerificationRequest(Verify: true, Until: now.AddDays(10))));
+        async Task<IReadOnlyList<string>> RunAsync(Atlas.Server.Platform.Identity.UserAccount steward)
+        {
+            while (await f.Host.InvokeAsync<int>(new SendVerificationNotices(now)) == SendVerificationNoticesHandler.Batch)
+            {
+            }
+            await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+            return (await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(steward,
+                new Atlas.Server.Features.Notifications.Queries.ListNotifications(null))).Items.Where(x => x.SubjectId == page.Id).Select(x => x.Kind).ToList();
+        }
+
+        Assert.Equal(new[] { NotificationKinds.VerificationExpiring }, await RunAsync(f.Writer));
+        await f.As<PageVerificationView>(f.Writer, new SetPageVerification(page.Id, new SetPageVerificationRequest(StewardId: f.Reader.Id)));
+        Assert.Equal(new[] { NotificationKinds.VerificationExpiring }, await RunAsync(f.Reader));
+    }
+
+    [PostgreSqlFact]
+    public async Task A_deactivated_steward_is_told_to_each_spaces_administrators_once()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        var admin = await f.Host.SeedUserAsync("spaceadmin");
+        var spaces = new List<Guid>();
+        foreach (var name in new[] { "První", "Druhý", "Neověřovaný" })
+        {
+            var space = await f.Host.SeedSpaceAsync(name, (admin, SpaceRole.Admin), (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+            if (name != "Neověřovaný")
+            {
+                await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", space);
+                spaces.Add(space);
+            }
+            // Two pages in a space still make one item; the space that verifies nothing makes none.
+            foreach (var title in new[] { "Postup", "Návod" })
+            {
+                var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(space, null, title, Atlas.Server.Tests.Attachments.AttachmentFixture.Rich(title), title)));
+                await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+            }
+        }
+        var user = Assert.Single(await f.As<IReadOnlyList<Atlas.Server.Features.Administration.Contracts.UserSummary>>(f.Admin,
+            new Atlas.Server.Features.Administration.Queries.ListUsers(Id: f.Writer.Id)));
+        await f.As<Atlas.Server.Features.Administration.Contracts.UserSummary>(f.Admin,
+            new Atlas.Server.Features.Administration.Commands.SaveUser(f.Writer.Id, new(user.DisplayName, false, false, user.Version)));
+        await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+
+        async Task<List<Atlas.Server.Features.Notifications.Contracts.NotificationDto>> InboxAsync(Atlas.Server.Platform.Identity.UserAccount account)
+            => (await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(account, new Atlas.Server.Features.Notifications.Queries.ListNotifications(null)))
+                .Items.Where(x => x.Kind == NotificationKinds.StewardDeactivated).ToList();
+        var items = await InboxAsync(admin);
+        Assert.Equal(spaces.Order(), items.Select(x => x.SubjectId).Order());
+        Assert.All(items, x => Assert.Equal(("atlas.space", f.Writer.Id, 1), (x.SubjectType, x.ActorId, x.Count)));
+        Assert.Empty(await InboxAsync(f.Reader));
     }
 }

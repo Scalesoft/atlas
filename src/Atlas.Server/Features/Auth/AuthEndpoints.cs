@@ -82,6 +82,9 @@ public static class AuthEndpoints
         profile.MapPut("/api/profile/appearance", async (Appearance appearance, IMessageBus bus, CancellationToken ct)
                 => Results.Ok(await bus.InvokeAsync<Appearance>(new UpdateAppearance(appearance), ct)))
             .Produces<Appearance>();
+        profile.MapGet("/api/collaborator-colors", async (NHibernate.ISession session, CancellationToken ct)
+                => Results.Ok(await CollaboratorColorPreference.ReadAllAsync(session, ct)))
+            .Produces<Dictionary<Guid, string>>();
         profile.MapPut("/api/profile/release-notes", async (ReleaseNotesSeenRequest request, IMessageBus bus, CancellationToken ct) =>
         {
             await bus.InvokeAsync(new MarkReleaseNotesSeen(request.Version), ct);

@@ -6,6 +6,7 @@ import { Mapping } from '@tiptap/pm/transform'
 const OUTLINE_IDLE_MS = 100
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { outlineHighlights } from '../engine/outlineHighlight'
+import { markdownChangeMapping } from '../core/changeMapping'
 import { outlineStrings } from './strings/outline'
 
 /** View-only navigation; never serialized into the document or shared with peers. */
@@ -119,9 +120,10 @@ export function createOutlineHighlight(editor: Editor) {
   const sharedTargets = targets
   outlineHighlights.set(editor, {
     map(tr) {
-      if (tr.docChanged) for (const [owner, target] of sharedTargets) {
+      const mapping = tr.docChanged ? markdownChangeMapping(tr) : null
+      if (mapping) for (const [owner, target] of sharedTargets) {
         if (target === null) continue
-        const mapped = tr.mapping.mapResult(target)
+        const mapped = mapping.mapResult(target)
         sharedTargets.set(owner, !mapped.deleted && tr.doc.nodeAt(mapped.pos)?.type.name === 'heading' ? mapped.pos : null)
       }
     },

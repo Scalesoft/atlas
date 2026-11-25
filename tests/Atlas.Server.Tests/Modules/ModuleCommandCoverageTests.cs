@@ -95,6 +95,9 @@ public sealed class ModuleCommandCoverageTests
         [typeof(SetJobPaused)] = "Pausing every trigger of a job is an operational setting, like the module settings: the web's and the API's (3.3 plan §4.7, decision O5).",
         [typeof(SetNotificationPreference)] = "An account's own setting, not an object: the web's only (inbox spec §9, decision 7).",
         [typeof(NamedVersion)] = "The answer of NameVersion, not a command.",
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetMcpVerification)] = "The MCP tool's wrapper (G5 first) of SetPageVerification, which is covered above.",
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetMcpSpaceVerification)] = "The MCP tool's wrapper (G5 first) of SetSpaceVerification, which is covered above.",
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportMcpOutdated)] = "The MCP tool's wrapper (G5 first) of ReportPageOutdated, which is covered above.",
     };
 
     [PostgreSqlFact]

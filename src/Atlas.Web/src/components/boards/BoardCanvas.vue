@@ -12,7 +12,7 @@ const editorBlocks = () => loadChunk(() => import("../../boards/editorBlocks"));
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/node-resizer/dist/style.css";
 import "@vue-flow/minimap/dist/style.css";
-import { ConnectionLineType, ConnectionMode, SelectionMode, useVueFlow, VueFlow, type Connection, type EdgeChange, type EdgeTypesObject, type GraphEdge, type GraphNode, type NodeChange, type NodeTypesObject } from "@vue-flow/core";
+import { ConnectionMode, SelectionMode, useVueFlow, VueFlow, type Connection, type ConnectionLineProps, type EdgeChange, type EdgeTypesObject, type GraphEdge, type GraphNode, type NodeChange, type NodeTypesObject } from "@vue-flow/core";
 import { MiniMap } from "@vue-flow/minimap";
 import { computed, markRaw, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef, useId, watch, type Ref } from "vue";
 import { landFocus, opensActions } from "../../keyboard/navigation";
@@ -25,8 +25,8 @@ import { boardClipboardType, copyPayload, pasteChanges, readPayload } from "../.
 import { dropAccepts, placedContacts, readDrop } from "../../boards/boardDrop";
 import { contactRemoved, contactsRestored, repeatedContact } from "../../contacts/contactLinking";
 import {
-  alignChanges, blockLayoutOf, boundsOf, connectChanges, connectToNewNoteChanges, createChange, deleteChanges, distributeChanges, duplicateChanges, fitGeometry,
-  insertChanges, itemLabel, minSizeOf, moveChanges, nearestSide, noteToPageChanges, reconnectChanges, reorderChanges, reuseUnchanged, styleChanges, textChanges, toFlowEdges, toFlowNodes, topZ,
+  alignChanges, blockLayoutOf, boundsOf, connectChanges, connectToNewNoteChanges, createChange, defaultProps, deleteChanges, distributeChanges, duplicateChanges, fitGeometry,
+  insertChanges, itemLabel, minSizeOf, moveChanges, nearestSide, noteToPageChanges, previewSides, propsOf, reconnectChanges, reorderChanges, reuseUnchanged, sideMiddle, styleChanges, textChanges, toFlowEdges, toFlowNodes, topZ,
   type Alignment, type BoardEdge as FlowEdge, type BoardNode as FlowNode, type Point,
 } from "../../boards/boardFlow";
 import type { MarkdownIntention, MarkdownIntentionsMenu } from "@atlas/markdown/core";
@@ -39,7 +39,8 @@ import { boardLink, pageLink } from "../../pageLinks";
 import { actionsMenuReady, loadActionsMenu } from "./canvas/actionsMenuChunk";
 import { boardToolKeys } from "../../boards/boardKeymap";
 import { arrangeChanges, COLLAPSED_GROUP, collapsedOwners, containerAt, dropTargets, dropTargetsOf, escapeSelection, groupChanges, membersOf, ungroupChanges, withMembers } from "../../boards/boardGroups";
-import { loadConnectorStyle, rememberConnectorStyle, saveConnectorStyle } from "../../boards/boardConnectorStyle";
+import { loadConnectorStyle, rememberConnectorStyle, saveConnectorStyle, type ConnectorStyle } from "../../boards/boardConnectorStyle";
+import type { Port } from "../../boards/boardRoute";
 import { linkOf, neighbourhood, pathBetween, type Highlight } from "../../boards/boardNeighbours";
 import type { BoardItem } from "../../boards/boardModel";
 import { planGroupMotion, planMotion } from "../../boards/boardMotion";
@@ -57,6 +58,7 @@ import { animateAtlas, literalMs, motionEasing, motionMs, prefersReducedMotion }
 import type { PlayedMotion } from "./canvas/boardAnimations";
 import BoardBackground from "./canvas/BoardBackground.vue";
 import { boardCanvasKey, only, perItem, type BoardCanvasContext, type BoardTool } from "./canvas/boardCanvasContext";
+import BoardConnectorPreview from "./canvas/BoardConnectorPreview.vue";
 import BoardContextToolbar from "./canvas/BoardContextToolbar.vue";
 import BoardEdge from "./canvas/BoardEdge.vue";
 import BoardGuides from "./canvas/BoardGuides.vue";
@@ -154,8 +156,9 @@ const landing = shallowRef<ReadonlySet<string>>(new Set());
 function showDropTarget(next: ReadonlySet<string>) {
   if (next.size !== landing.value.size || [...next].some(id => !landing.value.has(id))) landing.value = next;
 }
-/** Connecting from the keyboard (L on one selected item, J1): the item it starts at and the one the arrows chose. */
-const linking = shallowRef<{ from: string; to?: string } | null>(null);
+/** Connecting from the keyboard (L on one selected item, J1): the item it starts at and the one the arrows chose. Moving an end of the
+ * selected connector (L its end, Shift+L its start): `edge` and the end that moves; `from` is the end that stays. */
+const linking = shallowRef<{ from: string; to?: string; edge?: string; end?: "source" | "target" } | null>(null);
 const minimap = ref(false);
 const settingsOpen = ref(false);
 const connecting = ref(false);
@@ -477,7 +480,18 @@ function focusItem(id: string, tries = 30) {
 function presence() {
   if (!props.canEdit) return;
   const dragged = [...local.value].slice(0, 50).map(([itemId, g]) => ({ itemId, ...fitGeometry(g) }));
-  emit("preview", { ...(cursor && { cursor }), dragging: dragged });
+  const line = connectingNow();
+  emit("preview", { ...(cursor && { cursor }), dragging: dragged, ...(line && { connecting: line }) });
+}
+/** The connector I am drawing, for the others (A8): its fixed end and side, and where its free end is (the item it would land at). */
+function connectingNow(): PresencePayload["connecting"] {
+  const state = drawing.value, link = linking.value;
+  if (state && cursor) {
+    const to = [...landing.value][0];
+    return { from: state.fixed, ...(state.fixedSide && { side: state.fixedSide }), ...(to && { to }), x: cursor.x, y: cursor.y };
+  }
+  const target = link?.to ? byId.value.get(link.to) : undefined;
+  return link && target ? { from: link.from, to: target.id, x: target.x + target.width / 2, y: target.y + target.height / 2 } : undefined;
 }
 /** The pointer in client coordinates while it is over the canvas: where the command panel opens. */
 let pointer: Point | undefined;
@@ -490,9 +504,11 @@ function onPointerMove(event: PointerEvent) {
   pointer = { x: event.clientX, y: event.clientY };
   // A connector being drawn shows the item it would attach to: the event's own target, the element under the pointer (nothing captures
   // the pointer while connecting), so a move needs no second hit test of the whole board.
+  // A finger's moves all go to where it went down (implicit capture): its hit is the element under it.
   if (connecting.value) {
-    const hit = (event.target as Element | null)?.closest?.<HTMLElement>(".vue-flow__node")?.dataset.id;
-    showDropTarget(hit && hit !== connection?.from ? new Set([hit]) : new Set());
+    const under = event.pointerType === "mouse" ? event.target as Element | null : document.elementFromPoint(event.clientX, event.clientY);
+    const hit = under?.closest?.<HTMLElement>(".vue-flow__node")?.dataset.id;
+    showDropTarget(hit && hit !== (connection?.from ?? reconnecting?.fixed) ? new Set([hit]) : new Set());
   }
   // Panning with Space held is no tap of it.
   if (keys.value.space && event.buttons) spaceTap = 0;
@@ -1049,14 +1065,26 @@ async function copyLink(item: BoardViewItem) {
 
 // Connecting (spec §3.3): from a handle to another item's nearest side, or to a new note dropped on empty board.
 let connection: { from: string; side?: BoardSide; done: boolean } | undefined;
-let reconnecting: { edge: string; end: "source" | "target"; done: boolean } | undefined;
+let reconnecting: { edge: string; end: "source" | "target"; fixed?: string; done: boolean } | undefined;
 const handleSide = (handle: string | null | undefined) => (handle && handle !== "auto" ? (handle as BoardSide) : undefined);
+/** The connector being drawn or one of its ends being moved (A3): its look, its end that stays and that end's side (unset: facing
+ * the other end), which end moves, and whether it lands with facing sides (the connector tool). */
+interface Drawing { look: ConnectorStyle; fixed: string; fixedSide?: BoardSide; moving: "source" | "target"; auto: boolean }
+const drawing = shallowRef<Drawing | null>(null);
+/** A connector's look and the side of its end that stays while the other one moves. */
+function drawingOf(connector: BoardItem, moving: "source" | "target"): Drawing {
+  const look = propsOf(connector);
+  return { look: { ...look, ...(connector.color && { color: connector.color }) }, fixed: (moving === "target" ? connector.from : connector.to)!,
+    fixedSide: moving === "target" ? look.fromSide : look.toSide, moving, auto: false };
+}
 function onConnectStart({ nodeId, handleId }: { nodeId?: string | null; handleId?: string | null }) {
   // Handles stay connectable on a board read only (switching the lock changes nothing on the cards): they take no pointer then.
-  if (!props.canEdit) return;
-  if (reconnecting || !nodeId) return;
-  connection = { from: nodeId, side: handleSide(handleId), done: false };
+  if (!props.canEdit || !nodeId) return;
+  // Moving an end shows the cards' handles and the card it would land at as drawing a new connector does (A2).
   connecting.value = true;
+  if (reconnecting) return;
+  connection = { from: nodeId, side: handleSide(handleId), done: false };
+  drawing.value = { look: { ...defaultProps("connector"), ...connectorStyle }, fixed: nodeId, fixedSide: connection.side, moving: "target", auto: activeTool.value === "connector" };
 }
 function onConnect(made: Connection) {
   if (!connection || reconnecting) return;
@@ -1073,7 +1101,9 @@ function dropTarget(event?: MouseEvent | TouchEvent) {
 }
 function onConnectEnd(event?: MouseEvent | TouchEvent) {
   connecting.value = false;
+  drawing.value = null;
   showDropTarget(new Set());
+  presence();
   const started = connection;
   connection = undefined;
   if (!started || started.done || reconnecting) return;
@@ -1091,28 +1121,80 @@ function onConnectEnd(event?: MouseEvent | TouchEvent) {
 }
 function onEdgeUpdateStart({ event, edge }: { event: MouseEvent | TouchEvent; edge: GraphEdge }) {
   // The ends stay mounted on a board read only (the lock switches nothing on every connector, J12.10), hidden and refused here.
-  if (!props.canEdit) return;
+  const connector = byId.value.get(edge.id);
+  if (!props.canEdit || !connector) return;
   const end = (event.target as Element | null)?.closest("[data-type]")?.getAttribute("data-type") === "source" ? "source" : "target";
-  reconnecting = { edge: edge.id, end, done: false };
+  drawing.value = drawingOf(connector, end);
+  reconnecting = { edge: edge.id, end, fixed: drawing.value.fixed, done: false };
+}
+/** The connector's `end` moved to `to` at `side`: the same connector (A4), its other end and side kept, and selected. */
+function reconnect(connector: BoardItem, end: "source" | "target", to: string, side: BoardSide | undefined) {
+  const current = connector.props ?? {};
+  send(reconnectChanges(connector, end === "target"
+    ? { from: connector.from!, to, fromSide: current.fromSide, toSide: side }
+    : { from: to, to: connector.to!, fromSide: side, toSide: current.toSide }));
+  select([connector.id]);
 }
 function onEdgeUpdate({ edge, connection: next }: { edge: GraphEdge; connection: Connection }) {
   const connector = byId.value.get(edge.id);
   if (!connector || !reconnecting) return;
   reconnecting.done = true;
-  send(reconnectChanges(connector, { from: next.source, to: next.target, fromSide: handleSide(next.sourceHandle), toSide: handleSide(next.targetHandle) }, newId()));
+  const end = reconnecting.end;
+  reconnect(connector, end, end === "target" ? next.target : next.source, handleSide(end === "target" ? next.targetHandle : next.sourceHandle));
 }
 function onEdgeUpdateEnd({ event, edge }: { event: MouseEvent | TouchEvent; edge: GraphEdge }) {
   const state = reconnecting;
   reconnecting = undefined;
+  drawing.value = null;
   const connector = byId.value.get(edge.id);
   if (!state || state.done || !connector) return;
   const target = dropTarget(event);
-  if (!target?.item) return;
-  const side = nearestSide(target.item, target.at), current = connector.props ?? {};
-  const next = state.end === "target"
-    ? { from: connector.from!, to: target.item.id, fromSide: current.fromSide, toSide: side }
-    : { from: target.item.id, to: connector.to!, fromSide: side, toSide: current.toSide };
-  send(reconnectChanges(connector, next, newId()));
+  if (target?.item) reconnect(connector, state.end, target.item.id, nearestSide(target.item, target.at));
+}
+/**
+ * A finger on a connector's end (A1): Vue Flow takes an end by the mouse only, though the gesture it starts follows touches too. The
+ * touch goes on as that mouse press, before the board would pan with it.
+ */
+function onTouchStart(event: TouchEvent) {
+  const end = (event.target as Element | null)?.closest?.(".vue-flow__edgeupdater");
+  const touch = event.touches[0];
+  if (!end || !touch || event.touches.length > 1 || !props.canEdit) return;
+  event.preventDefault();
+  event.stopPropagation();
+  end.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 0, clientX: touch.clientX, clientY: touch.clientY, view: window }));
+}
+
+/** A node's box on the board as Vue Flow measured it. */
+const nodeBox = (node: GraphNode): Geometry => ({ x: node.computedPosition.x, y: node.computedPosition.y, width: node.dimensions.width, height: node.dimensions.height });
+/** Where a connector attaches to a node's side: the point of that handle Vue Flow ends its edges at, the side's middle without one. */
+function portOf(node: GraphNode, side: BoardSide): Port {
+  const handle = node.handleBounds.source?.find(entry => entry.id === side);
+  if (!handle) return { ...sideMiddle(nodeBox(node), side), side };
+  const x = node.computedPosition.x + handle.x, y = node.computedPosition.y + handle.y;
+  return { side, x: side === "left" ? x : side === "right" ? x + handle.width : x + handle.width / 2, y: side === "top" ? y : side === "bottom" ? y + handle.height : y + handle.height / 2 };
+}
+/**
+ * The connector being drawn as it will be (A3, A5, A6): from its fixed end to the card it would land at, at the side it would take
+ * there (ringed), else to `free`; in the order of its own ends, so the route and the arrowheads are the edge's own.
+ */
+function previewOf(state: Drawing, fixed: GraphNode | undefined, over: GraphNode | undefined, free: Point, side: BoardSide | undefined) {
+  if (!fixed) return null;
+  const [fixedSide, freeSide] = previewSides(nodeBox(fixed), state.fixedSide, free, over && { box: nodeBox(over), side });
+  const freePort: Port = over ? portOf(over, freeSide) : { ...free, side: freeSide };
+  const ends: [Port, Port] = [portOf(fixed, fixedSide), freePort];
+  const [source, target] = state.moving === "source" ? [ends[1], ends[0]] : ends;
+  return { source, target, look: state.look, port: over ? freePort : undefined, boxes: [nodeBox(fixed), ...(over ? [nodeBox(over)] : [])], ends: [fixed.id, over?.id] };
+}
+/** Vue Flow's connection line: snapped to a handle near the pointer (its side), else over the card under it (the nearest side). */
+function connectionPreview(line: ConnectionLineProps) {
+  const state = drawing.value;
+  if (!state) return null;
+  const free = { x: line.targetX, y: line.targetY };
+  const handled = line.targetNode && line.targetNode.id !== state.fixed ? line.targetNode : undefined;
+  const landed = [...landing.value][0];
+  const over = handled ?? (landed ? flow.findNode(landed) : undefined);
+  const side = handled ? handleSide(line.targetHandle?.id) : over && !state.auto ? nearestSide(nodeBox(over), free) : undefined;
+  return previewOf(state, line.sourceNode, over, free, side);
 }
 
 // The selection's actions (context toolbar and keys).
@@ -1493,8 +1575,8 @@ function onKeydown(event: KeyboardEvent) {
   if (event.key === " ") { handled(); if (!event.repeat) spaceTap = performance.now(); keys.value.space = true; return; }
   if (event.key === "+" || event.key === "=") { handled(); stepZoom(1); return; }
   if (event.key === "-") { handled(); stepZoom(-1); return; }
-  // L on one selected item connects it from the keyboard; without one it is the connector tool.
-  if (key === "l" && props.canEdit && single.value && byId.value.get(single.value)?.kind !== "connector") { handled(); startLinking(single.value); return; }
+  // L on one selected item connects it from the keyboard, on a selected connector moves its end (Shift: its start); without one it is the connector tool.
+  if (key === "l" && props.canEdit && single.value) { handled(); startLinking(single.value, event.shiftKey ? "source" : "target"); return; }
   if (boardToolKeys[key]) { handled(); tool.value = boardToolKeys[key]!; return; }
   if (!props.canEdit) return;
   if (key === "p") { handled(); void pickPages(); }
@@ -1516,11 +1598,14 @@ function walkTo(direction: Direction) {
   const to = nearestInDirection(geometryWithId(from), cards.value.filter(item => item.id !== from.id && !hidden.has(item.id)).map(geometryWithId), direction);
   if (to) { select([to]); reveal(to); }
 }
-function startLinking(from: string) {
-  linking.value = { from };
-  showDropTarget(new Set());
+function startLinking(id: string, end: "source" | "target") {
+  const item = byId.value.get(id);
+  if (item?.kind !== "connector") linking.value = { from: id };
+  // The arrows go on from the end that moves.
+  else if (item.from && item.to) linking.value = { from: end === "target" ? item.from : item.to, to: end === "target" ? item.to : item.from, edge: id, end };
+  showDropTarget(new Set(linking.value?.edge ? [linking.value.to!] : []));
 }
-function stopLinking() { linking.value = null; showDropTarget(new Set()); }
+function stopLinking() { linking.value = null; showDropTarget(new Set()); presence(); }
 const geometryWithId = (item: BoardItem) => ({ id: item.id, ...geometryOf(item) });
 /** A key while connecting from the keyboard: arrows choose the item, Enter connects, Esc gives up; false lets any other key end it. */
 function linkKey(event: KeyboardEvent): boolean {
@@ -1528,23 +1613,43 @@ function linkKey(event: KeyboardEvent): boolean {
   const direction = directions[event.key];
   if (direction) {
     const start = byId.value.get(state.to ?? state.from);
-    const candidates = cards.value.filter(item => item.id !== state.from).map(geometryWithId);
+    // Not the members hidden in a collapsed group, as the arrows walking the board skip them (walkTo).
+    const hidden = collapsedOwners(items.value);
+    const candidates = cards.value.filter(item => item.id !== state.from && !hidden.has(item.id)).map(geometryWithId);
     const to = start && nearestInDirection(geometryWithId(start), candidates, direction);
-    if (to) { linking.value = { ...state, to }; showDropTarget(new Set([to])); reveal(to); }
+    if (to) { linking.value = { ...state, to }; showDropTarget(new Set([to])); reveal(to); presence(); }
     return true;
   }
   if (event.key === "Enter") {
-    const id = newId();
+    const connector = state.edge ? byId.value.get(state.edge) : undefined;
     stopLinking();
+    if (connector) {
+      // Back where it was: nothing, its side stays.
+      if (state.to && state.to !== (state.end === "target" ? connector.to : connector.from)) reconnect(connector, state.end!, state.to, undefined);
+      focusItem(connector.id);
+      return true;
+    }
+    const id = newId();
     // The keys go on with the new connector (Enter names it), not with the item the arrows ended on.
     if (state.to) { send(connectChanges(items.value, { id, from: state.from, to: state.to, style: connectorStyle })); select([id]); focusItem(id); }
     return true;
   }
-  if (event.key === "Escape") { stopLinking(); focusItem(state.from); return true; }
+  if (event.key === "Escape") { stopLinking(); focusItem(state.edge ?? state.from); return true; }
   if (["Shift", "Control", "Alt", "Meta"].includes(event.key)) return true;
   stopLinking();
   return false;
 }
+/** A board item's box for the others' connectors in progress (BoardPresence). */
+const presenceBox = (id: string): Geometry | undefined => byId.value.get(id);
+/** The connector L would make or move, drawn while the arrows choose (A9): with facing sides, as the one it sends (the moved end's side unset). */
+const linkPreview = computed(() => {
+  const state = linking.value;
+  if (!state?.to) return null;
+  const connector = state.edge ? byId.value.get(state.edge) : undefined;
+  const look: Drawing = connector ? drawingOf(connector, state.end!) : { look: { ...defaultProps("connector"), ...connectorStyle }, fixed: state.from, moving: "target", auto: true };
+  const over = flow.findNode(state.to);
+  return over ? previewOf(look, flow.findNode(state.from), over, sideMiddle(nodeBox(over), "top"), undefined) : null;
+});
 /** What the live region says: connecting from the keyboard, else the selection. */
 const sizeNote = ref("");
 let sizeNoteTimer: ReturnType<typeof setTimeout> | undefined;
@@ -1560,6 +1665,7 @@ const announcement = computed(() => {
   const state = linking.value;
   if (state) {
     const from = byId.value.get(state.from), to = state.to ? byId.value.get(state.to) : undefined;
+    if (state.edge) return t.canvas.reconnecting(to ? itemLabel(to) : undefined);
     return t.canvas.connecting(from ? itemLabel(from) : undefined, to ? itemLabel(to) : undefined);
   }
   return selectedItems.value.length === 1 ? itemLabel(selectedItems.value[0]!) : selectedItems.value.length ? t.canvas.selected(selectedItems.value.length) : "";
@@ -1846,12 +1952,14 @@ function perItemState(): BoardCanvasContext["per"] {
   const target = perItem(() => new Map([...landing.value].map(id => [id, true])));
   return { single: id => !!isSingle(id), editing: id => !!isEditing(id), mark, linkMark, dropTarget: id => !!target(id), hoveredEdge: id => !!isHovered(id) };
 }
+/** The radius of a connector end's grab circle: 44 px for a finger (A7). */
+const endRadius = computed(() => (touching.value ? 22 : 12));
 provide(boardCanvasKey, {
   flowId, canEdit: computed(() => props.canEdit), tool: activeTool, editing, editPoint, entering, single, overview, storedHeight: id => storedHeights.value.get(id), shift: computed(() => keys.value.shift), highlight, hoveredEdge, dropTarget: landing,
   per: perItemState(),
   startEdit, saveText, commitText, endEdit, unsaved, resizing, resized, open, openTarget, blockHost: props.blockHost, saveBlock, commitBlock, remove: removeItem, editedObject,
   restyle: (id: string, patch: { props: BoardPropsPatch }) => send(styleChanges(items.value, [id], patch)),
-  toneOf, obstacles, labelLayer: computed(() => flow.viewportRef.value?.querySelector<HTMLElement>(".vue-flow__edge-labels") ?? undefined),
+  toneOf, obstacles, endRadius, labelLayer: computed(() => flow.viewportRef.value?.querySelector<HTMLElement>(".vue-flow__edge-labels") ?? undefined),
 });
 /** A node of the minimap in its item's colour (the tone classes below), a frame as a pale area. */
 /** The minimap's tone of a colour: a palette colour of spaces (`indigo-4`) by its nearest board hue. */
@@ -1898,14 +2006,14 @@ defineExpose({ fit, zoomTo, centreOn, focusSurface, focusSelection });
     <div ref="surface" class="board-surface" tabindex="0" :aria-label="surfaceLabel" data-board-surface data-focus-landing :data-board-selection="selected.size ? '' : undefined"
       :style="{ '--board-edge-z': edgeLevel }"
       @keydown="onKeydown" @keyup="onKeyup" @focusin="takeTypedAhead($event); focusedEdge = ($event.target as Element).closest?.('.vue-flow__edge')?.getAttribute('data-id') ?? undefined" @focusout="focusedEdge = undefined" @wheel="onWheel" @pointermove="onPointerMove" @pointerleave="onPointerLeave" @dblclick="onDoubleClick" @contextmenu="onContextMenu"
-      @copy="onCopy" @cut="onCopy($event, true)" @paste="onPaste" @dragover="onDragOver" @drop="onDrop">
+      @copy="onCopy" @cut="onCopy($event, true)" @paste="onPaste" @dragover="onDragOver" @drop="onDrop" @touchstart.capture="onTouchStart">
       <BoardBackground :viewport="viewport" :settings="settings" :width="size.width" />
       <VueFlow :id="flowId" class="board-flow" :node-types="nodeTypes" :edge-types="edgeTypes" :apply-default="false"
         :min-zoom="0.05" :max-zoom="4" :zoom-on-scroll="false" :zoom-on-pinch="false" :pan-on-scroll="false" :zoom-on-double-click="false"
         :pan-on-drag="panning || touching ? true : MIDDLE_BUTTON" :selection-key-code="activeTool === 'select' && !panning && !touching ? true : null" multi-selection-key-code="Shift"
         :delete-key-code="null" :disable-keyboard-a11y="true" :elevate-nodes-on-select="false" :elevate-edges-on-select="false"
         :nodes-draggable="canEdit && activeTool === 'select'" :nodes-connectable="true" :edges-updatable="true" :elements-selectable="activeTool !== 'hand'"
-        :connection-mode="ConnectionMode.Loose" :connection-radius="28" :edge-updater-radius="7" :connection-line-type="ConnectionLineType.SmoothStep" :selection-mode="SelectionMode.Full"
+        :connection-mode="ConnectionMode.Loose" :connection-radius="28" :edge-updater-radius="endRadius" :selection-mode="SelectionMode.Full"
         :node-drag-threshold="2" :only-render-visible-elements="virtualise" :auto-pan-on-node-drag="true" :auto-pan-on-connect="true"
         @nodes-change="onNodesChange" @edges-change="onEdgesChange" @node-drag-start="onDragStart" @node-drag-stop="onDragStop"
         @connect-start="onConnectStart" @connect="onConnect" @connect-end="onConnectEnd"
@@ -1914,10 +2022,16 @@ defineExpose({ fit, zoomTo, centreOn, focusSurface, focusSelection });
         @node-click="onNodeClick" @edge-click="keepKeys"
         @node-mouse-enter="hoverNode($event.node.id)" @node-mouse-leave="hoverNode()"
         @edge-mouse-enter="hoveredEdge = $event.edge.id" @edge-mouse-leave="hoveredEdge = undefined">
+        <template #connection-line="line">
+          <BoardConnectorPreview v-if="connectionPreview(line)" v-bind="connectionPreview(line)!" />
+        </template>
         <MiniMap v-if="minimap" class="board-minimap" pannable zoomable :node-class-name="minimapClass" :width="180" :height="120" :aria-label="t.canvas.minimap" />
       </VueFlow>
       <BoardGuides :guides="guides" :viewport="viewport" />
-      <BoardPresence :remote="remote" :viewport="viewport" />
+      <svg v-if="linkPreview" class="board-link-preview" aria-hidden="true">
+        <g :transform="`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`"><BoardConnectorPreview v-bind="linkPreview" /></g>
+      </svg>
+      <BoardPresence :remote="remote" :viewport="viewport" :box-of="presenceBox" />
       <span class="sr-only" aria-live="polite" data-board-announcement>{{ announcement }}</span>
       <span ref="menuTheme" class="md-editor atlas-document-editor" :class="editorTheme" hidden />
     </div>
@@ -1973,7 +2087,7 @@ defineExpose({ fit, zoomTo, centreOn, focusSurface, focusSelection });
 .board-canvas[data-tool="hand"] .board-flow :deep(.vue-flow__pane), .board-canvas.is-panning .board-flow :deep(.vue-flow__pane) { cursor: grab; }
 .board-canvas:is([data-tool="note"], [data-tool="text"], [data-tool="shape"], [data-tool="frame"]) .board-flow :deep(.vue-flow__pane) { cursor: crosshair; }
 .board-flow :deep(.vue-flow__selection) { border: 1px solid var(--accent); border-radius: 2px; background: color-mix(in oklab, var(--accent) 8%, transparent); animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
-.board-flow :deep(.vue-flow__connection-path) { stroke: var(--accent); stroke-width: 2; }
+.board-link-preview { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 /* Connector labels in the edges' own layer, after them: above their lines (a frame lifts that layer), below the items. */
 .board-flow :deep(.vue-flow__edge-labels) { z-index: var(--board-edge-z, 0); }
 .board-flow :deep(.vue-flow__node:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); border-radius: var(--atlas-radius-md); }

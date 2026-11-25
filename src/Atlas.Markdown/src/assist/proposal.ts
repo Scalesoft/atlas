@@ -2,7 +2,7 @@ import type { Editor, JSONContent } from '@tiptap/core'
 import { DOMSerializer, Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model'
 import { TextSelection, type Transaction } from '@tiptap/pm/state'
 import { Mapping } from '@tiptap/pm/transform'
-import { closeMarkdownHistory, dispatchMarkdownHistoryOperation, openMarkdownContextPopover, createIconElement } from '../core'
+import { closeMarkdownHistory, dispatchMarkdownHistoryOperation, markdownChangeMapping, openMarkdownContextPopover, createIconElement } from '../core'
 import { copyAssistTheme } from './marker'
 import { assistMotion, collapse, DIFF_STAGGER, finished, glow, grow, solidify, strike } from './motion'
 import { assistStrings } from './strings'
@@ -82,7 +82,7 @@ export function openMarkdownProposalPanel(options: MarkdownProposalOptions): Pro
       if (writing) return
       const all = [transaction, ...appendedTransactions]
       if (!all.some(item => item.docChanged)) return
-      const mapping = new Mapping(); all.forEach(item => mapping.appendMapping(item.mapping))
+      const mapping = new Mapping(); all.forEach(item => mapping.appendMapping(markdownChangeMapping(item)))
       const mapped = mapRange(mapping, range)
       if (mapped) { range = mapped; if (!editor.state.doc.slice(mapped.from, mapped.to).eq(snapshot)) markStale() }
       else markStale()

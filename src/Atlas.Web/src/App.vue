@@ -56,6 +56,7 @@ import {
 import { personalLibraryApi, type PersonalPageState } from "./personalLibrary";
 import { useUnreadNotifications } from "./notifications";
 import { liveAccount } from "./live/accountChannel";
+import { loadPreferredColors, preferredColorChanged } from "./live/collaboratorColors";
 import { liveConnection } from "./live/liveConnection";
 import { pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
@@ -425,7 +426,7 @@ const wikiName = computed(() => status.value?.workspaceName?.trim() || "Atlas");
 watch(wikiName, (name) => { document.title = name; }, { immediate: true });
 const user = ref<User>();
 // The account's own live channel is the session's, set at sign-in and cleared at sign-out (accountChannel.ts).
-watch(() => user.value?.id, id => { liveAccount.value = id; setLexiconAccount(id ?? null); }, { immediate: true });
+watch(() => user.value?.id, id => { liveAccount.value = id; setLexiconAccount(id ?? null); if (id) void loadPreferredColors(); }, { immediate: true });
 // The sidebar's Oznámení badge and the signal an open inbox reloads with (user: channel of the one live connection).
 const { unread: unreadNotifications, signal: notificationSignal } = useUnreadNotifications(computed(() => user.value?.id));
 const loading = ref(true);
@@ -3779,6 +3780,7 @@ async function saveProfile() {
   try {
     const saved = await put<Appearance>("/profile/appearance", { ...appearance });
     if (user.value?.id !== owner) return;
+    if (saved.collaboratorColor !== user.value.appearance.collaboratorColor) preferredColorChanged(owner, saved.collaboratorColor ?? "auto");
     user.value.appearance = { ...saved, motion: saved.motion ?? "system" };
     adoptAppearance(saved);
     // The reading width belongs to this browser; it is kept once the account's part is saved.

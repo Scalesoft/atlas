@@ -177,6 +177,7 @@ public sealed class AtlasEndpointsTests
         "PUT /api/skills/topics/{id:guid}/parents",
         "PUT /api/v1/skills/topics/{id:guid}/parents",
         "PUT /api/profile/release-notes",
+        "GET /api/collaborator-colors",
         "GET /api/admin/contacts/link",
         "POST /api/admin/contacts/link",
         "GET /api/projector/spaces/{spaceId:guid}/requirements/search",

@@ -13,15 +13,17 @@ public static class CollaboratorPalette
 {
     public sealed record Entry(string Id, string Light, string Dark);
 
-    public static IReadOnlyList<Entry> Entries { get; } = Load();
+    private static readonly List<Entry> s_entries = Load();
+
+    public static IReadOnlyList<Entry> Entries => s_entries;
 
     public static int Count => Entries.Count;
 
     /// <summary>The slot of a palette id, or -1.</summary>
-    public static int SlotOf(string? id) => id is null ? -1 : Entries.ToList().FindIndex(entry => entry.Id == id);
+    public static int SlotOf(string? id) => id is null ? -1 : s_entries.FindIndex(entry => entry.Id == id);
 
     /// <summary>The slot of a stamped colour (either variant), or -1.</summary>
-    public static int SlotOfColor(string? color) => color is null ? -1 : Entries.ToList().FindIndex(entry => string.Equals(entry.Light, color, StringComparison.OrdinalIgnoreCase) || string.Equals(entry.Dark, color, StringComparison.OrdinalIgnoreCase));
+    public static int SlotOfColor(string? color) => color is null ? -1 : s_entries.FindIndex(entry => string.Equals(entry.Light, color, StringComparison.OrdinalIgnoreCase) || string.Equals(entry.Dark, color, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The slot a person who chose none starts from: a hash of the user id, the arithmetic of the editor's <c>markdownUserColorSlot</c>.</summary>
     public static int Auto(string userId)

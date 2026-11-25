@@ -4,6 +4,7 @@ import { Plugin, PluginKey, TextSelection, type EditorState, type Transaction } 
 import { StepMap } from '@tiptap/pm/transform'
 import { DecorationSet } from '@tiptap/pm/view'
 import { rememberMarkdownRevertedText } from '../../features/chips/chipText'
+import { markdownChangeMapping } from '../changeMapping'
 import { openMarkdownIntentions, registerMarkdownIntentions } from '../../features/intentions/intentions'
 import { createMarkdownModuleLoader, whenMarkdownIdle } from '../../features/modules/lazy'
 import { typedTrigger } from './gate'
@@ -146,9 +147,10 @@ export const MarkdownRecognition = Extension.create<MarkdownRecognitionOptions>(
           const meta = tr.getMeta(recognitionKey) as RecognitionMeta | undefined
           let { underlines, pending } = value
           if (tr.docChanged) {
-            underlines = underlines.map(tr.mapping, tr.doc)
+            const mapping = markdownChangeMapping(tr)
+            underlines = underlines.map(mapping, tr.doc)
             pending = pending.flatMap(entry => {
-              const from = tr.mapping.mapResult(entry.from, 1), to = tr.mapping.mapResult(entry.to, -1)
+              const from = mapping.mapResult(entry.from, 1), to = mapping.mapResult(entry.to, -1)
               if (!from.deleted && !to.deleted && from.pos < to.pos) return [{ ...entry, from: from.pos, to: to.pos }]
               entry.abort.abort()
               return []

@@ -267,6 +267,21 @@ export function nearestSide(box: Geometry, point: Point): BoardSide {
   return distances.reduce((best, next) => (next[1] < best[1] ? next : best))[0];
 }
 
+/** The middle of a box's side. */
+export function sideMiddle(box: Geometry, side: BoardSide): Point {
+  return side === "top" ? { x: box.x + box.width / 2, y: box.y } : side === "bottom" ? { x: box.x + box.width / 2, y: box.y + box.height }
+    : side === "left" ? { x: box.x, y: box.y + box.height / 2 } : { x: box.x + box.width, y: box.y + box.height / 2 };
+}
+/**
+ * The sides a connector being drawn (or an end being moved) runs between, from its fixed end to its free one, as the connector it
+ * becomes will: a side that is set stays, an unset one faces the other end ({@link autoSides}, as toFlowEdges draws it). Over a card
+ * the free end takes `over.side` (a handle near the pointer, the nearest side) or faces the fixed end; elsewhere it faces it from the pointer.
+ */
+export function previewSides(fixed: Geometry, fixedSide: BoardSide | undefined, free: Point, over?: { box: Geometry; side?: BoardSide }): [BoardSide, BoardSide] {
+  const [facing, back] = autoSides(fixed, over?.box ?? { ...free, width: 0, height: 0 });
+  return [fixedSide ?? facing, over?.side ?? back];
+}
+
 /**
  * An edge per connector between drawn items. A connector with an end hidden in a collapsed group goes to that group instead: all
  * of them between the same two nodes in one direction become one merged edge with their count, those inside one group none.
@@ -397,26 +412,20 @@ export function connectToNewNoteChanges(items: readonly BoardItem[], input: { no
 }
 
 /**
- * A connector whose end was dragged elsewhere: to another side of the same items it changes its sides; to another item it is
- * replaced in the same batch (the data has no `set` of its ends), keeping its label, colour and style.
+ * A connector whose end was dragged elsewhere: one `set` of the same connector, its new ends and sides, so its id (selection, label
+ * editing, references, other people's view) stays; nothing for the same place or a loop.
  */
-export function reconnectChanges(connector: BoardItem, next: Connection, newId: string): BoardChange[] {
-  const props = propsOf(connector);
-  if (next.from === connector.from && next.to === connector.to) {
-    const patch: BoardPropsPatch = {};
-    if ((next.fromSide ?? null) !== (props.fromSide ?? null)) patch.fromSide = next.fromSide ?? null;
-    if ((next.toSide ?? null) !== (props.toSide ?? null)) patch.toSide = next.toSide ?? null;
-    return Object.keys(patch).length ? [{ type: "set", itemId: connector.id, props: patch }] : [];
-  }
+export function reconnectChanges(connector: BoardItem, next: Connection): BoardChange[] {
   if (next.from === next.to) return [];
-  const { fromSide: _from, toSide: _to, ...style } = props;
-  return [
-    { type: "delete", itemId: connector.id },
-    { type: "create", item: {
-      id: newId, kind: "connector", ...CONNECTOR_BOX, z: connector.z, from: next.from, to: next.to,
-      ...(connector.text && { text: connector.text }), ...(connector.color && { color: connector.color }), props: { ...style, ...sides(next) },
-    } },
-  ];
+  const props = propsOf(connector);
+  const patch: BoardPropsPatch = {};
+  if ((next.fromSide ?? null) !== (props.fromSide ?? null)) patch.fromSide = next.fromSide ?? null;
+  if ((next.toSide ?? null) !== (props.toSide ?? null)) patch.toSide = next.toSide ?? null;
+  const change: BoardChange = {
+    type: "set", itemId: connector.id, ...(next.from !== connector.from && { from: next.from }), ...(next.to !== connector.to && { to: next.to }),
+    ...(Object.keys(patch).length && { props: patch }),
+  };
+  return Object.keys(change).length > 2 ? [change] : [];
 }
 
 export const deleteChanges = (ids: readonly string[]): BoardChange[] => ids.map(itemId => ({ type: "delete", itemId }));
@@ -433,7 +442,7 @@ export function noteToPageChanges(items: readonly BoardItem[], noteId: string, p
     ...(note.parent ? [{ type: "parent", itemId: id, parentId: note.parent } as const] : []),
     ...items.filter(item => item.kind === "connector" && !item.deleted && (item.from === noteId || item.to === noteId)).flatMap(connector => {
       const { fromSide, toSide } = propsOf(connector);
-      return reconnectChanges(connector, { from: moved(connector.from), to: moved(connector.to), fromSide, toSide }, newId());
+      return reconnectChanges(connector, { from: moved(connector.from), to: moved(connector.to), fromSide, toSide });
     }),
   ];
 }

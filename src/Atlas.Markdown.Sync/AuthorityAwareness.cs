@@ -6,7 +6,7 @@ namespace Atlas.Markdown.Sync;
 internal static class AuthorityAwareness
 {
     internal sealed record Validated(long ClientId, long Clock, byte[] Payload);
-    /// <param name="color">The colour the document assigned this participant (<see cref="CollaboratorPalette.Effective"/>); never the client's own claim.</param>
+    /// <param name="color">The colour the participant holds (<see cref="CollaboratorColors"/>); never the client's own claim.</param>
     /// <param name="presenceOnly">A read-only participant (a reader of a live page): only its identity goes out, no cursor or selection.</param>
     internal static Validated Validate(byte[] payload, CollabUser user, int maxBytes, bool presenceOnly = false, string? color = null)
     {

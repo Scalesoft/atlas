@@ -2,7 +2,7 @@ import type { Editor, JSONContent } from '@tiptap/core'
 import { Fragment, type Node } from '@tiptap/pm/model'
 import type { Transaction } from '@tiptap/pm/state'
 import { Mapping } from '@tiptap/pm/transform'
-import { parseMarkdownContent, serializeMarkdownContent } from '../core'
+import { markdownChangeMapping, parseMarkdownContent, serializeMarkdownContent } from '../core'
 import { mapRange } from './text'
 import type { MarkdownAssistRange } from './types'
 
@@ -76,7 +76,7 @@ export function projectMarkdownAssistSelection(editor: Editor, selection: Markdo
   let range: MarkdownAssistRange | null = { from: selection.from, to: selection.to }
   const track = ({ transaction, appendedTransactions }: { transaction: Transaction; appendedTransactions: Transaction[] }) => {
     if (!range) return
-    const mapping = new Mapping(); [transaction, ...appendedTransactions].forEach(item => mapping.appendMapping(item.mapping))
+    const mapping = new Mapping(); [transaction, ...appendedTransactions].forEach(item => mapping.appendMapping(markdownChangeMapping(item)))
     const mapped = mapRange(mapping, range)
     range = mapped && editor.state.doc.slice(mapped.from, mapped.to).eq(snapshot) ? mapped : null
   }
