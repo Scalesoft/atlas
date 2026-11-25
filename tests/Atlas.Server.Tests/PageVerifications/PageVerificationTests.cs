@@ -242,6 +242,13 @@ public sealed class PageVerificationTests
         Assert.True(refused.IsError);
         Assert.DoesNotContain(open.Id, Text(refused), StringComparison.OrdinalIgnoreCase);
 
+        // Stav obsahu lists a page the writer may only read (a page grant), but marks it: no Ověřit there.
+        Assert.Equal(HttpStatusCode.NoContent, (await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Put, $"/api/pages/{restricted.Id}/access/grants",
+            new { userId = writerId, role = "Reader" })).StatusCode);
+        var rows = (await AtlasHttpSite.Json(await writer.GetAsync($"/api/spaces/{space}/content-health"), HttpStatusCode.OK))["items"]!.AsArray();
+        Assert.Equal((true, false), (rows.Single(x => x!["pageId"]!.GetValue<string>() == open.Id)!["canEdit"]!.GetValue<bool>(),
+            rows.Single(x => x!["pageId"]!.GetValue<string>() == restricted.Id)!["canEdit"]!.GetValue<bool>()));
+
         // A writer: the restricted page is neither changed nor listed among the skipped.
         var result = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk, all), HttpStatusCode.OK);
         Assert.Equal(1, result["changed"]!.GetValue<int>());

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
-import { errorMessage } from "../../../api";
-import { pageAccounts } from "../../../contacts/contactSources";
+import { ApiError, errorMessage } from "../../../api";
+import { useToast } from "../../../composables/useToast";
 import { useAccountSearch, type PageAccountSource } from "../../../contacts/useAccountSearch";
 import { formatDate } from "../../../formatDate";
 import t from "../../../i18n/verification";
@@ -33,17 +33,22 @@ import type { ChoiceOption } from "../types";
  * Stav obsahu (5.2, plan §6): what of a space is verified, what expires and what people actually read, in existing parts only: StatTile row that sets
  * the filter, one SettingsList with a search and FilterMenus, a selection with bulk actions. Counts of readers, never names. The default order is
  * „Nejdřív čtené a neověřené“. Keyboard first: arrows move through the rows, Space selects, V verifies the selection (or the row), G picks the owner,
- * Enter opens the page. The server answers the state of every page (one C# function), so nothing is derived here.
+ * Enter opens the page. The server answers the state of every page (one C# function), so nothing is derived here. A row offers only what the reader
+ * can do there: Ověřit, the checkbox, V and G where it may edit the page and the page verifies; „Přesunout do koše“ (the tree's trash, Zpět in
+ * the toast) on an unread page it may edit. „Bez garanta“ offers the owner from the last author for the whole space (the server's fill).
  */
 const props = withDefaults(defineProps<{
   spaceId: string;
   api?: ContentHealthApi;
   /** The accounts an owner may be, searched in the context of one page (the gallery passes local ones). */
   people?: PageAccountSource;
-}>(), { api: () => contentHealthApi, people: (pageId: string, text: string, signal: AbortSignal) => pageAccounts(pageId)(text, signal) });
+}>(), { api: () => contentHealthApi, people: undefined });
 const context = useSettingsContext();
 const flash = useSettingsFlash();
 const router = useSettingsRoute();
+const toaster = useToast();
+// Only who manages the space can switch verification on (Obecné); a writer is told who does.
+const manages = computed(() => context.isWikiAdmin || context.spaces.find((space) => space.id === props.spaceId)?.role === "Admin");
 
 const state = ref<ContentHealthFilter>("");
 const mine = ref("");
@@ -55,7 +60,8 @@ const data = shallowRef<ContentHealth>();
 const items = ref<ContentHealthItem[]>([]);
 const loading = ref(false);
 const loadError = ref("");
-const actionError = ref("");
+/** The last action's failure with its way forward: the same action again, or (a page with subpages) the page, whose tree trashes it. */
+const failure = shallowRef<{ text: string; retry: () => unknown; label?: string }>();
 const busy = ref(false);
 const selected = ref(new Set<string>());
 const active = ref(0);
@@ -119,27 +125,42 @@ const tiles = computed(() => {
 /** A tile sets the filter it counts (the server knows each one); a second click on the lit tile shows everything again. */
 const pickTile = (filter: ContentHealthFilter) => { state.value = state.value === filter ? "" : filter; };
 
-// Selection and the bulk actions.
+// Selection and the bulk actions: only the rows the reader may verify (it edits the page and the page verifies).
+const actionable = (item: ContentHealthItem) => item.canEdit && item.state !== "off";
 const chosen = computed(() => items.value.filter((item) => selected.value.has(item.pageId)));
 const toggle = (id: string) => { const next = new Set(selected.value); if (!next.delete(id)) next.add(id); selected.value = next; };
-const allShown = computed(() => items.value.length > 0 && items.value.every((item) => selected.value.has(item.pageId)));
-const toggleAll = () => { selected.value = allShown.value ? new Set() : new Set(items.value.map((item) => item.pageId)); };
+const allShown = computed(() => items.value.some(actionable) && items.value.filter(actionable).every((item) => selected.value.has(item.pageId)));
+const toggleAll = () => { selected.value = allShown.value ? new Set() : new Set(items.value.filter(actionable).map((item) => item.pageId)); };
 /** The rows an action acts on: the selection, or the row the keyboard stands on when nothing is selected. */
-const target = () => (chosen.value.length ? chosen.value : items.value[active.value] ? [items.value[active.value]!] : []);
+const target = () => (chosen.value.length ? chosen.value : items.value.slice(active.value, active.value + 1).filter(actionable));
+
+/** The list read again after an action: the row leaves or moves, and the keyboard stays on its place (V, ↓, V row by row). */
+async function reload(inList: boolean) {
+  await load(false, true);
+  if (inList) { await nextTick(); root.value?.querySelectorAll<HTMLElement>("[data-health-row]")[active.value]?.focus(); }
+}
+const focusInList = () => !!(document.activeElement as HTMLElement | null)?.closest?.("[data-health-row]");
 
 async function bulk(request: ContentHealthBulk, done: (n: number) => string) {
-  if (busy.value || !request.pageIds.length) return;
-  // The verified row leaves or moves when the list is read again; the keyboard must stay on its place (V, ↓, V row by row).
-  const inList = !!(document.activeElement as HTMLElement | null)?.closest?.("[data-health-row]");
+  if (busy.value || (request.pageIds && !request.pageIds.length)) return;
+  const inList = focusInList();
   busy.value = true;
-  actionError.value = "";
+  failure.value = undefined;
   try {
-    const result = await props.api.bulk(props.spaceId, request);
-    flash.notify([done(result.changed), result.skipped.length ? t.health.skipped(result.skipped.length) : ""].filter(Boolean).join(" "), { icon: "shield-check" });
-    await load(false, true);
-    if (inList) { await nextTick(); root.value?.querySelectorAll<HTMLElement>("[data-health-row]")[active.value]?.focus(); }
-  } catch (failure) {
-    actionError.value = errorMessage(failure);
+    let changed = 0;
+    const skipped: { reason: string }[] = [];
+    // Without pageIds the server fills the whole space 500 pages at a time: again while it has more and still changes some.
+    for (let more = true; more;) {
+      const result = await props.api.bulk(props.spaceId, request);
+      changed += result.changed;
+      skipped.push(...result.skipped);
+      more = !request.pageIds && !!result.more && result.changed > 0;
+    }
+    const owned = skipped.filter((page) => page.reason === "has_steward").length;
+    flash.notify([done(changed), owned ? t.health.hasSteward(owned) : "", skipped.length > owned ? t.health.skipped(skipped.length - owned) : ""].filter(Boolean).join(" "), { icon: "shield-check" });
+    await reload(inList);
+  } catch (error) {
+    failure.value = { text: errorMessage(error), retry: () => bulk(request, done) };
   } finally {
     busy.value = false;
   }
@@ -154,6 +175,28 @@ const verify = async (rows = target()) => {
 };
 async function confirmVerify() { const rows = confirming.value; confirming.value = []; await runVerify(rows); }
 const fromAuthor = () => bulk({ action: "stewardFromLastAuthor", pageIds: target().map((row) => row.pageId) }, t.health.stewardDone);
+const fromAuthorSpace = () => bulk({ action: "stewardFromLastAuthor" }, t.health.stewardDone);
+/** „Bez garanta“ with nothing selected: the fill of the whole space, not only the rows loaded so far. */
+const offerSpaceFill = computed(() => state.value === "no-steward" && !chosen.value.length && !!summary.value?.withoutSteward);
+
+/** „Přesunout do koše“ of an unread page: the tree's trash, restorable, confirmed by a toast with Zpět. */
+async function trash(item: ContentHealthItem) {
+  if (busy.value) return;
+  const inList = focusInList();
+  busy.value = true;
+  failure.value = undefined;
+  try {
+    const { undo } = await props.api.trash(props.spaceId, item.pageId);
+    toaster.success(t.health.trashed(item.title), { undo: () => void undo().then(() => load(false, true), (error) => toaster.error(errorMessage(error))) });
+    await reload(inList);
+  } catch (error) {
+    failure.value = error instanceof ApiError && error.code === "subtree_confirmation_required"
+      ? { text: t.health.trashSubtree, label: t.health.open, retry: () => { failure.value = undefined; openPage(item.pageId); } }
+      : { text: errorMessage(error), retry: () => trash(item) };
+  } finally {
+    busy.value = false;
+  }
+}
 
 // The owner picker: the accounts with access to all the rows (a space has no list of its own), the first result preselected, Enter applies it.
 const pickerRows = ref<ContentHealthItem[]>([]);
@@ -182,7 +225,7 @@ function rowKey(event: KeyboardEvent, index: number) {
     const next = Math.min(items.value.length - 1, Math.max(0, index + (key === "arrowdown" ? 1 : -1)));
     active.value = next;
     (root.value?.querySelectorAll<HTMLElement>("[data-health-row]")[next])?.focus();
-  } else if (key === " ") { event.preventDefault(); toggle(items.value[index]!.pageId); }
+  } else if (key === " ") { event.preventDefault(); if (actionable(items.value[index]!)) toggle(items.value[index]!.pageId); }
   else if (key === "v") { event.preventDefault(); void verify(); }
   else if (key === "g") { event.preventDefault(); openPicker(); }
   else if (key === "enter") { event.preventDefault(); openPage(items.value[index]!.pageId); }
@@ -199,8 +242,8 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
     <SettingsPage :title="t.health.title" icon="shield-check" :description="t.health.description">
       <ErrorState v-if="loadError" :title="t.health.loadFailed" :text="loadError" :busy="loading" @retry="load()" />
       <LoadingSkeleton v-else-if="!data" :label="t.health.loading" />
-      <EmptyState v-else-if="!enabled" icon="shield-check" :title="t.health.off">
-        <Button as-child variant="outline"><a :href="router.href('general')"><AtlasIcon name="settings" :size="16" />{{ t.health.offOpen }}</a></Button>
+      <EmptyState v-else-if="!enabled" icon="shield-check" :title="manages ? t.health.off : t.health.offWriter">
+        <Button v-if="manages" as-child variant="outline"><a :href="router.href('general')"><AtlasIcon name="settings" :size="16" />{{ t.health.offOpen }}</a></Button>
       </EmptyState>
       <template v-else>
         <div class="health-tiles" data-health-tiles>
@@ -223,18 +266,26 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
               <Button variant="ghost" size="sm" type="button" @click="selected = new Set()">{{ t.health.clear }}</Button>
             </div>
           </InlineReveal>
-          <ErrorState v-if="actionError" :title="t.health.actionFailed" :text="actionError" :busy="busy" @retry="actionError = ''" />
+          <InlineReveal :open="offerSpaceFill">
+            <div class="health-bulk" data-health-space-fill>
+              <span>{{ t.health.fromAuthorSpace(summary?.withoutSteward ?? 0) }}</span>
+              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-from-author-space @click="fromAuthorSpace"><AtlasIcon name="history" :size="15" />{{ t.health.fromAuthor }}</Button>
+            </div>
+          </InlineReveal>
+          <ErrorState v-if="failure" :title="t.health.actionFailed" :text="failure.text" :retry-label="failure.label" :busy="busy" @retry="failure.retry()" />
           <div :aria-busy="loading" class="health-rows">
-            <label v-if="items.length" class="health-all"><Checkbox :model-value="allShown" :aria-label="t.health.selectAll" data-health-all @update:model-value="toggleAll" /><span>{{ t.health.selectAll }}</span></label>
+            <label v-if="items.some(actionable)" class="health-all"><Checkbox :model-value="allShown" :aria-label="t.health.selectAll" data-health-all @update:model-value="toggleAll" /><span>{{ t.health.selectAll }}</span></label>
             <SettingsList v-if="items.length" :label="t.health.list">
               <SettingsListRow v-for="(item, index) in items" :key="item.pageId" :title="item.title" :description="rowText(item)" :tabindex="index === active ? 0 : -1" class="health-row" data-health-row :data-page="item.pageId" :data-selected="selected.has(item.pageId) || undefined" @keydown="rowKey($event, index)" @focusin="active = index">
-                <template #leading><Checkbox :model-value="selected.has(item.pageId)" :aria-label="t.health.selectRow(item.title)" tabindex="-1" @update:model-value="toggle(item.pageId)" /></template>
+                <!-- A row it cannot verify keeps the checkbox's room (the titles stay in one line) without the checkbox. -->
+                <template #leading><Checkbox :model-value="selected.has(item.pageId)" :aria-label="t.health.selectRow(item.title)" tabindex="-1" :class="{ invisible: !actionable(item) }" :disabled="!actionable(item)" @update:model-value="toggle(item.pageId)" /></template>
                 <template #meta>
                   <span class="health-detail">{{ rowDetail(item) }}</span>
                   <StatusBadge :tone="verificationTone(item.state)" :icon="verificationIcon(item.state)" :label="verificationLabel(item)" size="sm" :data-health-state="item.state" />
                 </template>
                 <template #actions>
-                  <Button v-if="item.isPublished" variant="ghost" size="sm" type="button" :disabled="busy" data-health-row-verify @click="verify([item])"><AtlasIcon name="shield-check" :size="15" />{{ t.health.verify }}</Button>
+                  <Button v-if="actionable(item)" variant="ghost" size="sm" type="button" :disabled="busy" data-health-row-verify @click="verify([item])"><AtlasIcon name="shield-check" :size="15" />{{ t.health.verify }}</Button>
+                  <Button v-if="item.canEdit && !item.views" variant="ghost" size="sm" type="button" :disabled="busy" data-health-row-trash @click="trash(item)"><AtlasIcon name="trash" :size="15" />{{ t.health.toTrash }}</Button>
                   <Button variant="ghost" size="sm" type="button" data-health-open @click="openPage(item.pageId)"><AtlasIcon name="file-text" :size="15" />{{ t.health.open }}</Button>
                 </template>
               </SettingsListRow>
@@ -263,7 +314,6 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
 .health-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .health-filters .search-field { flex: 1 1 220px; }
 .health-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0 4px; font-size: 13px; }
-.health-bulk kbd, .health-keys kbd { margin-left: 4px; padding: 0 4px; border-radius: 4px; background: color-mix(in srgb, currentColor 18%, transparent); font: 600 11px var(--font-mono, ui-monospace, monospace); }
 .health-all { display: flex; align-items: center; gap: 10px; padding: 4px 0; color: var(--muted); font-size: 13px; }
 .health-rows > .settings-list { margin: 0 calc(var(--st-pad-x, 18px) * -1); --st-row-pad-x: var(--st-pad-x, 18px); }
 .health-rows > .st-empty.is-compact { border-style: none; padding-block: 20px; }

@@ -33,9 +33,10 @@ public sealed class SpaceReadershipHandler(ISession session, IContentAccess acce
             shown.Count > offset + PageSize ? (offset + PageSize).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
     }
 
-    /// <summary>One published page of a space with its readership in the period (<see cref="SpaceReadsAsync"/>).</summary>
+    /// <summary>One published page of a space with its readership in the period (<see cref="SpaceReadsAsync"/>); <paramref name="CanEdit"/>: the
+    /// actor may edit it (a space writer may only read a page with its own access).</summary>
     public sealed record SpaceRead(Guid PageId, Guid? ParentId, string Title, int PublishedVersion, long Views, long Readers, DateTime? LastViewedAt,
-        DateTime? LastPublishedAt);
+        DateTime? LastPublishedAt, bool CanEdit);
 
     /// <summary>
     /// Every published, untrashed, non-template page of the space the actor may read (EffectivePageAccess), with its views, distinct
@@ -47,19 +48,19 @@ public sealed class SpaceReadershipHandler(ISession session, IContentAccess acce
     public static Task<List<SpaceRead>> SpaceReadsAsync(ISession session, Guid actorId, Guid spaceId, DateTime start, DateTime end, CancellationToken ct)
         => session.ReadRowsAsync(SpaceReadsSql, new Dictionary<string, object> { ["actor"] = actorId, ["space"] = spaceId, ["start"] = start, ["end"] = end },
             row => new SpaceRead(row.GetGuid(0), row.IsDBNull(1) ? null : row.GetGuid(1), row.GetString(2), row.GetInt32(3), row.GetInt64(4),
-                row.GetInt64(5), row.IsDBNull(6) ? null : Utc(row.GetDateTime(6)), row.IsDBNull(7) ? null : Utc(row.GetDateTime(7))), ct);
+                row.GetInt64(5), row.IsDBNull(6) ? null : Utc(row.GetDateTime(6)), row.IsDBNull(7) ? null : Utc(row.GetDateTime(7)), row.GetBoolean(8)), ct);
 
     /// <summary>The statement of <see cref="SpaceReadsAsync"/> (:actor, :space, :start, :end); public for its budget test.</summary>
     public const string SpaceReadsSql = """
             WITH visible AS MATERIALIZED (
-                SELECT p."Id", p."ParentId", pub."Title", pub."Version"
+                SELECT p."Id", p."ParentId", pub."Title", pub."Version", m."Role">=2 AS "CanEdit"
                 FROM "EffectivePageAccess" m
                 JOIN "Page" p ON p."Id"=m."PageId"
                 JOIN "PageRevision" pub ON pub."Id"=p."PublishedRevisionId"
                 WHERE m."UserId"=:actor AND m."SpaceId"=:space AND m."Role">=1 AND p."SpaceId"=:space AND NOT p."IsTrashed" AND NOT p."IsTemplate"
             )
             SELECT v."Id" AS "PageId", v."ParentId" AS "ParentId", v."Title" AS "Title", v."Version" AS "Version",
-                r."Views" AS "Views", r."Readers" AS "Readers", r."LastViewedAt" AS "LastViewedAt", pp."ActiveFrom" AS "LastPublishedAt"
+                r."Views" AS "Views", r."Readers" AS "Readers", r."LastViewedAt" AS "LastViewedAt", pp."ActiveFrom" AS "LastPublishedAt", v."CanEdit" AS "CanEdit"
             FROM visible v
             CROSS JOIN LATERAL (
                 SELECT count(*) AS "Views", count(DISTINCT pv."UserId") AS "Readers", max(pv."ViewedAt") AS "LastViewedAt"
