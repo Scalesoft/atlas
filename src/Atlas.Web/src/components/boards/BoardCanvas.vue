@@ -1665,7 +1665,7 @@ const announcement = computed(() => {
   const state = linking.value;
   if (state) {
     const from = byId.value.get(state.from), to = state.to ? byId.value.get(state.to) : undefined;
-    if (state.edge) return t.canvas.reconnecting(to ? itemLabel(to) : undefined);
+    if (state.edge) return t.canvas.reconnecting(state.end ?? "target", to ? itemLabel(to) : undefined);
     return t.canvas.connecting(from ? itemLabel(from) : undefined, to ? itemLabel(to) : undefined);
   }
   return selectedItems.value.length === 1 ? itemLabel(selectedItems.value[0]!) : selectedItems.value.length ? t.canvas.selected(selectedItems.value.length) : "";
