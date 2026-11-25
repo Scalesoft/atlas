@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { defineComponent, h, onMounted, watch } from "vue";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
+import { toast } from "vue-sonner";
 import type { Page } from "./api";
 import { jsonResponse as response, mountApp, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "./testing/appHarness";
 
@@ -26,6 +27,9 @@ const page: Page = { id: "page-1", spaceId: "space-1", parentId: null, title: "V
   isPublished: false, publishedVersion: null, contentJson: plain, activeFrom: "2026-10-04T08:00:00Z", canEdit: true };
 
 let wrapper: VueWrapper | undefined;
+// A publication is confirmed in a toast; the header keeps only the state chip (D4).
+let toasted = vi.spyOn(toast, "success");
+beforeEach(() => { toasted = vi.spyOn(toast, "success"); });
 let requests: { method: string; path: string; body: string }[] = [];
 // Notes every request, before any route looks at it, and answers none.
 const record: Route = (path, init) => {
@@ -99,7 +103,7 @@ describe("publication check in the shell", () => {
     ]);
     expect(JSON.parse(published()[0]!.body)).toEqual({ expectedVersion: 3 });
     expect(panel()).toBeNull();
-    expect(app.get(".document-status").text()).toContain("Stránka byla publikována");
+    expect(toasted).toHaveBeenCalledWith("Stránka byla publikována.", expect.anything());
   });
 
   it("warns about a password with assist switched off, goes back to it and publishes anyway", async () => {
@@ -120,7 +124,7 @@ describe("publication check in the shell", () => {
     expect(JSON.parse(published()[0]!.body)).toEqual({ expectedVersion: 3 });
     // The first Publikovat checkpointed the page; nothing changed since, so neither the second nor confirming the findings saves again.
     expect(writes().filter(write => write.startsWith("PUT"))).toHaveLength(1);
-    expect(app.get(".document-status").text()).toContain("Stránka byla publikována");
+    expect(toasted).toHaveBeenCalledWith("Stránka byla publikována.", expect.anything());
   });
 
   it("lists dead and unpublished links from the server and an empty section", async () => {

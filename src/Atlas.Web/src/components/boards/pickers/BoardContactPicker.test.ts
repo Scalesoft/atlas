@@ -131,8 +131,8 @@ it("validates a new contact by the editor's rules and shows each wrong field wit
   await body().get("[data-contact-emails]").setValue("marie@");
   await body().get("[data-contact-phones]").setValue("abc");
   await body().get("[data-contact-form]").trigger("submit");
-  await vi.waitFor(() => expect(body().find(".contact-form-error").exists()).toBe(true));
-  const errors = body().findAll(".contact-form-error").map(error => error.text());
+  await vi.waitFor(() => expect(body().find("[data-contact-form] [role=alert]").exists()).toBe(true));
+  const errors = body().findAll("[data-contact-form] [role=alert]").map(error => error.text());
   expect(errors).toEqual(["Vyplňte pole: jméno.", "Zkontrolujte e-mailové adresy.", "Zkontrolujte telefonní čísla."]);
   expect(body().find("[data-pick-count]").exists()).toBe(false);
 });

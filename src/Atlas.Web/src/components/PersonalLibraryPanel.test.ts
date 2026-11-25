@@ -216,11 +216,11 @@ describe("personal library", () => {
   it("uses the shared page-state vocabulary instead of a per-tab wording", async () => {
     vi.mocked(personalLibraryApi.list).mockResolvedValue(list(["a"]));
     wrapper = mount(PersonalLibraryPanel, { props: { tab: "drafts" } }); await flushPromises();
-    expect(wrapper.get(".library-item [data-slot=badge]").text()).toBe("Nepublikované změny");
+    expect(wrapper.get(".library-item .status-badge").text()).toBe("Nepublikované změny");
     expect(wrapper.text()).not.toContain("Rozpracováno");
     await wrapper.setProps({ tab: "recent" }); await flushPromises();
     // The usual state is left unmarked; only what needs attention carries a badge.
-    expect(wrapper.find(".library-item [data-slot=badge]").exists()).toBe(false);
+    expect(wrapper.find(".library-item .status-badge").exists()).toBe(false);
     expect(wrapper.text()).not.toContain("Má publikovanou verzi");
   });
 });

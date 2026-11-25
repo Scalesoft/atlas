@@ -121,8 +121,8 @@ it("offers „Přidat do stromu…“ in the row menu, so a place reaches the tr
   const place = panel.findAll("[data-usage-place]")[2]!.element as HTMLElement;
   place.focus();
   place.dispatchEvent(new KeyboardEvent("keydown", { key: "F10", shiftKey: true, bubbles: true, cancelable: true }));
-  await flushPromises();
-  const item = [...document.querySelectorAll<HTMLElement>("[data-row-action]")].find(entry => entry.textContent?.trim() === "Přidat do stromu…");
+  await vi.waitFor(() => expect(document.querySelector("[data-testid=intentions]")).not.toBeNull());
+  const item = [...document.querySelectorAll<HTMLElement>("[data-testid=intentions] [role=option]")].find(entry => entry.textContent?.trim() === "Přidat do stromu…");
   expect(item).toBeTruthy();
   item!.click();
   await flushPromises();

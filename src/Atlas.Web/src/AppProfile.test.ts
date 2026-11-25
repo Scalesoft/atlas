@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'vue-sonner';
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
 import { emptyDocument } from './document';
 import { isMarkdownReducedMotion } from '@atlas/markdown/core';
@@ -221,8 +222,8 @@ describe('profile is a workspace page', () => {
     expect(status).not.toContain('Vzhled uložen.');
   });
 
-  it('marks a fresh publication confirmation as transient and clears it two seconds later', async () => {
-    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  it('confirms a fresh publication in a toast and keeps only the state chip in the header (D4)', async () => {
+    const toasted = vi.spyOn(toast, 'success').mockClear();
     try {
       const app = await start();
       await vi.waitFor(() => expect(app.find('textarea').exists()).toBe(true));
@@ -235,16 +236,9 @@ describe('profile is a workspace page', () => {
       expect(publishButton.attributes('disabled')).toBeUndefined();
       await publishButton.trigger('click');
       await flushPromises(); await flushPromises();
-      const status = app.get('.document-status');
-      expect(status.text()).toContain('Stránka byla publikována.');
-      expect(status.attributes('data-transient')).toBe('true');
-      expect(status.find('[data-confirmed="true"] svg[data-icon="circle-check"]').exists()).toBe(true);
-      await vi.advanceTimersByTimeAsync(2000);
-      await flushPromises();
-      const settled = app.get('.document-status');
-      expect(settled.attributes('data-transient')).toBeUndefined();
-      expect(settled.text()).not.toContain('Stránka byla publikována.');
-    } finally { vi.useRealTimers(); }
+      expect(toasted).toHaveBeenCalledWith('Stránka byla publikována.', expect.anything());
+      expect(app.get('.document-status').text()).toBe('Publikováno');
+    } finally { toasted.mockRestore(); }
   });
 });
 
