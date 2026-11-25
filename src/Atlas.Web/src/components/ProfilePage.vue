@@ -5,6 +5,7 @@ import { api, ApiError, errorMessage, type Appearance } from "../api";
 import { formatDateTime } from "../formatDate";
 import { locale, type LanguageChoice } from "../i18n";
 import { markdownInitials } from "@atlas/markdown/core/userColor";
+import { themedUserColor } from "../live/collaboratorColors";
 import t from "../i18n/profile";
 import AtlasVersionInfo from "./AtlasVersionInfo.vue";
 import { profilePageOf, themeAccents, type ProfileAccount, type ProfileTab, type ReadingWidth } from "../profile";
@@ -491,7 +492,7 @@ async function saveAndLeave() {
           <!-- Účet a vzhled (board 12): who you are, then two sections with two-column rows. Each half keeps its own
                explicit save; the unsaved-changes question covers both. -->
           <header class="profile-identity" data-profile-identity>
-            <span class="profile-identity-avatar" aria-hidden="true">{{ initialsOf(identityName || username) }}</span>
+            <span class="profile-identity-avatar" :style="userId ? { background: themedUserColor(userId), color: '#fff' } : undefined" aria-hidden="true">{{ initialsOf(identityName || username) }}</span>
             <div class="profile-identity-text">
               <p class="profile-identity-name">{{ identityName || username }}</p>
               <p v-if="identityMeta" class="profile-identity-meta">{{ identityMeta }}</p>

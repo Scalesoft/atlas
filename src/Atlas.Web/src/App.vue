@@ -92,6 +92,7 @@ import { documentNotice } from "./documentPresentation";
 import type { CollaborationStatus } from "./collaboration";
 import type { CollaborationPeer } from "./collaborationPresence";
 import StatusBadge from "./components/settings/StatusBadge.vue";
+import SubjectAvatar from "./components/settings/SubjectAvatar.vue";
 import CollaboratorAvatars from "./components/CollaboratorAvatars.vue";
 import DocumentTitle from "./components/DocumentTitle.vue";
 import type { MarkdownRichValue } from "@atlas/markdown/core";
@@ -813,11 +814,6 @@ const appearance = reactive<Appearance>({
   mode: "system",
   motion: "system",
 });
-/** Initials of a name: the first letters of its first two words (Marek Musil → MM), else its first two letters. */
-function initialsOf(value: string) {
-  const words = value.trim().split(/\s+/).filter(Boolean);
-  return (words.length > 1 ? words.slice(0, 2).map(word => word[0]).join("") : value.trim().slice(0, 2)).toLocaleUpperCase("cs");
-}
 /** Takes over a stored appearance; an older server sends no motion, which means "follow the device". */
 function adoptAppearance(value: Appearance) {
   Object.assign(appearance, { ...value, motion: value.motion ?? "system" });
@@ -4661,8 +4657,8 @@ onUnmounted(() => {
         <AiQuotaStatus v-if="!settingsMode && (assistantReachable || aiCapabilities.answer || aiCapabilities.pageSummary)" :key="user.id" compact class="sidebar-quota" />
         <div v-if="!profileOpen" class="account">
           <button class="profile-launch" @click="openProfile()" :aria-current="profileOpen ? 'page' : undefined">
-            <span class="avatar">{{ initialsOf(user.displayName) }}</span
-            ><span>{{ user.displayName }}<small>{{ t.cmd.profileAppearance }}</small></span
+            <SubjectAvatar class="avatar" kind="user" :name="user.displayName" :user-id="user.id" />
+            <span>{{ user.displayName }}<small>{{ t.cmd.profileAppearance }}</small></span
             ></button>
           <Tooltip v-if="user.isWikiAdmin"><TooltipTrigger as-child><button
             class="nav-link settings-nav"

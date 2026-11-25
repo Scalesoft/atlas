@@ -11,6 +11,8 @@ import type { AdminApiToken, PrincipalAccess } from "../access/accessModel";
 import { fakeApi as stubApi, problem, provideSettingsSurface, testContext } from "../general/testing";
 import AccessHistoryPage from "../global/AccessHistoryPage.vue";
 import AccountsPage from "./AccountsPage.vue";
+import PersonPeek from "./PersonPeek.vue";
+import { useWorkspacePanel } from "../../../composables/useWorkspacePanel";
 import { createDirectorySummary, directorySummaryKey } from "./directorySummary";
 import ApiTokensPage from "./ApiTokensPage.vue";
 import GroupsPage from "./GroupsPage.vue";
@@ -278,6 +280,24 @@ describe("people", () => {
     const reader = await open("#/settings/people/accounts", false);
     expect(reader.text()).toContain("Správa účtů je dostupná pouze správci wiki.");
     expect(calls.some((call) => call.path.startsWith("/admin"))).toBe(false);
+  });
+
+  it("shows a person in the shared dock: a click on the name sets ?osoba=, a deep link opens it, closing the dock clears it", async () => {
+    const panel = useWorkspacePanel();
+    const view = await open("#/settings/people/accounts");
+    await view.get('[data-account="u-jana"] [data-open-account]').trigger("click");
+    await settle();
+    expect(location.hash).toBe("#/settings/people/accounts?osoba=u-jana");
+    expect(panel.open.value && panel.content.value === PersonPeek && panel.contentProps.value.account).toMatchObject({ id: "u-jana" });
+    panel.hide();
+    await settle();
+    expect(location.hash).toBe("#/settings/people/accounts");
+    wrapper!.unmount();
+    await open("#/settings/people/accounts?osoba=u-petr");
+    expect(panel.open.value && panel.contentProps.value.account).toMatchObject({ id: "u-petr" });
+    wrapper!.unmount();
+    expect(panel.open.value).toBe(false);
+    panel.reset();
   });
 
   it("counts one set while searching and reads the directory's tallies once beside Nastavení wiki's", async () => {
