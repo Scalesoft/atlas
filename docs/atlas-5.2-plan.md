@@ -303,11 +303,14 @@ Dva povrchy jedné diskuse, nikdy oba naráz:
 - **Předání:** otevřením panelu bubliny nahoře odlétnou doprava k panelu (tokenová vzdálenost, jedna po druhé po 40 ms)
   a nová fronta se nehromadí; počet nepřečtených se vynuluje. Zavřením se peek vrací a nové komentáře se znovu objevují nahoře.
   Co přišlo při otevřeném panelu, četl čtenář v jeho seznamu.
+  Nikdy oba chaty naráz: bubliny odejdou, kdykoli je dok zobrazený (kterákoli záložka), čekají ve feedu a vrátí se po jeho zavření.
+  Feed při otevřeném vlákně nečte seznam (počet bere z vlákna a z oznámení relace, při startu s otevřeným vláknem z `/comments/counts`);
+  sekce pod obsahem je jen na telefonu (≤ 760 px), kde dok není; tam ji otevírá „Diskuse“ s počtem v dolní liště a v menu ⋯.
 - **Klávesnice:** **Alt C** přepíná (otevře panel s kurzorem v poli, podruhé zavře), **Esc** zavře panel a vrátí kurzor do textu
   na původní místo, rozepsané zůstane jako koncept. Peek je dosažitelný Tabem (bubliny jsou tlačítka).
 - **Rychlá odpověď a odeslání:** „Odpovědět“ u bubliny rozevře pod ní pole odpovědi (stejný `CommentComposer` jako v panelu, tedy `@`,
   `[[`, koncept); Enter odešle, Shift+Enter píše nový řádek, Esc pole složí. Vedle pole je **papírové letadélko**
-  (`CommentSendButton`, jedna implementace v bublině i v panelu): tlumené u prázdného pole, akcentové s textem, popojede při odeslání,
+  (`SendButton`, jedna implementace v bublině, v panelu i v asistentovi): tlumené u prázdného pole, akcentové s textem, při odeslání odletí,
   Tabem dosažitelné, popisek „Odeslat (Enter)" cs/en. Odeslaná odpověď odletí jako bublina do panelu. Panel odesílá Enterem stejně;
   diskuse tabule zůstává u Ctrl+Enter a textového tlačítka, dokud vlastník neřekne jinak.
 - **Citace výběru:** je-li ve stránce označený text, nový komentář začne jeho citací (`> text`) a kurzorem pod ní. Je to

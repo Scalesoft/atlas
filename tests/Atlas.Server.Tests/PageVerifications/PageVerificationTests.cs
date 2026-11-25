@@ -113,6 +113,9 @@ public sealed class PageVerificationTests
         var references = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, "/api/pages/references", new { ids = new[] { page.Id } }),
             HttpStatusCode.OK);
         Assert.Equal(PageVerificationStates.Expiring, Assert.Single(references["items"]!.AsArray())!["verification"]!.GetValue<string>());
+        // The search hit carries the same string (one contract with the tree and the references).
+        var hits = await AtlasHttpSite.Json(await reader.GetAsync("/api/search?q=Postup"), HttpStatusCode.OK);
+        Assert.Equal(PageVerificationStates.Expiring, hits["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verification"]!.GetValue<string>());
 
         // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader is refused.
         var bulk = $"/api/spaces/{space}/content-health/bulk";

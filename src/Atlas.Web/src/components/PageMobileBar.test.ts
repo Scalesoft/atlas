@@ -20,4 +20,16 @@ describe("PageMobileBar", () => {
     await writer.setProps({ locked: false });
     expect(writer.get("[data-page-mobile-lock]").attributes("aria-label")).toBe("Zamknout úpravy");
   });
+
+  it("offers the page's Diskuse with its comment count on a phone", async () => {
+    const bar = mount(PageMobileBar, { props: { discussion: 3 } });
+    const discussion = bar.get("[data-page-mobile-discussion]");
+    expect(discussion.text()).toContain("Diskuse");
+    expect(discussion.attributes("aria-label")).toBe("Diskuse, komentářů: 3");
+    expect(discussion.get(".page-mobile-count").text()).toBe("3");
+    await discussion.trigger("click");
+    expect(bar.emitted("discussion")).toHaveLength(1);
+    await bar.setProps({ discussion: 0 });
+    expect(bar.get("[data-page-mobile-discussion]").attributes("aria-label")).toBe("Diskuse");
+  });
 });

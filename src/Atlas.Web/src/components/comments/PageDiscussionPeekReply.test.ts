@@ -26,7 +26,7 @@ describe("PageDiscussionPeek quick reply", () => {
     wrapper.unmount();
 
     const view = await startReply(vi.fn(async () => undefined));
-    const send = view.get("[data-peek-reply] .comment-send");
+    const send = view.get("[data-peek-reply] .send-button");
     expect(send.attributes("aria-label")).toBe("Odeslat (Enter)");
     expect(send.attributes("aria-disabled")).toBe("true");
     expect(send.attributes("data-ready")).toBeUndefined();
@@ -59,7 +59,7 @@ describe("PageDiscussionPeek quick reply", () => {
     const view = await startReply(reply);
     editor()!.commands.insertContent("Souhlasím");
     await flushPromises();
-    await view.get("[data-peek-reply] .comment-send").trigger("click");
+    await view.get("[data-peek-reply] .send-button").trigger("click");
     await flushPromises();
     expect(reply).toHaveBeenCalledTimes(1);
     expect(view.emitted("dismiss")).toBeUndefined();

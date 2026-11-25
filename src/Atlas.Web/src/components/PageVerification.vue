@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import t from "../i18n/verification";
-import { computed, nextTick, onBeforeUnmount, reactive, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { errorMessage } from "../api";
 import { formatDate } from "../formatDate";
-import { pageAccounts, type PagePerson } from "../contacts/contactSources";
+import { animateAtlas, motionMs } from "../motion/aiMotion";
+import { pageAccounts } from "../contacts/contactSources";
+import { useAccountSearch, type PageAccountSource } from "../contacts/useAccountSearch";
 import { pageVerificationApi, verificationIcon, verificationLabel, verificationShown, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
 import AtlasIcon from "./AtlasIcon.vue";
 import { Button } from "./ui/button";
@@ -12,7 +14,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Textarea } from "./ui/textarea";
 import SearchableChoiceList from "./settings/SearchableChoiceList.vue";
 import StatusBadge from "./settings/StatusBadge.vue";
-import type { ChoiceOption } from "./settings/types";
 
 /**
  * „Ověřeno“ at the page title (5.2, plan §3.1): the status chip of the page (StatusBadge, as the catalog badge beside it) as the trigger of a small
@@ -27,7 +28,7 @@ const props = withDefaults(defineProps<{
   isPublished: boolean;
   api?: PageVerificationApi;
   /** The people an owner may be (the page's accounts); the gallery passes local ones. */
-  people?: (pageId: string, text: string, signal: AbortSignal) => Promise<PagePerson[]>;
+  people?: PageAccountSource;
 }>(), { api: () => pageVerificationApi, people: (pageId: string, text: string, signal: AbortSignal) => pageAccounts(pageId)(text, signal) });
 const emit = defineEmits<{ change: [value: PageVerification]; openHistory: [] }>();
 
@@ -58,7 +59,11 @@ async function run(change: VerificationChange, back = true) {
   busy.value = true;
   error.value = "";
   try {
-    emit("change", await props.api.change(props.pageId, change));
+    const before = props.verification?.verifiedAt ?? null;
+    const next = await props.api.change(props.pageId, change);
+    // A new verification: the chip confirms it once (StatusBadge pop and halo), keyed by its time.
+    if (next.verifiedAt && next.verifiedAt !== before) confirmedAt.value = next.verifiedAt;
+    emit("change", next);
     if (back) show("main");
   } catch (failure) {
     error.value = errorMessage(failure) || t.failed;
@@ -68,10 +73,17 @@ async function run(change: VerificationChange, back = true) {
 }
 const verify = () => { if (props.canEdit && props.isPublished) void run({ verify: true }); };
 
+const confirmedAt = ref<string | null>(null);
 async function show(next: View) {
+  // The popover's height follows the view instead of jumping (above the chip its edge glides with it rather than leaping).
+  const box = root.value?.parentElement;
+  const from = box?.getBoundingClientRect().height ?? 0;
   view.value = next;
+  if (next === "steward") findStewards();
   error.value = "";
   await nextTick();
+  const to = box?.getBoundingClientRect().height ?? 0;
+  if (box && from && Math.abs(to - from) > 1) animateAtlas(box, [{ height: `${from}px`, overflow: "clip" }, { height: `${to}px`, overflow: "clip" }], { duration: motionMs(box, "--atlas-motion-base") });
   root.value?.querySelector<HTMLElement>("[data-step-focus], input, textarea, button:not([disabled])")?.focus();
 }
 watch(open, (isOpen) => { if (!isOpen) { view.value = "main"; error.value = ""; note.value = ""; } });
@@ -86,26 +98,8 @@ function keydown(event: KeyboardEvent) {
 }
 
 // Změnit garanta: the page's accounts, searched remotely; the first result is preselected, Enter picks it.
-const query = ref("");
-const found = shallowRef<ChoiceOption[]>([]);
-const searching = ref(false);
-let search: AbortController | undefined;
-let timer: ReturnType<typeof setTimeout> | undefined;
-async function lookup() {
-  search?.abort();
-  const controller = (search = new AbortController());
-  searching.value = true;
-  try {
-    const people = await props.people(props.pageId, query.value.trim(), controller.signal);
-    if (!controller.signal.aborted) found.value = people.map((person) => ({ value: person.id, label: person.name, description: person.username ?? person.email ?? undefined, icon: "user" }));
-  } catch {
-    if (!controller.signal.aborted) found.value = [];
-  } finally {
-    if (search === controller) searching.value = false;
-  }
-}
-watch([query, view], () => { if (view.value !== "steward") return; clearTimeout(timer); timer = setTimeout(() => void lookup(), query.value ? 180 : 0); });
-onBeforeUnmount(() => { search?.abort(); clearTimeout(timer); clearTimeout(closing); });
+const { query, options: found, loading: searching, start: findStewards } = useAccountSearch(() => [props.pageId], props.people);
+onBeforeUnmount(() => clearTimeout(closing));
 const pickSteward = (id: string) => void run({ stewardId: id });
 
 function openUntil() {
@@ -136,7 +130,7 @@ async function sendReport() {
   <Popover v-if="value" v-model:open="open">
     <PopoverTrigger as-child>
       <button type="button" class="page-verification-chip" :title="tooltip" :aria-label="t.chipLabel(label)" :data-state="value.state" data-page-verification-chip>
-        <StatusBadge :tone="verificationTone(value.state)" :icon="verificationIcon(value.state)" :label="label" size="sm" />
+        <StatusBadge :key="value.verifiedAt ?? ''" :tone="verificationTone(value.state)" :icon="verificationIcon(value.state)" :label="label" size="sm" :confirmed="!!value.verifiedAt && value.verifiedAt === confirmedAt" />
       </button>
     </PopoverTrigger>
     <PopoverContent class="page-verification-pop" align="start" :side-offset="6" data-page-verification-popover @keydown="keydown">

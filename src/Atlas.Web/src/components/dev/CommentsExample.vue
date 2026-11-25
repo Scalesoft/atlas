@@ -8,6 +8,7 @@ import PageSidePanel from "../PageSidePanel.vue";
 import PageDiscussionPeek from "../comments/PageDiscussionPeek.vue";
 import type { DiscussionBubble } from "../../comments/pageDiscussionFeed";
 import AtlasIcon from "../AtlasIcon.vue";
+import SendButton from "../SendButton.vue";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 import { Button } from "../ui/button";
@@ -28,6 +29,14 @@ const stored = ref<ObjectComment[]>([
     body: `Starší poznámka ${index + 1}`, anchor: null, createdAt: minutesAgo(60 * 24 * (3 + index)), editedAt: null, deleted: false, canEdit: false, canDelete: false })),
 ]);
 const enabled = ref(true);
+// SendButton: a send that takes a moment, so the plane's flight and its return are seen.
+const sendText = ref("");
+const sendBusy = ref(false);
+function sendDemo() {
+  if (!sendText.value.trim() || sendBusy.value) return;
+  sendBusy.value = true;
+  setTimeout(() => { sendBusy.value = false; sendText.value = ""; }, 1200);
+}
 const pageOf = (items: ObjectComment[], before?: string): CommentPage => {
   const start = before ? items.findIndex(item => item.id === before) + 1 : 0;
   return { items: items.slice(start, start + 20), hasMore: items.length > start + 20, count: items.filter(item => !item.deleted).length, canPost: enabled.value };
@@ -104,7 +113,7 @@ function quoteSelection() {
 <template>
   <SettingsPage title="Komentáře" description="Diskuse k objektu (komentáře spec): jedna sdílená časová osa pro stránku, tabuli i dok, s ukázkovými daty.">
     <SettingsSection title="CommentThread"
-      description="Plochá časová osa jako ve Wiki.js: nejnovější nahoře, avatar, jméno a relativní čas, „upraveno“, řádek „Komentář byl odstraněn“, „Starší komentáře“ po dvaceti a pole „Napsat komentář…“ s Markdownem editoru stránky v kompaktní variantě, bez úchytu bloků, takže nic nepřesahuje do docku ani do sekce stránky (Ctrl+Enter odešle). Vlastní komentář upravíte a smažete (tužka a koš na konci řádku, ukážou se při najetí nebo fokusu, na dotykové obrazovce stále), správce objektu smaže každý. Klik kamkoli do pole píše. Použijte ji všude, kde se diskutuje k objektu: sekce pod obsahem stránky (title „Komentáře“), panel „Diskuse“ tabule a záložka „Diskuse“ v detailu objektu. Komentáře se načtou až u výřezu a nové přicházejí relací pohledu objektu; pohyb: nový komentář se zjeví, smazaný se prolne na řádek odstranění. Proti ActivityTimeline (záznam změn, jen ke čtení) se do ní píše a upravuje na místě.">
+      description="Plochá časová osa jako ve Wiki.js: nejnovější nahoře, avatar, jméno a relativní čas, „upraveno“, řádek „Komentář byl odstraněn“, „Starší komentáře“ po dvaceti a pole „Napsat komentář…“ s Markdownem editoru stránky v kompaktní variantě, bez úchytu bloků, takže nic nepřesahuje do docku ani do sekce stránky (Ctrl+Enter odešle). Vlastní komentář upravíte a smažete (tužka a koš na konci řádku, ukážou se při najetí nebo fokusu, na dotykové obrazovce stále), správce objektu smaže každý. Klik kamkoli do pole píše. Použijte ji všude, kde se diskutuje k objektu: sekce pod obsahem stránky na telefonu (title „Komentáře“, odesílá Enter jako dok; širší okno má jen záložku doku), panel „Diskuse“ tabule a záložka „Diskuse“ v detailu objektu. Komentáře se načtou až u výřezu a nové přicházejí relací pohledu objektu; pohyb: nový komentář se zjeví, smazaný se prolne na řádek odstranění. Proti ActivityTimeline (záznam změn, jen ke čtení) se do ní píše a upravuje na místě.">
       <div class="comments-example-tools">
         <label class="comments-example-switch"><Switch v-model="enabled" @update:model-value="thread++" />Komentáře v prostoru zapnuté</label>
         <Button variant="outline" size="sm" type="button" @click="colleagueWrites">Kolega napíše komentář</Button>
@@ -122,7 +131,7 @@ function quoteSelection() {
       </div>
     </SettingsSection>
     <SettingsSection title="Diskuse stránky v doku"
-      description="Stránka má tu samou diskusi jako tabule: záložka „Diskuse“ v doku stránky (PageSidePanel, tab comments) je stejné CommentThread nad stejným objektem a stejnou relací pohledu, žádný druhý chat. Otevře ji bublina u avatarů s počtem komentářů (zvýrazněným, dokud nepřečtete kolegův nový) a Alt C; kurzor jde rovnou do pole, Escape zavře dok a vrátí kurzor do textu. Pole odpovědi (v panelu i v bublině nahoře) je jedno: odesílá Enter, Shift+Enter píše nový řádek a papírové letadélko vedle pole to říká těm, kdo to nevědí (tlumené u prázdného pole, akcentové s textem, při odeslání popojede). Je-li ve stránce označený text, nový komentář začne jeho citací (Markdown „> …“), v galerii tlačítkem pod odstavcem. Oproti sekci pod obsahem nezabírá místo článku a zůstane otevřená při čtení.">
+      description="Stránka má tu samou diskusi jako tabule: záložka „Diskuse“ v doku stránky (PageSidePanel, tab comments) je stejné CommentThread nad stejným objektem a stejnou relací pohledu, žádný druhý chat. Otevře ji bublina u avatarů s počtem komentářů (zvýrazněným, dokud nepřečtete kolegův nový) a Alt C; kurzor jde rovnou do pole, Escape zavře dok a vrátí kurzor do textu. Pole odpovědi (v panelu i v bublině nahoře) je jedno: odesílá Enter, Shift+Enter píše nový řádek a papírové letadélko vedle pole to říká těm, kdo to nevědí (SendButton: tlumené u prázdného pole, akcentové s textem, při odeslání odletí). Je-li ve stránce označený text, nový komentář začne jeho citací (Markdown „> …“), v galerii tlačítkem pod odstavcem. Oproti sekci pod obsahem nezabírá místo článku a zůstane otevřená při čtení.">
       <div class="comments-example-tools">
         <Button variant="outline" size="sm" type="button" @click="quoteSelection">Citovat označený text</Button>
         <Button variant="ghost" size="sm" type="button" @click="dock++">Znovu otevřít</Button>
@@ -141,6 +150,14 @@ function quoteSelection() {
       </div>
       </Transition>
     </SettingsSection>
+    <SettingsSection title="SendButton"
+      description="Papírové letadélko vedle pole, které odesílá Enterem: jedna komponenta pro komentář, rychlou odpověď v bublině i otázku asistentovi. Bez textu je tlumené (aria-disabled, Tabem dosažitelné, nic neudělá), s textem akcentové; při odeslání letadélko odletí se zprávou a po odeslání přilétne nové. Tón quiet (komentáře) nebo ai (přechod asistenta). Při omezeném pohybu nic nelétá. Použijte ho u pole s odesláním Enterem; u formuláře s textovým potvrzením zůstává Button.">
+      <form class="comments-example-send" @submit.prevent="sendDemo">
+        <input v-model="sendText" class="comments-example-send-input" aria-label="Zpráva" placeholder="Napište a stiskněte Enter" />
+        <SendButton :ready="!!sendText.trim()" :busy="sendBusy" label="Odeslat (Enter)" />
+        <SendButton tone="ai" :ready="!!sendText.trim()" :busy="sendBusy" label="Odeslat otázku (Enter)" />
+      </form>
+    </SettingsSection>
   </SettingsPage>
 </template>
 
@@ -158,5 +175,8 @@ function quoteSelection() {
 /* The panel slides in from its edge (st-slide-in); reduced motion: the distance is 0, only the fade stays. */
 .comments-example-dock-enter-active { animation: st-slide-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 .comments-example-dock-leave-active { animation: st-slide-in var(--atlas-motion-base) var(--atlas-ease-in) reverse both; }
+.comments-example-send { display: flex; align-items: center; gap: 8px; max-width: 420px; }
+.comments-example-send-input { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--input-line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 14px; }
+.comments-example-send-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .comments-example-dock { max-width: 400px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 </style>

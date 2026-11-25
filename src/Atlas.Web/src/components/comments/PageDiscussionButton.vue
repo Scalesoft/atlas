@@ -12,13 +12,14 @@ import PageDiscussionPeek from "./PageDiscussionPeek.vue";
 /**
  * The page's discussion at the top bar (App's `page-discussion-anchor`): the button of the dock's Diskuse (it toggles it; Alt C does the same)
  * with the comments' count over its corner, accented while a colleague's new comments are unread, and under it the peek with their latest
- * words (PageDiscussionPeek). The count and the bubbles come from the page's feed, read after the page's text; `open` (the dock shows
- * the Diskuse) hands the bubbles over to it. A bubble's „Odpovědět“ posts a comment to the page that mentions the bubble's author (`host`: the comment field's `@`, `[[`). One lazy part, so the first screen carries none of it. `pageId` undefined: nothing is read.
+ * words (PageDiscussionPeek). The count and the bubbles come from the page's feed, read after the page's text; `open` (the page's thread is
+ * shown: the dock's Diskuse, or the section under the content on a phone) hands the bubbles over to it and the feed reads no list. Never both
+ * chats: while the dock is shown at all (`docked`, any tab) the bubbles fly toward it and wait in the feed until it closes. A bubble's „Odpovědět“ posts a comment to the page that mentions the bubble's author (`host`: the comment field's `@`, `[[`). One lazy part, so the first screen carries none of it. `pageId` undefined: nothing is read.
  */
-const props = defineProps<{ pageId?: string; selfId?: string; open: boolean; host?: BoardBlockHost }>();
+const props = defineProps<{ pageId?: string; selfId?: string; open: boolean; docked?: boolean; host?: BoardBlockHost }>();
 const emit = defineEmits<{ toggle: []; open: [] }>();
 const feed = usePageDiscussionFeed(() => props.pageId, { selfId: () => props.selfId, open: () => props.open });
-defineExpose({ /** The open thread knows its count at once, also after the reader's own comment. */ set: feed.set });
+defineExpose({ /** The open thread knows its count at once, also after the reader's own comment. */ set: feed.set, /** The page's comments (the phone's Diskuse shows it). */ count: feed.count });
 /** A quick reply from the peek: a comment of the page like any other; the notice of the view session brings it to the open threads. */
 async function reply(markdown: string, bubble: DiscussionBubble) {
   await commentApi.post(props.pageId!, replyTo(bubble, markdown));
@@ -38,5 +39,5 @@ const badge = () => feed.unread.value || feed.count.value;
     </TooltipTrigger>
     <TooltipContent>{{ t.common.discussion }} · {{ chordLabel("Alt+c") }}</TooltipContent>
   </Tooltip>
-  <PageDiscussionPeek :bubbles="feed.bubbles.value" :docked="open" :host="host" :reply="feed.canPost.value ? reply : undefined" :draft-scope="pageId" @open="emit('open')" @dismiss="feed.dismiss" @replying="feed.pin" />
+  <PageDiscussionPeek :bubbles="docked || open ? [] : feed.bubbles.value" :docked="docked || open" :host="host" :reply="feed.canPost.value ? reply : undefined" :draft-scope="pageId" @open="emit('open')" @dismiss="feed.dismiss" @replying="feed.pin" />
 </template>

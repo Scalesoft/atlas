@@ -60,7 +60,7 @@ import { loadPreferredColors, preferredColorChanged } from "./live/collaboratorC
 import { liveConnection } from "./live/liveConnection";
 import { pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
-import type { PageVerification as PageVerificationState } from "./verification/pageVerification";
+import { usePageVerification } from "./verification/usePageVerification";
 import { verificationMark } from "./verification/verificationMark";
 import { isSpacePinned, pinnedFirst, setSpacePinned, SPACE_PIN_REQUIRED } from "./spacePins";
 import { downloadContentExport, rememberCoverDetails, rememberedCoverDetails, type PdfCoverDetail } from "./contentExport";
@@ -610,17 +610,8 @@ const canSaveEditor = computed(() => browserOnline.value && editorReady.value &&
 const shownVersion = computed(() => !page.value ? 0 : pageCanWrite.value || page.value.live ? page.value.version : page.value.publishedVersion ?? page.value.version);
 /** A writer's page's publication (mode, when it was published), read for a published page; undefined until it arrives. */
 const publication = shallowRef<PagePublication>();
-/** Ověření stránky (5.2): from the page's bundle, replaced by the answer of every change made in the chip or the dock. */
-const verification = shallowRef<PageVerificationState | null>(null);
-const verificationOpen = ref(false);
-watch(() => page.value?.bundle?.verification, (value) => { if (value) verification.value = value; });
-watch(() => page.value?.id, () => { verification.value = page.value?.bundle?.verification ?? null; verificationOpen.value = false; }, { immediate: true });
-// A newly published version changes „Změněno po ověření“: read the state again (the bundle is from the page's opening).
-watch(() => (page.value && !page.value.isTemplate ? `${page.value.id}:${page.value.publishedVersion}` : ""), (key, before) => {
-  const [id, was] = [key.split(":")[0], before?.split(":")[0]];
-  if (!id || id !== was || !verification.value || verification.value.state === "off") return;
-  void import("./verification/pageVerification").then(m => m.pageVerificationApi.read(id)).then(value => { if (page.value?.id === id) verification.value = value; }).catch(() => undefined);
-});
+/** Ověření stránky (5.2): the chip's and the dock's state, the chip's popover and the panel's Čtenost. */
+const { verification, open: verificationOpen, readers: pageReaders } = usePageVerification(() => page.value);
 /** A writer's page published live (Publikace Živě, `PagePublication.effective`): readers already read its saved state. */
 const publishedLive = computed(() => publication.value?.effective === "Live");
 /** Neither a reader nor a live page's writer has anything waiting for Publikovat (a reader never sees unpublished state). */
@@ -677,6 +668,8 @@ const workspaceBar = ref<HTMLElement>();
 const workspaceWidth = ref(window.innerWidth - 272);
 const workspaceBarHeight = ref(52);
 const viewportWidth = ref(window.innerWidth);
+/** A phone (≤ 760 px): no dock and no top-bar discussion; the page's discussion is the section under the content. */
+const phoneLayout = computed(() => viewportWidth.value <= 760);
 const sidebarWidth = ref(272);
 const sidebarMaximum = computed(() => Math.max(220, Math.min(480, viewportWidth.value - 640)));
 const effectiveSidebarWidth = computed(() => Math.min(sidebarWidth.value, sidebarMaximum.value));
@@ -985,6 +978,8 @@ const commands = computed<WikiCommand[]>(() => {
   if (user.value.isWikiAdmin) items.push({ id: 'space-trash', label: t.cmd.spaceTrash, detail: t.common.wikiAdmin, icon: 'trash', keywords: ['obnovit'], run: () => openSettings(`${globalSettingsBase}/spaces/trash`) });
   if (user.value.isWikiAdmin) items.push({ id: 'settings', label: t.common.wikiAdmin, detail: t.common.settings, icon: 'settings', keywords: ['nastavení'], run: openAdministration });
   if (currentSpace.value && spaceCanManage(currentSpace.value)) items.push({ id: 'space-settings', label: t.common.spaceSettings, detail: currentSpace.value.name, icon: 'settings', run: () => openSettings(spaceSettingsHash(currentSpace.value!.id)) });
+  // Stav obsahu is every editor's of the space (5.2 §6), its one section of the space settings.
+  if (currentSpace.value && spaceCanWrite(currentSpace.value)) { const space = currentSpace.value; items.push({ id: 'content-health', label: t.cmd.contentHealth, detail: space.name, icon: 'shield-check', keywords: ['overeni', 'verification'], run: () => spaceMenu(space, 'content-health') }); }
   if (currentSpace.value && projectorEnabled.value) {
     const space = currentSpace.value;
     items.push(
@@ -2670,8 +2665,9 @@ async function exportContent(kind: "pages" | "spaces", format: "zip" | "pdf" = "
   });
 }
 /** One answer for the space menu wherever it opens (SpaceMenuItems: the breadcrumb's and the sidebar's). The trash and the export are of the open space, so another one opens first. */
-async function spaceMenu(space: Space, action: "settings" | "templates" | "access" | "trash" | "export") {
+async function spaceMenu(space: Space, action: "settings" | "templates" | "access" | "trash" | "export" | "content-health") {
   if (action === "settings") return openSettings(spaceSettingsHash(space.id));
+  if (action === "content-health") return openSettings(spaceSettingsHash(space.id, "content-health"));
   if (action === "templates") return openSpaceTemplates(space.id);
   if (action === "access") return openSettings(spaceSettingsHash(space.id, "access"));
   if (currentSpace.value?.id !== space.id && !(await selectSpace(space))) return;
@@ -3046,7 +3042,11 @@ const pageDockOpen = computed(() => workspacePanel.open.value && !!pageDockTabs.
 // The discussion is open while the dock shows its Diskuse: then the peek under the avatars hands over to it (never both).
 const discussionOpen = computed(() => pageDockOpen.value && pageDockShown.value && pageDockTab.value === "comments");
 // The discussion button's count and the peek's bubbles are PageDiscussionButton's (lazy, read after the page's text); the open thread tells it its count.
+// On a phone the section under the content is the open thread (the button is hidden there, its count shows in the bottom bar and the ⋯ menu).
 const discussionButton = ref<InstanceType<typeof PageDiscussionButton>>();
+const discussionThreadOpen = computed(() => discussionOpen.value || phoneLayout.value);
+/** The comment fields' editor services (`[[`, `@`) of the open page, one host for the button, the section and the dock. */
+const pageCommentHost = computed(() => (page.value && commentHost.value ? commentHost.value(page.value.id, page.value.spaceId) : undefined));
 function pageDockRemembered() {
   return !user.value || readStored(`atlas:reading:${user.value.id}:dock`) !== "closed";
 }
@@ -3075,7 +3075,15 @@ async function openDiscussion() {
   if (!picked) { await nextTick(); const side = document.querySelector("[data-page-side=comments]"); if (side) void focusWhenPresent(side, '.comment-composer [contenteditable="true"]', 90); }
   return true;
 }
+/** Diskuse on a phone (Alt C, the bottom bar, the ⋯ menu): the section under the content, the keyboard on its field or „Napsat komentář“. */
+function revealPageComments() {
+  const section = workspace.value?.querySelector<HTMLElement>(".page-comments");
+  if (!section) return;
+  section.scrollIntoView({ block: "start" });
+  void focusWhenPresent(section, '[data-comment-start], .comment-composer [contenteditable="true"]', 90);
+}
 function toggleDiscussion() {
+  if (phoneLayout.value) return revealPageComments();
   if (!discussionOpen.value) return void openDiscussion();
   workspacePanel.hide();
   rememberPageDock(false);
@@ -4614,6 +4622,7 @@ onUnmounted(() => {
                 @access="spaceMenu(space, 'access')"
                 @trash="spaceMenu(space, 'trash')"
                 @export-space="spaceMenu(space, 'export')"
+                @content-health="spaceMenu(space, 'content-health')"
                 @create-page="createPageInSpace(space)"
                 @create-board="createBoardInSpace(space)"
                 @set-collapsed="(ids, collapse) => setPagesCollapsed(space.id, ids, collapse)"
@@ -4736,7 +4745,7 @@ onUnmounted(() => {
                       <!-- The same list as the sidebar's „Další akce prostoru“ (SpaceMenuItems). -->
                       <SpaceMenuItems :can-write="spaceCanWrite(currentSpace)" can-manage :boards="boardsEnabled" :empty="!(spacePages[currentSpace.id]?.length)"
                         @create-page="createPageInSpace(currentSpace)" @create-board="createBoardInSpace(currentSpace)" @settings="spaceMenu(currentSpace, 'settings')" @pin-policy="spaceMenu(currentSpace, 'settings')"
-                        @templates="spaceMenu(currentSpace, 'templates')" @access="spaceMenu(currentSpace, 'access')" @trash="spaceMenu(currentSpace, 'trash')" @export-space="spaceMenu(currentSpace, 'export')" />
+                        @templates="spaceMenu(currentSpace, 'templates')" @access="spaceMenu(currentSpace, 'access')" @trash="spaceMenu(currentSpace, 'trash')" @export-space="spaceMenu(currentSpace, 'export')" @content-health="spaceMenu(currentSpace, 'content-health')" />
                     </ActionDisclosure>
                   </li>
                   <li v-if="templateView"><span class="breadcrumb-separator" aria-hidden="true">/</span><span class="breadcrumb-title" aria-current="page">{{ templateView === 'new-page' ? t.common.newPage : templateView === 'new-board' ? t.common.newBoard : templateView === 'new-deployment' ? t.nav.newDeployment : t.nav.newTemplate }}</span></li>
@@ -4777,7 +4786,7 @@ onUnmounted(() => {
             <div v-if="page && documentValue && !pageAccessTab && !libraryTab && !administrationOpen" class="document-actions">
                 <CollaboratorAvatars v-if="collaborationEnabled && browserOnline" :peers="pagePeers" @navigate="editor?.navigateToPeer($event)" />
                 <!-- The page's Diskuse like a board's: the count is the comments', accented while a colleague's new one is unseen (Alt C opens it too). -->
-                <span v-if="pageDockTabs" class="page-discussion-anchor"><PageDiscussionButton v-if="afterContent" ref="discussionButton" :page-id="page.id" :self-id="user?.id" :open="discussionOpen" :host="commentHost?.(page.id, page.spaceId)" @toggle="toggleDiscussion" @open="openDiscussion" /></span>
+                <span v-if="pageDockTabs" class="page-discussion-anchor"><PageDiscussionButton v-if="afterContent" ref="discussionButton" :page-id="page.id" :self-id="user?.id" :open="discussionThreadOpen" :docked="pageDockOpen" :host="pageCommentHost" @toggle="toggleDiscussion" @open="openDiscussion" /></span>
                 <div class="document-secondary-actions">
                 <CopyPageLink ref="copyPageLink" :page-id="page.id" />
                 <!-- Icon-only like „Kopírovat odkaz“ beside them, so they say what they do the same way when pointed at or focused. -->
@@ -4785,6 +4794,7 @@ onUnmounted(() => {
                 <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="favorite-button text-muted-foreground" :aria-label="personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite" :aria-pressed="personalState?.isFavorite ?? false" :aria-busy="favoritePending" :disabled="!personalState || favoritePending" @click="toggleFavorite"><AtlasIcon name="star" /></Button></TooltipTrigger><TooltipContent>{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</TooltipContent></Tooltip>
                 <ActionDisclosure :label="t.nav.pageActions" :disabled="pending">
                 <ActionDisclosureItem class="mobile-page-action" :disabled="favoritePending || !personalState" @click="toggleFavorite"><AtlasIcon name="star" />{{ personalState?.isFavorite ? t.cmd.removeFavorite : t.cmd.addFavorite }}</ActionDisclosureItem>
+                <ActionDisclosureItem v-if="pageDockTabs" class="mobile-page-action" data-page-discussion-menu @click="toggleDiscussion"><AtlasIcon name="quote" />{{ t.common.discussion }}<span v-if="discussionButton?.count" class="action-hint">{{ discussionButton.count }}</span></ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="openPageAccess(page.id)"><AtlasIcon name="users" />{{ t.common.whoHasAccess }}</ActionDisclosureItem>
                 <ActionDisclosureItem class="mobile-page-action" @click="copyPageLink?.copy()"><AtlasIcon name="link" />{{ t.common.copyLink }}</ActionDisclosureItem>
                 <ActionDisclosureItem v-if="currentSpace && canWrite" class="mobile-page-action" @click="showCreatePage"><AtlasIcon name="plus" />{{ t.common.newPage }}</ActionDisclosureItem>
@@ -5037,10 +5047,11 @@ onUnmounted(() => {
               @can-undo="pageCanUndo = $event"
             /></section>
           <PageConnections v-if="editorReady" layout="graph" :page-title="page.title" :document="documentValue" :page-id="page.id" :space-id="page.spaceId" :refresh-key="libraryRefresh" :related-enabled="aiCapabilities.related" />
-          <CommentThread v-if="editorReady && afterContent" :key="`comments:${page.id}`" class="page-comments" :object-id="page.id" :view-key="`page:${page.id}`" :title="t.common.comments"
-            :host="commentHost?.(page.id, page.spaceId)" @anchor="revealCitedHeading($event)" />
+          <!-- A phone's discussion (no dock there): the same thread as the dock's Diskuse, sending with Enter like it. -->
+          <CommentThread v-if="editorReady && afterContent && phoneLayout" :key="`comments:${page.id}`" class="page-comments" :object-id="page.id" :view-key="`page:${page.id}`" :title="t.common.comments"
+            quick :host="pageCommentHost" @count="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" />
           <PageMobileBar v-if="editorReady" :can-ask="canAsk" :lockable="pageCanWrite" :locked="pageLocked" :favorite="personalState?.isFavorite ?? false" :favorite-busy="favoritePending || !personalState"
-            @read="readFromTop" @ask="launchAssistant(true)" @favorite="toggleFavorite" @lock="toggleLock" />
+            :discussion="pageDockTabs ? discussionButton?.count ?? 0 : null" @read="readFromTop" @ask="launchAssistant(true)" @favorite="toggleFavorite" @lock="toggleLock" @discussion="revealPageComments" />
         </template>
         <section v-else-if="unavailablePage || unavailableSpace" class="overview page-unavailable" data-page-unavailable>
           <EmptyState v-if="unavailableSpace" data-focus-landing icon="lock" :title="t.nav.spaceUnavailableTitle" :text="t.nav.spaceUnavailableText">
@@ -5114,7 +5125,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" :host="commentHost?.(page.id, page.spaceId)" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="page.bundle?.readers" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" :host="pageCommentHost" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="pageReaders" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>
@@ -5322,7 +5333,7 @@ onUnmounted(() => {
               <span class="space-icon" :data-color="item.color"><AtlasIcon :name="item.icon" :size="18" /></span>
               <span class="search-result-main"><span class="search-result-head"><strong class="search-result-title"><span v-if="item.widget?.key" class="search-issue-key">{{ item.widget.key }}</span><SearchHighlight :text="item.title" :query="query" /></strong>
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
-                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="verificationMark(item.result.verification?.state)" :name="verificationMark(item.result.verification?.state)!.icon" :size="13" class="search-verification" :data-warn="verificationMark(item.result.verification?.state)!.warn || undefined" role="img" :aria-label="verificationMark(item.result.verification?.state)!.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="verificationMark(item.result.verification?.state)!.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
+                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="verificationMark(item.result.verification)" :name="verificationMark(item.result.verification)!.icon" :size="13" class="search-verification" :data-warn="verificationMark(item.result.verification)!.warn || undefined" role="img" :aria-label="verificationMark(item.result.verification)!.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="verificationMark(item.result.verification)!.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
                   <span v-if="item.board" class="search-live-label" data-search-type>{{ t.common.board }}</span>
                   <span v-else-if="item.widget">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
                 </small>

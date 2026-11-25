@@ -187,7 +187,7 @@ describe("CommentThread quick reply", () => {
     const api = fakeApi(page([]));
     await mounted(api, { quick: true });
     await vi.waitFor(() => expect(editor()).toBeDefined());
-    const send = wrapper!.get(".comment-send");
+    const send = wrapper!.get(".send-button");
     expect(send.attributes("aria-label")).toBe("Odeslat (Enter)");
     expect(send.attributes("aria-disabled")).toBe("true");
     expect(wrapper!.find(".comment-composer-actions [data-comment-submit]").exists()).toBe(false);
@@ -204,7 +204,7 @@ describe("CommentThread quick reply", () => {
 
   it("keeps the text button and Ctrl+Enter in a thread that is not quick (a board's)", async () => {
     await mounted(fakeApi(page([])));
-    expect(wrapper!.find(".comment-send").exists()).toBe(false);
+    expect(wrapper!.find(".send-button").exists()).toBe(false);
     expect(wrapper!.get("[data-comment-submit]").text()).toBe("Odeslat");
   });
 });

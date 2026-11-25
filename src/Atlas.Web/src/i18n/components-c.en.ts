@@ -34,6 +34,7 @@ const en: ComponentsMessages = {
     exportEmpty: "The space has no pages yet.",
     exportHint: "A ZIP of the saved versions of the pages you can access, with attachments. Not a server backup.",
     export: "Export space",
+    contentHealth: "Content health",
   },
   tagSearch: {
     tags: "Tags",

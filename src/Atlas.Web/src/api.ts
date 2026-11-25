@@ -149,8 +149,8 @@ export interface SearchResult {
   matchedAlias?: string | null;
   /** Meaning-only hit (hybrid search): `snippet` is the passage, `headingTitle`/`headingId` its anchor. */
   semantic?: boolean;
-  /** Ověřený obsah (5.2): the state of the page's verification (the icon beside the title); absent when it is off. */
-  verification?: { state: import("./verification/pageVerification").VerificationState } | null;
+  /** Ověřený obsah (5.2): the state of the page's verification (the icon beside the title), the tree's string; absent when it is off. */
+  verification?: import("./verification/pageVerification").VerificationState | null;
   passage?: { text: string; headingTitle?: string | null; headingId?: string | null } | null;
 }
 export class ApiError extends Error {

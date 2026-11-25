@@ -2,12 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import PageVerification from "./PageVerification.vue";
 import { verificationMark } from "../verification/verificationMark";
-import { verificationLabel, type PageVerification as Verification, type VerificationState } from "../verification/pageVerification";
+import { verificationIcon, verificationLabel, verificationTone, type PageVerification as Verification, type VerificationState } from "../verification/pageVerification";
 
 const day = 86_400_000;
 const at = (days: number) => new Date(Date.now() + days * day).toISOString();
 const sample = (state: VerificationState, over: Partial<Verification> = {}): Verification => ({ state, stewardId: "u1", stewardName: "Jana Malá", verifiedAt: at(-30), verifiedUntil: at(90), verifiedVersion: 3, changedSinceVerification: false, verifiedByName: "Petr Test", intervalMonths: null, spaceIntervalMonths: 6, ...over });
-const api = () => ({ change: vi.fn(async (_: string, change: object) => sample("verified", { verifiedUntil: at(180), ...change })), report: vi.fn(async () => {}) });
+const api = () => ({ read: vi.fn(), change: vi.fn(async (_: string, change: object) => sample("verified", { verifiedUntil: at(180), ...change })), report: vi.fn(async () => {}) });
 const people = vi.fn(async () => [{ id: "u2", name: "Eva Nováková" }, { id: "u3", name: "Eva Dvořáková" }]);
 
 let wrapper: VueWrapper | undefined;
@@ -48,12 +48,16 @@ describe("PageVerification chip", () => {
     expect(verificationMark("verified")).toMatchObject({ icon: "shield-check", warn: false });
     expect(verificationMark("expired")).toMatchObject({ icon: "shield-alert", warn: true });
     expect(verificationMark("unverified")).toBeNull();
+    // The chip derives from the same mapping: unverified is a plain neutral shield, never a check.
+    expect([verificationIcon("unverified"), verificationTone("unverified")]).toEqual(["shield", "neutral"]);
+    expect([verificationIcon("expiring"), verificationTone("expired")]).toEqual(["shield-check", "warning"]);
   });
 });
 
 describe("PageVerification popover", () => {
   it("shows the owner, who verified and what changed since, and an editor verifies with V", async () => {
     const service = api();
+    service.change.mockResolvedValueOnce(sample("verified", { verifiedAt: at(0) }));
     open(sample("verified", { changedSinceVerification: true, verifiedViaAi: true }), { api: service });
     await openPopover();
     expect(pop()!.textContent).toContain("Jana Malá");
@@ -63,6 +67,10 @@ describe("PageVerification popover", () => {
     await flushPromises();
     expect(service.change).toHaveBeenCalledWith("p1", { verify: true });
     expect(wrapper!.emitted("change")![0]![0]).toMatchObject({ state: "verified" });
+    // The new verification is confirmed once on the chip (StatusBadge pop and halo); the bundle's old one never was.
+    expect(chip()!.querySelector(".status-badge[data-confirmed]")).toBeNull();
+    await wrapper!.setProps({ verification: wrapper!.emitted("change")![0]![0] as Verification });
+    expect(chip()!.querySelector(".status-badge[data-confirmed]")).not.toBeNull();
   });
 
   it("cannot verify a page that is not published and says why", async () => {

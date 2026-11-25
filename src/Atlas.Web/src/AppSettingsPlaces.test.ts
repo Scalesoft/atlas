@@ -391,3 +391,34 @@ describe("O prostoru, the tab of a space for everyone who can open it", () => {
     expect((app.getComponent({ name: "SpaceSwitcher" }).props("spaces") as SpaceRow[]).map(item => item.id)).toEqual(["space-2"]);
   });
 });
+
+// 5.2 §6: Stav obsahu is every editor's of the space; canOpenSettings gives a Writer that one section and nothing else of the space settings.
+describe("Stav obsahu for a space's editors", () => {
+  const health: Route = path => path.startsWith("/api/spaces/space-1/content-health")
+    ? response({ summary: { verified: 0, expiring: 0, expired: 0, unverified: 0, withoutSteward: 0 }, items: [], nextCursor: null, enabled: true }) : undefined;
+
+  it("leads a Writer from the space menu into Stav obsahu, opens it by its address and refuses the other sections", async () => {
+    const { toast } = await import("vue-sonner");
+    const refused = vi.spyOn(toast, "error");
+    const app = await start("#/spaces/space-1", { user: member, spaces: [space("space-1", "Tým", "Writer")], routes: health });
+    await app.get('[aria-label="Další akce prostoru Tým"]').trigger("click"); await settleMenu();
+    expect(document.querySelector("[role=menu] [data-space-menu=settings]")).toBeNull();
+    document.querySelector<HTMLElement>("[role=menu] [data-space-menu=content-health]")!.click(); await settle();
+    expect(location.hash).toBe("#/spaces/space-1/settings/content-health");
+    expect(app.findComponent({ name: "SpaceContentHealthPage" }).exists()).toBe(true);
+    expect(requests).toContain("/api/spaces/space-1/content-health?sort=priority&days=90");
+    expect(refused).not.toHaveBeenCalled();
+    await visit("#/spaces/space-1/settings/general");
+    expect(location.hash).toBe("#/");
+    expect(refused).toHaveBeenCalledWith("Nastavení prostoru může otevřít jen jeho správce.", expect.anything());
+    await visit("#/spaces/space-1/settings/content-health");
+    expect(location.hash).toBe("#/spaces/space-1/settings/content-health");
+  });
+
+  it("offers a Reader no Stav obsahu", async () => {
+    const app = await start("#/spaces/space-1", { user: member, spaces: [space("space-1", "Tým", "Reader")], routes: health });
+    expect(app.find('[aria-label="Další akce prostoru Tým"]').exists() && document.querySelector("[data-space-menu=content-health]")).toBeFalsy();
+    await visit("#/spaces/space-1/settings/content-health");
+    expect(location.hash).toBe("#/");
+  });
+});

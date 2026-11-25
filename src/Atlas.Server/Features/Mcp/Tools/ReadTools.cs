@@ -130,7 +130,7 @@ public sealed class McpReadTools
                 {
                     head.Append("   publikováno: ").Append(Date(published)).Append('\n');
                 }
-                if (hit.Verification?.State is { } verificationState)
+                if (hit.Verification is { } verificationState)
                 {
                     // 5.2: an expired verification is said in the answer (plan §7).
                     head.Append("   ověření: ").Append(PageVerifications.PageVerificationText.State(verificationState)).Append('\n');
@@ -147,7 +147,7 @@ public sealed class McpReadTools
                     item["headingTitle"] = sectionTitle;
                     item["headingId"] = sectionId;
                 }
-                if (hit.Verification?.State is { } stateOfHit)
+                if (hit.Verification is { } stateOfHit)
                 {
                     item["verification"] = new JsonObject { ["state"] = stateOfHit };
                 }

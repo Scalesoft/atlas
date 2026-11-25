@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { errorMessage } from "../../../api";
-import { pageAccounts, type PagePerson } from "../../../contacts/contactSources";
+import { pageAccounts } from "../../../contacts/contactSources";
+import { useAccountSearch, type PageAccountSource } from "../../../contacts/useAccountSearch";
 import { formatDate } from "../../../formatDate";
 import t from "../../../i18n/verification";
 import { contentHealthApi, verificationIcon, verificationLabel, verificationTone, type ContentHealth, type ContentHealthApi, type ContentHealthBulk, type ContentHealthDays, type ContentHealthFilter, type ContentHealthItem, type ContentHealthSort } from "../../../verification/pageVerification";
@@ -38,7 +39,7 @@ const props = withDefaults(defineProps<{
   spaceId: string;
   api?: ContentHealthApi;
   /** The accounts an owner may be, searched in the context of one page (the gallery passes local ones). */
-  people?: (pageId: string, text: string, signal: AbortSignal) => Promise<PagePerson[]>;
+  people?: PageAccountSource;
 }>(), { api: () => contentHealthApi, people: (pageId: string, text: string, signal: AbortSignal) => pageAccounts(pageId)(text, signal) });
 const context = useSettingsContext();
 const flash = useSettingsFlash();
@@ -157,37 +158,14 @@ const fromAuthor = () => bulk({ action: "stewardFromLastAuthor", pageIds: target
 // The owner picker: the accounts with access to all the rows (a space has no list of its own), the first result preselected, Enter applies it.
 const pickerRows = ref<ContentHealthItem[]>([]);
 const pickerOpen = ref(false);
-const people = ref<ChoiceOption[]>([]);
-const peopleQuery = ref("");
-const searching = ref(false);
-let peopleRequest: AbortController | undefined;
-let peopleTimer: ReturnType<typeof setTimeout> | undefined;
-async function findPeople() {
-  peopleRequest?.abort();
-  const controller = (peopleRequest = new AbortController());
-  if (!pickerRows.value.length) return;
-  searching.value = true;
-  try {
-    // Only people who may read every picked page (the first 20; the server reports any page it still skips).
-    const lists = await Promise.all(pickerRows.value.slice(0, 20).map((row) => props.people(row.pageId, peopleQuery.value.trim(), controller.signal)));
-    const found = lists[0]!.filter((person) => lists.every((list) => list.some((other) => other.id === person.id)));
-    if (!controller.signal.aborted) people.value = found.map((person) => ({ value: person.id, label: person.name, description: person.username ?? person.email ?? undefined, icon: "user" }));
-  } catch {
-    if (!controller.signal.aborted) people.value = [];
-  } finally {
-    if (peopleRequest === controller) searching.value = false;
-  }
-}
+const { query: peopleQuery, options: people, loading: searching, start: findPeople } = useAccountSearch(() => pickerRows.value.map((row) => row.pageId), props.people);
 function openPicker() {
   const rows = target();
   if (!rows.length) return;
   pickerRows.value = rows;
-  peopleQuery.value = "";
-  people.value = [];
   pickerOpen.value = true;
-  void findPeople();
+  findPeople();
 }
-watch(peopleQuery, () => { clearTimeout(peopleTimer); peopleTimer = setTimeout(() => void findPeople(), 180); });
 async function pickSteward(stewardId: string) {
   const rows = pickerRows.value;
   pickerOpen.value = false;

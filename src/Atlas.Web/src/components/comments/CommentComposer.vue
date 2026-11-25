@@ -13,7 +13,7 @@ import { markdownProjection } from "../../pageSourceDraft";
 import { boardTextInput } from "../boards/text/boardMarkdownText";
 import "../boards/text/boardTextSurface.css";
 import { Button } from "../ui/button";
-import CommentSendButton from "./CommentSendButton.vue";
+import SendButton from "../SendButton.vue";
 import t from "../../i18n/components-search";
 import { focusWhenPresent } from "../../keyboard/navigation";
 import { draftKeeper, drafts, holdUnsavedWork } from "../../lib/unsavedWork";
@@ -28,7 +28,7 @@ import { pragueNow, historyStampText } from "@atlas/markdown/core";
  * anywhere in it writes. With `draftKey` (a new comment) the typed text counts as unsaved work and is kept under that key when the
  * field goes, to come back with the next field (UX-P-6), unless „Zrušit“ or Escape threw it away (the host drops a kept draft once
  * its comment is sent). With `enterSubmits` (a requirement's note, quick like 3.4's) Enter sends and Shift+Enter writes a new line; with
- * `sendIcon` puts a paper-plane button (CommentSendButton) in the field's corner instead of the text button, dim while the field is empty and
+ * `sendIcon` puts a paper-plane button (SendButton) in the field's corner instead of the text button, dim while the field is empty and
  * accent with text, for a quick reply that Enter sends (the page's discussion and its peek); with `dayChip` a chip „dnes ▾“ picks the day of the note (sent as the second argument of `submit`) and returns to today after each send.
  */
 const props = withDefaults(defineProps<{
@@ -122,7 +122,7 @@ defineExpose({ reset, submit, dispatch, quote });
     <!-- @vue-generic {'rich'} --><MarkdownEditor v-model="draft" profile="rich" variant="compact" :ariaLabel="ariaLabel" :plugins="plugins" :lexicon="host.lexicon" :placeholder="placeholder"
       :outline="editorOutline" v-bind="editorChrome" :show-block-add-button="false" :fullscreenable="false" @created="created"
       :class="[theme, 'atlas-document-editor', 'board-text', 'comment-composer-editor']" />
-    <CommentSendButton v-if="sendIcon" class="comment-composer-send" :ready="canSend" :busy="busy" :label="enterSubmits ? t.comments.sendEnter : t.comments.sendCtrl" data-comment-submit />
+    <SendButton v-if="sendIcon" class="comment-composer-send" :ready="canSend" :busy="busy" :label="enterSubmits ? t.comments.sendEnter : t.comments.sendCtrl" data-comment-submit />
     </div>
     <div class="comment-composer-actions">
       <span v-if="dayChip" class="comment-composer-day">

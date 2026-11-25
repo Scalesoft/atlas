@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref, useId, watch } from "vue";
-import { animateAtlas, motionMs, paperPlaneFlight, PAPER_PLANE_ICON_PATHS } from "../../motion/aiMotion";
+import { ref, useId } from "vue";
 import t from "../../i18n/assistant-panel";
+import SendButton from "../SendButton.vue";
 import { Textarea } from "../ui/textarea";
 import { disclosureHooks } from "../settings/disclosure";
 
 /**
  * The field of the next question (plan §15; board „Asistent – vstupy a průběh“): one rounded field that grows with the text,
- * the send button in the AI colours (a paper plane that leaves with the question). Enter sends,
+ * the send button in the AI colours (SendButton: a paper plane that leaves with the question). Enter sends,
  * Shift+Enter breaks the line, ArrowUp in the empty field brings back the previous question. The first Escape belongs to the
  * panel (it stops a running answer before it closes anything). The draft is owned by the parent (memory only). A question with
  * a detected password is refused by the parent, which then shows `notice`; the text stays in the field. `maxlength` leaves room
@@ -22,35 +22,6 @@ const emit = defineEmits<{ "update:modelValue": [value: string]; send: [] }>();
 const field = ref<HTMLTextAreaElement | { $el: HTMLTextAreaElement }>();
 let recallIndex = -1;
 const hintId = useId();
-const plane = ref<SVGSVGElement>();
-const away = ref(false);
-let flight: Animation | null = null;
-let returning = 0;
-/** A fresh plane glides into the empty button from below left once the answer is ready (and the old one has flown off). */
-function planeBack() {
-  away.value = false;
-  animateAtlas(plane.value, [
-    { opacity: 0, transform: "translate(-7px, 7px) scale(.5)" },
-    { opacity: 1, transform: "translate(1px, -1px) scale(1.08)", offset: 0.65 },
-    { opacity: 1, transform: "none" },
-  ], { duration: plane.value ? motionMs(plane.value, "--atlas-motion-pop") : undefined });
-}
-// A question that really left (the parent turned busy, not a refused one): the plane of the button takes off with it and the
-// button stays empty while the answer is prepared. Under reduced motion nothing flies and the icon simply stays.
-watch(() => props.busy, async (busy) => {
-  const current = ++returning;
-  if (busy) {
-    flight?.cancel();
-    flight = plane.value ? paperPlaneFlight(plane.value) : null;
-    away.value = !!flight;
-    return;
-  }
-  if (!away.value) return;
-  await flight?.finished.catch(() => {});
-  if (current === returning && !props.busy) planeBack();
-});
-onBeforeUnmount(() => { returning++; flight?.cancel(); });
-
 function element(): HTMLTextAreaElement | undefined {
   const value = field.value;
   return value instanceof HTMLTextAreaElement ? value : value?.$el;
@@ -100,9 +71,7 @@ function send() {
         @keydown="keydown"
       />
       <div v-if="$slots.actions" class="assistant-actions"><slot name="actions" /></div>
-      <button class="assistant-send" type="submit" :aria-label="t.composer.send" :title="t.composer.sendTitle" :disabled="busy || !modelValue.trim()">
-        <svg ref="plane" class="assistant-send-plane" :class="{ 'is-away': away }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path v-for="d in PAPER_PLANE_ICON_PATHS" :key="d" :d="d" /></svg>
-      </button>
+      <SendButton class="assistant-send" tone="ai" :ready="!!modelValue.trim()" :busy="busy" :label="t.composer.send" :title="t.composer.sendTitle" />
     </div>
     <Transition :css="false" v-bind="disclosureHooks"><p v-if="notice" class="assistant-composer-note" role="alert" data-assistant-notice>{{ notice }}</p></Transition>
     <!-- Read with the field, never shown: under the field it was a second line of small print in every conversation. What the
@@ -123,15 +92,6 @@ function send() {
 .assistant-composer .assistant-input textarea:focus-visible:not(.md-editor):not(.md-editor *) { border: 0; box-shadow: none; outline: none; }
 /* Same weight as the field rule above, which sets flex: 1. */
 .assistant-composer .assistant-input.has-actions textarea:not(.md-editor):not(.md-editor *) { flex-basis: 100%; }
-/* Concentric: the field's 16 px radius less its 1 px border and 7 px padding is the button's 8 px (it was 14 and 9, a corner gap of 8.2 px
-   against 7 px along the edges). */
-.assistant-send { display: grid; flex: none; place-items: center; width: 32px; height: 32px; padding: 0; overflow: visible; border: 0; border-radius: 8px; background: linear-gradient(135deg, var(--accent), var(--ai-ink)); color: var(--on-accent, #fff); cursor: pointer; transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), filter var(--atlas-motion-fast) var(--atlas-ease-out), transform var(--atlas-motion-fast) var(--atlas-ease-out); }
-@media (hover: hover) and (pointer: fine) { .assistant-send:hover:not(:disabled) { filter: brightness(1.08); } }
-.assistant-send:active:not(:disabled) { transform: scale(var(--atlas-press)); }
-.assistant-send:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.assistant-send:disabled { opacity: .45; cursor: default; }
-.assistant-send svg { pointer-events: none; }
-/* The plane has flown off with the question (aiMotion paperPlaneFlight); the button stays empty until a new one glides in. */
-.assistant-send-plane.is-away { opacity: 0; }
+/* Concentric: the field's 16 px radius less its 1 px border and 7 px padding is the send button's 8 px. */
 .assistant-composer-note { margin: 0; color: var(--error); font-size: 12.5px; }
 </style>
