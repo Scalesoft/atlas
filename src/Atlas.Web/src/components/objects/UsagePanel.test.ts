@@ -28,7 +28,7 @@ async function show(props: Record<string, unknown> = {}, usage: UsageApi = api) 
   return wrapper;
 }
 
-it("groups the places by space, says how and why each is used, and counts the hidden ones without a name", async () => {
+it("groups the places by space, says how and why each is used, and neither names nor counts the hidden ones", async () => {
   const panel = await show();
   expect(panel.findAll(".usage-space h4").map(h => h.text())).toEqual(["Finance", "Provoz"]);
   const places = panel.findAll("[data-usage-place]");
@@ -40,8 +40,8 @@ it("groups the places by space, says how and why each is used, and counts the hi
   // A contact card reads as a card, with that person's card as the excerpt.
   expect(places[0]!.find(".usage-kind").text()).toMatch(/^vizitka/);
   expect(places[0]!.find(".usage-excerpt").text()).toBe("Jana · PM projektu");
-  expect(panel.find(".usage-summary").text()).toBe("Použito na 5 místech");
-  expect(panel.get("[data-usage-hidden]").text()).toBe("A ještě na 1 místě, ke kterému nemáte přístup.");
+  expect(panel.find(".usage-summary").text()).toBe("Použito na 4 místech");
+  expect(panel.text()).not.toContain("nemáte přístup");
   expect(panel.text()).not.toContain("Nedostupné");
 });
 
@@ -75,7 +75,7 @@ it("still places only inform", async () => {
 it("collapsed it asks only for the count and reads the places when unfolded", async () => {
   const usage = { usage: vi.fn(api.usage), count: vi.fn(api.count) };
   const panel = await show({ collapsible: true }, usage);
-  expect(panel.get("[data-usage-toggle]").text()).toBe("Použito na 5 místech");
+  expect(panel.get("[data-usage-toggle]").text()).toBe("Použito na 4 místech");
   expect(usage.usage).not.toHaveBeenCalled();
   expect(panel.find("[data-usage-place]").exists()).toBe(false);
   await panel.get("[data-usage-toggle]").trigger("click");
@@ -98,7 +98,7 @@ it("collapsed it asks for the count only once the row comes into view", async ()
   await new Promise(resolve => setTimeout(resolve, 5));
   await flushPromises();
   expect(usage.count).toHaveBeenCalledOnce();
-  expect(panel.get("[data-usage-toggle]").text()).toBe("Použito na 5 místech");
+  expect(panel.get("[data-usage-toggle]").text()).toBe("Použito na 4 místech");
 });
 
 it("pages on with Načíst další místa, says Nikde nepoužito, and an unreadable object is no error", async () => {

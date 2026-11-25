@@ -184,7 +184,11 @@ const trashed = computed(() => (trashing.value ? store.value.get(trashing.value)
 async function askTrash(id: string) {
   trashError.value = ""; note.value = "";
   let count = 0;
-  try { count = (await (props.usage ?? usageApi).count(id, undefined, undefined, true))?.total ?? 0; }
+  try {
+    const usage = await (props.usage ?? usageApi).count(id, undefined, undefined, true);
+    // Used only where the reader may not look: asked as an unknown use, the number is not told.
+    count = usage?.total || (usage?.hidden ? -1 : 0);
+  }
   catch { count = -1; /* unknown use: ask rather than trash silently */ }
   used.value = count;
   trashing.value = id;

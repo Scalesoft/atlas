@@ -25,10 +25,10 @@ public sealed class TemplateOriginTests
             $"""SELECT string_agg(CAST("Id" AS text), ',') FROM "Page" WHERE "TemplatePageId"='{template.Id}'"""));
         Assert.Equal(1L, await OutboxTests.ScalarAsync(f.Host.ConnectionString, $"""SELECT count(*) FROM "Page" WHERE "Id"='{plain.Id}' AND "TemplatePageId" IS NULL"""));
 
-        // The template's usage is the page made from it, for a reader of the space too (an unpublished draft of another is hidden, counted).
+        // The template's usage is the page made from it, for a reader of the space too (an unpublished draft of another is hidden: not counted, only said to exist).
         var usage = await f.As<ObjectUsageList>(f.Writer, new GetObjectUsage(template.Id));
         Assert.Equal((made.Id, RelationKinds.Template, 1), (Assert.Single(usage.Items).PlaceId, usage.Items[0].Kind, usage.Total));
-        Assert.Equal(new UsageCount(template.Id, 1, 0, 1), await f.As<UsageCount>(f.Reader, new CountObjectUsage(template.Id)));
+        Assert.Equal(new UsageCount(template.Id, 0, true), await f.As<UsageCount>(f.Reader, new CountObjectUsage(template.Id)));
         // The page's relations name its template; Obsah lists the pages, never the template, and the page's own count is unchanged.
         Assert.Contains((await f.RelationsAsync(f.Writer, made.Id)).Edges, edge => edge.Kind == RelationKinds.Template && edge.TargetId == template.Id);
         var contents = await f.ContentsAsync(f.Writer);

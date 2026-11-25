@@ -88,11 +88,11 @@ export function contactsIn(doc: { descendants(visit: (node: { type: { name: stri
 }
 
 /** No place but `here` uses the contact, and `here` no longer does (`stillHere` other references left): the usage service (ObjectUsage,
- * drafts and places the reader may not see counted) finds at most one use, and that one is `here` (a page not yet saved, a board whose
- * deletion arrived first, count none). `places` lists the visible uses, asked for only when `total` is 1. Pure. */
-export function isLastUsage(count: Pick<UsageCount, "total">, here: Pick<ContactPlace, "id">, stillHere: number, places?: Pick<UsagePage, "items" | "hidden">): boolean {
-  if (stillHere > 0 || count.total > 1) return false;
-  return count.total === 0 || (!!places && places.hidden === 0 && places.items.every(use => use.placeId.toLowerCase() === here.id.toLowerCase()));
+ * drafts counted) finds no use in a place the reader may not see and at most one they may, and that one is `here` (a page not yet saved,
+ * a board whose deletion arrived first, count none). `places` lists the visible uses, asked for only when `total` is 1. Pure. */
+export function isLastUsage(count: Pick<UsageCount, "total" | "hidden">, here: Pick<ContactPlace, "id">, stillHere: number, places?: Pick<UsagePage, "items">): boolean {
+  if (stillHere > 0 || count.hidden || count.total > 1) return false;
+  return count.total === 0 || (!!places && places.items.every(use => use.placeId.toLowerCase() === here.id.toLowerCase()));
 }
 
 /** The open „poslední použití“ question (ContactLastUsageDialog, mounted once by the app); one at a time. */
@@ -191,7 +191,7 @@ export async function usedOn(objectId: string, signal: AbortSignal, api: Pick<Us
   const places = page.items.filter(row => row.placeId !== here && !seen.has(row.placeId) && seen.add(row.placeId)).map(row => ({
     title: row.placeTitle, ...(row.spaceName ? { detail: row.spaceName } : {}),
     url: buildShellHashEncoded(row.placeTypeId === "atlas.board" ? { view: "board", boardId: row.placeId } : { view: "page", pageId: row.placeId }) }));
-  return { places: places.slice(0, usedOnPlaces), more: Math.max(0, places.length - usedOnPlaces) + page.hidden };
+  return { places: places.slice(0, usedOnPlaces), more: Math.max(0, places.length - usedOnPlaces) };
 }
 
 /** A contact linked to an account (its `directoryId` is the account's id, AccountContacts) is that internal person: the editor colours their

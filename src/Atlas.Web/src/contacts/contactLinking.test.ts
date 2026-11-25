@@ -89,20 +89,20 @@ it("counts the references to a contact in a document", () => {
 it("is the last usage only when no other place, seen or unseen, uses the contact", () => {
   const here = { id: "B1" };
   const row = (placeId: string) => ({ placeId, placeTypeId: "atlas.board", placeTitle: "Tabule", spaceId: null, spaceName: null, kind: "placement" as const, count: 1, draft: false });
-  expect(isLastUsage({ total: 0 }, here, 0)).toBe(true);
-  expect(isLastUsage({ total: 1 }, here, 0, { items: [row("b1")], hidden: 0 })).toBe(true);
+  expect(isLastUsage({ total: 0, hidden: false }, here, 0)).toBe(true);
+  expect(isLastUsage({ total: 1, hidden: false }, here, 0, { items: [row("b1")] })).toBe(true);
   // The one use is elsewhere (this page not saved yet), unseen, or not listed: not the last.
-  expect(isLastUsage({ total: 1 }, here, 0, { items: [row("p9")], hidden: 0 })).toBe(false);
-  expect(isLastUsage({ total: 1 }, here, 0, { items: [], hidden: 1 })).toBe(false);
-  expect(isLastUsage({ total: 1 }, here, 0)).toBe(false);
-  expect(isLastUsage({ total: 0 }, here, 1)).toBe(false);
-  expect(isLastUsage({ total: 2 }, here, 0, { items: [row("b1"), row("p1")], hidden: 0 })).toBe(false);
+  expect(isLastUsage({ total: 1, hidden: false }, here, 0, { items: [row("p9")] })).toBe(false);
+  expect(isLastUsage({ total: 0, hidden: true }, here, 0)).toBe(false);
+  expect(isLastUsage({ total: 1, hidden: false }, here, 0)).toBe(false);
+  expect(isLastUsage({ total: 0, hidden: false }, here, 1)).toBe(false);
+  expect(isLastUsage({ total: 2, hidden: false }, here, 0, { items: [row("b1"), row("p1")] })).toBe(false);
 });
 
 it("trashes the contact after its last usage only when the person says so", async () => {
   const run = (total: number, trash: boolean, placeId = "p1") => {
     const used = {
-      usage: { count: vi.fn(async () => ({ objectId: id, total, visible: total, hidden: 0 })), usage: vi.fn(async () => ({ objectId: id, items: [{ placeId, placeTypeId: "atlas.page", placeTitle: "Stránka", spaceId: null, spaceName: null, kind: "mention" as const, count: 1, draft: true }], total, hidden: 0, nextCursor: null })) },
+      usage: { count: vi.fn(async () => ({ objectId: id, total, hidden: false })), usage: vi.fn(async () => ({ objectId: id, items: [{ placeId, placeTypeId: "atlas.page", placeTitle: "Stránka", spaceId: null, spaceName: null, kind: "mention" as const, count: 1, draft: true }], total, nextCursor: null })) },
       contacts: { forget: vi.fn() }, objects: { trash: vi.fn(async () => {}) }, ask: vi.fn(async () => trash),
     };
     return { used, done: contactRemoved(id, "Jana", { kind: "page", id: "p1" }, 0, used) };
@@ -144,14 +144,14 @@ it("brings a trashed contact back when the card deletion is undone", async () =>
 });
 
 describe("contact usage for the read-only card", () => {
-  it("lists each place once, pages and boards by their route, and counts the rest and the hidden ones", async () => {
+  it("lists each place once, pages and boards by their route, and counts the rest", async () => {
     const row = (placeId: string, placeTypeId: string, placeTitle: string) => ({ placeId, placeTypeId, placeTitle, spaceId: "s", spaceName: "Wiki", kind: "mention", count: 1, draft: false });
     const items = [row("p1", "atlas.page", "Zakázka"), row("p1", "atlas.page", "Zakázka"), row("b1", "atlas.board", "Tabule"), ...[2, 3, 4, 5, 6].map(n => row(`p${n}`, "atlas.page", `Strana ${n}`))];
-    const answer = await (await import("./contactLinking")).usedOn("c1", new AbortController().signal, { usage: async () => ({ objectId: "c1", items, total: 7, hidden: 2, nextCursor: null }) as never });
+    const answer = await (await import("./contactLinking")).usedOn("c1", new AbortController().signal, { usage: async () => ({ objectId: "c1", items, total: 8, nextCursor: null }) as never });
     expect(answer!.places).toHaveLength(5);
     expect(answer!.places[0]).toEqual({ title: "Zakázka", detail: "Wiki", url: "#/pages/p1" });
     expect(answer!.places[1]!.url).toContain("b1");
-    expect(answer!.more).toBe(2 + 2);
+    expect(answer!.more).toBe(2);
   });
   it("is null for an unreadable contact", async () => {
     expect(await (await import("./contactLinking")).usedOn("c1", new AbortController().signal, { usage: async () => null })).toBeNull();

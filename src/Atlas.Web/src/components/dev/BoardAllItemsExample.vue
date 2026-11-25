@@ -109,12 +109,12 @@ const derivedApi: BoardLinksApi = {
     relations: async () => null,
   },
   usage: {
-    usage: async objectId => ({ objectId, total: 4, hidden: 1, nextCursor: null, items: [
+    usage: async objectId => ({ objectId, total: 3, nextCursor: null, items: [
       { placeId: "gallery-page-plan", placeTypeId: "atlas.page", placeTitle: "Plán vydání 3.2", spaceId: "gallery-space", spaceName: "Provoz", kind: "mention", count: 2, draft: false, excerpt: "PM projektu je Jana Nováková, čekáme na její schválení." },
       { placeId: "gallery-board", placeTypeId: "atlas.board", placeTitle: "Vydání 3.2", spaceId: "gallery-space", spaceName: "Provoz", kind: "placement", count: 1, draft: false },
       { placeId: "gallery-page-portal", placeTypeId: "atlas.page", placeTitle: "Portál pro zákazníky", spaceId: "gallery-space", spaceName: "Provoz", kind: "party", count: 1, draft: true },
     ] }),
-    count: async objectId => ({ objectId, total: 4, visible: 3, hidden: 1 }),
+    count: async objectId => ({ objectId, total: 3, hidden: true }),
   },
   waiting: {
     waiting: async () => ({ parties: [

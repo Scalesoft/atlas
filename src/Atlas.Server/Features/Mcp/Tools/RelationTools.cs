@@ -112,9 +112,9 @@ public sealed class McpRelationTools(IMessageBus bus)
 
     [McpServerTool(Name = "atlas_list_usage", Title = "Použití v prostoru", ReadOnly = true, Idempotent = true, OpenWorld = false, Destructive = false)]
     [McpToolScope(ApiScopes.Read)]
-    [AssistantDescription("Inventář prostoru: komponenty podle typu s počtem použití (i skrytých) a příznakem nepoužité; filtr type, unused. spaceId, cursor.")]
+    [AssistantDescription("Inventář prostoru: komponenty podle typu s počtem použití a příznakem nepoužité; filtr type, unused. spaceId, cursor.")]
     [Description("Vypíše komponenty prostoru (stránky, tabule, kontakty a další objekty, i objekty wiki v prostoru použité) podle typu s počtem míst, kde jsou " +
-        "použité (uses, včetně konceptů stránek), počtem míst, která vlastník tokenu nevidí (hidden), a příznakem unused: objekt mimo strom, který nic nepoužívá " +
+        "použité a vlastník tokenu je vidí (uses, včetně konceptů stránek), a příznakem unused: objekt mimo strom, který nic nepoužívá " +
         "ani skrytě; takové objekty může úklid sirotků po nastavené době přesunout do koše. unused true vypíše jen nepoužité. Kde přesně je objekt použitý, " +
         "řekne atlas_get_relations. Po 50 položkách pokračování přes nextCursor. " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListUsageAsync(
@@ -134,7 +134,7 @@ public sealed class McpRelationTools(IMessageBus bus)
         foreach (var row in inventory.Items)
         {
             body.Append("- ").Append(McpText.Line(row.Title, 200)).Append(" (").Append(row.TypeId).Append(", id ").Append(row.Id)
-                .Append(", použito na ").Append(row.Uses + row.Hidden).Append(" místech").Append(row.Hidden > 0 ? $" (z toho skrytých {row.Hidden})" : "").Append(row.Unused ? ", nepoužité" : "").Append(")\n");
+                .Append(", použito na ").Append(row.Uses).Append(" místech").Append(row.Unused ? ", nepoužité" : "").Append(")\n");
         }
         var structured = JsonSerializer.SerializeToNode(inventory, Json)!.AsObject();
         structured["spaceId"] = space;

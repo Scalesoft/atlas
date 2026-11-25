@@ -7,8 +7,8 @@ public sealed record SpaceContents(IReadOnlyList<ContentRow> Items, ContentSumma
 /// <param name="Path">The titles of the readable ancestors in the tree (a page's own board: of its page), root first, joined by " › "; empty at the root or outside the tree.</param>
 /// <param name="Scope">space, wiki or private: an object of the wiki used in the space carries its badge.</param>
 /// <param name="HostId">The page a page's own board belongs to (relation attached).</param>
-/// <param name="UsedCount">Places it is used, as „Použito na“ counts them (ObjectUsage total: links, cards, mentions, reference nodes, pages
-/// made from a template; drafts and places the reader may not see included).</param>
+/// <param name="UsedCount">Places it is used that the reader may see, as „Použito na“ counts them (ObjectUsage: links, cards, mentions, reference
+/// nodes, pages made from a template; drafts included). Places the reader may not see are not counted: their number is not told.</param>
 public sealed record ContentRow(Guid Id, string TypeId, string Title, string Path, string Scope, Guid? SpaceId, Guid? HostId, int UsedCount, int LinksIn,
     int LinksOut, int Comments, DateTime UpdatedAt, bool CanEdit);
 
@@ -31,8 +31,8 @@ public sealed record RelationNodeDto(Guid Id, string? TypeId, string? Title, Gui
 public sealed record RelationEdgeDto(Guid SourceId, Guid TargetId, string Kind, int Count, string? Anchor, bool Draft = false, string? PartId = null, string? Excerpt = null, bool Card = false);
 
 /// <summary>„Použito na“ (plan 3.1 M5): the places an object is used in that the reader may see, a page of them, sorted by space, place
-/// and kind; <see cref="Total"/> counts every use, <see cref="Hidden"/> those in places the reader may not see.</summary>
-public sealed record ObjectUsageList(Guid ObjectId, IReadOnlyList<UsageRow> Items, int Total, int Hidden, string? NextCursor);
+/// and kind; <see cref="Total"/> counts them. Uses in places the reader may not see are neither listed nor counted.</summary>
+public sealed record ObjectUsageList(Guid ObjectId, IReadOnlyList<UsageRow> Items, int Total, string? NextCursor);
 
 /// <summary>One use: kde (the place, its space), jak (<see cref="Kind"/>), proč (<see cref="PartId"/>, <see cref="Excerpt"/>) and whether
 /// only the working draft holds it.</summary>
@@ -46,14 +46,14 @@ public sealed record ObjectUsageList(Guid ObjectId, IReadOnlyList<UsageRow> Item
 public sealed record UsageRow(Guid PlaceId, string PlaceTypeId, string PlaceTitle, Guid? SpaceId, string? SpaceName, string Kind, int Count, string? Anchor,
     bool Draft, string? PartId, string? Excerpt, bool Card = false);
 
-/// <summary>The cheap count of badges and of the last-usage warning: <see cref="Total"/> = <see cref="Visible"/> + <see cref="Hidden"/>.</summary>
-public sealed record UsageCount(Guid ObjectId, int Total, int Visible, int Hidden);
+/// <summary>The cheap count of badges and of the last-usage warning: <see cref="Total"/> the uses the reader may see; <see cref="Hidden"/>
+/// only whether any use is in a place they may not see (never how many), so the warning does not call a still used object unused.</summary>
+public sealed record UsageCount(Guid ObjectId, int Total, bool Hidden);
 
 /// <summary>The space's inventory (plan 3.1 M5): its components by type with their uses, a page of them; <see cref="Types"/> and
 /// <see cref="Unused"/> count the whole inventory whatever the filter.</summary>
 public sealed record SpaceUsage(IReadOnlyList<UsageInventoryRow> Items, IReadOnlyDictionary<string, int> Types, int Unused, string? NextCursor);
 
 /// <param name="Uses">Uses the reader may see; a wiki's object counts its uses in this space only.</param>
-/// <param name="Hidden">Uses in places the reader may not see.</param>
 /// <param name="Unused">Not in the tree and used nowhere, hidden places included: what the orphan cleanup may take once it is old enough.</param>
-public sealed record UsageInventoryRow(Guid Id, string TypeId, string Title, string Scope, int Uses, int Hidden, bool Unused);
+public sealed record UsageInventoryRow(Guid Id, string TypeId, string Title, string Scope, int Uses, bool Unused);

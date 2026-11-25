@@ -195,17 +195,17 @@ public sealed class PageDerivedRowsTests
         // The badges' count (asked per candidate in the editor) neither scans the revisions nor writes a row.
         using (var recording = SqlRecording.Start())
         {
-            Assert.Equal(new UsageCount(contact, 0, 0, 0), await f.Boards.As<UsageCount>(f.Writer, new CountObjectUsage(contact)));
+            Assert.Equal(new UsageCount(contact, 0, false), await f.Boards.As<UsageCount>(f.Writer, new CountObjectUsage(contact)));
             Assert.DoesNotContain(recording.Statements, sql => sql.Contains("strpos", StringComparison.Ordinal)
                 || sql.Contains("INSERT INTO \"PageObjectMention\"", StringComparison.Ordinal) || sql.Contains("DELETE FROM \"PageObjectMention\"", StringComparison.Ordinal));
         }
 
         // The last-usage warning of a removal or delete derives the pages that may be behind first.
-        Assert.Equal(new UsageCount(contact, 1, 1, 0), await f.Boards.As<UsageCount>(f.Writer, new CountObjectUsage(contact, Fresh: true)));
+        Assert.Equal(new UsageCount(contact, 1, false), await f.Boards.As<UsageCount>(f.Writer, new CountObjectUsage(contact, Fresh: true)));
 
         // The mention removed in the next save is forgotten the same way: the row of a revision no longer current does not count.
         var saved = await f.Pages.SaveAsync(page.Id, new SavePageRequest("Lidé", RelationsFixture.Rich(), "Lidé", page.Version), f.Writer, default);
-        Assert.Equal(new UsageCount(contact, 0, 0, 0), await f.Boards.As<UsageCount>(f.Writer, new CountObjectUsage(contact, Fresh: true)));
+        Assert.Equal(new UsageCount(contact, 0, false), await f.Boards.As<UsageCount>(f.Writer, new CountObjectUsage(contact, Fresh: true)));
         Assert.NotEqual(page.Version, saved.Version);
     }
 

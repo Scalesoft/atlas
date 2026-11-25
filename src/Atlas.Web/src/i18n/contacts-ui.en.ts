@@ -56,7 +56,7 @@ const en: ContactsUiMessages = {  card: {
     count: (shown: number, total: number) => `Contacts: ${shown} of ${total}.`,
     contactWord: "Contact",
     usedIn: (places: string) => `is used in ${places}`,
-    usedUnknown: "may be used somewhere (couldn't load the count)",
+    usedUnknown: "may be used somewhere",
     trashTail: "Pages and boards will then show it as a contact in the trash; restoring from the trash brings everything back.",
     trashed: "The contact is in the trash.",
   },

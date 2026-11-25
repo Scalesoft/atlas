@@ -14,7 +14,7 @@ using static Atlas.Server.Tests.Relations.RelationsFixture;
 namespace Atlas.Server.Tests.Relations;
 
 /// <summary>„Použito na“ (plan 3.1 M5): one service tells kde, jak and proč of every use, drafts included, to each reader only what it may
-/// read and the rest as a hidden count; its count, the space's inventory and the relations of MCP read the same uses.</summary>
+/// read and of the rest only whether there is any (never how many); its count, the space's inventory and the relations of MCP read the same uses.</summary>
 public sealed class UsageTests
 {
     [PostgreSqlFact]
@@ -32,17 +32,17 @@ public sealed class UsageTests
 
         var usage = await UsageAsync(f, f.Writer, jana);
         Assert.Equal(["Návrh mention draft", "Plán placement", "Provoz mention", "Provoz reference"], Places(usage));
-        Assert.Equal((4, 0, (string?)null), (usage.Total, usage.Hidden, usage.NextCursor));
+        Assert.Equal((4, (string?)null), (usage.Total, usage.NextCursor));
         Assert.All(usage.Items, row => Assert.Equal((f.SpaceId, "Obsah"), (row.SpaceId, row.SpaceName)));
         Assert.Equal("Za VPN odpovídá Jana", usage.Items.Single(row => row.PlaceId == provoz.Id && row.Kind == RelationKinds.Mention).Excerpt);
         Assert.Equal("Nově přebírá Jana", usage.Items.Single(row => row.Draft).Excerpt);
         Assert.Equal(card.ToString(), usage.Items.Single(row => row.Kind == RelationKinds.Placement).PartId);
         Assert.Equal(node.Id.ToString(), usage.Items.Single(row => row.Kind == RelationKinds.Reference).PartId);
 
-        // A reader of the published pages: the draft's use is hidden, told only as a number.
+        // A reader of the published pages: the draft's use is hidden, not counted; the count tells only that there is one (the last-usage warning).
         Assert.Equal(["Plán placement", "Provoz mention", "Provoz reference"], Places(await UsageAsync(f, f.Reader, jana)));
-        Assert.Equal(new UsageCount(jana, 4, 3, 1), await f.As<UsageCount>(f.Reader, new CountObjectUsage(jana)));
-        Assert.Equal(new UsageCount(jana, 3, 3, 0), await f.As<UsageCount>(f.Writer, new CountObjectUsage(jana, Drafts: false)));
+        Assert.Equal(new UsageCount(jana, 3, true), await f.As<UsageCount>(f.Reader, new CountObjectUsage(jana)));
+        Assert.Equal(new UsageCount(jana, 3, false), await f.As<UsageCount>(f.Writer, new CountObjectUsage(jana, Drafts: false)));
 
         // atlas_get_relations reads the same: drafts to an editor of the page, why each use is there, the rest hidden.
         var asReader = await f.As<ObjectRelations>(f.Reader, new GetObjectRelations(jana, Drafts: true, Reasons: true));
@@ -88,10 +88,10 @@ public sealed class UsageTests
         foreach (var (actor, places, hidden, pubHidden) in expected)
         {
             var usage = await UsageAsync(f, actor, jana);
-            Assert.Equal((actor.Username, places, hidden, 4), (actor.Username, string.Join("|", usage.Items.Select(row => row.PlaceTitle)), usage.Hidden, usage.Total));
-            Assert.Equal(new UsageCount(jana, 4, 4 - hidden, hidden), await f.As<UsageCount>(actor, new CountObjectUsage(jana)));
+            Assert.Equal((actor.Username, places, 4 - hidden), (actor.Username, string.Join("|", usage.Items.Select(row => row.PlaceTitle)), usage.Total));
+            Assert.Equal(new UsageCount(jana, 4 - hidden, hidden > 0), await f.As<UsageCount>(actor, new CountObjectUsage(jana)));
             var ofPub = await UsageAsync(f, actor, pub.Id);
-            Assert.Equal((actor.Username, pubHidden), (actor.Username, ofPub.Hidden));
+            Assert.Equal((actor.Username, 1 - pubHidden), (actor.Username, ofPub.Total));
             Assert.Equal(1 - pubHidden, ofPub.Items.Count);
         }
         await BoardsFixture.Refused(404, () => UsageAsync(f, f.Outsider, jana));
@@ -102,8 +102,10 @@ public sealed class UsageTests
 
         // The inventory and Obsah agree with the cleanup: a contact used only where the reader may not look is used, not unused.
         var inventory = await f.As<SpaceUsage>(f.Reader, new ListSpaceUsage(f.SpaceId));
-        Assert.Equal((2, 2, false), inventory.Items.Where(row => row.Id == jana).Select(row => (row.Uses, row.Hidden, row.Unused)).Single());
-        Assert.Equal((0, 1, false), inventory.Items.Where(row => row.Id == hiddenOnly).Select(row => (row.Uses, row.Hidden, row.Unused)).Single());
+        Assert.Equal((2, false), inventory.Items.Where(row => row.Id == jana).Select(row => (row.Uses, row.Unused)).Single());
+        Assert.Equal((0, false), inventory.Items.Where(row => row.Id == hiddenOnly).Select(row => (row.Uses, row.Unused)).Single());
+        // Obsah counts only the reader's places too: the hidden ones keep the contact used, but their number is not told.
+        Assert.Equal(0, (await f.ContentsAsync(f.Reader)).Items.Single(row => row.Id == hiddenOnly).UsedCount);
         Assert.DoesNotContain(inventory.Items, row => row.Id == secret.Id || row.Id == own);
         Assert.Equal(1, inventory.Unused);
         Assert.Equal(["Volná"], (await f.As<SpaceUsage>(f.Reader, new ListSpaceUsage(f.SpaceId, Unused: true))).Items.Select(row => row.Title));

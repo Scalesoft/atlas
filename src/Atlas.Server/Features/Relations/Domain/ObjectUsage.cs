@@ -13,7 +13,8 @@ namespace Atlas.Server.Features.Relations.Domain;
 /// last-usage warning, the space's inventory and MCP alike. A use is an edge of the relation registry (<see cref="RelationKinds.UsedEnd"/>)
 /// read from the place it is used in (<see cref="RelationKinds.PlaceOf"/>): the page that links or mentions it, the board that shows it,
 /// the page a reference node or an attached board hangs under. A place in the trash is no use. A place the reader may not read, or a
-/// use only the working draft of a page they may not edit holds, is counted as hidden and nothing else of it is told.
+/// use only the working draft of a page they may not edit holds, is counted as hidden for the server's decisions (unused, the last-usage
+/// warning's yes or no) and nothing else of it is told, not even how many.
 /// </summary>
 public sealed class ObjectUsage(RelationReader reader)
 {
