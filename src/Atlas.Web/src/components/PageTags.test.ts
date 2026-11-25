@@ -1,11 +1,13 @@
 ﻿import { afterEach, describe, expect, it, vi } from 'vitest';
-import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import { DOMWrapper, flushPromises, mount, type VueWrapper } from '@vue/test-utils';
 import { api } from '../api';
 import PageTags from './PageTags.vue';
 vi.mock('../api', async original => ({ ...await original<typeof import('../api')>(), api: vi.fn() }));
 const notice = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock('../composables/useToast', () => ({ useToast: () => ({ success: notice.success, error: notice.error, warning: vi.fn(), dismissAll: vi.fn() }) }));
 let wrapper: VueWrapper | undefined;
+// The editor is an anchored panel portalled out of the component, so its parts are found in the document.
+const body = new DOMWrapper(document.body);
 const tags = [{ id: 'tag-api', name: 'API' }, { id: 'tag-guides', name: 'Návody' }];
 function render(canEdit = true, userId = 'user-1') {
   return wrapper = mount(PageTags, { props: { pageId: 'page-1', userId, canEdit }, attachTo: document.body });
@@ -31,7 +33,7 @@ describe('page tags', () => {
     });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click');
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click');
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click');
     await app.setProps({ canEdit: false }); await flushPromises();
     expect(app.findAll('.page-tag-link')).toHaveLength(2);
     vi.mocked(api).mockResolvedValue({ tags: [tags[1]] });
@@ -46,7 +48,7 @@ describe('page tags', () => {
     });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click');
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click');
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click');
     await flushPromises();
     expect(app.findAll('.page-tag-link').map(t => t.text())).toEqual(['Návody']);
     answer({ tags: [tags[1]] }); await flushPromises();
@@ -71,18 +73,18 @@ describe('page tags', () => {
     });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[aria-label="Odebrat tag Návody"]').trigger('click'); await flushPromises();
+    await body.get('[aria-label="Odebrat tag Návody"]').trigger('click'); await flushPromises();
     const puts = () => vi.mocked(api).mock.calls.filter(c => c[1]?.method === 'PUT').map(c => JSON.parse(c[1]?.body as string));
     expect(vi.mocked(api).mock.calls.find(c => c[1]?.method === 'PUT')?.[0]).toBe('/pages/page-1/tags');
     expect(puts()).toEqual([{ names: ['API'], expectedTagIds: ['tag-api', 'tag-guides'] }]);
-    await app.get('[role="combobox"]').setValue('Integrace');
+    await body.get('[role="combobox"]').setValue('Integrace');
     // An Enter before the answer to the typed text waits for it, then takes the typed text as a new tag (no existing tag matches).
-    await app.get('[role="combobox"]').trigger('keydown', { key: 'Enter' });
+    await body.get('[role="combobox"]').trigger('keydown', { key: 'Enter' });
     await new Promise(done => setTimeout(done, 220)); await flushPromises();
     // The second change carries the ids the first one's answer left (nothing is lost between the two).
     expect(puts()[1]).toEqual({ names: ['API', 'Integrace'], expectedTagIds: ['tag-api'] });
     expect(app.findAll('.page-tag-link').map(t => t.text())).toEqual(['API', 'Integrace']);
-    expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['API', 'Integrace']);
+    expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['API', 'Integrace']);
   });
   it('sends one request at a time and the newest selection in the next one', async () => {
     const answers: Array<(value: unknown) => void> = [];
@@ -93,8 +95,8 @@ describe('page tags', () => {
     });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click');
-    await app.get('[aria-label="Odebrat tag Návody"]').trigger('click');
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click');
+    await body.get('[aria-label="Odebrat tag Návody"]').trigger('click');
     // The first request is on its way; the second change waits for it instead of racing it.
     expect(answers).toHaveLength(1);
     answers[0]!({ tags: [tags[1]] }); await flushPromises();
@@ -108,13 +110,13 @@ describe('page tags', () => {
     vi.mocked(api).mockImplementation(async path => path.startsWith('/tags?') ? { items: tags } : { tags });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[role="combobox"]').setValue('  api ');
-    await app.get('[role="combobox"]').trigger('keydown', { key: 'Enter' });
-    expect(app.findAll('.tag-draft')).toHaveLength(2);
+    await body.get('[role="combobox"]').setValue('  api ');
+    await body.get('[role="combobox"]').trigger('keydown', { key: 'Enter' });
+    expect(body.findAll('.tag-draft')).toHaveLength(2);
     expect(vi.mocked(api).mock.calls.some(c => c[1]?.method === 'PUT')).toBe(false);
-    await app.get('[role="combobox"]').trigger('keydown', { key: 'Escape' });
-    expect((app.get('[role="combobox"]').element as HTMLInputElement).value).toBe('');
-    expect(app.get('dialog').attributes()).toHaveProperty('open');
+    await body.get('[role="combobox"]').trigger('keydown', { key: 'Escape' });
+    expect((body.get('[role="combobox"]').element as HTMLInputElement).value).toBe('');
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
   });
   it('puts the saved tags back and says why when a save is refused, then Ctrl+Z walks the changes back and forth', async () => {
     let refuse = true;
@@ -127,17 +129,17 @@ describe('page tags', () => {
     });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click'); await flushPromises();
-    expect(app.get('dialog').attributes()).toHaveProperty('open');
-    expect(app.text()).toContain('Tagy mezitím upravil někdo jiný.');
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click'); await flushPromises();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(body.text()).toContain('Tagy mezitím upravil někdo jiný.');
     expect(app.findAll('.page-tag-link')).toHaveLength(2);
-    expect(app.findAll('.tag-draft')).toHaveLength(2);
+    expect(body.findAll('.tag-draft')).toHaveLength(2);
     refuse = false;
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click'); await flushPromises();
-    expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['Návody']);
-    const field = app.get('[role="combobox"]');
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click'); await flushPromises();
+    expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['Návody']);
+    const field = body.get('[role="combobox"]');
     await field.trigger('keydown', { key: 'z', ctrlKey: true }); await flushPromises();
-    expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['API', 'Návody']);
+    expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['API', 'Návody']);
     expect(app.findAll('.page-tag-link').map(t => t.text())).toEqual(['API', 'Návody']);
     await field.trigger('keydown', { key: 'y', ctrlKey: true }); await flushPromises();
     expect(app.findAll('.page-tag-link').map(t => t.text())).toEqual(['Návody']);
@@ -151,14 +153,14 @@ describe('page tags', () => {
     });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    expect(app.get('.tag-lookup-error').text()).toContain('Našeptávač není dostupný');
+    expect(body.get('.notice.error').text()).toContain('Našeptávač není dostupný');
     down = false;
-    await app.get('.tag-lookup-error button').trigger('click'); await flushPromises();
-    expect(app.find('.tag-lookup-error').exists()).toBe(false);
-    await app.get('[role="combobox"]').setValue('Pro');
+    await body.get('.notice.error button').trigger('click'); await flushPromises();
+    expect(body.find('.notice.error').exists()).toBe(false);
+    await body.get('[role="combobox"]').setValue('Pro');
     await new Promise(resolve => setTimeout(resolve, 200)); await flushPromises();
-    await app.get('[role="combobox"]').trigger('keydown', { key: 'Enter' }); await flushPromises();
-    expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['Provoz']);
+    await body.get('[role="combobox"]').trigger('keydown', { key: 'Enter' }); await flushPromises();
+    expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['Provoz']);
   });
 
   it('takes nothing from an empty field, the highlighted row once something is typed, and waits for the answer to a typed text', async () => {
@@ -170,25 +172,25 @@ describe('page tags', () => {
       });
       const app = render(); await flushPromises();
       await app.get('.edit-page-tags').trigger('click'); await vi.advanceTimersByTimeAsync(10); await flushPromises();
-      const field = app.get('[role="combobox"]');
+      const field = body.get('[role="combobox"]');
       // Nothing is highlighted in the untouched empty field, so Enter has nothing to take; the arrows choose a row.
-      expect(app.findAll('[role="option"][aria-selected="true"]')).toHaveLength(0);
+      expect(body.findAll('[role="option"][aria-selected="true"]')).toHaveLength(0);
       await field.trigger('keydown', { key: 'Enter' });
-      expect(app.findAll('.tag-draft')).toHaveLength(0);
+      expect(body.findAll('.tag-draft')).toHaveLength(0);
       // Typed, then Enter before the answer came: it takes the answer's first tag, not the tag as typed.
       await field.setValue('Prov');
       await field.trigger('keydown', { key: 'Enter' });
-      expect(app.findAll('.tag-draft')).toHaveLength(0);
+      expect(body.findAll('.tag-draft')).toHaveLength(0);
       await vi.advanceTimersByTimeAsync(300); await flushPromises();
-      expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['Provoz']);
+      expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['Provoz']);
       // Tab takes the highlighted row too and the focus stays in the field.
       await field.setValue('Prov'); await vi.advanceTimersByTimeAsync(300); await flushPromises();
-      expect(app.get('[role="option"][aria-selected="true"]').text()).toContain('Provize');
+      expect(body.get('[role="option"][aria-selected="true"]').text()).toContain('Provize');
       await field.trigger('keydown', { key: 'Tab' }); await flushPromises();
-      expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['Provoz', 'Provize']);
+      expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['Provoz', 'Provize']);
     } finally { vi.useRealTimers(); }
   });
-  it('keeps the suggestion list at the tallest height it reached while the dialog is open, so the centred dialog does not bounce', async () => {
+  it('keeps the suggestion list at the tallest height it reached while the panel is open, so the panel does not bounce', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (this: HTMLElement) {
       return this.getAttribute('role') === 'listbox' ? this.querySelectorAll('[role="option"]').length * 50 : 0;
@@ -199,55 +201,55 @@ describe('page tags', () => {
       const app = render(); await flushPromises();
       await app.get('.edit-page-tags').trigger('click');
       await vi.advanceTimersByTimeAsync(200); await flushPromises();
-      expect(app.findAll('[role="option"]')).toHaveLength(3);
-      expect(app.get('[role="listbox"]').attributes('style')).toContain('min-height: 150px');
+      expect(body.findAll('[role="option"]')).toHaveLength(3);
+      expect(body.get('[role="listbox"]').attributes('style')).toContain('min-height: 150px');
       // Typing leaves one row ("Vytvořit nový tag") for a moment: the list keeps its room instead of collapsing.
-      await app.get('[role="combobox"]').setValue('Zz');
+      await body.get('[role="combobox"]').setValue('Zz');
       await vi.advanceTimersByTimeAsync(200); await flushPromises();
-      expect(app.findAll('[role="option"]')).toHaveLength(1);
-      expect(app.get('[role="listbox"]').attributes('style')).toContain('min-height: 150px');
-      // A closed dialog starts the next time from nothing.
-      await app.get('dialog button[aria-label="Zavřít"]').trigger('click'); await flushPromises();
-      expect(app.get('[role="listbox"]').attributes('style') ?? '').not.toContain('min-height');
+      expect(body.findAll('[role="option"]')).toHaveLength(1);
+      expect(body.get('[role="listbox"]').attributes('style')).toContain('min-height: 150px');
+      // A closed panel is gone and starts the next time from nothing.
+      await app.get('.edit-page-tags').trigger('click'); await flushPromises();
+      expect(body.find('[role="listbox"]').exists()).toBe(false);
     } finally { height.mockRestore(); vi.useRealTimers(); }
   });
-  it('opens the dialog of another page with the rows an earlier one showed, and a skeleton of rows while the very first answer is on its way (P17)', async () => {
+  it('opens the panel of another page with the rows an earlier one showed, and a skeleton of rows while the very first answer is on its way (P17)', async () => {
     let hold = false, answer: ((value: unknown) => void) | undefined;
     vi.mocked(api).mockImplementation(path => path.startsWith('/tags?') ? (hold ? new Promise(() => {}) : new Promise(done => { answer = done; })) : Promise.resolve({ tags }));
     const app = render(true, 'user-cache'); await flushPromises();
     await app.get('.edit-page-tags').trigger('click');
-    expect(app.find('.loading-skeleton').exists()).toBe(true);
+    expect(body.find('.loading-skeleton').exists()).toBe(true);
     answer!({ items: [{ id: 't1', name: 'Provoz' }] });
     await flushPromises();
-    expect(app.find('.loading-skeleton').exists()).toBe(false);
-    expect(app.findAll('[role="option"]').map(row => row.text())).toEqual([expect.stringContaining('Provoz')]);
-    await app.get('dialog button[aria-label="Zavřít"]').trigger('click'); await flushPromises();
+    expect(body.find('.loading-skeleton').exists()).toBe(false);
+    expect(body.findAll('[role="option"]').map(row => row.text())).toEqual([expect.stringContaining('Provoz')]);
+    await app.get('.edit-page-tags').trigger('click'); await flushPromises();
     hold = true;
     await app.setProps({ pageId: 'page-2' }); await flushPromises();
     await app.get('.edit-page-tags').trigger('click');
-    expect(app.findAll('[role="option"]').map(row => row.text())).toEqual([expect.stringContaining('Provoz')]);
-    expect(app.find('.loading-skeleton').exists()).toBe(false);
+    expect(body.findAll('[role="option"]').map(row => row.text())).toEqual([expect.stringContaining('Provoz')]);
+    expect(body.find('.loading-skeleton').exists()).toBe(false);
   });
   it('keeps the newest change when the dialog is reopened while it is being saved, instead of sending the older tags back', async () => {
     const answers: Array<(value: unknown) => void> = [];
     vi.mocked(api).mockImplementation((path, options) => path.startsWith('/tags?') ? Promise.resolve({ items: [] }) : options?.method === 'PUT' ? new Promise(done => answers.push(done)) : Promise.resolve({ tags }));
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click');
-    await app.get('dialog button[aria-label="Zavřít"]').trigger('click'); await flushPromises();
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click');
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['Návody']);
+    await app.get('.edit-page-tags').trigger('click'); await flushPromises();
+    expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['Návody']);
     answers[0]!({ tags: [tags[1]] }); await flushPromises();
     expect(puts()).toHaveLength(1);
-    expect(app.findAll('.tag-draft').map(t => t.text())).toEqual(['Návody']);
+    expect(body.findAll('.tag-draft').map(t => t.text())).toEqual(['Návody']);
   });
   it('lets a save finish when the page is left, with the change queued behind it', async () => {
     const answers: Array<(value: unknown) => void> = [];
     vi.mocked(api).mockImplementation((path, options) => path.startsWith('/tags?') ? Promise.resolve({ items: [] }) : options?.method === 'PUT' ? new Promise(done => answers.push(done)) : Promise.resolve({ tags }));
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click');
-    await app.get('[aria-label="Odebrat tag Návody"]').trigger('click');
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click');
+    await body.get('[aria-label="Odebrat tag Návody"]').trigger('click');
     app.unmount(); wrapper = undefined;
     expect((puts()[0]![1]!.signal as AbortSignal).aborted).toBe(false);
     answers[0]!({ tags: [tags[1]] }); await flushPromises();
@@ -257,9 +259,9 @@ describe('page tags', () => {
     vi.mocked(api).mockImplementation(async (path, options) => options?.method === 'PUT' ? { tags: (JSON.parse(options.body as string).names as string[]).map(name => ({ id: `tag-${name}`, name })) } : path.startsWith('/tags?') ? { items: [] } : { tags });
     const app = render(); await flushPromises();
     await app.get('.edit-page-tags').trigger('click'); await flushPromises();
-    await app.get('[aria-label="Odebrat tag API"]').trigger('click'); await flushPromises();
+    await body.get('[aria-label="Odebrat tag API"]').trigger('click'); await flushPromises();
     expect(notice.success).not.toHaveBeenCalled();
-    await app.get('dialog button[aria-label="Zavřít"]').trigger('click'); await flushPromises();
+    await app.get('.edit-page-tags').trigger('click'); await flushPromises();
     expect(notice.success).toHaveBeenCalledTimes(1);
     expect(notice.success.mock.calls[0]![0]).toBe('Tag „API“ odebrán.');
     notice.success.mock.calls[0]![1].undo(); await flushPromises();

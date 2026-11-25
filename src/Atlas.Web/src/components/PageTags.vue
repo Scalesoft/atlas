@@ -1,6 +1,6 @@
 ﻿<script lang="ts">
 import type { PageTag } from "../pageTags";
-/** The answers of the tag catalog by typed text, kept for the session per user (P17): the dialog of any page opens with the rows an earlier one showed, and the request only refines them. */
+/** The answers of the tag catalog by typed text, kept for the session per user (P17): the panel of any page opens with the rows an earlier one showed, and the request only refines them. */
 const known = new Map<string, Map<string, PageTag[]>>();
 </script>
 
@@ -17,7 +17,7 @@ import { cleanTagName, tagKey, tagTone } from '../pageTags';
 import {useAiCapabilities} from "../composables/useAiCapabilities";
 import {proposeTags} from "../ai/writingApi";
 import TagSuggestions from "./creation/TagSuggestions.vue";
-import AppDialog from './AppDialog.vue';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import AtlasIcon from './AtlasIcon.vue';
 import LoadingNote from './settings/LoadingNote.vue';
 import LoadingSkeleton from './LoadingSkeleton.vue';
@@ -27,11 +27,11 @@ import { useSearchKeys } from '../lib/searchKeys';
 import { useToast } from '../composables/useToast';
 import '../page-tags.css';
 /**
- * The tags of a page and their editor (P5: tags save as they go, no Uložit). A tag added or removed in the dialog is sent at once and
+ * The tags of a page and their editor (P5: tags save as they go, no Uložit), an anchored panel next to the chips (ui/popover, like PageIconPicker). A tag added or removed in the panel is sent at once and
  * shown at once (optimistic); a refused save puts the tags back with the reason, a tag removed by mistake comes back with Ctrl+Z.
  * The field is every search's (searchKeys.ts): the first match is preselected once something is typed, Enter or Tab takes it
  * (before the answer to the typed text came it waits for it), an empty field takes nothing, the first Esc empties the field and the
- * next one closes the dialog, keeping the tags. The suggestions of an earlier answer show at once and the network only refines them.
+ * next one closes the panel and returns the focus to the chips' button, keeping the tags. The suggestions of an earlier answer show at once and the network only refines them.
  */
 // `initial`: the tags that came with the page (its bundle, 3.6-G N7), so opening it asks for nothing more.
 /** `canWrite` false: the reader has no right to write here, so the control that would add tags is not drawn at all (omitted: as before, where the locked placeholder keeps the row's height). */
@@ -82,8 +82,8 @@ async function settleRow(apply: () => void) {
   }
 }
 /**
- * The dialog is centred, so a list that arrives a moment after it opened, collapses to one row on a keystroke and grows
- * again would move the whole dialog every time. The list keeps the tallest height it reached while the dialog is open
+ * A list that arrives a moment after the panel opened, collapses to one row on a keystroke and grows
+ * again would move the panel's edge every time. The list keeps the tallest height it reached while the panel is open
  * (`optionsFloor`) and eases to a taller one, so the dialog only ever grows, once, and never bounces while typing.
  */
 const optionsList = ref<HTMLElement>(), optionsFloor = ref(0);
@@ -139,8 +139,10 @@ async function startEditing() {
   // A save still on its way carries the newest draft (the tags shown are older): reopening must not send them back.
   if (!persisting) draft.value = tags.value.map(tag => tag.name);
   opened = [...draft.value]; searchKeys.rest(); text.value = ''; editError.value = ''; undone = []; redone = []; editing.value = true;
-  findSuggestions(true); await nextTick(); fieldElement(input.value)?.focus();
+  findSuggestions(true);
 }
+// The panel opens with the focus in the tag search (the first suggestion is preselected once something is typed).
+const focusSearch = (event: Event) => { event.preventDefault(); fieldElement(input.value)?.focus(); };
 /** The tags the dialog opened with: removing some and closing offers „Zpět“ on the page, where Ctrl+Z of the dialog is gone (P6). */
 let opened: string[] = [];
 function close() {
@@ -173,7 +175,7 @@ function add(name: string) {
 }
 function remove(position: number) { commit(draft.value.filter((_, at) => at !== position)); fieldElement(input.value)?.focus(); }
 // Enter or Tab takes the highlighted row (the first, once something is typed; one typed before its answer waits for it); nothing typed takes
-// nothing unless the arrows or the pointer chose a row; the first Esc empties the field, the next one closes the dialog (P3, P8).
+// nothing unless the arrows or the pointer chose a row; the first Esc empties the field, the next one closes the panel (P3, P8).
 const searchKeys = useSearchKeys({ text: () => text.value, clear: () => { text.value = ''; }, waiting: () => suggestPending.value, keepFocus: true,
   empty: () => true,
   take: () => { const name = optionNames.value[index.value]; if (!name) return false; add(name); } });
@@ -249,14 +251,13 @@ onBeforeUnmount(() => { mounted = false; stopSuggestions(); if (!persisting) { g
 <template>
   <div ref="root" class="page-tags tags-ui" :aria-busy="loading" :aria-label="t.tags.pageTags">
     <LoadingNote v-if="loading && !loaded" inline class="tag-loading" :label="t.tags.loading" />
-    <span v-else-if="error" class="tag-lookup-error" role="alert">{{ error }} <Button variant="outline" type="button" @click="load">{{ t.tags.retry }}</Button></span>
-    <template v-else>
+    <span v-else-if="error" class="notice error" role="alert">{{ error }} <Button variant="link" size="sm" type="button" @click="load">{{ t.tags.retry }}</Button></span>
+    <Popover v-else :open="editing" @update:open="open => (open ? startEditing() : close())">
       <div v-if="shownTags.length" class="tag-chip-list">
         <button v-for="tag in shownTags" :key="tag.id" type="button" class="tag-chip page-tag-link" :data-tone="tagTone(tag.name)" :disabled="tag.id.startsWith('draft:')" :aria-label="t.tags.pagesWith(tag.name)" @click="emit('selectTag', tag)"><AtlasIcon name="hash" :size="14" />{{ tag.name }}</button>
       </div>
-      <button v-if="loaded && (canEdit || (canWrite !== false && !shownTags.length))" type="button" class="edit-page-tags" :class="{ 'is-locked': !canEdit }" :inert="!canEdit || undefined" :aria-label="tags.length ? t.tags.editTags : t.tags.addTags" @click="startEditing"><AtlasIcon :name="tags.length ? 'pencil' : 'plus'" :size="14" /><span>{{ tags.length ? t.tags.editTags : t.tags.addTags }}</span></button>
-    </template>
-    <AppDialog :title="t.tags.pageTags" :open="editing" @close="close">
+      <PopoverTrigger v-if="loaded && (canEdit || (canWrite !== false && !shownTags.length))" as-child><button type="button" class="edit-page-tags" :class="{ 'is-locked': !canEdit }" :inert="!canEdit || undefined" :aria-label="tags.length ? t.tags.editTags : t.tags.addTags"><AtlasIcon :name="tags.length ? 'pencil' : 'plus'" :size="14" /><span>{{ tags.length ? t.tags.editTags : t.tags.addTags }}</span></button></PopoverTrigger>
+      <PopoverContent align="start" :aria-label="t.tags.pageTags" class="tag-panel tags-ui w-[min(26rem,calc(100vw-1.5rem))]" @open-auto-focus="focusSearch" @escape-key-down="text && $event.preventDefault()">
       <div class="tag-editor tags-ui" @keydown="historyKeys">
         <p class="tag-editor-intro">{{ t.tags.intro }}</p>
         <div class="tag-selection" :aria-label="t.tags.selected">
@@ -269,12 +270,13 @@ onBeforeUnmount(() => { mounted = false; stopSuggestions(); if (!persisting) { g
           <LoadingSkeleton v-if="suggestPending && !optionNames.length" :rows="3" row-height="52px" :label="t.tags.loading" />
           <button v-for="(name, optionIndex) in optionNames" :id="listId + '-' + optionIndex" :key="tagKey(name)" type="button" role="option" :aria-selected="highlighted === optionIndex" tabindex="-1" :class="{ active: highlighted === optionIndex }" @pointermove="index = optionIndex; searchKeys.move()" @mousedown.prevent @click="add(name)"><span class="tag-option-icon" :data-tone="tagTone(name)"><AtlasIcon :name="createName === name ? 'plus' : 'hash'" :size="16" /></span><span><strong>{{ name }}</strong><small>{{ createName === name ? t.tags.createNew : t.tags.addExisting }}</small></span><AtlasIcon name="plus" :size="16" /></button>
         </div>
-        <p v-if="suggestError" class="tag-lookup-error" role="status">{{ t.tags.lookupError }} <Button variant="outline" type="button" @click="findSuggestions(true)">{{ t.tags.retry }}</Button></p>
+        <p v-if="suggestError" class="notice error" role="status">{{ t.tags.lookupError }} <Button variant="link" size="sm" type="button" @click="findSuggestions(true)">{{ t.tags.retry }}</Button></p>
         <p v-if="editError" class="notice error" role="alert">{{ editError }}</p>
         <TagSuggestions :request="capabilities.tagSuggestions && canEdit && pageVersion !== undefined ? aiTagRequest : undefined" :context-key="tagContextKey" @apply="applyAiTags" />
         <p class="tag-editor-help"><AtlasIcon name="info" :size="14" />{{ t.tags.help }}</p>
       </div>
-    </AppDialog>
+      </PopoverContent>
+    </Popover>
   </div>
 </template>
 
@@ -283,7 +285,6 @@ onBeforeUnmount(() => { mounted = false; stopSuggestions(); if (!persisting) { g
 .atlas .page-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 13px; }
 /* Refresh 2.5: the tags share the metadata row under the title (board 03). */
 .atlas .document-meta > .page-tags { flex-basis: auto; width: auto; margin-top: 0; }
-.atlas .page-tags:has(> .app-dialog:only-child) { display: none; }
 .atlas .page-tags .edit-page-tags { display: inline-flex; align-items: center; gap: 5px; min-height: 27px; padding: 3px 7px; border: 1px dashed var(--line); border-radius: 7px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 500; }
 /* A locked page keeps the row (J7.1): an untagged page holds the place of „Přidat tagy“ invisibly. */
 .atlas .page-tags .edit-page-tags.is-locked { visibility: hidden; }
@@ -291,8 +292,8 @@ onBeforeUnmount(() => { mounted = false; stopSuggestions(); if (!persisting) { g
 /* A fast answer never flashes „Načítání tagů…“: the note waits for the defer, and the tags fade in where they stay. */
 .atlas .tag-loading { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both; }
 .atlas .page-tags .tag-chip-list > .tag-chip { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
-.atlas .tag-editor-intro { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.6; }
-.atlas .tag-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 65px; padding: 14px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--hover); }
+.atlas .tag-editor-intro { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.atlas .tag-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 65px; padding: 10px; margin-bottom: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--hover); }
 .atlas .tag-selection-empty { color: var(--muted); font-size: 13px; }
 .atlas .tag-input-label { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; margin: 0 0 8px; }
 .atlas .tag-input-label > span { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
@@ -305,7 +306,7 @@ onBeforeUnmount(() => { mounted = false; stopSuggestions(); if (!persisting) { g
 .atlas .tag-options strong { font-size: 13px; font-weight: 600; }
 .atlas .tag-options small { font-size: 11px; color: var(--muted); }
 .atlas .tag-option-icon { display: inline-grid; place-items: center; height: 32px; border-radius: 8px; color: var(--tag-ink); background: color-mix(in srgb, var(--tag-ink) 9%, var(--surface)); }
-.atlas .tag-editor-help { display: flex; align-items: center; gap: 7px; margin: 20px 0 0; color: var(--muted); font-size: 12px; }
+.atlas .tag-editor-help { display: flex; align-items: center; gap: 7px; margin: 14px 0 0; color: var(--muted); font-size: 12px; }
 .atlas .tag-editor-help > svg { flex-shrink: 0; }
 @media (max-width: 680px) { .atlas .tag-editor-help { align-items: flex-start; } }
 </style>
