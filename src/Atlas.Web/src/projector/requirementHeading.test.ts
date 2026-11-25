@@ -265,7 +265,7 @@ describe("the section card (a requirement's section ends at the next heading of 
     nia.querySelector<HTMLElement>(".rq-check")!.click();
     nia.querySelector<HTMLElement>("[data-rq-chip=state]")!.click();
     const card = await vi.waitFor(() => { const found = document.querySelector<HTMLElement>(".md-context-popover"); expect(found).not.toBeNull(); return found!; });
-    expect([...card.querySelectorAll(".md-context-menu-item")].map(row => row.textContent)).toEqual(["čeká na vstupStav", "vstup · IT nemocniceDruh", "NIASlužba", "21. 7. 2026Termín"]);
+    expect([...card.querySelectorAll(".md-context-menu-item")].map(row => row.textContent)).toEqual(["čeká na vstupStav", "vstup · IT nemocniceDruh", "NIASlužba", "21. července 2026Termín"]);
     (card.querySelector(".md-context-menu-item") as HTMLElement).click();
     expect(JSON.stringify(editor.getJSON())).toBe(json);
     // The right back: the checkbox is a control again. A writer's in-text controls are no Tab stops (Esc, Tab leaves the editor, F5):
