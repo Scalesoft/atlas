@@ -46,7 +46,7 @@ const badge = () => props.unread || props.discussion || 0;
    page scrolls and follows the last line when the end is reached, so it never covers it. Under a page shorter than
    the screen the view's leftover height lies above it (shell.css, the phone shell: the spacer is `order: 1`), so it
    sits at the bottom there too instead of hanging under the last line in the middle of the screen. */
-@media (max-width: 680px) {
+@media (max-width: 760px) {
   .page-mobile-bar {
     position: sticky; bottom: 0; z-index: 4; order: 2;
     display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 4px;
