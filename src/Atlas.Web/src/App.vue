@@ -59,7 +59,7 @@ import { liveAccount } from "./live/accountChannel";
 import { liveConnection } from "./live/liveConnection";
 import { pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
-import type { PageVerification as PageVerificationState } from "./verification/pageVerification";
+import { usePageVerification } from "./verification/usePageVerification";
 import { verificationMark } from "./verification/verificationMark";
 import { isSpacePinned, pinnedFirst, setSpacePinned, SPACE_PIN_REQUIRED } from "./spacePins";
 import { downloadContentExport, rememberCoverDetails, rememberedCoverDetails, type PdfCoverDetail } from "./contentExport";
@@ -609,17 +609,8 @@ const canSaveEditor = computed(() => browserOnline.value && editorReady.value &&
 const shownVersion = computed(() => !page.value ? 0 : pageCanWrite.value || page.value.live ? page.value.version : page.value.publishedVersion ?? page.value.version);
 /** A writer's page's publication (mode, when it was published), read for a published page; undefined until it arrives. */
 const publication = shallowRef<PagePublication>();
-/** Ověření stránky (5.2): from the page's bundle, replaced by the answer of every change made in the chip or the dock. */
-const verification = shallowRef<PageVerificationState | null>(null);
-const verificationOpen = ref(false);
-watch(() => page.value?.bundle?.verification, (value) => { if (value) verification.value = value; });
-watch(() => page.value?.id, () => { verification.value = page.value?.bundle?.verification ?? null; verificationOpen.value = false; }, { immediate: true });
-// A newly published version changes „Změněno po ověření“: read the state again (the bundle is from the page's opening).
-watch(() => (page.value && !page.value.isTemplate ? `${page.value.id}:${page.value.publishedVersion}` : ""), (key, before) => {
-  const [id, was] = [key.split(":")[0], before?.split(":")[0]];
-  if (!id || id !== was || !verification.value || verification.value.state === "off") return;
-  void import("./verification/pageVerification").then(m => m.pageVerificationApi.read(id)).then(value => { if (page.value?.id === id) verification.value = value; }).catch(() => undefined);
-});
+/** Ověření stránky (5.2): the chip's and the dock's state, the chip's popover and the panel's Čtenost. */
+const { verification, open: verificationOpen, readers: pageReaders } = usePageVerification(() => page.value);
 /** A writer's page published live (Publikace Živě, `PagePublication.effective`): readers already read its saved state. */
 const publishedLive = computed(() => publication.value?.effective === "Live");
 /** Neither a reader nor a live page's writer has anything waiting for Publikovat (a reader never sees unpublished state). */
@@ -5132,7 +5123,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" :host="pageCommentHost" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="page.bundle?.readers" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" :host="pageCommentHost" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="pageReaders" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>
