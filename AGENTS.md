@@ -4,7 +4,7 @@ These rules apply to every change, by people and by AI coding agents. [CONTRIBUT
 
 # UI components and layouts
 
-Before adding UI, review the development gallery at `/?gallery=1` on the frontend Vite server and its executable examples in `src/Atlas.Web/src/components/dev/ComponentGallery.vue`. The gallery is development-only and uses local sample data.
+Before adding UI, review the development gallery at `/?gallery=1` on the frontend Vite server and its executable examples in `src/Atlas.Web/src/components/dev/ComponentGallery.vue`. The gallery is development-only and uses local sample data. Interaction concepts (side panels, popovers, menus, editing, feedback, lists, pickers) and their one canonical component are listed in [docs/ux-concepts.md](docs/ux-concepts.md): use it before creating UI, never build a second mechanism for a listed concept, and add a row when a new concept is introduced.
 
 The gallery includes live examples of shared UI and layouts, plus an automatically populated, searchable source catalog of all existing Vue components. Feature screens in that catalog are references, not components to mount without their application context.
 

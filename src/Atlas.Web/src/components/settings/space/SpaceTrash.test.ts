@@ -14,6 +14,7 @@ let wrapper: VueWrapper | undefined;
 let context: SettingsContext;
 let trashList = [trashed];
 let calls: { method: string; path: string; body?: string }[];
+let flash: ReturnType<typeof createSettingsFlash>;
 
 function mountWith(component: Component, props: Record<string, unknown>, isWikiAdmin: boolean) {
   context = {
@@ -24,7 +25,8 @@ function mountWith(component: Component, props: Record<string, unknown>, isWikiA
     setup() {
       provideSettingsContext(context);
       provideDirtyGuard(createDirtyGuard());
-      provideSettingsFlash(createSettingsFlash(provideSettingsRoute("#/settings")));
+      flash = createSettingsFlash(provideSettingsRoute("#/settings"));
+      provideSettingsFlash(flash);
       return () => h(component, props);
     },
   });
@@ -86,7 +88,7 @@ describe("Koš prostorů", () => {
     expect(calls.some((call) => call.method === "POST" && call.path === "/api/spaces/provoz/restore")).toBe(true);
     expect(context.spacesChanged).toHaveBeenCalled();
     expect(document.querySelector('[data-trash-row="provoz"]')).toBeNull();
-    expect(document.body.textContent).toContain("Prostor Provoz je zpět");
+    expect(flash.message.value?.text).toContain("Prostor Provoz je zpět");
   });
 
   it("deletes a space permanently only after its exact name is typed, naming its vaults", async () => {
@@ -111,9 +113,9 @@ describe("Koš prostorů", () => {
     await flushPromises();
     expect(calls).toContainEqual({ method: "POST", path: "/api/spaces/provoz/purge", body: JSON.stringify({ name: "Provoz" }) });
     expect(document.querySelector('[data-trash-row="provoz"]')).toBeNull();
-    expect(document.body.textContent).toContain("Prostor Provoz je trvale smazaný");
-    // UX3-4: the last space gone, the focus lands on the outcome, not on the page body.
-    await vi.waitFor(() => expect(document.activeElement?.closest("[data-result-banner]")).not.toBeNull());
+    expect(flash.message.value?.text).toContain("Prostor Provoz je trvale smazaný");
+    // UX3-4: the last space gone, the focus lands on the cleanup rule, not on the page body.
+    await vi.waitFor(() => expect(document.activeElement?.closest("[data-trash-cleanup-scope]")).not.toBeNull());
   });
 
   it("offers no permanent delete when the trash is empty, only its empty state", async () => {
