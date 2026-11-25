@@ -5060,9 +5060,9 @@ onUnmounted(() => {
               @can-undo="pageCanUndo = $event"
             /></section>
           <PageConnections v-if="editorReady" layout="graph" :page-title="page.title" :document="documentValue" :page-id="page.id" :space-id="page.spaceId" :refresh-key="libraryRefresh" :related-enabled="aiCapabilities.related" />
-          <!-- A phone's discussion (no dock there): the same thread as the dock's Diskuse, sending with Enter like it. -->
+          <!-- A phone's discussion (no dock there): the same thread as the dock's Diskuse. -->
           <CommentThread v-if="editorReady && afterContent && phoneLayout" :key="`comments:${page.id}`" class="page-comments" :object-id="page.id" :view-key="`page:${page.id}`" :title="t.common.comments"
-            quick :host="pageCommentHost" @count="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" />
+            :host="pageCommentHost" @count="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" />
           <PageMobileBar v-if="editorReady" :can-ask="canAsk" :lockable="pageCanWrite" :locked="pageLocked" :favorite="personalState?.isFavorite ?? false" :favorite-busy="favoritePending || !personalState"
             :discussion="pageDockTabs ? discussionButton?.count ?? 0 : null" @read="readFromTop" @ask="launchAssistant(true)" @favorite="toggleFavorite" @lock="toggleLock" @discussion="revealPageComments" />
         </template>

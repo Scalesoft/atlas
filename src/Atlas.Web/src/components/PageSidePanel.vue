@@ -281,7 +281,7 @@ const ownAccess = computed(() => {
     </section>
 
     <!-- The same thread as the page's section under its content and a board's dock: one object, one view session; a selection of the page is quoted (Alt C). -->
-    <CommentThread v-else-if="tab === 'comments'" :key="pageId" :object-id="pageId" :view-key="`page:${pageId}`" :host="host" :api="commentApi" :views="views" quotes quick :lazy="false"
+    <CommentThread v-else-if="tab === 'comments'" :key="pageId" :object-id="pageId" :view-key="`page:${pageId}`" :host="host" :api="commentApi" :views="views" quotes :lazy="false"
       @count="emit('comments', $event)" @anchor="emit('anchor', $event)" />
 
     <section v-else class="page-side-section" :aria-label="t.side.accessToPage">
