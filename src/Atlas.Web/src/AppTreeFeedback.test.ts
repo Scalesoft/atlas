@@ -154,8 +154,9 @@ describe("the tree says what it did, with Zpět", () => {
     await start();
     row("page-2").focus();
     key(row("page-2"), { key: "ContextMenu" });
-    await vi.waitFor(() => expect(document.querySelector('[data-tree-action="copyLink"]')).not.toBeNull());
-    document.querySelector<HTMLElement>('[data-tree-action="copyLink"]')!.click();
+    const copyLink = () => [...document.querySelectorAll<HTMLElement>("[data-testid=intentions] [role=option]")].find(item => item.textContent === "Kopírovat odkaz");
+    await vi.waitFor(() => expect(copyLink()).toBeDefined());
+    copyLink()!.click();
     await vi.waitFor(() => expect(success).toHaveBeenCalledWith("Odkaz je zkopírovaný.", expect.anything()));
     expect(document.querySelector(".global-notice")).toBeNull();
   });

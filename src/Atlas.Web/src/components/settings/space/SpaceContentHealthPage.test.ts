@@ -96,11 +96,11 @@ describe("Stav obsahu", () => {
     const { api, view } = open();
     await flushPromises();
     await view.get("[data-health-row] [data-row-more]").trigger("click");
-    await flushPromises();
-    const labels = [...document.querySelectorAll("[data-row-action]")].map((entry) => entry.textContent);
+    await vi.waitFor(() => expect(document.querySelector("[data-testid=intentions]")).not.toBeNull());
+    const labels = [...document.querySelectorAll("[data-testid=intentions] [role=option]")].map((entry) => entry.textContent);
     expect(labels[0]).toContain("Ověřit");
     expect(labels[1]).toContain("garanta");
-    (document.querySelector("[data-row-action]") as HTMLElement).click();
+    (document.querySelector("[data-testid=intentions] [role=option]") as HTMLElement).click();
     await flushPromises();
     expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: [rows[0]!.pageId] });
   });

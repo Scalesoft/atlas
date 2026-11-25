@@ -179,13 +179,15 @@ export function openMarkdownIntentionsMenu(options: {
   contextElement?: Element
   editor?: Editor
   rows: readonly (readonly MarkdownIntention[] | Promise<readonly MarkdownIntention[]>)[]
+  /** The menu's accessible name, when the host names what it is about („Akce: Provozní příručka“). */
+  label?: string
   filter?: string
   aiFirst?: boolean
   onClose?: () => void
 }): MarkdownIntentionsMenu {
   const doc = options.document
   let rows: MarkdownIntention[] = [], filter = options.filter ?? '', pending = 0, closed = false
-  const list = createSuggestionList({ document: doc, label: intentionsStrings.label, heading: intentionsStrings.label, testId: 'intentions', emptyText: intentionsStrings.empty,
+  const list = createSuggestionList({ document: doc, label: options.label ?? intentionsStrings.label, heading: intentionsStrings.label, testId: 'intentions', emptyText: intentionsStrings.empty,
     onSelect: id => {
       const row = shown().find(item => item.id === id)
       close()

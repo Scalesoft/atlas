@@ -27,6 +27,7 @@ import { spaceCoverName } from "../spaceCoverCatalog";
 import type { SpaceCoverChoice } from "../spaceCover";
 import type { BoardCommand } from "../boards/boardCommands";
 import type { CatalogDefinition } from "../projector/projectorApi";
+import { loadActionsMenu } from "../components/boards/canvas/actionsMenuChunk";
 import BoardCommandPanel from "../components/boards/canvas/BoardCommandPanel.vue";
 import BoardPagePicker from "../components/boards/BoardPagePicker.vue";
 import BoardContactPicker from "../components/boards/pickers/BoardContactPicker.vue";
@@ -573,6 +574,7 @@ const acted = (spy: { mock: { calls: unknown[][] } }) => spy.mock.calls.some(([,
 
 /** A row of a list answers the five gestures of „Co s tím jde dělat“ (P2) with the same menu, which offers what the row's buttons do and returns the keyboard to the row. */
 async function rowMenu(row: HTMLElement, expected: string[]): Promise<ProbeResult> {
+  await loadActionsMenu();
   const gestures: [string, () => void][] = [
     ["Ctrl+mezerník", () => press(row, " ", { ctrlKey: true, code: "Space" })],
     ["Alt+Enter", () => press(row, "Enter", { altKey: true })],
@@ -584,14 +586,15 @@ async function rowMenu(row: HTMLElement, expected: string[]): Promise<ProbeResul
     row.focus();
     gesture();
     await flush(50);
-    const menu = find("[role=menu]");
+    // The page editor's own menu; a row's label without its shortcut hint (Delete, F2: RowActionsMenu runs those keys on the row).
+    const menu = find("[data-testid=intentions]");
     if (!menu) return `${name} opens no menu on the row`;
-    // A row's label without its shortcut hint (Delete, F2: RowActionsMenu runs those keys on the row).
-    const labels = [...menu.querySelectorAll("[role=menuitem]")].map(item => words(item).replace(words(item.querySelector(".board-menu-key")), "").trim());
+    if (!menu.querySelector("[role=option][aria-selected=true]")) return `${name} opens the menu with no row preselected`;
+    const labels = [...menu.querySelectorAll("[role=option] .t")].map(item => words(item));
     if (labels.join("|") !== expected.join("|")) return `${name} offers ${shown(labels)}, not ${shown(expected)}`;
     press(menu, "Escape");
     await flush(50);
-    if (find("[role=menu]")) return "Esc left the menu open";
+    if (find("[data-testid=intentions]")) return "Esc left the menu open";
     if (document.activeElement !== row) return `after Esc the keyboard is on ${document.activeElement?.tagName.toLowerCase()}, not on the row`;
   }
   return true;
