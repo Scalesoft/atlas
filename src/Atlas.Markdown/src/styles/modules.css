@@ -1,12 +1,13 @@
 .md-module { display: block; position: relative; margin: 1.15rem 0; padding: 12px; border: 1px solid transparent; border-radius: 10px; color: var(--md-text, #233044); transition: border-color var(--md-motion-fast) var(--md-motion-ease), box-shadow var(--md-motion-fast) var(--md-motion-ease), background-color var(--md-motion-fast) var(--md-motion-ease); }
 /* Contact cards read as one list: several blocks in a row stand close together. */
-.md-module[data-md-module=contactCard] { margin: .35rem 0; padding: 4px 12px; }
+/* The card is the frame: the block only holds it, without a second hover or frame of its own. */
+.md-module[data-md-module=contactCard] { margin: .35rem 0; padding: 0; border: 0; }
 span.md-module { display: inline-flex; align-items: center; gap: .25rem; margin: 0 .1rem; padding: 0 2px; vertical-align: baseline; border-radius: 5px; max-width: calc(100% - .2rem); box-sizing: border-box; }
 /* At most the line (P17, 375 px): an inline element's chip ellipsizes inside it instead of running past the page. */
 span.md-module > * { min-width: 0; }
 .ProseMirror[contenteditable=true] .md-module:hover { border-color: var(--line, #dce2e8); }
 /* A click on the block opens its edit (block.ts), so it reads as clickable. */
-.ProseMirror[contenteditable=true] .md-module-editable:hover { cursor: pointer; background: color-mix(in srgb, var(--accent-soft, #e3f4f7) 14%, transparent); }
+.ProseMirror[contenteditable=true] .md-module-editable:not([data-md-module=contactCard]):hover { cursor: pointer; background: color-mix(in srgb, var(--accent-soft, #e3f4f7) 14%, transparent); }
 .md-module.ProseMirror-selectednode { outline: 2px solid var(--accent, #58a9b9); outline-offset: var(--focus-offset, 2px); background: color-mix(in srgb, var(--accent-soft, #e3f4f7) 22%, transparent); }
 .md-module h3, .md-module p { margin: .3rem 0 .6rem; }
 /* A chip (a contact mention is a button) keeps its own look (chip.css); :where keeps this rule's weight for every other button. */
