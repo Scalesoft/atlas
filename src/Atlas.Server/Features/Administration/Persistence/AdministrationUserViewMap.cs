@@ -2,6 +2,7 @@ using NHibernate;
 using NHibernate.Mapping.ByCode;
 using NHibernate.Mapping.ByCode.Conformist;
 using Atlas.Server.Features.Administration.Domain;
+using Atlas.Server.Features.Contacts;
 
 namespace Atlas.Server.Features.Administration.Persistence;
 
@@ -10,13 +11,14 @@ public sealed class AdministrationUserViewMap : ClassMapping<AdministrationUserV
     public AdministrationUserViewMap()
     {
         Mutable(false);
-        Subselect("""
-            SELECT u."Id", u."Username", u."DisplayName", u."IsActive", u."IsWikiAdmin", r."ActiveFrom",
+        Subselect($"""
+            SELECT a."Id", a."Username", a."DisplayName", a."IsActive", a."IsWikiAdmin", r."ActiveFrom",
                 c."UserId" IS NOT NULL AS "HasBuiltinCredential",
-                c."PasswordHash" IS NOT NULL AND length(c."PasswordHash") > 0 AS "HasPassword"
-            FROM "UserAccount" u
-            JOIN "UserAccountRevision" r ON r."UserId" = u."Id" AND r."ActiveTo" IS NULL
-            LEFT JOIN "BuiltinCredential" c ON c."UserId" = u."Id"
+                c."PasswordHash" IS NOT NULL AND length(c."PasswordHash") > 0 AS "HasPassword",
+                ({AccountContacts.OwnContact} LIMIT 1) AS "ContactId"
+            FROM "UserAccount" a
+            JOIN "UserAccountRevision" r ON r."UserId" = a."Id" AND r."ActiveTo" IS NULL
+            LEFT JOIN "BuiltinCredential" c ON c."UserId" = a."Id"
             """);
         Id(x => x.Id, m =>
         {
@@ -30,5 +32,6 @@ public sealed class AdministrationUserViewMap : ClassMapping<AdministrationUserV
         Property(x => x.ActiveFrom, m => m.Type(NHibernateUtil.UtcDateTime));
         Property(x => x.HasBuiltinCredential);
         Property(x => x.HasPassword);
+        Property(x => x.ContactId);
     }
 }

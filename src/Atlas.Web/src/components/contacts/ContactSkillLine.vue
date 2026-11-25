@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, useId } from "vue";
+import { computed, onMounted, ref, useId } from "vue";
 import t from "../../i18n/contacts-ui";
 import { topicUrl } from "../../contacts/contactLinking";
 import { shownLevel, skillApi as defaultApi, type ContactSkill, type SkillApi } from "../../contacts/skillApi";
@@ -25,6 +25,9 @@ onMounted(async () => {
   finally { loading.value = false; }
 });
 const dots = (skill: ContactSkill) => Math.round(shownLevel(skill) ?? 0);
+// With bars: the rated topics as bars, the ones no level is shown for (yet, or to this reader) as chips, so none goes missing.
+const rated = computed(() => (props.bars ? (skills.value ?? []).filter(skill => shownLevel(skill) != null) : []));
+const chips = computed(() => (skills.value ?? []).filter(skill => !rated.value.includes(skill)));
 const rating = ref(false);
 const panelId = useId();
 </script>
@@ -34,15 +37,15 @@ const panelId = useId();
   <div v-else-if="skills" class="contact-skill-block">
   <div class="contact-skill-line" data-contact-skills>
     <span class="contact-skill-line-title"><AtlasIcon name="lightbulb" :size="14" />{{ t.skills.title }}</span>
-    <a v-for="skill in bars ? [] : skills.slice(0, limit)" :key="skill.tagId" class="contact-skill-line-chip" :href="topicUrl(skill.name)" :title="skill.selfNote ?? undefined">
+    <a v-for="skill in chips.slice(0, limit)" :key="skill.tagId" class="contact-skill-line-chip" :href="topicUrl(skill.name)" :title="skill.selfNote ?? undefined">
       {{ skill.name }}<SkillLevelDots v-if="dots(skill)" :level="dots(skill)" />
     </a>
-    <span v-if="!bars && skills.length > limit" class="contact-skill-line-more">+{{ skills.length - limit }}</span>
+    <span v-if="chips.length > limit" class="contact-skill-line-more">+{{ chips.length - limit }}</span>
     <button type="button" class="contact-skill-line-rate" :aria-expanded="rating" :aria-controls="panelId" @click="rating = !rating">
       {{ skills.length ? t.skills.rateShort : t.skills.addSkill }}
     </button>
   </div>
-  <SkillBars v-if="bars" class="contact-skill-bars" :skills="skills" :name="name" />
+  <SkillBars v-if="rated.length" class="contact-skill-bars" :skills="rated" :name="name" />
   <InlineReveal :id="panelId" v-model:open="rating">
     <div class="contact-skill-rating"><SkillRatePanel :contact-id="contactId" :api="api" @saved="skills = $event.skills" /></div>
   </InlineReveal>

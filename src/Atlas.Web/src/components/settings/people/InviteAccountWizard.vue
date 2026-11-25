@@ -23,10 +23,12 @@ import type { InviteDraft } from "./types";
  * confirmed handing it over; the parent then leaves the flow. A new wiki administrator is a security change: the summary
  * confirms it with a fresh sign-in (ConfirmWithReauth) and `submit` carries the proof.
  */
-const props = withDefaults(defineProps<{ submit: (draft: InviteDraft, proof?: string | null) => Promise<Invitation>; takenUsernames?: string[] }>(), { takenUsernames: () => [] });
+/** `initial`: what is known already (a profile's „Vytvořit účet“ brings the contact's name). */
+const props = withDefaults(defineProps<{ submit: (draft: InviteDraft, proof?: string | null) => Promise<Invitation>; takenUsernames?: string[]; initial?: Partial<InviteDraft> }>(),
+  { takenUsernames: () => [], initial: () => ({}) });
 const emit = defineEmits<{ done: [invitation: Invitation]; cancel: []; dirty: [value: boolean] }>();
 
-const draft = ref<InviteDraft>({ username: "", displayName: "", isWikiAdmin: false });
+const draft = ref<InviteDraft>({ username: "", displayName: "", isWikiAdmin: false, ...props.initial });
 const step = ref("who");
 const busy = ref(false);
 const failure = ref("");

@@ -1,7 +1,24 @@
 import { plural, translate } from ".";
 
 /** Contacts (components/contacts/): the directory, cards, picker, duplicates, trash. The Czech source. */
-const cs = {  card: {
+const cs = {
+  activity: {
+    title: "Aktivita",
+    space: "Prostor",
+    allSpaces: "Všechny prostory",
+    searchSpace: "Hledat prostor",
+    loading: "Načítání aktivity…",
+    failed: "Aktivitu se nepodařilo načíst",
+    empty: "Žádné změny stránek, které smíte číst",
+    emptyText: "Až tento člověk změní stránku, kterou smíte číst, objeví se tu.",
+    year: (count: number) => plural(count, { one: "# změna za rok", few: "# změny za rok", other: "# změn za rok" }),
+    last: "naposledy aktivní",
+    mostIn: "nejvíc v",
+    calendar: "Kalendář změn za posledních 21 týdnů",
+    open: "Aktivita",
+    openOf: (name: string) => `Aktivita: ${name}`,
+  },
+  card: {
     name: "Jméno",
     title: "Funkce",
     organization: "Organizace",

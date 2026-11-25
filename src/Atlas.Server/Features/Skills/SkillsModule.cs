@@ -51,10 +51,10 @@ public static class SkillsModule
                 => Results.Ok(await bus.InvokeAsync<TopicView>(new LinkTopics(id, request.ParentId, request.Remove, request.Kind ?? "part_of"), ct)))
             .Produces<TopicView>().ProducesProblem(400).ProducesProblem(404)
             .WithSummary("Make a topic part of a broader one (kind part_of, C# of .NET) or related to another (kind related), or with remove not any more.");
-        var graph = group.MapGet("/skills/graph", async (Guid? spaceId, IMessageBus bus, CancellationToken ct)
-                => Results.Ok(await bus.InvokeAsync<SkillGraph>(new GetSkillGraph(spaceId), ct)))
+        var graph = group.MapGet("/skills/graph", async (Guid? spaceId, Guid? contactId, IMessageBus bus, CancellationToken ct)
+                => Results.Ok(await bus.InvokeAsync<SkillGraph>(new GetSkillGraph(spaceId, ContactId: contactId), ct)))
             .Produces<SkillGraph>().RequireRateLimiting("search")
-            .WithSummary("Who knows what as a graph: people and the topics they know (the level the reader may see), and the topics' part_of and related links; spaceId keeps the topics of that space's pages.");
+            .WithSummary("Who knows what as a graph: people and the topics they know (the level the reader may see), and the topics' part_of and related links; spaceId keeps the topics of that space's pages; contactId keeps one person (their profile).");
         if (!personalApi)
         {
             return;

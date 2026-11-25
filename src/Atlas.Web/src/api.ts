@@ -136,6 +136,8 @@ export interface SetupStatus {
 export interface SearchWidget {
   kind: 'contact' | 'youtrack'; title: string; detail: string; headingId?: string | null;
   key?: string | null; state?: string | null; url?: string | null;
+  /** A contact hit's contact as the page holds it: `objectId` its directory contact, `directoryId` the account of a colleague. */
+  contact?: { objectId?: string; directoryId?: string } | null;
 }
 export interface SearchResult {
   widgets?: SearchWidget[];

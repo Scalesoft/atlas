@@ -5,6 +5,9 @@ import { ApiError } from "../../api";
 import { createLiveObjects } from "../../objects/liveObjects";
 import type { ObjectDto, ObjectList, ObjectSummary, TrashedObject } from "../../objects/objectApi";
 import ContactDirectory from "./ContactDirectory.vue";
+import { showContactDetail } from "../../contacts/contactDock";
+
+vi.mock("../../contacts/contactDock", () => ({ showContactDetail: vi.fn() }));
 
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.innerHTML = ""; });
@@ -210,4 +213,14 @@ it("opens the trash, restores a contact into the directory and purges one only a
   await vi.waitFor(() => expect(source.list).toHaveBeenCalled());
   await flushPromises();
   expect(document.activeElement?.hasAttribute("data-contact-trash-open")).toBe(true);
+});
+
+it("opens an internal person's activity in the dock from their row", async () => {
+  const colleague = { ...summary("c1", "Eva"), data: { name: "Eva", directoryId: "acc-1" } };
+  show([colleague, summary("c2", "Karel")], false);
+  await flushPromises();
+  // Only a colleague (the contact of an account) has an activity; anybody may open it.
+  expect(wrapper!.findAll("[data-contact-activity]")).toHaveLength(1);
+  await wrapper!.get('[data-contact-row="c1"] [data-contact-activity]').trigger("click");
+  expect(vi.mocked(showContactDetail).mock.calls[0]![0]).toBe("c1");
 });

@@ -86,6 +86,28 @@ public sealed class SearchTextTests
 
     /// <summary>Review U16: a requirement line reads as its title and state in a hit, without the task marker and the key.</summary>
     [Fact]
+    public void Snippet_reads_a_dialect_component_as_its_values_without_keys_ids_or_its_fence()
+    {
+        const string Card = """
+            Kdo je v týmu.
+
+            ```a-contact
+            - name: Eva Dvořáková
+              title: Vývojářka
+              emails:
+                - eva@example.test
+              objectId: 56896927-dcc2-43af-889f-654e772cf23d
+              directoryId: 609aac08-6e9c-4bb1-a7ab-8a48e004190c
+            ```
+
+            Další text.
+            """;
+        Assert.Equal("Kdo je v týmu. Eva Dvořáková Vývojářka eva@example.test Další text.", SearchText.Snippet(Card, "eva"));
+        // A headline fragment cut inside the fence still shows no key or id.
+        Assert.Equal("Vývojářka", SearchText.Snippet("  title: Vývojářka\n  directoryId: 609aac08-6e9c-4bb1", "vyvojarka"));
+    }
+
+    [Fact]
     public void Snippet_and_passage_read_requirement_lines_as_title_and_state()
     {
         const string markdown = "## Balíček portál\n\n- [ ] **Doména** — neřešeno · naše práce · klíč: domena\n\n"

@@ -42,6 +42,13 @@ const graph: Graph = { truncated: false, nodes: [
     { source: "lucie", target: "bpmn", kind: "skill", level: 5 }, { source: "lucie", target: "csharp", kind: "skill", level: null },
     { source: "csharp", target: "dotnet", kind: "part_of" }, { source: "consent", target: "forms", kind: "related" }] };
 const directoryPeople = [{ id: "lucie", name: "Lucie Nováková", organization: "Scalesoft" }, { id: "jan", name: "Jan Dvořák", organization: "Orion" }, { id: "petra", name: "Petra Malá", organization: "Modelsoft" }];
+// One person's graph (their profile): the server answers their node and topics; here the same filtered from the local map.
+const personGraph = (contactId: string): Graph => {
+  const links = graph.links.filter(link => link.kind === "skill" && link.source === contactId);
+  const topics = new Set(links.map(link => link.target));
+  return { truncated: false, nodes: graph.nodes.filter(node => node.id === contactId || topics.has(node.id)),
+    links: [...links, ...graph.links.filter(link => link.kind !== "skill" && topics.has(link.source) && topics.has(link.target))] };
+};
 const api: Pick<SkillApi, "contact" | "rate" | "topics" | "experts" | "merge" | "link" | "pages" | "graph"> = {
   contact: id => delay(people[id]!),
   rate: async (id, request) => {
@@ -119,6 +126,9 @@ const topicText = ref(""), takenTopic = ref("");
     </SettingsSection>
     <SettingsSection title="SkillGraph — Mapa znalostí (třetí pohled v Kontaktech)" description="Graf kdo–co vedle Adresáře a Celé wiki: lidé a témata, síla čáry je úroveň, kterou čtenář smí vidět; témata spojuje „je součástí“ (plná) a „souvisí“ (čárkovaná). Filtry organizace, prostor a téma. Klik na téma otevře jeho přehled v adresáři, na osobu její kartu pod grafem s pruhy znalostí. Seznam je týž graf pro klávesnici; pod 680 px místa je jen seznam. Proč ne graf vazeb stránek (Obsah prostoru): ten ukazuje stránky a objekty prostoru, tohle lidi a témata napříč wiki.">
       <SkillGraph :api="api" :data="graph" :spaces="[{ id: 's1', name: 'Orion' }, { id: 's2', name: 'Začínáme' }]" />
+    </SettingsSection>
+    <SettingsSection title="SkillGraph v profilu člověka (contactId)" description="Tentýž graf zúžený na jednoho člověka v jeho profilu (ContentDetail kontaktu s účtem), nad pruhy úrovní: jeho témata, jak je čtenář smí vidět (server filtruje GET /api/skills/graph?contactId=, soukromá hodnocení jen hodnotiteli), bez filtrů mapy, kreslený i v úzkém doku. Člověk bez témat nevykreslí nic, pruhy pod ním nabídnou Ohodnotit. Načítá se líně s profilem.">
+      <div class="skills-example-panel"><SkillGraph :api="{ ...api, graph: async (_space, _signal, contactId) => personGraph(contactId!) }" :contact-id="ids.martin" /></div>
     </SettingsSection>
     <SettingsSection title="SkillBars — znalosti osoby" description="Přehled osoby: pruh na téma, délka je úroveň, seskupeno podle širšího tématu (shluky), skupiny podle nejlepšího tématu. Pruhy místo radaru: čtou se při jakémkoli počtu témat i na 375 px. Ukazuje je detail kontaktu v doku a osoba vybraná v grafu (ContactSkillLine s bars).">
       <div class="skills-example-panel"><SkillBars name="Pavel Horák" :skills="people[ids.martin]!.skills.map(skill => ({ ...skill, group: ['C#', 'NHibernate'].includes(skill.name) ? '.NET' : skill.name === 'Informované souhlasy' ? 'Orion' : null }))" /></div>

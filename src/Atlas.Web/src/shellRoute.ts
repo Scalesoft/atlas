@@ -61,8 +61,8 @@ export type SpaceTab = (typeof spaceTabs)[number];
 export type ShellRoute =
   /** `#/`, and every address the shell does not know: Knihovna with its first tab. */
   | { view: "home" }
-  /** `#/library/<tab>`, with `?q=` the tab's search (Kontakty: who knows a topic) */
-  | { view: "library"; tab: LibraryView; q?: string }
+  /** `#/library/<tab>`, with `?q=` the tab's search (Kontakty: who knows a topic) or `?contact=` a contact's dock (a person's card and activity) */
+  | { view: "library"; tab: LibraryView; q?: string; contact?: string }
   /** `#/spaces/<id>`, `#/spaces/<id>/about`, `…/boards`, `…/deployments` and `…/waiting` */
   | { view: "space"; spaceId: string; tab?: SpaceTab }
   /** `#/new-space` */
@@ -93,7 +93,7 @@ const id = "[a-zA-Z0-9-]+";
 const oneOf = (names: readonly string[]) => names.join("|");
 const spacePartPattern = new RegExp(`^#/spaces/(${id})/(${oneOf(pageCreationKinds)}|${pageTemplatesPart}|${oneOf(spaceTabs)})$`);
 const boardPattern = new RegExp(`^#/boards/(${id})$`);
-const libraryPattern = new RegExp(`^#/library/(${oneOf(libraryViews)})(?:\\?q=([^&]*))?$`);
+const libraryPattern = new RegExp(`^#/library/(${oneOf(libraryViews)})(?:\\?q=([^&]*)|\\?contact=(${id}))?$`);
 const profilePattern = new RegExp(`^#/profile(?:/(${oneOf(profileTabs)}))?/?$`);
 const pageAccessPattern = new RegExp(`^#/pages/(${id})/access(?:/(${oneOf(pageAccessTabs.filter(tab => tab !== defaultPageAccessTab))}))?/?$`);
 const contentPattern = new RegExp(`^#/(pages|spaces)/(${id})(?:\\?(heading|block|comment)=([^&]+))?$`);
@@ -133,7 +133,10 @@ export function parseShellHash(hash: string): ShellRoute {
   // Lower case: the server writes ids that way and names the live channel `board:<id>` after them.
   if (board) return { view: "board", boardId: board[1].toLowerCase() };
   const libraryMatch = libraryPattern.exec(hash), library = member(libraryViews, libraryMatch?.[1]);
-  if (library) { const q = headingOf(libraryMatch?.[2]); return q ? { view: "library", tab: library, q } : { view: "library", tab: library }; }
+  if (library) {
+    const q = headingOf(libraryMatch?.[2]), contact = libraryMatch?.[3];
+    return q ? { view: "library", tab: library, q } : contact ? { view: "library", tab: library, contact } : { view: "library", tab: library };
+  }
   if (hash === spaceCreationHash) return { view: "spaceCreation" };
   if (hash === whatsNewHash) return { view: "whatsNew" };
   const settings = resolveSettingsHash(hash);
@@ -153,7 +156,7 @@ export function parseShellHash(hash: string): ShellRoute {
 function hashOf(route: ShellRoute, writeId: (value: string) => string): string {
   switch (route.view) {
     case "home": return "#/";
-    case "library": return `#/library/${route.tab}${route.q ? `?q=${encodeURIComponent(route.q)}` : ""}`;
+    case "library": return `#/library/${route.tab}${route.q ? `?q=${encodeURIComponent(route.q)}` : route.contact ? `?contact=${route.contact}` : ""}`;
     case "space": return `#/spaces/${writeId(route.spaceId)}${route.tab ? `/${route.tab}` : ""}`;
     case "spaceCreation": return spaceCreationHash;
     case "pageCreation": return `#/spaces/${writeId(route.spaceId)}/${route.kind}`;

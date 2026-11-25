@@ -28,6 +28,8 @@ import ContactPicker from "../contacts/ContactPicker.vue";
 import ContactDirectory from "../contacts/ContactDirectory.vue";
 import ContactOverview from "../contacts/ContactOverview.vue";
 import PageContactEditor from "../contacts/PageContactEditor.vue";
+import PersonActivity from "../contacts/PersonActivity.vue";
+import type { RecentChange } from "../home/homeApi";
 import type { EntityApi, EntityItem } from "../../entities/entityApi";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
@@ -255,6 +257,24 @@ const overviewPage = ref<MarkdownRichValue>(structuredClone(overviewValue));
 const overviewPlugins = createDocumentWidgets({ kind: "edit" });
 const overviewReading = [...createDocumentWidgets({ kind: "public" }), createOverviewReading(() => "gallery-contacts")];
 const kinds = overviewKinds().map(kind => `${kind.label} (${kind.kind})`).join(", ");
+
+// PersonActivity: one colleague's changes in two spaces, two pages of rows.
+const activityChange = (id: string, title: string, spaceId: string, spaceName: string, minutes: number): RecentChange => ({
+  pageId: `activity-${id}`, title, spaceId, spaceName, revisionId: `activity-rev-${id}`, version: 3, at: new Date(Date.now() - minutes * 60_000).toISOString(),
+  authorId: "acc-eva", authorName: "Eva Dvořáková", channel: "web", isAi: false, apiToken: null, furtherChanges: id === "a" ? 2 : 0, canOpenHistory: false });
+const activityRows = [activityChange("a", "Plán nasazení", "s-dev", "Vývoj", 12), activityChange("b", "Postup zálohování", "s-ops", "Provoz", 180),
+  activityChange("c", "Onboarding nového kolegy", "s-dev", "Vývoj", 60 * 26), activityChange("d", "Kontrolní seznam vydání", "s-dev", "Vývoj", 60 * 24 * 6)];
+const activitySource = {
+  changes: async (_filter: string, cursor: string | null, _signal?: AbortSignal, _limit?: number, scope: { space?: string } = {}) => {
+    const rows = activityRows.filter(row => !scope.space || row.spaceId === scope.space);
+    return cursor ? { items: rows.slice(2), next: null } : { items: rows.slice(0, 2), next: rows.length > 2 ? "next" : null };
+  },
+  // Her year: a few changes a week in Vývoj, now and then in Provoz.
+  days: async () => ({ days: Array.from({ length: 120 }, (_, index) => index).filter(index => index % 3 === 0 || index % 7 === 0).map(index => ({
+    day: new Date(Date.now() - index * 86_400_000).toISOString().slice(0, 10), spaceId: index % 7 === 0 ? "s-ops" : "s-dev",
+    spaceName: index % 7 === 0 ? "Provoz" : "Vývoj", changes: 1 + (index % 4) })) }),
+};
+const activityOpened = ref("");
 </script>
 
 <template>
@@ -283,6 +303,10 @@ const kinds = overviewKinds().map(kind => `${kind.label} (${kind.kind})`).join("
       <label class="contacts-example-switch"><Switch v-model="pageEditorOpen" />Panel otevřený (vypnutí ho zavře a uloží)</label>
       <div v-if="pageEditorOpen" class="contacts-example-card" data-example-page-contact><PageContactEditor :snapshot="pageSnapshot" :save="pageSave" :store="store" :usage="pageUsage" :forget="() => {}" /></div>
       <p class="st-muted" data-example-page-stored>Zapsáno do stránky: {{ pageStored }}</p>
+    </SettingsSection>
+    <SettingsSection title="PersonActivity" description="Aktivita kolegy: interní osoba (kontakt propojený s účtem, directoryId) je tentýž člověk jako účet, takže v detailu kontaktu (ContentDetail: Obsah, uzel stromu, karta na tabuli, Knihovna → Kontakty → ikona Aktivita u kolegy, odkaz Otevřít v adresáři z karty osoby ve stránce) je pod kartou (a pod jeho kompetencemi, ContactSkillLine) jeho rok v kostce: kolik změn, kdy naposledy, kde nejvíc, kalendář změn (ActivityHeatmap jako v Profilu, GET /api/me/changes/days) a co naposledy změnil. Je to Co se změnilo zúžené na jeden účet (GET /api/me/changes?author=, MCP atlas_list_recent_changes s authorId) se stejnými řádky (ChangeRow), nejnovější první (bez omezení na 30 dní), filtrem prostoru (FilterMenu s hledáním) a Načíst další. Ukáže jen stránky, které divák smí číst, nic nepočítá ze skrytých a nikdy neříká, kdo co četl. Řádek otevře stránku; historie se otevírá ze stránky. Proč ne RecentChangesCard: ta je karta domovské stránky s filtry Vše / AI / Moje; tady je jeden člověk v detailu.">
+      <div class="contacts-example-card" data-example-person-activity><PersonActivity account-id="acc-eva" :source="activitySource" @open="activityOpened = $event" /></div>
+      <p class="st-muted">Otevřeno: {{ activityOpened || "nic" }}</p>
     </SettingsSection>
     <SettingsSection title="ContactPicker" description="Jedna osoba do textu stránky z klávesnice (/Kontakt a /Kontakt v textu v editoru, kotvené u kurzoru): pište jméno v libovolném pořadí a tvaru (zkuste „jan kovarik“ nebo „pepa“), první je předvybraný, šipky, Enter nebo Tab vloží, první Esc smaže napsané a druhý zavře (prázdné pole nic nevezme a žádný řádek nezvýrazní; první šipka ukáže první řádek a Enter ho pak vezme). Co napíšete hned po výběru z lomítka, je hledání; Enter stisknutý před odpovědí počká a vezme první výsledek odpovědi. Stejná osoba z adresáře, účtů a stránek je jednou (podle e-mailu a id), dva lidé jednoho jména mají řádek s organizací, e-mailem a zdrojem. Poslední řádek Nový kontakt odkryje formulář s napsaným jménem a varuje, když takové jméno už existuje. S vlastností create (řádek „Nový kontakt“ ve výběru osoby po „čekáme na“ v požadavku) se jméno hned porovná s adresářem a rovnou se ptá na shodu, bez hledání a formuláře. Iniciály hledají také: „MM“ najde Marka Musila i Michala Macka, „MMu“ jen Marka a „MMa“ jen Michala (první písmeno jména a začátek příjmení, bez ohledu na diakritiku); v textu stránky se iniciály na kontakt nikdy samy nemění. Zkratky a přezdívky kontaktu adresáře („Mára“) najdou člověka hned jako první řádek; když vyberete osobu po hledání, které není začátkem jejího jména ani e-mailu („MMu“, „Mára“), adresář si ho zapamatuje jako její zkratku (jen kdo smí kontakt měnit) a příště ji najde rovnou; stejnou zkratku mohou mít dva lidé, první je ten, koho pro ni lidé vybírají častěji. Proč ne BoardContactPicker: ten v dialogu zaškrtává několik kontaktů adresáře pro karty tabule; tenhle vkládá jednu osobu u kurzoru. Hledání mají společné (contacts/contactSources.ts).">
       <div class="contacts-example-picker" data-example-contact-picker><ContactPicker :search="searchPeople" :pick="pickPerson" :learn="learnPerson" :close="() => {}" :normalize="normalizeContact" /></div>

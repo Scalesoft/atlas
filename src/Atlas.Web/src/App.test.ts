@@ -15,6 +15,8 @@ import DocumentEditor, { codeBlockHighlightingReady } from "./components/Documen
 import { jsonResponse as response, memoryStorage, mountApp as mountShell, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "./testing/appHarness";
 // These shell tests exercise local draft/publication responses. Transport and
 // editor collaboration lifecycle have their own component/integration tests.
+const showContactDetail = vi.hoisted(() => vi.fn());
+vi.mock("./contacts/contactDock", () => ({ showContactDetail }));
 vi.mock("./collaboration", async (original) => ({
   ...await original<typeof import("./collaboration")>(),
   joinPageCollaboration: vi.fn(() => new Promise(() => {})),
@@ -2501,6 +2503,60 @@ describe('embedded widgets in wiki search', () => {
     expect(input.attributes('aria-activedescendant')).toBe('search-result-1');
     await input.trigger('keydown', { key: 'Enter' }); await flushPromises();
     expect(location.hash).toContain('heading=team');
+  });
+});
+
+describe('a colleague from the directory in wiki search', () => {
+  it('is found by name though no page holds them, once beside a page that does, and only a colleague', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const fetchMock = requestMock(path => path.startsWith('/api/search?') ? Promise.resolve(response({ items: [
+      { ...page, id: 'page-a', title: 'Tým', spaceName: space.name, snippet: '', widgets: [
+        { kind: 'contact', title: 'Eva Dvořáková', detail: 'Vývoj', headingId: null, contact: { objectId: 'c-eva', directoryId: 'acc-eva' } },
+        // An older entry of a colleague, linked to their contact before it knew the account.
+        { kind: 'contact', title: 'Ema Dvorská', detail: '', headingId: null, contact: { objectId: 'c-ema' } }] },
+    ], hasMore: false }))
+      : path.startsWith('/api/objects?type=atlas.contact&scope=wiki&q=') ? Promise.resolve(response({ items: [
+        { id: 'c-eva', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Eva Dvořáková', version: 1, updatedAt: '', data: { name: 'Eva Dvořáková', title: 'Vývojářka', directoryId: 'acc-eva' } },
+        { id: 'c-ema', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Ema Dvorská', version: 1, updatedAt: '', data: { name: 'Ema Dvorská', directoryId: 'acc-ema' } },
+        { id: 'c-ext', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Erik Dodavatel', version: 1, updatedAt: '', data: { name: 'Erik Dodavatel' } },
+      ], total: 3, page: 1, pageSize: 50, canCreate: false })) : undefined);
+    const app = await mountApp(fetchMock);
+    await app.get('.search-launch').trigger('click');
+    const input = app.get('.omnisearch-input input');
+    await input.setValue('Dvo'); await vi.advanceTimersByTimeAsync(180); await flushPromises();
+    const people = app.get('[role=group][aria-label="Kontakty"]').findAll('a');
+    expect(people.map(person => person.attributes('href'))).toEqual(['#/library/contacts?contact=c-eva', '#/library/contacts?contact=c-ema']);
+    expect(people[0]!.text()).toContain('Vývojářka');
+    // A person from the directory is in no page or space.
+    expect(people[0]!.text()).not.toContain(' · ');
+  });
+});
+
+describe('a colleague in wiki search', () => {
+  it('is one hit however many pages hold them, preselected by name, and Enter opens their card and activity', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const eva = { kind: 'contact', title: 'Eva Dvořáková', detail: 'Vývoj', headingId: 'tym', contact: { name: 'Eva Dvořáková', objectId: 'c-eva', directoryId: 'acc-eva' } };
+    const fetchMock = requestMock(path => path.startsWith('/api/search?') ? Promise.resolve(response({ items: [
+      { ...page, id: 'page-a', title: 'Plán nasazení', spaceName: space.name, snippet: '', widgets: [eva] },
+      { ...page, id: 'page-b', title: 'Postup zálohování', spaceName: space.name, snippet: '', widgets: [{ ...eva, headingId: 'kontakty' }] },
+    ], hasMore: false })) : undefined);
+    const app = await mountApp(fetchMock);
+    await app.get('.search-launch').trigger('click');
+    const input = app.get('.omnisearch-input input');
+    await input.setValue('Eva Dvořáková'); await vi.advanceTimersByTimeAsync(180); await flushPromises();
+    const people = app.get('[role=group][aria-label="Kontakty"]').findAll('a');
+    expect(people).toHaveLength(1);
+    expect(people[0]!.attributes('href')).toBe('#/library/contacts?contact=c-eva');
+    expect(app.get('#search-result-0').text()).toContain('Eva Dvořáková');
+    await input.trigger('keydown', { key: 'Enter' }); await flushPromises(); await vi.dynamicImportSettled();
+    expect(location.hash).toBe('#/library/contacts?contact=c-eva');
+    expect(showContactDetail).toHaveBeenLastCalledWith('c-eva');
+    // The same person again, with the address unchanged: the dock opens again.
+    showContactDetail.mockClear();
+    await app.get('.search-launch').trigger('click');
+    await app.get('.omnisearch-input input').setValue('Eva Dvořáková'); await vi.advanceTimersByTimeAsync(180); await flushPromises();
+    await app.get('.omnisearch-input input').trigger('keydown', { key: 'Enter' }); await flushPromises(); await vi.dynamicImportSettled();
+    expect(showContactDetail).toHaveBeenCalledWith('c-eva');
   });
 });
 

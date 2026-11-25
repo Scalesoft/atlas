@@ -119,6 +119,74 @@ public sealed class RecentChangesTests
         Assert.Equal(400, (await Assert.ThrowsAsync<ApiException>(() => f.As<RecentChangeList>(f.Reader, new ListRecentChanges("some", null, 2)))).Status);
     }
 
+    [PostgreSqlFact]
+    public async Task A_persons_activity_is_only_their_changes_the_viewer_may_read_narrowed_by_space_and_on_mcp_none_out_of_ai()
+    {
+        await using var f = await PersonalLibraryFixture.CreateAsync();
+        await Published(f, "Writer plan");
+        await Published(f, "Colleague plan", owner: f.OtherWriter);
+        var hiddenSpace = await f.Host.SeedSpaceAsync("Hidden", (f.Writer, SpaceRole.Writer));
+        await Published(f, "Hidden plan", hiddenSpace);
+        var outOfAi = await f.Host.SeedSpaceAsync("Out of AI", (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+        await Published(f, "Not for AI", outOfAi);
+        await f.As<SpaceAiSettingsView>(f.Admin, new SaveSpaceAiSettings(outOfAi, new SaveSpaceAiSettingsRequest(false, null)));
+
+        // The writer's work in a space the reader has no grant on stays the writer's own: no row, no count.
+        Assert.Equal(["Not for AI", "Writer plan"], (await Of(f, f.Reader, f.Writer.Id)).Select(x => x.Title).Order());
+        Assert.Equal(["Hidden plan", "Not for AI", "Writer plan"], (await Of(f, f.Writer, f.Writer.Id)).Select(x => x.Title).Order());
+        Assert.Equal(["Colleague plan"], (await Of(f, f.Reader, f.OtherWriter.Id)).Select(x => x.Title));
+        Assert.Equal(["Writer plan"], (await Of(f, f.Reader, f.Writer.Id, f.SpaceId)).Select(x => x.Title));
+        Assert.Empty(await Of(f, f.Reader, f.Writer.Id, hiddenSpace));
+
+        var token = await TestApiTokens.SeedAsync(f.Host, f.Reader, "agent");
+        f.Host.Channel.Current = new RequestChannel(ContentChannel.Mcp, token);
+        Assert.Equal(["Writer plan"], (await Of(f, f.Reader, f.Writer.Id)).Select(x => x.Title));
+        Assert.Empty(await Of(f, f.Reader, f.Writer.Id, outOfAi));
+        f.Host.Channel.Current = RequestChannel.Web;
+    }
+
+    [PostgreSqlFact]
+    public async Task A_persons_activity_reaches_past_the_window_newest_first_by_cursor_and_the_plain_list_keeps_its_window()
+    {
+        await using var f = await PersonalLibraryFixture.CreateAsync();
+        var old = await Published(f, "Old plan");
+        await f.Execute("""UPDATE "PageRevision" SET "ActiveFrom"=now()-interval '90 days' WHERE "PageId"=:id""", old.Id);
+        await Published(f, "New plan");
+
+        var first = await f.As<RecentChangeList>(f.Reader, new ListRecentChanges("all", null, 1, f.Writer.Id));
+        var second = await f.As<RecentChangeList>(f.Reader, new ListRecentChanges("all", first.Next, 1, f.Writer.Id));
+        Assert.Equal(["New plan", "Old plan"], first.Items.Concat(second.Items).Select(x => x.Title));
+        Assert.Null(second.Next);
+        Assert.DoesNotContain(await List(f, f.Reader), x => x.PageId == old.Id);
+    }
+
+    [PostgreSqlFact]
+    public async Task A_persons_year_by_day_and_space_counts_only_what_the_viewer_may_read_and_on_mcp_nothing_out_of_ai()
+    {
+        await using var f = await PersonalLibraryFixture.CreateAsync();
+        var plan = await Published(f, "Writer plan");
+        await f.Pages.SaveAsync(plan.Id, new SavePageRequest("Writer plan", PersonalLibraryFixture.Rich("more"), null, plan.Version), f.Writer, default);
+        await Published(f, "Colleague plan", owner: f.OtherWriter);
+        var hiddenSpace = await f.Host.SeedSpaceAsync("Hidden", (f.Writer, SpaceRole.Writer));
+        await Published(f, "Hidden plan", hiddenSpace);
+        var outOfAi = await f.Host.SeedSpaceAsync("Out of AI", (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+        await Published(f, "Not for AI", outOfAi);
+        await f.As<SpaceAiSettingsView>(f.Admin, new SaveSpaceAiSettings(outOfAi, new SaveSpaceAiSettingsRequest(false, null)));
+        var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Europe/Prague").ToString("yyyy-MM-dd");
+
+        // The reader sees the published version of the writer's plan (the newer work is unpublished), and nothing of the hidden space.
+        var reader = (await f.As<PersonActivity>(f.Reader, new GetPersonActivity(f.Writer.Id))).Days;
+        Assert.All(reader, day => Assert.Equal(today, day.Day));
+        Assert.Equal([(f.SpaceId, 1), (outOfAi, 1)], reader.Select(day => (day.SpaceId!.Value, day.Changes)).OrderBy(x => x.Item1 == outOfAi));
+        var writer = (await f.As<PersonActivity>(f.Writer, new GetPersonActivity(f.Writer.Id))).Days;
+        Assert.Equal(4, writer.Sum(day => day.Changes));
+
+        var token = await TestApiTokens.SeedAsync(f.Host, f.Reader, "agent");
+        f.Host.Channel.Current = new RequestChannel(ContentChannel.Mcp, token);
+        Assert.Equal([f.SpaceId], (await f.As<PersonActivity>(f.Reader, new GetPersonActivity(f.Writer.Id))).Days.Select(day => day.SpaceId!.Value));
+        f.Host.Channel.Current = RequestChannel.Web;
+    }
+
     private static async Task<PageDto> Published(PersonalLibraryFixture f, string title, Guid? spaceId = null, UserAccount? owner = null)
     {
         var author = owner ?? f.Writer;
@@ -128,6 +196,9 @@ public sealed class RecentChangesTests
 
     private static async Task<IReadOnlyList<RecentChange>> List(PersonalLibraryFixture f, UserAccount actor, string filter = "all")
         => (await f.As<RecentChangeList>(actor, new ListRecentChanges(filter, null, 50))).Items;
+
+    private static async Task<IReadOnlyList<RecentChange>> Of(PersonalLibraryFixture f, UserAccount viewer, Guid author, Guid? space = null)
+        => (await f.As<RecentChangeList>(viewer, new ListRecentChanges("all", null, 50, author, space))).Items;
 
     private static async Task<T> Scalar<T>(PersonalLibraryFixture f, string sql, Guid id)
     {

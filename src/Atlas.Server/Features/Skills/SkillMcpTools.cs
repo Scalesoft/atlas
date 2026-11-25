@@ -94,10 +94,12 @@ public sealed class SkillMcpTools(IMessageBus bus)
     [McpToolScope(ApiScopes.Read)]
     [AssistantDescription("Přehled celé mapy znalostí: témata, kolik lidí je zná a kdo, a vazby témat (je součástí, souvisí). Volitelně spaceId: jen témata stránek prostoru.")]
     [Description("Mapa znalostí jako přehled (graf kdo–co z Knihovna → Kontakty): témata, která zná nejvíc lidí (nejvýš 60), u každého lidé s úrovní, kterou smíte " +
-        "vidět, a vazby témat (je součástí, souvisí). spaceId nechá jen témata stránek toho prostoru. Na jedno téma podrobně atlas_find_experts. " + McpText.TrustNotice)]
-    public async Task<CallToolResult> GraphAsync([Description("Volitelně spaceId: jen témata čitelných stránek prostoru.")] string? spaceId = null, CancellationToken ct = default)
+        "vidět, a vazby témat (je součástí, souvisí). spaceId nechá jen témata stránek toho prostoru, contactId jednoho člověka. Na jedno téma podrobně atlas_find_experts. " + McpText.TrustNotice)]
+    public async Task<CallToolResult> GraphAsync([Description("Volitelně spaceId: jen témata čitelných stránek prostoru.")] string? spaceId = null,
+        [Description("Volitelně contactId: jen tento člověk a jeho témata (jeho profil).")] string? contactId = null, CancellationToken ct = default)
     {
-        var graph = await bus.InvokeAsync<SkillGraph>(new GetSkillGraph(spaceId is null ? null : McpArguments.RequiredId(spaceId, "spaceId"), AiScopeOnly: true), ct);
+        var graph = await bus.InvokeAsync<SkillGraph>(new GetSkillGraph(spaceId is null ? null : McpArguments.RequiredId(spaceId, "spaceId"), AiScopeOnly: true,
+            ContactId: McpArguments.OptionalId(contactId, "contactId")), ct);
         var names = graph.Nodes.ToDictionary(x => x.Id, x => McpText.Line(x.Name, 60));
         var body = new StringBuilder();
         foreach (var topic in graph.Nodes.Where(x => x.Kind == "topic"))

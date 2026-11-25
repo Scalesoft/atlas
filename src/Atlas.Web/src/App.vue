@@ -54,6 +54,7 @@ import {
   type SpacePinPolicy,
   type User,
 } from "./api";
+import type { ObjectList } from "./objects/objectApi";
 import { personalLibraryApi, type PersonalPageState } from "./personalLibrary";
 import { useUnreadNotifications } from "./notifications";
 import { liveAccount } from "./live/accountChannel";
@@ -1014,6 +1015,8 @@ const results = ref<SearchResult[]>([]);
 const searchResources = ref<{ type: string; id: string; spaceId: string; spaceName: string; title: string; snippet: string;
   /** A comment's object and place (its own group „Komentáře“, comments spec §4). */
   target?: { objectId: string; typeId: string; anchor: string | null } }[]>([]);
+/** The colleagues the query names in the contact directory (their account's contact, directoryId), whether a page holds them or not. */
+const searchPeople = ref<SearchWidget[]>([]);
 const { capabilities: aiCapabilities } = useAiCapabilities();
 /** The assistant panel opens with answers from the wiki or with the agent alone (the agent needs no index). */
 const assistantReachable = computed(() => aiCapabilities.value.assistant || aiCapabilities.value.agent);
@@ -1061,11 +1064,13 @@ const searchGroups = computed(() => {
     detail: heading ? `${result.title} · ${result.spaceName}` : result.spaceName,
     href: pageLink(result.id, headingId ?? undefined), icon: heading ? 'hash' : 'page', color: heading ? 'green' : 'blue',
   }; });
+  // A colleague (a contact of an account) is one person, not one hit per page: their row opens their card and activity.
   const widgetItems = (kind: SearchWidget['kind']) => results.value.flatMap(result => (result.widgets ?? [])
     .map((widget, index) => ({ widget, index })).filter(item => item.widget.kind === kind)
-    .map(({ widget, index }) => ({ board: false, passage: undefined, semantic: undefined, key: kind === 'youtrack' && widget.url ? `issue-${widget.url}` : `widget-${result.id}-${kind}-${index}`, widget, live: false,
+    .map(({ widget, index }) => ({ board: false, passage: undefined, semantic: undefined, key: kind === 'youtrack' && widget.url ? `issue-${widget.url}` : searchPerson(widget) ? `person-${searchPerson(widget)}` : `widget-${result.id}-${kind}-${index}`, widget, live: false,
       result: { ...result, headingId: widget.headingId }, mark: verificationMark(result.verificationState), title: widget.title,
-      detail: widget.detail, href: kind === 'youtrack' && widget.url ? widget.url : pageLink(result.id, widget.headingId ?? undefined),
+      detail: widget.detail, href: kind === 'youtrack' && widget.url ? widget.url : searchPerson(widget) ? buildShellHash({ view: 'library', tab: 'contacts', contact: searchPerson(widget) })
+        : pageLink(result.id, widget.headingId ?? undefined),
       icon: kind === 'contact' ? 'users' : 'check', color: kind === 'contact' ? 'green' : 'blue',
     })));
   const boards = searchResources.value.filter(hit => hit.type === 'board').map(hit => ({ board: true, passage: undefined, semantic: undefined, key: `board-${hit.id}`, live: false,
@@ -1081,8 +1086,13 @@ const searchGroups = computed(() => {
     };
   });
   // Only issues placed on pages the reader can read (the server's widget index), never a free search of YouTrack; always after the content.
+  // Directory people first: a page's hit of the same person is then the same row.
+  const people = searchPeople.value.map(widget => ({ board: false, passage: undefined, semantic: undefined, key: `person-${searchPerson(widget)}`, widget, live: false,
+    result: { id: searchPerson(widget)!, spaceId: '', spaceName: '', title: widget.title, snippet: '' } as SearchResult, mark: undefined, title: widget.title,
+    detail: widget.detail, href: buildShellHash({ view: 'library', tab: 'contacts', contact: searchPerson(widget) }), icon: 'users', color: 'green' }));
   const known = new Set<string>();
-  const issues = widgetItems('youtrack').filter(item => { if (known.has(item.key)) return false; known.add(item.key); return true; });
+  const once = (item: { key: string }) => { if (known.has(item.key)) return false; known.add(item.key); return true; };
+  const issues = widgetItems('youtrack').filter(once);
   // UX SB4-5: spaces are one more group under the same title-first rule, so a space named as the query leads and Enter opens it.
   const spaceItems = searchSpaces.value.map(space => ({ board: false, passage: undefined, semantic: undefined, key: `space-${space.id}`, live: false,
     widget: undefined as SearchWidget | undefined, result: { id: space.id, spaceId: space.id, spaceName: space.name, title: space.name, snippet: '' } as SearchResult,
@@ -1093,7 +1103,7 @@ const searchGroups = computed(() => {
     { title: t.common.headings, kind: 'headings', rankFloor: 1, items: pageItems(true) },
     { title: t.search.boards, kind: 'boards', items: boards },
     { title: t.common.comments, kind: 'comments', items: comments },
-    { title: t.cmd.contacts, kind: 'contacts', items: widgetItems('contact') },
+    { title: t.cmd.contacts, kind: 'contacts', items: [...people, ...widgetItems('contact')].filter(once) },
     { title: 'YouTrack', kind: 'youtrack', rankFloor: 3, items: issues },
     { title: t.common.spaces, kind: 'spaces', items: spaceItems },
   ].filter(group => group.items.length), searchQuestion.value).map((group, groupIndex, groups) => ({ ...group,
@@ -1590,7 +1600,7 @@ function resetSessionState() {
   searchUrl(false);
   query.value = "";
   resetSearchFilters();
-  results.value = []; searchSpaces.value = []; searchResources.value = []; suggestedPages.value = [];
+  results.value = []; searchSpaces.value = []; searchResources.value = []; searchPeople.value = []; suggestedPages.value = [];
   searchNextOffset.value = null; hasMore.value = false; searchIndex.value = 0;
   searchError.value = ""; searchAttempted.value = false;
   searchViewToRestore = undefined;
@@ -2555,8 +2565,8 @@ async function openPageFromSettings(id: string, pdfExport?: boolean) {
 function openPageAccess(id: string, tab: PageAccessTab = "access", fromHistory = false) {
   return openPage(id, false, fromHistory, undefined, tab);
 }
-function openLibrary(tab: LibraryView, fromHistory = false, q = "") {
-  if (!guardNavigation(fromHistory, () => openLibrary(tab, false, q))) return;
+function openLibrary(tab: LibraryView, fromHistory = false, q = "", contact = "") {
+  if (!guardNavigation(fromHistory, () => openLibrary(tab, false, q, contact))) return;
   navigationVersion++;
   openingPage.value = false;
   administrationOpen.value = false;
@@ -2569,7 +2579,9 @@ function openLibrary(tab: LibraryView, fromHistory = false, q = "") {
   libraryTab.value = tab;
   libraryQuery.value = q;
   closeSearch();
-  const address = buildShellHash(q ? { view: "library", tab, q } : { view: "library", tab });
+  // A person's card and activity over Kontakty (`?contact=`): opened on every call, the same address again included.
+  if (contact) void import("./contacts/contactDock").then(({ showContactDetail }) => showContactDetail(contact));
+  const address = buildShellHash(q ? { view: "library", tab, q } : contact ? { view: "library", tab, contact } : { view: "library", tab });
   if (!fromHistory && location.hash !== address) history.pushState(null, "", address);
 }
 /** Whose favourite and visit the shell keeps: the open page's, or the open board's (the same marks, interaction spec §6). */
@@ -3884,6 +3896,30 @@ function openSearchResult(event: MouseEvent, result: SearchResult) {
   event.preventDefault();
   if (!searchOpening.value) void openPage(result.id, false, false, result.headingId ?? undefined);
 }
+/** The colleagues a query names in the contact directory, as contact hits; only the whole wiki's search (no tag or other content). */
+async function findSearchPeople(text: string, version: number, signal: AbortSignal) {
+  if (searchTag.value || searchContent.value !== 'all' || text.trim().length < 2) { searchPeople.value = []; return; }
+  try {
+    const list = await api<ObjectList>(`/objects?type=atlas.contact&scope=wiki&q=${encodeURIComponent(text.trim())}`, { signal });
+    if (version !== searchVersion) return;
+    searchPeople.value = list.items.filter(item => typeof item.data?.directoryId === 'string').slice(0, 5).map(item => ({ kind: 'contact', title: item.title,
+      detail: [item.data!.title, item.data!.department, item.data!.organization].filter(part => typeof part === 'string' && part).join(' · '),
+      contact: { objectId: item.id, directoryId: item.data!.directoryId as string } }));
+  } catch { if (version === searchVersion && !signal.aborted) searchPeople.value = []; /* The people are a courtesy beside the pages. */ }
+}
+/** The directory contact of a colleague's contact hit, or undefined for anyone else; an older entry linked to a colleague the directory
+ *  named for this query (no account on it yet) is that colleague too. */
+function searchPerson(widget: SearchWidget | undefined) {
+  const id = widget?.kind === 'contact' ? widget.contact?.objectId : undefined;
+  return id && (widget!.contact!.directoryId || searchPeople.value.some(person => person.contact?.objectId === id)) ? id : undefined;
+}
+function openSearchPerson(event: MouseEvent, contact: string) {
+  if (!isPlainNavigationClick(event)) return;
+  event.preventDefault();
+  if (searchOpening.value) return;
+  rememberSearchView();
+  openLibrary('contacts', false, '', contact);
+}
 function openSearchBoard(event: MouseEvent, result: SearchResult) {
   if (!isPlainNavigationClick(event)) return;
   event.preventDefault();
@@ -3954,6 +3990,7 @@ function scheduleSearch() {
     results.value = [];
     searchSpaces.value = [];
     searchResources.value = [];
+    searchPeople.value = [];
     hasMore.value = false;
     searchAttempted.value = false;
     searchSemantic.value = false;
@@ -3978,6 +4015,7 @@ function scheduleSearch() {
   searchAbort = abort;
   searching.value = true;
   let previewShown = false;
+  void findSearchPeople(text, version, abort.signal);
   async function searchPass(prefixOnly: boolean) {
     try {
       const found = await api<{ items: SearchResult[]; hasMore: boolean; spaces?: typeof searchSpaces.value; resources?: typeof searchResources.value; nextOffset?: number | null; semantic?: boolean; didYouMean?: string; relaxed?: boolean }>(
@@ -4349,7 +4387,7 @@ async function historyNavigation() {
   }
   else if (route.view === "whatsNew") openWhatsNew(true);
   else if (route.view === "board") openBoard(route.boardId, true);
-  else if (route.view === "library") openLibrary(route.tab, true, route.q);
+  else if (route.view === "library") openLibrary(route.tab, true, route.q, route.contact);
   else if (route.view === "spaceCreation") openSpaceCreation(true);
   else if (route.view === "settings") openSettings(location.hash, true);
   else if (route.view === "profile") {
@@ -5311,13 +5349,13 @@ onUnmounted(() => {
             <a v-for="item in group.items" v-memo="[item, searchIndex === item.index, query, searchOpening, highlightedPage === item.result.id]" :id="`search-result-${item.index}`" :key="item.key"
               role="option" :tabindex="item.index === searchIndex ? 0 : -1" :aria-disabled="searchOpening"
               :href="item.href" :target="item.widget?.url ? '_blank' : undefined" :rel="item.widget?.url ? 'noopener noreferrer' : undefined" :aria-selected="item.index === searchIndex" :class="{ active: item.index === searchIndex }" :data-semantic="item.semantic" class="search-result" :data-page-id="!item.widget && !item.board && !item.result.isDraft ? item.result.id : undefined" :data-search-board="item.board || undefined" :data-answer-highlight="highlightedPage === item.result.id || undefined"
-              @mousedown.prevent @click="item.widget?.url ? undefined : item.board ? openSearchBoard($event, item.result) : openSearchResult($event, item.result)" @pointermove="selectSearchPointer($event, item.index)" @pointerenter="truncatedTitle($event, '.search-result-title')" @focus="searchIndex = item.index; searchResultChosen = true">
+              @mousedown.prevent @click="item.widget?.url ? undefined : searchPerson(item.widget) ? openSearchPerson($event, searchPerson(item.widget)!) : item.board ? openSearchBoard($event, item.result) : openSearchResult($event, item.result)" @pointermove="selectSearchPointer($event, item.index)" @pointerenter="truncatedTitle($event, '.search-result-title')" @focus="searchIndex = item.index; searchResultChosen = true">
               <span class="space-icon" :data-color="item.color"><AtlasIcon :name="item.icon" :size="18" /></span>
               <span class="search-result-main"><span class="search-result-head"><strong class="search-result-title"><span v-if="item.widget?.key" class="search-issue-key">{{ item.widget.key }}</span><SearchHighlight :text="item.title" :query="query" /></strong>
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
                 <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="'mark' in item && item.mark" :name="item.mark.icon" :size="13" class="search-verification" :data-warn="item.mark.warn || undefined" role="img" :aria-label="item.mark.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="item.mark.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
                   <span v-if="item.board" class="search-live-label" data-search-type>{{ t.common.board }}</span>
-                  <span v-else-if="item.widget">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
+                  <span v-else-if="item.widget && item.result.spaceName">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
                 </small>
                 <small v-if="item.result.matchedAlias" class="search-alias">{{ t.search.alsoFound }} <SearchHighlight :text="item.result.matchedAlias" :query="query" /></small>
                 <ResultPassage v-if="item.passage" :text="item.passage.text" :heading-title="item.passage.headingTitle" :query="query" />

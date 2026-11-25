@@ -40,7 +40,9 @@ export const skillApi = {
   topics: (q: string, signal?: AbortSignal) => api<{ items: TopicRef[] }>(`/skills/topics?q=${id(q)}`, { signal }),
   merge: (tagId: string, intoId: string) => post<TopicView>(`/skills/topics/${id(tagId)}/merge`, { intoId }),
   link: (tagId: string, otherId: string, kind: TopicLinkKind, remove = false) => put<TopicView>(`/skills/topics/${id(tagId)}/parents`, { parentId: otherId, kind, remove }),
-  graph: (spaceId?: string | null, signal?: AbortSignal) => api<SkillGraph>(`/skills/graph${spaceId ? `?spaceId=${id(spaceId)}` : ""}`, { signal }),
+  /** `contactId`: one person and the topics the reader may see of them (their profile). */
+  graph: (spaceId?: string | null, signal?: AbortSignal, contactId?: string) =>
+    api<SkillGraph>(`/skills/graph${contactId ? `?contactId=${id(contactId)}` : spaceId ? `?spaceId=${id(spaceId)}` : ""}`, { signal }),
   /** The readable pages carrying the topic's tag (the page tags' own listing). */
   pages: async (tagId: string, signal?: AbortSignal) => (await api<{ items: TaggedPage[] }>(`/tags/${id(tagId)}/pages?limit=5`, { signal })).items,
 };

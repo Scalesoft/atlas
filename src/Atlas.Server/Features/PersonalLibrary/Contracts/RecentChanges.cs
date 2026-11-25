@@ -15,3 +15,9 @@ public sealed record RecentChange(Guid PageId, string Title, Guid? SpaceId, stri
 
 /// <param name="Next">The cursor of the next page, or null at the end of the window.</param>
 public sealed record RecentChangeList(IReadOnlyList<RecentChange> Items, string? Next);
+
+/// <summary>How many versions a person made on <paramref name="Day"/> (yyyy-MM-dd, Prague) in one space; only days with any.</summary>
+public sealed record PersonActivityDay(string Day, Guid? SpaceId, string? SpaceName, int Changes);
+
+/// <summary>A person's last 365 days, as GetPersonActivity reads them.</summary>
+public sealed record PersonActivity(IReadOnlyList<PersonActivityDay> Days);

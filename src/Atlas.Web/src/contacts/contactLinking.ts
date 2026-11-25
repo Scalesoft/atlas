@@ -208,8 +208,8 @@ export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOpt
     live: (objectId, { signal }) => contactApi.live(objectId, { signal }).then(withAccount),
     editLinked: (contact, { editor, anchor, signal, save }) =>
       openVuePopover({ editor, anchor, signal, title: `Kontakt ${contact.name}`, variant: "panel", component: PageContactEditor, props: { snapshot: contact, save } }),
-    // shortcut: the directory has no address of one contact yet, so the link opens the directory; link the contact once it has one.
-    directoryUrl: () => buildShellHashEncoded({ view: "library", tab: "contacts" }),
+    // The contact's dock over the directory: its card, and a colleague's activity.
+    directoryUrl: objectId => buildShellHashEncoded({ view: "library", tab: "contacts", contact: objectId }),
     // „Použito na“ of the read-only card: the first few places the reader may see, the rest as a number.
     readerUsage: (objectId, { signal }) => usedOn(objectId, signal, undefined, host?.place()?.id),
     // „Umí“ of the read-only card and its Ohodnotit (Mapa znalostí).

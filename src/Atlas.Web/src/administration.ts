@@ -12,6 +12,8 @@ export interface DirectoryUser {
   hasBuiltinCredential: boolean;
   source: "builtin" | "external";
   credentialState: "active" | "pending" | "none";
+  /** The account's directory contact: the person's profile (null until it has one). */
+  contactId?: string | null;
 }
 export interface Group {
   id: string;
@@ -109,6 +111,8 @@ export const adminApi = {
       username: string;
       displayName: string;
       isWikiAdmin: boolean;
+      /** A profile's „Vytvořit účet“: the contact the new account is, linked in the same request. */
+      contactId?: string;
     },
     proof?: string | null,
   ) => securityChange<Invitation>("/admin/users", "POST", body, proof),

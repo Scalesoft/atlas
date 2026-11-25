@@ -23,7 +23,7 @@ import t from "../../../i18n/settings-people";
 import type { ChoiceOption } from "../types";
 import { useSettingsRoute } from "../useSettingsRoute";
 import PersonCard from "./PersonCard.vue";
-import PersonPeek from "./PersonPeek.vue";
+import { showContactDetail } from "../../../contacts/contactDock";
 import { useWorkspacePanel } from "../../../composables/useWorkspacePanel";
 import { Table, TableCaption, TableHead, TableHeader, TableRow, TableCell } from "../../ui/table";
 import { outOfReach } from "../../../lib/outOfReach";
@@ -252,20 +252,16 @@ const listed = computed(() => {
 // One set per line: the directory's waiting accounts over the whole list, a narrowed list's own beside its own count.
 const narrowed = computed(() => !!search.value.trim() || !!status.value || !!groupFilter.value);
 const pendingCount = computed(() => (narrowed.value ? listed.value.filter((user) => accountStatus(user) === "pending").length : summary.value?.pending ?? 0));
-// The person in the shared dock (?osoba=): a click on a name opens the summary there; the name stays a link to the full
-// card for a new tab and the keyboard. The address is the state: closing the dock clears it, a deep link opens it.
+// The person's profile in the shared dock (?osoba=): a click on a name opens the account's contact there, the one person profile
+// (its admin part shows the account); the name stays a link to the full card for a new tab, the keyboard and an account without its
+// contact yet. The address is the state: closing the dock clears it, a deep link opens it.
 const panel = useWorkspacePanel();
 const peekId = computed(() => router.route.value.query.osoba ?? "");
 const peeked = computed(() => (peekId.value ? users.value.find((user) => user.id === peekId.value) : undefined));
-const peekShown = () => panel.open.value && panel.content.value === PersonPeek;
-watch(peeked, (user) => {
-  if (user) panel.show({ label: user.displayName, content: PersonPeek, props: { account: user, currentUserId: context.userId, spaces: context.spaces }, focus: false });
-  else if (peekShown()) panel.hide();
-}, { immediate: true });
-watch(() => panel.open.value, (open) => { if (!open && peekId.value && panel.content.value === PersonPeek) closePeek(); });
-onBeforeUnmount(() => { if (peekShown()) panel.hide(); });
+watch(() => peeked.value?.contactId, (contact) => { if (contact) void showContactDetail(contact); }, { immediate: true });
+watch(() => panel.open.value, (open) => { if (!open && peekId.value) closePeek(); });
 function peek(user: DirectoryUser, event: MouseEvent) {
-  if (!isPlainNavigationClick(event)) return;
+  if (!isPlainNavigationClick(event) || !user.contactId) return;
   event.preventDefault();
   router.setQuery({ ...router.route.value.query, osoba: peekId.value === user.id ? undefined : user.id });
 }

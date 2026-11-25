@@ -34,6 +34,7 @@ import type { SkillApi } from "../../contacts/skillApi";
 import type { ContactApi } from "../../contacts/contactApi";
 import "../settings/settings.css";
 import LoadMoreButton from "../LoadMoreButton.vue";
+import { showContactDetail } from "../../contacts/contactDock";
 
 /**
  * Knihovna → Kontakty (objects spec §2.3): the wiki's contact directory. Every contact once, whether a page or a board shows it or
@@ -45,7 +46,8 @@ import LoadMoreButton from "../LoadMoreButton.vue";
  * search. Rows rise in staggered, a trashed one fades out; the rows are the tab's live objects (liveObjects),
  * so what a board changes shows here and the other way round. Koš (for who may add contacts) swaps the directory for its trash
  * (ContactTrash) and back, focus on the Koš button again; Možné duplicity (ContactDuplicates) the same way, for merging two contacts
- * of one person. `source`, `store` and `contacts` are replaced by the gallery.
+ * of one person. A colleague (the contact of an account, `directoryId`) has Aktivita: the contact's dock with their changes (contactDock.ts).
+ * `source`, `store` and `contacts` are replaced by the gallery.
  */
 const props = defineProps<{ source?: Pick<ObjectApi, "list" | "create" | "trash" | "trashList" | "restore" | "purge">; store?: LiveObjects; contacts?: Pick<ContactApi, "duplicates" | "merge" | "accountSuggestions" | "resolveAccount">; usage?: Pick<UsageApi, "count">;
   /** The search from the address (`#/library/contacts?q=C%23`: who knows a topic). */ initialQuery?: string; skills?: Pick<SkillApi, "experts" | "merge" | "contact" | "rate" | "topics" | "link" | "pages"> }>();
@@ -275,6 +277,10 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
         <li v-for="(row, index) in rows" :key="row.id" :style="{ '--i': Math.min(index, 8) }" :class="{ 'is-highlighted': highlighted === row.id }" :data-contact-row="row.id"
           :data-first="row === first || undefined">
           <ContactCard :contact="row.contact" :editable="row.object.canEdit" :upload="file => uploadContactPhoto(row.id, file)" @change="change(row.id, $event)" />
+          <Button v-if="row.contact.directoryId" variant="ghost" size="sm" type="button" class="contact-directory-activity" :aria-label="t.activity.openOf(row.object.title)"
+            :title="t.activity.openOf(row.object.title)" data-contact-activity @click="showContactDetail(row.id, store)">
+            <AtlasIcon name="history" :size="15" />
+          </Button>
           <Button v-if="row.object.canEdit" variant="ghost" size="sm" type="button" class="contact-directory-trash" :aria-label="t.directory.moveToTrashOf(row.object.title)"
             :title="t.directory.moveToTrashOf(row.object.title)" data-contact-trash @click="askTrash(row.id)">
             <AtlasIcon name="trash" :size="15" />
@@ -308,7 +314,7 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
 .contact-directory-items > li.is-highlighted { background: var(--accent-soft); }
 /* The contact Enter takes, while the search has the focus (P8). */
 .contact-directory:has(input[data-contact-search]:focus) .contact-directory-items > li[data-first] { background: var(--state-active-row-bg); box-shadow: var(--state-active-row-mark); }
-.contact-directory-trash { flex: none; color: var(--muted); }
+.contact-directory-trash, .contact-directory-activity { flex: none; color: var(--muted); }
 /* Rows rise in staggered (first eight), a trashed one fades out where it was while the rest close up. */
 .contact-row-enter-active { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out) backwards; animation-delay: calc(var(--i, 0) * var(--st-stagger)); }
 .contact-row-leave-active { position: absolute; animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; pointer-events: none; }

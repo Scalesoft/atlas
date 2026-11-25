@@ -11,8 +11,10 @@ import type { AdminApiToken, PrincipalAccess } from "../access/accessModel";
 import { fakeApi as stubApi, problem, provideSettingsSurface, testContext } from "../general/testing";
 import AccessHistoryPage from "../global/AccessHistoryPage.vue";
 import AccountsPage from "./AccountsPage.vue";
-import PersonPeek from "./PersonPeek.vue";
+import { showContactDetail } from "../../../contacts/contactDock";
 import { useWorkspacePanel } from "../../../composables/useWorkspacePanel";
+
+vi.mock("../../../contacts/contactDock", () => ({ showContactDetail: vi.fn() }));
 import { createDirectorySummary, directorySummaryKey } from "./directorySummary";
 import ApiTokensPage from "./ApiTokensPage.vue";
 import GroupsPage from "./GroupsPage.vue";
@@ -230,7 +232,7 @@ beforeEach(() => {
   state = {
     users: [
       user("u-admin", { displayName: "Admin", isWikiAdmin: true }),
-      user("u-jana", { displayName: "Jana Nováková" }),
+      user("u-jana", { displayName: "Jana Nováková", contactId: "c-jana" }),
       user("u-petr", { displayName: "Petr Svoboda", credentialState: "pending" }),
       user("u-eva", { displayName: "Eva Malá", isActive: false }),
       user("u-hub", { displayName: "Hub User", source: "external", hasBuiltinCredential: false, credentialState: "none" }),
@@ -282,21 +284,37 @@ describe("people", () => {
     expect(calls.some((call) => call.path.startsWith("/admin"))).toBe(false);
   });
 
-  it("shows a person in the shared dock: a click on the name sets ?osoba=, a deep link opens it, closing the dock clears it", async () => {
+  it("opens a person's profile from the list: a click on the name sets ?osoba=, a deep link opens it, closing the dock clears it", async () => {
     const panel = useWorkspacePanel();
     const view = await open("#/settings/people/accounts");
     await view.get('[data-account="u-jana"] [data-open-account]').trigger("click");
     await settle();
     expect(location.hash).toBe("#/settings/people/accounts?osoba=u-jana");
-    expect(panel.open.value && panel.content.value === PersonPeek && panel.contentProps.value.account).toMatchObject({ id: "u-jana" });
+    // The one person profile (the account's contact), not a second admin view of the person.
+    expect(showContactDetail).toHaveBeenLastCalledWith("c-jana");
+    panel.show({ label: "Jana", content: defineComponent({ render: () => null }) });
+    await settle();
     panel.hide();
     await settle();
     expect(location.hash).toBe("#/settings/people/accounts");
     wrapper!.unmount();
-    await open("#/settings/people/accounts?osoba=u-petr");
-    expect(panel.open.value && panel.contentProps.value.account).toMatchObject({ id: "u-petr" });
+    vi.mocked(showContactDetail).mockClear();
+    await open("#/settings/people/accounts?osoba=u-jana");
+    expect(showContactDetail).toHaveBeenCalledWith("c-jana");
     wrapper!.unmount();
-    expect(panel.open.value).toBe(false);
+    // An account without its contact yet: the name is the link to its full card.
+    vi.mocked(showContactDetail).mockClear();
+    const again = await open("#/settings/people/accounts");
+    const petr = again.get('[data-account="u-petr"] [data-open-account]');
+    expect(petr.attributes("href")).toBe("#/settings/people/accounts/u-petr");
+    // The page leaves the click to the link (recorded, then stopped here so the test does not navigate).
+    let followed = false;
+    const record = (event: Event) => { followed = !event.defaultPrevented; event.preventDefault(); };
+    document.addEventListener("click", record);
+    await petr.trigger("click", { button: 0 });
+    document.removeEventListener("click", record);
+    expect(followed).toBe(true);
+    expect(showContactDetail).not.toHaveBeenCalled();
     panel.reset();
   });
 
