@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from "vue";
 import "../../../collaborationPresence.css";
-import { userColor } from "../../../live/collaboratorColors";
+import { themedUserColor } from "../../../live/collaboratorColors";
+import { verificationMark } from "../../../verification/verificationMark";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import AtlasIcon from "../../AtlasIcon.vue";
 import CollaborationPointer from "../../CollaborationPointer.vue";
@@ -12,18 +13,18 @@ import { useDemoLoop, type At } from "./demoClock";
 // Verified content (5.2): the page's chip at its title passes from „Ověřeno“ through „Vyprší za 14 dní“ (a reminder goes to its owner)
 // to „Ověření vypršelo“; the owner's pointer opens the chip, presses Ověřit and the page is verified again, valid for the next interval.
 const d = t.demos.verify;
-const jana = userColor("00000004");
+const jana = computed(() => themedUserColor("00000004"));
 type State = "verified" | "expiring" | "expired";
 const root = ref<HTMLElement>();
 const chip = ref<HTMLElement>();
 const button = ref<HTMLElement>();
 const hand = ref<{ $el: HTMLElement }>();
 const state = ref<State>("verified"), renewed = ref(false), reminder = ref(false), open = ref(false), pressed = ref(false), fresh = ref(false);
-const badge = computed(() => ({
-  verified: { tone: "neutral", icon: "shield-check", label: d.verified },
-  expiring: { tone: "neutral", icon: "clock", label: d.expiring },
-  expired: { tone: "warning", icon: "triangle-alert", label: d.expired },
-} as const)[state.value]);
+// The chip's icon and tone from the product's one mapping (the page chip, search, link chips).
+const badge = computed(() => {
+  const mark = verificationMark(state.value)!;
+  return { tone: mark.warn ? "warning" : "neutral", icon: mark.icon, label: d[state.value] } as const;
+});
 const facts = computed(() => (renewed.value ? `${d.today} · ${d.until(d.dates[1]!)}` : d.until(d.dates[0]!)));
 const glide = createPointerGlide(() => root.value!, (element, x, y) => { element.style.transform = `translate3d(${x}px, ${y}px, 0)`; });
 onBeforeUnmount(() => glide.stop());
@@ -95,7 +96,7 @@ useDemoLoop(root, (at) => {
 }
 .demo-verify-pop.is-open { opacity: 1; scale: 1; }
 .demo-verify-button {
-  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 7px; background: var(--accent); color: var(--accent-contrast, #fff);
+  display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 7px; background: var(--accent); color: var(--on-accent);
   font-size: 12px; font-weight: 600; transition: scale var(--atlas-motion-fast) var(--atlas-ease-out);
 }
 .demo-verify-button.is-pressed { scale: var(--atlas-press, .97); }
