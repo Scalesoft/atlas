@@ -346,7 +346,7 @@ export function defineMarkdownBlockModule<T>(options: MarkdownBlockModuleOptions
           toolbar = createMarkdownContextToolbar({ editor: context.editor, anchor: context.container, getPos: context.getPos, label: options.label, signal: lifetime.signal,
             onActivate: runtime.edit ? editInPlace : undefined, activateOnClick: runtime.editOnClick !== false })
           if (runtime.edit) {
-            if (options.name !== 'contactCard') context.container.classList.add('md-module-editable') // a card is its own hover target (its frame)
+            context.container.classList.add('md-module-editable')
             toolbar.addButton({ label: modulesStrings.editBlockLabel(options.label), icon: 'settings', text: options.label, onClick: edit })
             const selection = context.editor.state.selection
             if (openOnInsertRequests.get(context.editor) === options.name && selection instanceof NodeSelection && selection.from === context.getPos()) {
