@@ -1,7 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import type { LiveObject } from "../../objects/liveObjects";
+import { toast } from "vue-sonner";
 import PageContactEditor from "./PageContactEditor.vue";
+
+vi.mock("vue-sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), dismiss: vi.fn() } }));
 
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.innerHTML = ""; });
@@ -117,4 +120,19 @@ it("a refusal answered after a newer panel of the contact stored its snapshot le
   await flushPromises();
   expect(save).toHaveBeenCalledTimes(2);
   expect(save.mock.calls[1]![0].role).toBe("Vedoucí");
+});
+
+it("2B: says „Kontakt upraven“ with „Zpět“, which writes the fields as they were back to the contact (P6)", async () => {
+  const { store, forget } = editor();
+  await flushPromises();
+  await wrapper!.get('[data-contact-field="emails"] .contact-edit-link').trigger("click");
+  await wrapper!.get("[data-contact-input]").setValue("d@firma.example.test");
+  await wrapper!.get("[data-contact-input]").trigger("keydown", { key: "Enter", ctrlKey: true });
+  await vi.waitFor(() => expect(toast.success).toHaveBeenCalledWith("Kontakt upraven.", expect.objectContaining({ id: `contact-edit:${id}` })));
+  const undo = vi.mocked(toast.success).mock.calls.at(-1)![1]!.action as unknown as { onClick: () => void };
+  forget.mockClear();
+  undo.onClick();
+  await flushPromises();
+  expect(store.edit).toHaveBeenLastCalledWith(id, { emails: ["denis@example.cz"] });
+  expect(forget).toHaveBeenCalledWith(id);
 });
