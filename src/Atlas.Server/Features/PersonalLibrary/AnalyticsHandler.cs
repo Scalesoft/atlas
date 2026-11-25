@@ -165,7 +165,7 @@ public sealed class AnalyticsHandler(ISession session, PersonalPageGuard guard, 
 
     private static DateTime Utc(object value) => DateTime.SpecifyKind((DateTime)value, DateTimeKind.Utc);
 
-    private static (DateTime Start, DateTime End) Period(DateOnly from, DateOnly to)
+    internal static (DateTime Start, DateTime End) Period(DateOnly from, DateOnly to)
     {
         if (from.Year < 1970 || to.Year >= 9999 || to < from || to.DayNumber - from.DayNumber > 365)
             throw new ApiException(400, "Vyberte období od 1 do 366 dní.");

@@ -212,7 +212,6 @@ public sealed class McpG5CoverageTests
             ["atlas_cancel_job_run"] = [new() { ["jobId"] = "none", ["runId"] = 1 }],
             ["atlas_set_tags"] = [new() { ["pageId"] = page.Id, ["add"] = new[] { "x" } }],
             // from and to are dates: the plain "x" is refused before G5.
-            ["atlas_list_readership"] = [new() { ["spaceId"] = space, ["from"] = "2026-01-01", ["to"] = "2026-01-31" }],
             // A comment on the page and on the contact of the space.
             ["atlas_post_comment"] = [new() { ["objectId"] = page.Id, ["body"] = "x" }, new() { ["objectId"] = contact, ["body"] = "x" }],
             // The administrator's own comment on the page: the author and the manager, so only G5 stops the edit and the deletion.

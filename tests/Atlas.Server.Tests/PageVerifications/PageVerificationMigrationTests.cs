@@ -71,7 +71,7 @@ public sealed class PageVerificationMigrationTests
         {
             await using var connection = new NpgsqlConnection(schema.ConnectionString);
             await connection.OpenAsync();
-            await using var command = new NpgsqlCommand(SpaceReadershipHandler.SpaceReadsSql, connection);
+            await using var command = new NpgsqlCommand(SpaceReadership.SpaceReadsSql, connection);
             command.Parameters.AddWithValue("actor", admin);
             command.Parameters.AddWithValue("space", Guid.Parse(Space));
             command.Parameters.AddWithValue("start", DateTime.UtcNow.AddDays(-365));

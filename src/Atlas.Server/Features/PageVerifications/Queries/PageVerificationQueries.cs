@@ -53,12 +53,12 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
             "unread" => row => row.Read.Views == 0,
             _ => throw new ApiException(400, "Neznámý filtr stavu obsahu.")
         };
-        var offset = SpaceReadershipHandler.SpaceCursor(query.Cursor);
-        var actor = await SpaceReadershipHandler.RequireSpaceEditorAsync(access, query.SpaceId, ct);
+        var offset = SpaceReadership.SpaceCursor(query.Cursor);
+        var actor = await SpaceReadership.RequireSpaceEditorAsync(access, query.SpaceId, ct);
         var space = (await session.GetAsync<Space>(query.SpaceId, ct))!;
         var now = clock.GetUtcNow().UtcDateTime;
-        var (start, end) = SpaceReadershipHandler.LastDays(query.Days, now);
-        var reads = await SpaceReadershipHandler.SpaceReadsAsync(session, actor.Id, query.SpaceId, start, end, ct);
+        var (start, end) = SpaceReadership.LastDays(query.Days, now);
+        var reads = await SpaceReadership.SpaceReadsAsync(session, actor.Id, query.SpaceId, start, end, ct);
         var verifications = (await session.ReadRowsAsync($"""
                 SELECT v."PageId" AS "PageId", st."Id" AS "StewardId", st."DisplayName" AS "StewardName", v."IntervalMonths" AS "IntervalMonths",
                     v."VerifiedUntil" AS "VerifiedUntil", v."VerifiedVersion" AS "VerifiedVersion"
@@ -103,7 +103,7 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
     }
 
     /// <summary>The titles of the page's readable published ancestors from the root; a parent the reader may not read ends the path.</summary>
-    private static List<string> Ancestors(SpaceReadershipHandler.SpaceRead page, Dictionary<Guid, SpaceReadershipHandler.SpaceRead> byId)
+    private static List<string> Ancestors(SpaceReadership.SpaceRead page, Dictionary<Guid, SpaceReadership.SpaceRead> byId)
     {
         var path = new List<string>();
         var seen = new HashSet<Guid> { page.PageId };
@@ -114,5 +114,5 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         return path;
     }
 
-    private sealed record Row(SpaceReadershipHandler.SpaceRead Read, string State, Guid? StewardId, string? StewardName, DateTime? Until, int? VerifiedVersion);
+    private sealed record Row(SpaceReadership.SpaceRead Read, string State, Guid? StewardId, string? StewardName, DateTime? Until, int? VerifiedVersion);
 }

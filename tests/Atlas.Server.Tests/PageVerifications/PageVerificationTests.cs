@@ -381,9 +381,9 @@ public sealed class PageVerificationTests
 
     /// <summary>The panel's „Čtenost“ and Stav obsahu count the same calendar days in Prague: a view just before the first day of the
     /// period counts in neither (a rolling 90 days would count it in the panel), one at its first moment in both. The space's readership
-    /// over MCP gives the same counts and never a name; a reader of the space may not ask for it.</summary>
+    /// over MCP gives the same counts, the last view as a day only and never a name; a reader of the space may not ask for it.</summary>
     [PostgreSqlFact]
-    public async Task The_panel_Stav_obsahu_and_the_readership_tool_count_the_same_days()
+    public async Task The_panel_Stav_obsahu_and_the_content_health_tool_count_the_same_days()
     {
         await using var f = await McpSite.CreateAsync();
         var space = await f.FirstSpaceAsync();
@@ -403,13 +403,13 @@ public sealed class PageVerificationTests
         Assert.Equal((1L, 1L), (bundle["readers"]!.GetValue<long>(), Assert.Single(health["items"]!.AsArray())!["readers"]!.GetValue<long>()));
 
         var agent = await f.ClientAsync(await f.AdminTokenAsync("read"));
-        var period = new { spaceId = space, from = today.AddDays(1 - PageVerificationReader.ReaderDays).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd") };
-        var read = await CallAsync(agent, "atlas_list_readership", period);
+        var args = new { spaceId = space, days = PageVerificationReader.ReaderDays };
+        var read = await CallAsync(agent, "atlas_list_content_health", args);
         var item = Assert.Single(Structured(read)["items"]!.AsArray())!;
-        Assert.Equal((page.Id, 1L, 1L), (item["pageId"]!.GetValue<string>(), item["readers"]!.GetValue<long>(), item["views"]!.GetValue<long>()));
+        Assert.Equal((page.Id, 1L, 1L, today.AddDays(1 - PageVerificationReader.ReaderDays).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)),
+            (item["pageId"]!.GetValue<string>(), item["readers"]!.GetValue<long>(), item["views"]!.GetValue<long>(), item["lastViewedAt"]!.GetValue<string>()));
         Assert.DoesNotContain("vzacna", Text(read), StringComparison.Ordinal);
-        Assert.Equal("invalid_argument", ErrorCode(await CallAsync(agent, "atlas_list_readership", new { spaceId = space, from = "včera", to = "dnes" })));
         var asReader = await f.ClientAsync((await IssueAsync(reader, f.Site.Password, ["read"], ["mcp"], "Read")).Secret);
-        Assert.Equal(403, Structured(await CallAsync(asReader, "atlas_list_readership", period))["status"]!.GetValue<int>());
+        Assert.Equal(403, Structured(await CallAsync(asReader, "atlas_list_content_health", args))["status"]!.GetValue<int>());
     }
 }

@@ -18,7 +18,6 @@ public static class PageVerificationsModule
     public static IServiceCollection AddPageVerifications(this IServiceCollection services)
         // The MCP tools run the shared handlers behind G5 (PageVerificationMcpHandler).
         => services.AddScoped<PageVerificationReader>().AddScoped<Commands.PageVerificationHandler>().AddScoped<Queries.PageVerificationQueryHandler>()
-            .AddScoped<Queries.SpaceReadershipHandler>()
             .AddJob<ContentVerificationJob>();
 
     public static void MapPageVerifications(this WebApplication app)
@@ -61,19 +60,12 @@ public static class PageVerificationsModule
             .WithSummary("Change up to 500 pages of the space at once: action verify, steward (stewardId, null clears it) or stewardFromLastAuthor " +
                 "(the author of the last published version, only for pages without an active steward; the others are skipped as has_steward) over pageIds. Without pageIds, stewardFromLastAuthor sets the steward of every verified " +
                 "page of the space that has none. Pages refused (no edit right, never published, …) are listed in skipped with the reason.");
-        var readership = group.MapGet("/spaces/{spaceId:guid}/readership", async (Guid spaceId, DateOnly from, DateOnly to, string? filter, string? cursor,
-                IMessageBus bus, CancellationToken ct)
-                => Results.Ok(await bus.InvokeAsync<SpaceReadership>(new GetSpaceReadership(spaceId, from, to, filter, cursor), ct)))
-            .Produces<SpaceReadership>().ProducesProblem(400).ProducesProblem(403).ProducesProblem(404)
-            .WithSummary("Readership of the space's published pages over a period of up to 366 days for its admins and writers: views, distinct " +
-                "readers, last view and last publication per page, most read first; counts only, never who. filter: all or unread.");
         if (!personalApi)
         {
             return;
         }
         read.WithName("GetPageVerification");
         health.WithName("GetContentHealth");
-        readership.WithName("GetSpaceReadership");
         set.WithName("SetPageVerification").RequireAuthorization(PersonalApiEndpoints.WritePolicy).AuditApiWrite(ApiOperations.PageVerificationSet);
         report.WithName("ReportPageOutdated").RequireAuthorization(PersonalApiEndpoints.WritePolicy).AuditApiWrite(ApiOperations.PageReportOutdated);
         batch.WithName("SetSpaceVerification").RequireAuthorization(PersonalApiEndpoints.WritePolicy).AuditApiWrite(ApiOperations.SpaceVerificationBatch);

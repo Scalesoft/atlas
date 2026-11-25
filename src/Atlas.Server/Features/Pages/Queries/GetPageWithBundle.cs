@@ -60,7 +60,7 @@ public sealed class GetPageWithBundleHandler(PageReader reader, PersonalPageGuar
             {
                 Verification = verification,
                 Readers = verification is null || verification.State == PageVerifications.Domain.PageVerificationStates.Off
-                    ? null : await PageVerifications.Queries.SpaceReadershipHandler.PageReadersAsync(session, page.Id,
+                    ? null : await PageVerifications.Queries.SpaceReadership.PageReadersAsync(session, page.Id,
                         PageVerifications.PageVerificationReader.ReaderDays, clock.GetUtcNow().UtcDateTime, ct)
             }
         };

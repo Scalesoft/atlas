@@ -31,7 +31,6 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
 {
     public const int MaxBulk = 500;
     public const int MaxNote = 500;
-    private static readonly TimeZoneInfo Zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
     public async Task<PageVerificationView> Handle(SetPageVerification command, CancellationToken ct)
     {
@@ -239,7 +238,8 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             return chosen.ToUniversalTime();
         }
         var local = chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen;
-        return TimeZoneInfo.ConvertTimeToUtc(Zone.IsInvalidTime(local) ? local.AddHours(1) : local, Zone);
+        var zone = Queries.SpaceReadership.Prague;
+        return TimeZoneInfo.ConvertTimeToUtc(zone.IsInvalidTime(local) ? local.AddHours(1) : local, zone);
     }
 
     private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)

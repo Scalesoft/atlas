@@ -49,12 +49,6 @@ public sealed record ReportPageOutdatedRequest(string? Note = null);
 /// <param name="Notified">How many people were told (the steward, else up to three editors who last published it).</param>
 public sealed record PageOutdatedReport(int Notified);
 
-/// <summary>One page of the space's readership (plan §5.2): counts only, never who read.</summary>
-public sealed record SpaceReadershipItem(Guid PageId, string Title, long Views, long Readers, DateTime? LastViewedAt, DateTime? LastPublishedAt);
-
-/// <param name="NextCursor">For the next page of the list; null at its end.</param>
-public sealed record SpaceReadership(IReadOnlyList<SpaceReadershipItem> Items, string? NextCursor);
-
 /// <summary>The tiles of Stav obsahu: pages of the space with verification on, by state.</summary>
 /// <param name="WithoutSteward">„Bez garanta“ (none, or a deactivated account), whatever the state.</param>
 public sealed record ContentHealthSummary(int Verified, int Expiring, int Expired, int Unverified, int WithoutSteward);
@@ -62,8 +56,9 @@ public sealed record ContentHealthSummary(int Verified, int Expiring, int Expire
 /// <summary>A row of Stav obsahu.</summary>
 /// <param name="Path">The titles of its ancestors from the root, as far as the reader may read them (a hidden parent ends it).</param>
 /// <param name="Readers">Distinct readers in the period; <paramref name="Views"/> the views.</param>
+/// <param name="LastViewedAt">The day of the last view in the period (Prague), no time: counts only, never who.</param>
 public sealed record ContentHealthItem(Guid PageId, string Title, IReadOnlyList<string> Path, string State, Guid? StewardId, string? StewardName,
-    DateTime? VerifiedUntil, bool ChangedSinceVerification, long Readers, long Views, DateTime? LastViewedAt, DateTime? LastPublishedAt,
+    DateTime? VerifiedUntil, bool ChangedSinceVerification, long Readers, long Views, DateOnly? LastViewedAt, DateTime? LastPublishedAt,
     int PublishedVersion, int? VerifiedVersion)
 {
     /// <summary>Always true: Stav obsahu lists published pages only (only a publication can be verified).</summary>
