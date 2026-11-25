@@ -29,7 +29,11 @@ defineProps<{ selection: BulkSelection; disabled?: boolean }>();
       </div>
     </InlineReveal>
     <label v-if="selection.total" class="bulk-select-all">
-      <Checkbox :model-value="selection.all" :aria-label="t.selectShownCount(selection.total)" :disabled="disabled" data-bulk-all @update:model-value="selection.toggleAll()" />
+      <!-- Some rows ticked: the box is filled with a dash (ui/checkbox draws only the tick). -->
+      <Checkbox :model-value="selection.all" class="data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground data-[state=indeterminate]:border-primary" :aria-label="t.selectShownCount(selection.total)" :disabled="disabled" data-bulk-all @update:model-value="selection.toggleAll()">
+        <svg v-if="selection.all === 'indeterminate'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12" /></svg>
+        <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="size-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path pathLength="30" d="M4 12l5 5L20 6" /></svg>
+      </Checkbox>
       <span>{{ t.selectShown }} <span class="bulk-select-total">({{ formatNumber(selection.total) }})</span></span>
     </label>
   </div>

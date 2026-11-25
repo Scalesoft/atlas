@@ -424,7 +424,8 @@ async function publish() {
 .space-list-controls :deep(.search-field-input) { min-height: 36px; border-radius: 10px; font-size: 14px; }
 .space-list-controls :deep(.filter-menu-trigger) { min-height: 36px; padding: 0 12px; border-radius: 10px; font-size: 14px; }
 .content-bulk { margin-top: 10px; }
-.content-bulk-note { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 12px; }
+/* Under the actions and Zrušit výběr, on a line of its own. */
+.content-bulk-note { order: 1; flex-basis: 100%; margin: 0; color: var(--muted); font-size: 12px; }
 .space-list-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .space-list-note.is-error { color: var(--error); }
 
