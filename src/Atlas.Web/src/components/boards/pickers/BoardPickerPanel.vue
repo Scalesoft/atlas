@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import t from "../../../i18n/boards";
 import { watch } from "vue";
 import { PopoverAnchor, PopoverContent, PopoverPortal, PopoverRoot } from "reka-ui";
 import { useEditorTheme } from "../../../editor/editorSetup";
-import AtlasIcon from "../../AtlasIcon.vue";
 import { rememberFocus } from "../../../lib/focusReturn";
 import "../canvas/boardPopover.css";
 
 /**
  * The frame of the board's pickers (page, YouTrack issues, contacts): the page editor's light popover (its link and `/Kontakt`
  * pickers), dropping from the middle of the canvas's top edge, without a backdrop, so the board the cards land on stays in sight.
- * Esc, the close button and a click outside cancel; the focus goes to the first field and back where it was.
+ * No title and no close button (the owner's rule for the editor's menus and pickers): `title` names the panel for a screen reader;
+ * Esc and a click outside cancel; the focus goes to the first field and back where it was.
  * Why not AppDialog: a modal over the whole page dims the board and asks a question; a picker only adds to what is in front of you.
  */
 const props = defineProps<{ open: boolean; title: string; anchor?: HTMLElement | null }>();
@@ -46,10 +45,6 @@ function focusOpener(event: Event) {
     <PopoverPortal force-mount>
       <PopoverContent class="md-editor atlas-document-editor md-context-popover board-picker nodrag nopan nowheel" :class="theme" side="bottom" align="center" :side-offset="0"
         :collision-padding="12" :aria-label="title" data-positioned data-board-picker @open-auto-focus="focusField" @close-auto-focus="focusOpener">
-        <header class="board-picker-head">
-          <span class="board-picker-title">{{ title }}</span>
-          <button type="button" class="md-picker-close" :aria-label="t.pickerPanel.close" @click="emit('close')"><AtlasIcon name="close" :size="16" /></button>
-        </header>
         <div class="board-picker-body"><slot /></div>
         <footer v-if="$slots.footer" class="board-picker-actions"><slot name="footer" /></footer>
       </PopoverContent>
@@ -61,9 +56,6 @@ function focusOpener(event: Event) {
 <style scoped>
 /* Out of the owner's flow: as `display: contents` its empty anchor was a flex item, and each picker cost the board a 12 px gap. */
 .board-picker-frame { position: absolute; width: 0; height: 0; }
-.board-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 6px 0 12px; }
-.board-picker-title { color: var(--text-dim, var(--muted)); font-size: 12px; font-weight: 600; }
-.board-picker-head .md-picker-close { display: grid; place-items: center; min-height: 0; border-radius: var(--radius-sm, 6px); }
-.board-picker-body { display: grid; gap: 8px; padding: 4px 10px 10px; }
+.board-picker-body { display: grid; gap: 8px; padding: 10px; }
 .board-picker-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; padding: 8px 10px 10px; border-top: 1px solid var(--line); }
 </style>
