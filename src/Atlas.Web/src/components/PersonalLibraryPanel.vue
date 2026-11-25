@@ -17,6 +17,7 @@ import t from "../i18n/components-personal";
 
 // The rows enter one after another with the settings design system's step (--st-stagger).
 import "./settings/settings.css";
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 // `embedded`: inside a page that already has the title and the refresh action (Váš profil → Historie
 // návštěv). It drops the own heading and padding; `#empty` and `#error` let that page use its own states.
@@ -60,7 +61,7 @@ async function load(append = false) {
     if (reason instanceof ApiError && [401, 403, 404].includes(reason.status)) {
       items.value = []; nextOffset.value = null;
     }
-    // The next page failed (nextOffset is unchanged, so Načíst další stránky asks for that same page again).
+    // The next page failed (nextOffset is unchanged, so Načíst další asks for that same page again).
     moreFailed.value = append && items.value.length > 0;
   } finally { if (!disposed && current === generation) { loading.value = false; loaded.value = true; } }
 }
@@ -104,7 +105,7 @@ onBeforeUnmount(() => { disposed = true; generation++; abort?.abort(); });
       <p v-if="items.length" class="help" role="status">{{ t.panel.loaded(items.length) }}</p>
       <!-- A failed next page, as in 2.6.0: the rows stay and the retry below asks for the same page; a page that gives its own #error says it itself. -->
       <p v-if="moreFailed && !$slots.error" class="library-more-error" role="alert"><AtlasIcon name="triangle-alert" :size="15" />{{ error }}</p>
-      <Button variant="outline" v-if="nextOffset !== null" class="library-more" :disabled="loading" :aria-busy="loading" @click="load(true)"><AtlasIcon name="refresh" :size="16" />{{ t.panel.loadMore }}</Button>
+      <LoadMoreButton v-if="nextOffset !== null" class="library-more" :busy="loading" @click="load(true)" />
     </footer>
   </section>
 </template>
@@ -139,7 +140,7 @@ onBeforeUnmount(() => { disposed = true; generation++; abort?.abort(); });
 .library-item > svg { color: var(--muted); flex: 0 0 auto; }
 .library-footer { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-top: 18px; }
 .library-footer.has-failure { flex-wrap: wrap; gap: 8px 18px; }
-/* The quiet failure line of the app (as in the page list of a space): the reason, and the retry (Načíst další stránky) beside it. */
+/* The quiet failure line of the app (as in the page list of a space): the reason, and the retry (Načíst další) beside it. */
 .library-more-error { display: flex; flex: 1 1 240px; align-items: center; gap: 8px; margin: 0; color: var(--error); font-size: 13px; line-height: 1.55; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .library-more-error > svg { flex: none; }
 .personal-library.embedded { width: 100%; max-width: none; padding: 0; }

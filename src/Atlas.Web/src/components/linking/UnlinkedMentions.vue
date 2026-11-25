@@ -12,6 +12,7 @@ import EmptyState from "../settings/EmptyState.vue";
 import ErrorState from "../settings/ErrorState.vue";
 import { Button } from "../ui/button";
 import t from "../../i18n/components-objects";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * Nepropojené zmínky of a space (P15 „viditelné mezery“): the names, page titles and issue keys its pages mention without a link,
@@ -157,7 +158,7 @@ async function reloadPage(row: UnlinkedMention, at = items.value.length) {
         </li>
       </TransitionGroup>
     </section>
-    <Button v-if="cursor && !error" variant="outline" type="button" class="unlinked-more" :disabled="more" :aria-busy="more" data-unlinked-more @click="load(true)">{{ t.unlinked.loadMore }}</Button>
+    <LoadMoreButton v-if="cursor && !error" class="unlinked-more" :busy="more" data-unlinked-more @click="load(true)" />
   </section>
 </template>
 

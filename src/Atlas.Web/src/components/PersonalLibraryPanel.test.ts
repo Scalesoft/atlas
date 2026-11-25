@@ -129,7 +129,7 @@ describe("personal library", () => {
     expect(wrapper.find(".error-state").exists()).toBe(false);
     expect(wrapper.get(".library-footer [role=alert]").text()).toContain("Další stránky se nepodařilo načíst.");
     expect(wrapper.get(".library-footer .help").text()).toBe("Načtené stránky: 2.");
-    expect(wrapper.get(".library-more").text()).toContain("Načíst další stránky");
+    expect(wrapper.get(".library-more").text()).toContain("Načíst další");
     expect(vi.mocked(personalLibraryApi.list).mock.calls[1]![1]).toBe(2);
 
     await wrapper.get(".library-more").trigger("click"); await flushPromises();

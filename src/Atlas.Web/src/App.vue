@@ -347,6 +347,7 @@ import { settingsPlaceHeading, settingsReturnLabel, type SettingsPlace } from ".
 import { managedSpaces } from "./components/settings/context";
 import { disclosureHooks } from "./components/settings/disclosure";
 import { crossFade } from "./motion/crossFade";
+import LoadMoreButton from "./components/LoadMoreButton.vue";
 let documentEditorModule: Promise<typeof import("./components/DocumentEditor.vue")> | undefined;
 // Starts the editor chunk, and through its module scope code highlighting, without rendering anything.
 // Opening a page and pointer or keyboard intent on a page link call it; application start only for an address that names a page.
@@ -5361,7 +5362,7 @@ onUnmounted(() => {
         </span>
         <span v-if="!commandMode" class="search-footer-end">
           <span class="search-summary"><strong class="search-summary-count"><span class="search-summary-label">{{ t.search.shown }} </span>{{ searchResultCount }}{{ hasMore ? '+' : '' }}</strong><LoadingNote inline class="search-opening" :active="searchOpening || loadingMore" :label="loadingMore && !searchOpening ? t.search.loadingMore : t.search.opening" /></span>
-          <Button variant="outline" v-if="hasMore" size="sm" class="search-load-more" :disabled="loadingMore || searching" :aria-busy="loadingMore" aria-controls="search-results" @click="moreSearch">{{ t.search.loadMore }}</Button>
+          <LoadMoreButton v-if="hasMore" class="search-load-more" :busy="loadingMore" :disabled="searching" aria-controls="search-results" @click="moreSearch" />
         </span>
       </footer>
     </AppDialog>

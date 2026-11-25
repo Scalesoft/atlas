@@ -23,6 +23,7 @@ import SummaryList from "../SummaryList.vue";
 import { useSettingsFlash } from "../flash";
 import { useSettingsRoute } from "../useSettingsRoute";
 import { durationText, focusReturned, jobHeads, nextText, pausedBadge, rememberJob, returnFocus, runBadge, runMoment, summaryText, triggerLabel } from "./jobFormat";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * Správa wiki → Provoz → Úlohy na pozadí → one job (Atlas 3.3 plan §5): what starts it, when it runs next, how it is tried again, whether it is
@@ -152,7 +153,7 @@ onMounted(async () => {
             </SettingsListRow>
           </SettingsList>
           <p v-if="!runs.length" class="st-note">{{ t.detail.neverRan }}<template v-if="job.known">{{ " " + t.detail.runNowHint }}</template></p>
-          <div v-if="page && runs.length < page.total" class="job-older"><Button variant="outline" size="sm" type="button" :disabled="more" :aria-busy="more" data-job-older @click="older">{{ t.detail.older }}</Button></div>
+          <div v-if="page && runs.length < page.total" class="job-older"><LoadMoreButton older :busy="more" data-job-older @click="older" /></div>
         </SettingsSection>
       </div>
     </LoadingRegion>
