@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 import { ApiError, errorMessage } from "../../api";
 import { useToast } from "../../composables/useToast";
+import { rowKeys } from "../../keyboard/navigation";
 import { unlinkedApi, type UnlinkedApi, type UnlinkedChoice, type UnlinkedMention } from "../../linking/unlinkedApi";
 import ActionMenu, { type ActionMenuItem } from "../ActionMenu.vue";
 import AtlasIcon from "../AtlasIcon.vue";
@@ -119,21 +120,10 @@ async function reloadPage(row: UnlinkedMention, at = items.value.length) {
     counted();
   } catch (failure) { toaster.error(errorMessage(failure)); }
 }
-
-/** Arrows move between the rows' first buttons; the buttons keep Enter and Space. */
-function onKeydown(event: KeyboardEvent) {
-  if ((event.key !== "ArrowDown" && event.key !== "ArrowUp") || event.altKey || event.ctrlKey || event.metaKey || (event.target as Element).closest("[role=menu]")) return;
-  const list = primaries(), row = (event.target as Element).closest("[data-unlinked-row]");
-  const at = list.findIndex(button => row?.contains(button));
-  const next = list[at + (event.key === "ArrowDown" ? 1 : -1)];
-  if (at < 0 || !next) return;
-  event.preventDefault();
-  next.focus();
-}
 </script>
 
 <template>
-  <section ref="root" class="unlinked" aria-labelledby="unlinked-title" :aria-busy="loading" tabindex="-1" @keydown="onKeydown">
+  <section ref="root" class="unlinked" aria-labelledby="unlinked-title" :aria-busy="loading" tabindex="-1" @keydown="rowKeys($event, '[data-unlinked-row]:not(.unlinked-row-leave-active)')">
     <header class="unlinked-header">
       <h3 id="unlinked-title">{{ t.unlinked.title }}</h3>
       <p>{{ t.unlinked.intro }}</p>

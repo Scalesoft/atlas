@@ -85,6 +85,7 @@ const cs = {
     toTrash: "Přesunout do koše",
     selected: (n: number) => plural(n, { one: "Vybrána # stránka", few: "Vybrány # stránky", other: "Vybráno # stránek" }),
     selectRow: (title: string) => `Vybrat ${title}`,
+    rowActions: (title: string) => `Akce stránky ${title}`,
     selectAll: "Vybrat všechny zobrazené",
     clear: "Zrušit výběr",
     fromAuthor: "Garant podle posledního autora",

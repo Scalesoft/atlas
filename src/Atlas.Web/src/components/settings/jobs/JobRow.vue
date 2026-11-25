@@ -4,7 +4,6 @@ import { formatAgo, formatDateTime } from "../../../formatDate";
 import type { Job, JobFailure } from "../../../jobs/jobApi";
 import t from "../../../i18n/settings-jobs";
 import AtlasIcon from "../../AtlasIcon.vue";
-import RowActionsMenu from "../../RowActionsMenu.vue";
 import { Button } from "../../ui/button";
 import SettingsListRow from "../SettingsListRow.vue";
 import StatusBadge from "../StatusBadge.vue";
@@ -31,7 +30,7 @@ const chosen = (id: string) => (id === "toggle" ? emit("paused", !props.job.paus
 </script>
 
 <template>
-  <SettingsListRow :title="job.title" :icon="moduleIcon(job.module)" :data-job-row="job.id" :data-first="first || undefined" :data-failed="failed ? '' : undefined"
+  <SettingsListRow :title="job.title" :icon="moduleIcon(job.module)" :menu="menu" :menu-label="t.row.actions(job.title)" more @select="chosen" :data-job-row="job.id" :data-first="first || undefined" :data-failed="failed ? '' : undefined"
     :data-running="job.lastRun?.state === 'running' ? '' : undefined">
     <template #title><a class="st-link" :href="router.href(detailPath)" :title="job.description">{{ job.title }}</a></template>
     <template #description>
@@ -54,7 +53,6 @@ const chosen = (id: string) => (id === "toggle" ? emit("paused", !props.job.paus
     <template #actions>
       <Button v-if="job.known" variant="outline" size="sm" type="button" :disabled="busy" :aria-busy="busy" :aria-label="t.row.runNowLabel(job.title)" data-job-run-now @click="emit('run')"><AtlasIcon name="refresh" :size="15" />{{ t.runNow }}</Button>
     </template>
-    <RowActionsMenu :items="menu" :label="t.row.actions(job.title)" @select="chosen" />
   </SettingsListRow>
 </template>
 

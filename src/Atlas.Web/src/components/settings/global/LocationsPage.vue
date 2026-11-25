@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import AtlasIcon from "../../AtlasIcon.vue";
-import ActionDisclosure from "../../ActionDisclosure.vue";
-import ActionDisclosureItem from "../../ActionDisclosureItem.vue";
 import { Button } from "../../ui/button";
 import { errorMessage } from "../../../api";
 import { vaultApi, vaultLocationKinds, type VaultLocation, type VaultLocationDraft } from "../../../vaults";
@@ -91,6 +89,10 @@ async function remove() {
             :icon="vaultLocationKinds[location.kind].icon"
             :highlighted="flash.highlight.value === location.id"
             :data-location="location.id"
+            :menu="[{ id: 'remove', label: t.locations.remove, icon: 'trash', shortcut: 'Delete', destructive: true }]"
+            :menu-label="t.locations.moreActions(location.name)"
+            more
+            @select="removing = location; removeError = ''"
           >
             <template #description><code class="st-mono location-root">{{ location.root }}</code></template>
             <template #meta>
@@ -100,9 +102,6 @@ async function remove() {
             </template>
             <template #actions>
               <Button variant="ghost" size="sm" as-child><a :href="router.href(`general/files/${location.id}`)" :data-edit-location="location.id"><AtlasIcon name="pencil" :size="15" />{{ t.locations.edit }}</a></Button>
-              <ActionDisclosure :label="t.locations.moreActions(location.name)">
-                <ActionDisclosureItem :data-remove-location="location.id" @click="removing = location; removeError = ''"><AtlasIcon name="trash" :size="15" />{{ t.locations.remove }}</ActionDisclosureItem>
-              </ActionDisclosure>
             </template>
           </SettingsListRow>
         </SettingsList>
