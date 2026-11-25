@@ -28,7 +28,7 @@ public sealed class NotificationRequestedHandler(ISession session, AccessChanges
                   "SubjectId"=EXCLUDED."SubjectId","Anchor"=CASE WHEN EXCLUDED."Kind"=:noted THEN coalesce(EXCLUDED."Anchor",n."Anchor") ELSE EXCLUDED."Anchor" END,"ActorId"=EXCLUDED."ActorId",
                   "LastMessageId"=EXCLUDED."LastMessageId","UpdatedAt"=now(),"ReadAt"=NULL
                 WHERE n."LastMessageId" IS DISTINCT FROM :message
-                  AND NOT (n."Kind"=EXCLUDED."Kind" AND n."ActorId" IS NOT DISTINCT FROM EXCLUDED."ActorId" AND n."UpdatedAt">now()-:quiet*interval '1 second')
+                  AND NOT (:quiet>0 AND n."Kind"=EXCLUDED."Kind" AND n."ActorId" IS NOT DISTINCT FROM EXCLUDED."ActorId" AND n."UpdatedAt">now()-:quiet*interval '1 second')
                 RETURNING n."RecipientId"
                 """)
             .SetParameter("kind", message.Kind).SetParameter("topic", NotificationKinds.Topic(message.Kind)).SetParameter("subject", message.SubjectId).SetParameter("anchor", message.Anchor, NHibernateUtil.String)
