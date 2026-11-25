@@ -3051,6 +3051,8 @@ const discussionButton = ref<InstanceType<typeof PageDiscussionButton>>();
 const phoneDiscussion = ref<ComponentPublicInstance>();
 const phoneDiscussionShown = useElementVisibility(phoneDiscussion);
 const discussionThreadOpen = computed(() => discussionOpen.value || (phoneLayout.value && phoneDiscussionShown.value));
+/** The dock: Alt C over an open dock remembers the text it came from, as opening the dock does, so Escape returns there. */
+const workspaceSidePanel = ref<InstanceType<typeof WorkspaceSidePanel>>();
 /** The comment fields' editor services (`[[`, `@`) of the open page, one host for the button, the section and the dock. */
 const pageCommentHost = computed(() => (page.value && commentHost.value ? commentHost.value(page.value.id, page.value.spaceId) : undefined));
 function pageDockRemembered() {
@@ -3082,6 +3084,7 @@ async function openDiscussion() {
   // The thread's editor services (people, pages) come first, so the first Alt C already has `@`.
   await pageChrome.comments().catch(() => undefined);
   if (picked) requestedQuote.value = picked;
+  workspaceSidePanel.value?.rememberOpener();
   showPageDock("comments");
   rememberPageDock(true);
   if (!picked) { await nextTick(); const side = document.querySelector("[data-page-side=comments]"); if (side) void focusWhenPresent(side, '.comment-composer [contenteditable="true"]', 90); }
@@ -5135,7 +5138,7 @@ onUnmounted(() => {
         </section>
         </div>
         <!-- One panel: the assistant anywhere, and on a page the dock whose tabs switch between the page tools and the assistant. -->
-        <WorkspaceSidePanel v-if="workspacePanel.content.value" v-model:open="workspacePanel.open.value" :label="workspacePanel.label.value"
+        <WorkspaceSidePanel v-if="workspacePanel.content.value" ref="workspaceSidePanel" v-model:open="workspacePanel.open.value" :label="workspacePanel.label.value"
           :storage-key="pageDockTabs ? `atlas:reading:${user.id}:dock-width` : `atlas:reading:${user.id}:panel-width`"
           :tabs="pageDockTabs ?? workspacePanel.tabs.value" :active-tab="pageDockTabs ? pageDockActive : workspacePanel.activeTab.value"
           :min-width="pageDockTabs ? (pageDockTabs.length > 4 ? 392 : pageDockTabs.length > 3 ? 340 : 300) : 360" :default-width="pageDockTabs ? (pageDockTabs.length > 4 ? 392 : 340) : 400"
