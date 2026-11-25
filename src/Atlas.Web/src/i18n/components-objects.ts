@@ -67,6 +67,18 @@ const cs = {
     noneTitle: "Bez vazeb",
     noneText: "Nic na tento objekt neodkazuje, není na žádné tabuli a nic nezmiňuje.",
   },
+  addToTree: {
+    menu: "Přidat do stromu…",
+    title: "Přidat do stromu",
+    space: "Prostor",
+    under: "Pod stránku",
+    confirm: "Přidat",
+    cancel: "Zrušit",
+    added: "Odkaz byl přidán do stromu.",
+    refused: "Tento objekt do stromu přidat nejde: neexistuje, nebo k němu nemáte přístup.",
+    noSpace: "Nemáte prostor, do kterého můžete psát.",
+    rowActions: (title: string) => `Akce: ${title}`,
+  },
   usage: {
     wholeWiki: "Celá wiki",
     untitled: "Bez názvu",
