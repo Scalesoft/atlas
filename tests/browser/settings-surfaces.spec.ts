@@ -80,9 +80,8 @@ test('settings rows keep labels, switches and actions visible from phone to desk
 test('narrow profile navigation keeps every destination visible', async ({ page }) => {
   await page.getByRole('button', { name: /Profil a vzhled/ }).click();
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: /Sekce/ }).click();
-  const sheet = page.getByRole('dialog', { name: 'Sekce' });
-  const navigation = sheet.getByRole('navigation', { name: 'Nastavení profilu', exact: true });
+  await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
+  const navigation = page.locator('#atlas-settings-rail').getByRole('navigation', { name: 'Nastavení profilu', exact: true });
   const fit = await navigation.evaluate(element => {
     const bounds = element.getBoundingClientRect();
     const links = [...element.querySelectorAll('a')];

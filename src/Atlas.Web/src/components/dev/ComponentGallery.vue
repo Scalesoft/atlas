@@ -75,6 +75,8 @@ import StatTile from "../settings/StatTile.vue";
 import ActivityHeatmap from "../ActivityHeatmap.vue";
 import { shiftDay } from "../../activity";
 import OptionPills from "../settings/OptionPills.vue";
+import BulkSelectBar from "../settings/BulkSelectBar.vue";
+import { useBulkSelection } from "../settings/bulkSelection";
 import SearchableTags from "../settings/SearchableTags.vue";
 import SearchField from "../settings/SearchField.vue";
 import AppearancePickerExample from "./AppearancePickerExample.vue";
@@ -166,6 +168,9 @@ const rowName = ref("");
 const checked = ref(true);
 const enabled = ref(true);
 const period = ref("week");
+const viewMode = ref("list");
+const bulkRows = ["Přístupová příručka", "Postup při výpadku", "Noví kolegové"];
+const bulk = useBulkSelection(() => bulkRows);
 const pdfCover = ref<PdfCoverDetail[]>(["revision", "state", "revisionDate"]);
 const pdfDownloadOpen = ref(false);
 const sliderSteps = ["Rychle", "Důkladně", "Do hloubky"];
@@ -472,6 +477,16 @@ const steps: FlowStep[] = [
           <label class="gallery-choice"><Checkbox v-model="checked" /> Zahrnout podprostory</label>
           <label class="gallery-choice"><Switch v-model="enabled" /> Povolit oznámení</label>
           <OptionPills v-model="period" label="Období" :options="[{ value: 'week', label: 'Týden' }, { value: 'month', label: 'Měsíc' }, { value: 'year', label: 'Rok', disabled: true }]" />
+        </SettingsSection>
+        <SettingsSection title="OptionPills segmented" description="settings/OptionPills.vue s segmented — tichý vzhled přepínače pohledu (Karty | Seznam, Náhled | Markdown): jeden zvednutý čip klouže na zvolenou volbu. Chování je stejné jako u pilulek. Použijte ho pro přepínání pohledů na stejný obsah; obyčejné pilulky jsou pro nezávislé filtry, SettingsTabs pro části detailu.">
+          <OptionPills v-model="viewMode" segmented label="Pohled" hide-label :options="[{ value: 'list', label: 'Seznam' }, { value: 'cards', label: 'Karty' }]" />
+        </SettingsSection>
+        <SettingsSection title="BulkSelectBar" description="settings/BulkSelectBar.vue + useBulkSelection — jediný hromadný výběr seznamu (Obsah, Schvalování konceptů, Stav obsahu): Notionův model, výběr začíná zaškrtnutím řádku a lišta s počtem a akcemi se rozbalí při prvním zaškrtnutí. Ne pro volbu položek ve formuláři nebo dialogu.">
+          <BulkSelectBar :selection="bulk"><Button size="sm" type="button">Publikovat vybrané</Button></BulkSelectBar>
+          <label v-for="row in bulkRows" :key="row" class="gallery-choice"><Checkbox :model-value="bulk.has(row)" @update:model-value="bulk.toggle(row)" /> {{ row }}</label>
+        </SettingsSection>
+        <SettingsSection title="FormField error" description="FormField.vue s error — sdílená chyba pole mimo nastavení: v nastavení SettingsRow, jinde FormField. Zpráva stojí pod polem (role=alert) a pole ji čte přes aria-describedby.">
+          <FormField label="Název" error="Název je povinný"><template #default="{ describedBy }"><Input model-value="" :aria-describedby="describedBy" aria-invalid="true" /></template></FormField>
         </SettingsSection>
         <SettingsSection title="PdfCoverDetailsField" description="PdfCoverDetailsField.vue — co titulní strana PDF uvede o revizi; ruční export (Export do PDF) i automatický export (Titulní strana) jedním polem. Předvolby (OptionPills: Všechny údaje, Formální, Bez údajů), jednotlivé údaje zaškrtávátky a vedle živý náhled titulní strany s ukázkovými údaji: zaškrtnutý údaj se do papíru rozvine, odškrtnutý složí, řádek pod ukazatelem či fokusem se na papíře zvýrazní. Samostatná komponenta, protože ji sdílí dva dialogy a náhled patří jen k ní; obecný výběr více voleb → ChoiceCards multiple.">
           <PdfCoverDetailsField v-model="pdfCover" title="Příručka Acme Care" space="Zdravotnictví" />

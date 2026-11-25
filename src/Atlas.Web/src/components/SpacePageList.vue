@@ -258,7 +258,7 @@ function graphSelect(id: string) {
 function graphOpen(id: string, typeId: string) {
   if (typeId === 'atlas.page' || typeId === 'atlas.board') emit('open', id, typeId === 'atlas.board' ? 'board' : 'page');
 }
-function graphBack() { root.value?.querySelector<HTMLElement>('[data-content-view="graph"]')?.focus(); }
+function graphBack() { root.value?.querySelector<HTMLElement>('.content-view-switch [data-value="graph"]')?.focus(); }
 const table = ref<HTMLElement>();
 /* One Tab stop for the whole list (SH2-14): ↑ ↓ Home End walk the rows and Space ticks a draft (rowKeys), the stop follows the focus. */
 const TITLES = '.space-page-title';

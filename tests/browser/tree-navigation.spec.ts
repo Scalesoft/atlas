@@ -49,8 +49,8 @@ test("native tree drag moves a saved page, retains its editor, and keeps typed c
   await expect(page.getByRole("button",{name:`Rozbalit ${parent.title}`,exact:true})).toBeVisible();
   await page.getByRole("button",{name:/^Hledat ve wiki/}).click();
   await page.getByRole("dialog",{name:"Hledat ve wiki",exact:true}).getByRole("combobox",{name:/^Hledat ve wiki – /}).fill(child.title);
-  await page.getByRole('button', { name: /^Filtry/ }).click();
-  await page.getByRole("radio", { name: "Dostupné koncepty", exact: true }).click();
+  await page.getByRole("dialog",{name:"Hledat ve wiki",exact:true}).getByRole("button",{name:/^Obsah: /}).click();
+  await page.getByRole("menuitemradio",{name:"Dostupné koncepty",exact:true}).click();
   const foundChild = page.getByRole("listbox",{name:"Výsledky hledání"}).getByRole("option",{name:new RegExp(child.title)});
   await expect(foundChild).toBeVisible();
   await foundChild.click();

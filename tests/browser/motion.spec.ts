@@ -94,8 +94,7 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     await expectSaved(page);
     await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
     await page.getByRole('button', { name: 'Správa wiki', exact: true }).click();
-    // On a phone the sections are in the "Sekce" sheet; on a wide screen in the rail.
-    if (!(await page.getByRole('navigation', { name: 'Správa wiki', exact: true }).isVisible())) await page.getByRole('button', { name: /Sekce/ }).click();
+    // The sections are in the left panel (a drawer on a phone); the drawer was opened above.
     await page.getByRole('navigation', { name: 'Správa wiki', exact: true }).getByRole('link', { name: /^Skupiny(\s|$)/ }).click();
     // A settings page enters with the settings rise; under reduced motion its distance is zero (a fade).
     const groups = page.getByRole('region', { name: 'Skupiny', exact: true });

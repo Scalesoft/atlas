@@ -106,21 +106,20 @@ test('an administrator goes from O prostoru into the settings, moves to another 
   await expect(page.getByRole('heading', { level: 1, name: 'Vývoj' })).toBeVisible();
 });
 
-test('on a phone the sections are in the sheet and the switcher in the drawer moves to the other space', async ({ page }) => {
+test('on a phone the sections and the switcher are in the drawer; the switcher moves to the other space', async ({ page }) => {
   await mockWiki(page, 'Admin');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#/spaces/provoz/settings/templates');
   await expect(page.locator('.settings-shell')).toBeVisible();
-  // "Sekce" is sections only: the space is moved from the drawer, so the sheet holds no switcher.
-  await page.getByRole('button', { name: /^Sekce/ }).click();
-  const sheet = page.getByRole('dialog', { name: 'Sekce', exact: true });
-  await expect(sheet).toBeVisible();
+  // The sections are in the left panel (a drawer on a phone) beside the space switcher.
+  await page.getByRole('button', { name: 'Zobrazit boční navigaci' }).click();
+  const rail = page.locator('#atlas-settings-rail');
+  await expect(rail).toBeVisible();
   for (const section of ['Obecné', 'Přístupy', 'Sdílení odkazem', 'Šablony stránek', 'Trezory']) {
-    await expect(sheet.getByRole('link', { name: new RegExp(`^${section}`) })).toBeVisible();
+    await expect(rail.getByRole('link', { name: new RegExp(`^${section}`) })).toBeVisible();
   }
-  await expect(sheet.locator('[data-space-switcher]')).toHaveCount(0);
-  await sheet.getByRole('button', { name: 'Zavřít sekce' }).press('Escape');
-  await expect(sheet).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(rail).toBeHidden();
   expect(await noHorizontalScroll(page)).toBe(true);
   await page.getByRole('button', { name: 'Zobrazit boční navigaci' }).click();
   const switcher = page.locator('#wiki-navigation [data-space-switcher]');

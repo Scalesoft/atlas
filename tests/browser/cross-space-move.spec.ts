@@ -73,10 +73,9 @@ test('an ordinary writer moves a saved page and continues editing with a new gen
     expect((await readerContext.request.get(`/api/pages/${id}`)).status()).toBe(200);
     await writer.getByRole('button', { name: 'Další akce stránky', exact: true }).click();
     await writer.getByRole('menuitem', { name: 'Přesunout…', exact: true }).click();
-    // The organization dialog groups rename/location into tabs; the cross-space move is a disclosure under "Umístění".
+    // The organization dialog is the location only (no rename, no tabs); the cross-space move is a disclosure in it.
     const organization = writer.getByRole('dialog', { name: 'Uspořádat stránku', exact: true });
     await expect(organization).toContainText(initial.title);
-    await organization.getByRole('radiogroup', { name: 'Nastavení stránky', exact: true }).getByRole('radio', { name: 'Umístění', exact: true }).click();
     await organization.getByText('Přesun do jiného prostoru', { exact: true }).click();
     await organization.locator(`#organization-target-space [data-value="${target.id}"]`).click();
     await organization.getByRole('checkbox', { name: 'Potvrzuji změnu přístupových práv podle cílového prostoru', exact: true }).check();
