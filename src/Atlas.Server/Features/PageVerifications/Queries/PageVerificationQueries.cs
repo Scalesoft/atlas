@@ -1,3 +1,4 @@
+using Atlas.Server.Features.Mcp.Commands;
 using Atlas.Server.Features.PageVerifications.Domain;
 using ISession = NHibernate.ISession;
 
@@ -5,9 +6,6 @@ namespace Atlas.Server.Features.PageVerifications.Queries;
 
 /// <summary>The page's verification for whoever may read the page (<c>GET /api/pages/{id}/verification</c>).</summary>
 public sealed record GetPageVerification(Guid PageId);
-
-/// <summary>atlas_list_content_health: G5 on the space, then the shared read.</summary>
-public sealed record GetMcpContentHealth(GetContentHealth Query);
 
 /// <summary>
 /// Stav obsahu (plan §6): the space's published pages with their verification and readership, for its admins and writers.
@@ -21,7 +19,7 @@ public sealed record GetContentHealth(Guid SpaceId, string? State = null, bool M
     string? Query = null, string? Cursor = null, int Limit = 50);
 
 public sealed class PageVerificationQueryHandler(ISession session, PageGate gate, PageVerificationReader reader, IContentAccess access,
-    TimeProvider clock)
+    TimeProvider clock, IRequestChannel channel, McpOrganizationGuard mcp)
 {
     public async Task<PageVerificationView> Handle(GetPageVerification query, CancellationToken ct)
     {
@@ -54,6 +52,11 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
             _ => throw new ApiException(400, "Neznámý filtr stavu obsahu.")
         };
         var offset = SpaceReadership.SpaceCursor(query.Cursor);
+        // G5 on MCP and the assistant: a space out of AI is a missing space.
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockSpaceForReadAsync(query.SpaceId, ct);
+        }
         var actor = await SpaceReadership.RequireSpaceEditorAsync(access, query.SpaceId, ct);
         var space = (await session.GetAsync<Space>(query.SpaceId, ct))!;
         var now = clock.GetUtcNow().UtcDateTime;

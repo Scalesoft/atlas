@@ -1,3 +1,4 @@
+using Atlas.Server.Features.Mcp.Commands;
 using Atlas.Server.Features.Notifications;
 using Atlas.Server.Features.PageOrganization.Domain;
 using Atlas.Server.Features.PageVerifications.Domain;
@@ -17,23 +18,20 @@ public sealed record SetSpaceVerification(Guid SpaceId, SetSpaceVerificationRequ
 /// <summary>„Nahlásit neaktuální“: any reader of the page tells its steward; nothing on the page changes.</summary>
 public sealed record ReportPageOutdated(Guid PageId, ReportPageOutdatedRequest Request);
 
-/// <summary>atlas_set_verification: G5 first (the page's space, or the space of a bulk change), then the shared write.</summary>
-public sealed record SetMcpVerification(Guid PageId, SetPageVerificationRequest Request);
-
-/// <summary>atlas_set_verification with spaceId: G5 on the space, then the shared bulk write.</summary>
-public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
-
-/// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
-public sealed record ReportMcpOutdated(ReportPageOutdated Command);
-
+/// <summary>The three writes of verification for the web, /api/v1, MCP and the assistant; on MCP and the assistant G5 first, under the space
+/// lock (a space out of AI is a missing page or space).</summary>
 public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, IContentAccess access, PageGate gate,
-    PageVerificationReader reader, IRequestChannel channel, Outbox outbox, TimeProvider clock)
+    PageVerificationReader reader, IRequestChannel channel, Outbox outbox, TimeProvider clock, McpOrganizationGuard mcp)
 {
     public const int MaxBulk = 500;
     public const int MaxNote = 500;
 
     public async Task<PageVerificationView> Handle(SetPageVerification command, CancellationToken ct)
     {
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockPageSpaceAsync(command.PageId, ct);
+        }
         // A readable page without EditContent answers 403, anything else 404.
         var (page, actor) = await locks.LockPageAsync(command.PageId, false, AccessOperation.EditContent, ct);
         await ApplyAsync(page, actor, command.Request, ct);
@@ -43,6 +41,10 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
 
     public async Task<SpaceVerificationResult> Handle(SetSpaceVerification command, CancellationToken ct)
     {
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockSpaceForWriteAsync(command.SpaceId, ct);
+        }
         var request = command.Request;
         var space = await session.GetAsync<Space>(command.SpaceId, ct);
         if (space is null || space.IsTrashed)
@@ -120,6 +122,10 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
 
     public async Task<PageOutdatedReport> Handle(ReportPageOutdated command, CancellationToken ct)
     {
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockPageSpaceSharedAsync(command.PageId, ct);
+        }
         var opened = (await gate.ReadAsync(command.PageId, AccessOperation.ReadContent, ct)).Require();
         var note = Rules.OptionalText(command.Request.Note, "Poznámka", MaxNote, null);
         var steward = (await session.GetAsync<PageVerification>(opened.Page.Id, ct))?.StewardId;

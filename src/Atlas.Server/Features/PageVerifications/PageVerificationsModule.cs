@@ -16,9 +16,7 @@ public sealed class PageVerificationMigration() : EmbeddedSchemaMigration("20261
 public static class PageVerificationsModule
 {
     public static IServiceCollection AddPageVerifications(this IServiceCollection services)
-        // The MCP tools run the shared handlers behind G5 (PageVerificationMcpHandler).
-        => services.AddScoped<PageVerificationReader>().AddScoped<Commands.PageVerificationHandler>().AddScoped<Queries.PageVerificationQueryHandler>()
-            .AddJob<ContentVerificationJob>();
+        => services.AddScoped<PageVerificationReader>().AddJob<ContentVerificationJob>();
 
     public static void MapPageVerifications(this WebApplication app)
     {

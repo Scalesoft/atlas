@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json.Nodes;
 using Atlas.Server.Features.Mcp;
-using Atlas.Server.Features.Mcp.Commands;
 using Atlas.Server.Features.PageVerifications.Commands;
 using Atlas.Server.Features.PageVerifications.Queries;
 using Atlas.Server.Features.PersonalApi;
@@ -13,35 +12,8 @@ using Wolverine;
 
 namespace Atlas.Server.Features.PageVerifications;
 
-public sealed class PageVerificationMcpHandler(McpOrganizationGuard guard, PageVerificationHandler handler, PageVerificationQueryHandler queries)
-{
-    public async Task<PageVerificationView> Handle(SetMcpVerification command, CancellationToken ct)
-    {
-        await guard.LockPageSpaceAsync(command.PageId, ct);
-        return await handler.Handle(new SetPageVerification(command.PageId, command.Request), ct);
-    }
-
-    public async Task<SpaceVerificationResult> Handle(SetMcpSpaceVerification command, CancellationToken ct)
-    {
-        await guard.LockSpaceForWriteAsync(command.SpaceId, ct);
-        return await handler.Handle(new SetSpaceVerification(command.SpaceId, command.Request), ct);
-    }
-
-    public async Task<ContentHealthList> Handle(GetMcpContentHealth query, CancellationToken ct)
-    {
-        await guard.LockSpaceForReadAsync(query.Query.SpaceId, ct);
-        return await queries.Handle(query.Query, ct);
-    }
-
-    public async Task<PageOutdatedReport> Handle(ReportMcpOutdated command, CancellationToken ct)
-    {
-        await guard.LockPageSpaceSharedAsync(command.Command.PageId, ct);
-        return await handler.Handle(command.Command, ct);
-    }
-}
-
 /// <summary>5.2 over MCP (plan §7): what a person does with verification, AI does under the token's owner with the same rights; a
-/// verification over MCP is marked „přes AI“. Not a Wolverine handler.</summary>
+/// verification over MCP is marked „přes AI“; the shared handlers apply G5. Not a Wolverine handler.</summary>
 [McpServerToolType]
 public sealed class PageVerificationMcpTools(IMessageBus bus)
 {
@@ -111,7 +83,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
             {
                 return McpErrors.InvalidArgument("Hromadně zadejte právě jedno: verify, stewardId, clearSteward, nebo stewardFromLastAuthor.");
             }
-            var bulk = await bus.InvokeAsync<SpaceVerificationResult>(new SetMcpSpaceVerification(spaceToChange,
+            var bulk = await bus.InvokeAsync<SpaceVerificationResult>(new SetSpaceVerification(spaceToChange,
                 new SetSpaceVerificationRequest(action, ids, request.StewardId)), ct);
             return McpText.Result($"Hromadná změna ověření: změněno {bulk.Changed} stránek, přeskočeno {bulk.Skipped.Count}" +
                 (bulk.Skipped.Count > 0 ? " (" + string.Join(", ", bulk.Skipped.Take(20).Select(x => $"{x.PageId}: {x.Reason}")) + ")." : ".") +
@@ -123,7 +95,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
                     ["skipped"] = new JsonArray(bulk.Skipped.Select(x => (JsonNode)new JsonObject { ["pageId"] = x.PageId, ["reason"] = x.Reason }).ToArray())
                 });
         }
-        var view = await bus.InvokeAsync<PageVerificationView>(new SetMcpVerification(page!.Value, request), ct);
+        var view = await bus.InvokeAsync<PageVerificationView>(new SetPageVerification(page!.Value, request), ct);
         var structured = PageVerificationText.Json(view);
         structured["pageId"] = page;
         structured["intervalMonths"] = view.IntervalMonths;
@@ -154,7 +126,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
         {
             return McpErrors.InvalidArgument("limit musí být 1 až 50.");
         }
-        var list = await bus.InvokeAsync<ContentHealthList>(new GetMcpContentHealth(new GetContentHealth(space, state, mine, sort, days, query, cursor, limit)), ct);
+        var list = await bus.InvokeAsync<ContentHealthList>(new GetContentHealth(space, state, mine, sort, days, query, cursor, limit), ct);
         var text = new StringBuilder();
         var s = list.Summary;
         text.Append("Stav obsahu: ověřeno ").Append(s.Verified).Append(", brzy vyprší ").Append(s.Expiring).Append(", vypršelo ")
@@ -201,7 +173,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
         CancellationToken ct = default)
     {
         var id = McpArguments.RequiredId(pageId, "pageId");
-        var report = await bus.InvokeAsync<PageOutdatedReport>(new ReportMcpOutdated(new ReportPageOutdated(id, new ReportPageOutdatedRequest(note))), ct);
+        var report = await bus.InvokeAsync<PageOutdatedReport>(new ReportPageOutdated(id, new ReportPageOutdatedRequest(note)), ct);
         return McpText.Result($"Nahlášeno: oznámení dostalo {report.Notified} lidí.", new JsonObject { ["pageId"] = id, ["notified"] = report.Notified });
     }
 }
