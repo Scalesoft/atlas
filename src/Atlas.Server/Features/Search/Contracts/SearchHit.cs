@@ -12,10 +12,10 @@ public sealed record SearchHit(Guid Id, Guid SpaceId, string SpaceName, string T
     public string? HeadingId { get; init; }
     public string? MatchedAlias { get; init; }
 
-    /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the result's icon; absent while off.
-    /// The order of the results does not depend on it (O5).</summary>
+    /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the result's icon, the same string as
+    /// the tree's and the page references'; absent while off. The order of the results does not depend on it (O5).</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public SearchHitVerification? Verification { get; init; }
+    public string? Verification { get; init; }
 
     /// <summary>S1 "Významová shoda": found by meaning only, the page does not match the query's words. Its snippet, heading
     /// and anchor are the passage's. Written only when true, so a search without AI serializes as before (AI-24).</summary>
@@ -36,6 +36,3 @@ public sealed record SearchHit(Guid Id, Guid SpaceId, string SpaceName, string T
 /// <summary>A passage of the knowledge index: plain text of at most 320 characters cut at a word
 /// (<c>SearchText.Passage</c>) and the anchor of its section (null for the start of the page).</summary>
 public sealed record SearchPassage(string Text, string? HeadingTitle, string? HeadingId);
-
-/// <summary>5.2: the verification of a search hit's page, its state only (the icon of the result).</summary>
-public sealed record SearchHitVerification(string State);

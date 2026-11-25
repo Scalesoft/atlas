@@ -1,6 +1,7 @@
 /**
- * The quiet mark of a search result or a link chip (plan 5.2 §3.3): a shield for a verified page, a warning one for an expired one, nothing
- * otherwise (the order of results does not change, O5). Apart from pageVerification.ts, which carries the texts of the whole feature, so
+ * The one mapping of a verification state to its mark (plan 5.2 §3.3): a shield for a verified page, a warning one for an expired one, nothing
+ * otherwise (unverified is neutral; the order of results does not change, O5). Search results and link chips show it as is; the chip and
+ * Stav obsahu derive their icon and tone from it (pageVerification.ts). Apart from pageVerification.ts, which carries the texts of the whole feature, so
  * the shell and the editor's page links import it without them (bundle budget); the wording is the shell's.
  */
 export function verificationMark(state: string | null | undefined) {

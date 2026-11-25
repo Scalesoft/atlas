@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import PageVerification from "./PageVerification.vue";
 import { verificationMark } from "../verification/verificationMark";
-import { verificationLabel, type PageVerification as Verification, type VerificationState } from "../verification/pageVerification";
+import { verificationIcon, verificationLabel, verificationTone, type PageVerification as Verification, type VerificationState } from "../verification/pageVerification";
 
 const day = 86_400_000;
 const at = (days: number) => new Date(Date.now() + days * day).toISOString();
@@ -48,6 +48,9 @@ describe("PageVerification chip", () => {
     expect(verificationMark("verified")).toMatchObject({ icon: "shield-check", warn: false });
     expect(verificationMark("expired")).toMatchObject({ icon: "shield-alert", warn: true });
     expect(verificationMark("unverified")).toBeNull();
+    // The chip derives from the same mapping: unverified is a plain neutral shield, never a check.
+    expect([verificationIcon("unverified"), verificationTone("unverified")]).toEqual(["shield", "neutral"]);
+    expect([verificationIcon("expiring"), verificationTone("expired")]).toEqual(["shield-check", "warning"]);
   });
 });
 

@@ -1,6 +1,7 @@
 import { api, post, put } from "../api";
 import t from "../i18n/verification";
 import type { StatusTone } from "../components/settings/types";
+import { verificationMark } from "./verificationMark";
 
 /**
  * Ověřený obsah (5.2, docs/atlas-5.2-plan.md §2–3 and §7): the state of a page's verification as the server derives it (one function in C#,
@@ -45,9 +46,9 @@ export const pageVerificationApi: PageVerificationApi = {
 
 /** The chip shows only a switched-on verification. */
 export const verificationShown = (value: Pick<PageVerification, "state"> | null | undefined): value is PageVerification => !!value && value.state !== "off";
-// Unverified is neutral: right after verification is switched on every page is, and a reader must not see a warning on all of them.
-export const verificationTone = (state: VerificationState): StatusTone => (state === "expired" ? "warning" : "neutral");
-export const verificationIcon = (state: VerificationState) => (state === "expired" ? "shield-alert" : "shield-check");
+// Both from the one mapping (verificationMark): unverified is neutral, a plain shield (right after verification is switched on every page is, and a reader must not see a warning or a check on all of them).
+export const verificationTone = (state: VerificationState): StatusTone => (verificationMark(state)?.warn ? "warning" : "neutral");
+export const verificationIcon = (state: VerificationState) => verificationMark(state)?.icon ?? "shield";
 /** Whole days from `now` to `until` (rounded up, never below 0). */
 export const daysLeft = (until: string, now = Date.now()) => Math.max(0, Math.ceil((Date.parse(until) - now) / 86_400_000));
 /** „Ověřeno“, „Vyprší za 9 dní“, „Ověření vypršelo“, „Neověřeno“. */
