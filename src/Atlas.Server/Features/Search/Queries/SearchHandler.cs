@@ -150,7 +150,7 @@ public sealed class SearchHandler
         {
             for (var i = 0; i < items.Count; i++)
             {
-                items[i] = items[i] with { Verification = states.TryGetValue(items[i].Id, out var state) ? state : null };
+                items[i] = items[i] with { VerificationState = states.TryGetValue(items[i].Id, out var state) ? state : null };
             }
         }
         var resources = new List<SearchResourceHit>();

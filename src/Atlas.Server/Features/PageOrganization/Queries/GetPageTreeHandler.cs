@@ -59,7 +59,7 @@ public sealed class GetPageTreeHandler
             return new PageTreeItem(id, row[1] is Guid parent && visible.Contains(parent) ? parent : null,
                 canEdit ? (string)row[2] : (string)row[3], (int)row[4], (int)row[5], (bool)row[6], canEdit)
             {
-                Decoration = decorations.GetValueOrDefault(id), ChildrenByTitle = (bool)row[8], Verification = verifications.GetValueOrDefault(id)
+                Decoration = decorations.GetValueOrDefault(id), ChildrenByTitle = (bool)row[8], VerificationState = verifications.GetValueOrDefault(id)
             };
         }).ToList();
         // The other content types' leaves (interaction spec 6), one query each, in the one sibling order; a hidden parent puts

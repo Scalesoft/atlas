@@ -13,5 +13,5 @@ public sealed record PageReference(Guid Id, string Title,
 {
     /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the link chip; absent while off.</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Verification { get; init; }
+    public string? VerificationState { get; init; }
 }

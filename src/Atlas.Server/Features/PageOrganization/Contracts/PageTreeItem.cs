@@ -22,7 +22,7 @@ public sealed record PageTreeItem(Guid Id, Guid? ParentId, string? Title, int Ve
     /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the link chips that resolve from the
     /// tree; absent while off.</summary>
     [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
-    public string? Verification { get; init; }
+    public string? VerificationState { get; init; }
 
     /// <summary>Another content type's leaf under <paramref name="parentId"/> (the visible parent, D8).</summary>
     public static PageTreeItem Of(ContentTreeNode node, Guid? parentId) =>
