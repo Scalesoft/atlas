@@ -236,6 +236,22 @@ describe('contact contextual management', () => {
       if (state === 'trashed') { expect(name).toBe('Stará'); expect(phone).toBeUndefined(); expect(container.querySelector('.md-contact-unavailable')!.textContent).toBe('nedostupný kontakt') }
     }
   })
+  it('colours an internal person (the account behind the live contact) on the user colour in the card, the chip and the reader card', async () => {
+    const id = '0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6c', userColor = (user: string) => (user === 'user-1' ? 'rgb(1, 2, 3)' : 'rgb(9, 9, 9)')
+    const live = async () => ({ state: 'ok' as const, contact: { name: 'Jana', internalUser: { id: 'user-1', name: 'Jana' } } })
+    const block = mount([{ name: 'Jana', objectId: id }]); delete block.context.editor; delete block.context.update
+    await createContactsRuntime({ live, userColor }).render(block.context); await tick()
+    expect(block.container.querySelector<HTMLElement>('.md-contact-avatar')!.style.backgroundColor).toBe('rgb(1, 2, 3)')
+    block.container.querySelector<HTMLElement>('article')!.click()
+    expect(document.querySelector<HTMLElement>('.md-contact-reader .md-contact-avatar')!.style.backgroundColor).toBe('rgb(1, 2, 3)')
+    const chip = mount([{ name: 'Jana', objectId: id }]); delete chip.context.editor; delete chip.context.update
+    await createContactsRuntime({ live, userColor }, true).render(chip.context); await tick()
+    expect([chip.container.querySelector('[data-contact-kind]')!.getAttribute('data-contact-kind'), chip.container.querySelector<HTMLElement>('.md-contact-avatar')!.style.backgroundColor]).toEqual(['internal', 'rgb(1, 2, 3)'])
+    // The page saying external wins; nobody behind the contact stays plain.
+    const external = mount([{ name: 'Jana', objectId: id, kind: 'external' }]); delete external.context.editor; delete external.context.update
+    await createContactsRuntime({ live, userColor }).render(external.context); await tick()
+    expect(external.container.querySelector<HTMLElement>('.md-contact-avatar')!.style.backgroundColor).toBe('')
+  })
   it('links contacts without objectId in an editable document and updates the data once', async () => {
     const id = '0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b'
     const { context, update } = mount([{ name: 'Jana', role: 'PM' }, { name: 'Petr', objectId: id }])

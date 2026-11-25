@@ -12,6 +12,7 @@ import AtlasIcon from "../AtlasIcon.vue";
 import InlineReveal from "../settings/InlineReveal.vue";
 import { plainTitle } from "../../objects/relationsApi";
 import { markdownInitials } from "@atlas/markdown/core/userColor";
+import { themedUserColor } from "../../live/collaboratorColors";
 import { locale } from "../../i18n";
 import { downloadCard } from "../../contacts/contactShare";
 import { useContactQr } from "../../contacts/useContactQr";
@@ -31,8 +32,9 @@ import { Textarea } from "../ui/textarea";
  * card (Tab onto the name, then on into them) or after „Doplnit“, one small button instead of six placeholders on every row.
  * „Zkratky a přezdívky“ (aliases, one per line) are how people search for the person („MMu“, „Mára“); a pick in a people picker
  * after such a search adds one by itself (contactSources.ts `learnAlias`), here they are seen, corrected and removed.
- * The directory lists these, a board's object card shows one; the editor's own contacts block (a copy inside a page or on a board)
- * stays the editor's component: this one is the live directory contact.
+ * The directory lists these, a board's object card shows one; the editor's contacts block draws the same contact in a page (D7: two
+ * renderers, one look). A contact linked to an account (`directoryId`) is an internal person: the avatar on that user's colour, as the
+ * editor's card and chip draw it.
  */
 const props = withDefaults(defineProps<{ contact: ContactData; editable?: boolean; compact?: boolean; host?: BoardBlockHost;
   /** Uploads a chosen logo or photo (contactPhoto.ts) and answers the photo field; without it the card offers no upload. */
@@ -58,6 +60,7 @@ const open = ref(false);
 const showEmpty = computed(() => props.editable && !props.compact && (open.value || editing.value !== null));
 
 const initials = computed(() => markdownInitials(props.contact.name, locale));
+const tint = computed(() => (props.contact.directoryId ? { background: themedUserColor(props.contact.directoryId), color: "#fff" } : undefined));
 const lines = computed(() => inlineFields.filter(field => props.contact[field] || showEmpty.value));
 const hasLinks = computed(() => !!(props.contact.emails?.length || props.contact.phones?.length || props.contact.website || props.contact.aliases?.length));
 const hasEmpty = computed(() => ([...inlineFields, "emails", "phones", "website", "address", "aliases"] as const).some(field => !text(field)));
@@ -158,7 +161,7 @@ async function photoPicked(file: File | undefined) {
 
 <template>
   <article ref="root" class="contact-card" :class="{ 'is-compact': compact, 'is-editable': editable, 'is-fit': fit, 'is-qr': fit && qr }" data-contact-card @focusin="entered" @focusout="left" @keydown.capture="escapeCapture">
-    <span class="contact-avatar" aria-hidden="true" :inert="fit && qr ? true : undefined">{{ initials }}<img v-if="contact.photo && contact.photo !== failedPhoto" :src="contact.photo" alt="" loading="lazy" decoding="async"
+    <span class="contact-avatar" aria-hidden="true" :style="tint" :data-contact-internal="contact.directoryId ? '' : undefined" :inert="fit && qr ? true : undefined">{{ initials }}<img v-if="contact.photo && contact.photo !== failedPhoto" :src="contact.photo" alt="" loading="lazy" decoding="async"
       class="contact-photo" data-contact-photo @error="failedPhoto = contact.photo ?? ''"></span>
     <div class="contact-body" :inert="fit && qr ? true : undefined">
       <div class="contact-head">
@@ -247,13 +250,13 @@ async function photoPicked(file: File | undefined) {
 
 <style scoped>
 .contact-card { display: flex; gap: 12px; min-width: 0; color: var(--text); container-type: inline-size; }
-.contact-avatar { display: grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; }
+.contact-avatar { display: grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 .is-compact .contact-avatar { width: 28px; height: 28px; font-size: 11px; }
 .contact-avatar { position: relative; overflow: hidden; }
 .contact-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--paper, #fff); }
 .contact-body { display: grid; flex: 1; gap: 4px; min-width: 0; align-content: start; }
 .contact-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-width: 0; }
-.contact-name { min-width: 0; font-size: 15px; font-weight: 600; }
+.contact-name { min-width: 0; font-size: 15px; font-weight: 650; }
 .contact-reveal { animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .contact-lines { display: flex; flex-wrap: wrap; gap: 0 10px; color: var(--muted); font-size: 13px; }
 .contact-lines > .contact-field { display: inline-flex; align-items: baseline; }
