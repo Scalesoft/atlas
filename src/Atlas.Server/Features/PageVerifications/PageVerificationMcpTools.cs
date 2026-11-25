@@ -107,30 +107,31 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
     [McpToolScope(ApiScopes.Read)]
     [AssistantDescription("Stav obsahu prostoru: ověření a čtenost stránek, nejdřív čtené a neověřené. spaceId, volitelně state, mine, sort, days, query, cursor.")]
     [Description("Stav obsahu prostoru (pro správce a editory prostoru): počty stránek podle stavu ověření a publikované stránky se stavem, " +
-        "garantem, datem vypršení a čteností (zobrazení a různí čtenáři za období, bez jmen). state: all, due (k ověření), no-steward, " +
+        "garantem, datem vypršení a čteností (zobrazení a různí čtenáři za období, bez jmen). state (jako dlaždice Stavu obsahu): all, " +
+        "due (k ověření: brzy vyprší, vypršelo nebo neověřeno), verified, expiring, lapsed (vypršelo nebo neověřeno), no-steward (bez garanta), " +
         "unread (nečtené v období); mine: jen kde jsem garant; sort: priority (výchozí: nejdřív k ověření, pak nejčtenější), expiry, readers, " +
         "published; days: 30, 90 (výchozí), 365. " + States + " " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListContentHealthAsync(
         [Description("spaceId prostoru.")] string spaceId,
-        [Description("all, due, no-steward, unread.")] string? state = null,
+        [Description("all, due, verified, expiring, lapsed, no-steward, unread.")] string? state = null,
         [Description("true = jen stránky, kde jsem garant.")] bool mine = false,
         [Description("priority, expiry, readers, published.")] string? sort = null,
         [Description("Období čtenosti: 30, 90 nebo 365 dní.")] int days = 90,
         [Description("Část názvu stránky.")] string? query = null,
-        [Description("Počet položek 1–50, výchozí 20.")] int limit = 20,
+        [Description("Počet položek 1–100, výchozí 20.")] int limit = 20,
         [Description("nextCursor z předchozího výsledku.")] string? cursor = null,
         CancellationToken ct = default)
     {
         var space = McpArguments.RequiredId(spaceId, "spaceId");
-        if (limit is < 1 or > 50)
+        if (limit is < 1 or > 100)
         {
-            return McpErrors.InvalidArgument("limit musí být 1 až 50.");
+            return McpErrors.InvalidArgument("limit musí být 1 až 100.");
         }
         var list = await bus.InvokeAsync<ContentHealthList>(new GetContentHealth(space, state, mine, sort, days, query, cursor, limit), ct);
         var text = new StringBuilder();
         var s = list.Summary;
-        text.Append("Stav obsahu: ověřeno ").Append(s.Verified).Append(", brzy vyprší ").Append(s.Expiring).Append(", vypršelo ")
-            .Append(s.Expired).Append(", neověřeno ").Append(s.Unverified).Append(", bez garanta ").Append(s.WithoutSteward).Append(". Stránek v seznamu: ").Append(list.Total).Append(".\n");
+        var heading = $"Stav obsahu prostoru {space}: ověřeno {s.Verified}, brzy vyprší {s.Expiring}, vypršelo {s.Expired}, neověřeno {s.Unverified}, " +
+            $"bez garanta {s.WithoutSteward}. Stránek v seznamu: {list.Total}.";
         var items = new JsonArray();
         foreach (var item in list.Items)
         {
@@ -147,10 +148,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
                 ["readers"] = item.Readers, ["views"] = item.Views, ["lastViewedAt"] = item.LastViewedAt?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), ["lastPublishedAt"] = item.LastPublishedAt
             });
         }
-        if (list.NextCursor is { } next)
-        {
-            text.Append("Další stránky: zavolejte atlas_list_content_health se stejnými parametry a cursor: \"").Append(next).Append("\".\n");
-        }
+        var footer = list.NextCursor is { } next ? $"Další stránky: zavolejte atlas_list_content_health se stejnými parametry a cursor: \"{next}\"." : null;
         var structured = new JsonObject
         {
             ["summary"] = new JsonObject
@@ -159,7 +157,8 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
             },
             ["enabled"] = list.Enabled, ["total"] = list.Total, ["items"] = items, ["nextCursor"] = list.NextCursor
         };
-        return McpText.Result(text.ToString(), structured);
+        // Titles, ancestors and steward names are wiki text: inside the <wiki-content> boundary with the trust notice.
+        return McpText.Result(McpText.Wrap(heading, text.ToString(), footer), structured);
     }
 
     [McpServerTool(Name = "atlas_report_outdated", Title = "Nahlásit neaktuální stránku", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false)]
