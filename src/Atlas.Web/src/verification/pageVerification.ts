@@ -25,6 +25,8 @@ export interface PageVerification {
   intervalMonths: number | null;
   /** The space's default interval; null = verification is off in the space. */
   spaceIntervalMonths: number | null;
+  /** The panel's Čtenost (90 days) in the answer of GET and PUT …/verification while verification is on; null in the page's bundle. */
+  readers?: number | null;
 }
 /**
  * What `PUT /pages/{id}/verification` takes (the same as `PUT /api/v1/pages/{id}/verification`): only what is named changes. The server cannot tell

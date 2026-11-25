@@ -36,7 +36,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         var (page, actor) = await locks.LockPageAsync(command.PageId, false, AccessOperation.EditContent, ct);
         await ApplyAsync(page, actor, command.Request, ct);
         await session.FlushAsync(ct);
-        return await reader.ReadAsync(page.Id, await PublishedVersionAsync(page, ct), ct);
+        return await reader.ReadWithReadersAsync(page.Id, ct);
     }
 
     public async Task<SpaceVerificationResult> Handle(SetSpaceVerification command, CancellationToken ct)

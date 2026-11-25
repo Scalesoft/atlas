@@ -72,7 +72,7 @@ public sealed class GetMcpPageHandler
         }
         var version = query.Working || page.Live ? page.Version : page.PublishedVersion ?? page.Version;
         // 5.2: the verification block (plan §7); the tool says when the source expired.
-        page = page with { Verification = await m_verifications.ReadAsync(page.Id, page.PublishedVersion, ct) };
+        page = page with { Verification = await m_verifications.ReadAsync(page.Id, ct) };
         return new McpPageRead(page, query.Working, version, space.Name, path, titles);
     }
 }

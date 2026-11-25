@@ -88,6 +88,8 @@ public sealed class PageVerificationTests
         Assert.Equal((PageVerificationStates.Verified, page.Version, false, writerId),
             (verified["state"]!.GetValue<string>(), verified["verifiedVersion"]!.GetValue<int>(), verified["verifiedViaAi"]!.GetValue<bool>(),
                 verified["verifiedById"]!.GetValue<string>()));
+        // The answer carries the panel's Čtenost, so the page does not read its bundle again.
+        Assert.NotNull(verified["readers"]);
         Assert.Equal(PageVerificationStates.Off, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, url, new { intervalMonths = 0 }),
             HttpStatusCode.OK))["state"]!.GetValue<string>());
         Assert.Equal(PageVerificationStates.Verified, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, url, new { inheritInterval = true }),

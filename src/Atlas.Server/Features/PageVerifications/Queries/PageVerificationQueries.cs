@@ -24,10 +24,7 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
     public async Task<PageVerificationView> Handle(GetPageVerification query, CancellationToken ct)
     {
         var opened = (await gate.ReadAsync(query.PageId, AccessOperation.ReadContent, ct)).Require();
-        var published = opened.Page.PublishedRevisionId is { } revision
-            ? await session.QueryOver<PageRevision>().Where(x => x.Id == revision).Select(x => x.Version).SingleOrDefaultAsync<int?>(ct)
-            : null;
-        return await reader.ReadAsync(opened.Page.Id, published, ct);
+        return await reader.ReadWithReadersAsync(opened.Page.Id, ct);
     }
 
     public async Task<ContentHealthList> Handle(GetContentHealth query, CancellationToken ct)

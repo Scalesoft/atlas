@@ -11,9 +11,11 @@ namespace Atlas.Server.Features.PageVerifications;
 /// <param name="IntervalMonths">The page's own interval; null inherits <paramref name="SpaceIntervalMonths"/>, 0 = „Neověřovat“.</param>
 /// <param name="SpaceIntervalMonths">The space's interval; null = verification is off in the space.</param>
 /// <param name="PublishedVersion">The version readers read; null for a page never published (it cannot be verified).</param>
+/// <param name="Readers">The panel's „Čtenost“: distinct readers in 90 days, on GET and PUT …/verification while verification is on; null
+/// otherwise (the page's bundle carries its own).</param>
 public sealed record PageVerificationView(string State, Guid? StewardId, string? StewardName, DateTime? VerifiedAt, DateTime? VerifiedUntil,
     int? VerifiedVersion, bool ChangedSinceVerification, Guid? VerifiedById, string? VerifiedByName, bool VerifiedViaAi, int? IntervalMonths,
-    int? SpaceIntervalMonths, int? PublishedVersion);
+    int? SpaceIntervalMonths, int? PublishedVersion, long? Readers = null);
 
 /// <summary>
 /// <c>PUT /api/v1/pages/{id}/verification</c>: every field is optional, at least one is required, all apply together.
