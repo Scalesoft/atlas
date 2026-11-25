@@ -146,6 +146,8 @@ public sealed class ApiTokenRightsTests : IClassFixture<ApiTokenRightsTests.Toke
     [InlineData("POST", "/api/v1/pages/{id}/trash")]
     [InlineData("POST", "/api/v1/pages/{id}/untrash")]
     [InlineData("POST", "/api/v1/objects/{id}/comments")]
+    [InlineData("PUT", "/api/v1/objects/{id}/comments/{id}")]
+    [InlineData("DELETE", "/api/v1/objects/{id}/comments/{id}")]
     public async Task Write_scope_reaches_every_write_route_and_the_owners_rights_decide(string method, string route)
     {
         var client = await m_site.WriteClientAsync();
@@ -279,8 +281,10 @@ public sealed class ApiTokenRightsTests : IClassFixture<ApiTokenRightsTests.Toke
             "PUT /api/v1/pages/{id:guid}/verification",
             "POST /api/v1/pages/{id:guid}/verification/report",
             "POST /api/v1/spaces/{spaceId:guid}/content-health/bulk",
-            // 5.2: discussions, the page chat's channel: an agent answers with a comment.
+            // 5.2: discussions, the page chat's channel: an agent answers with a comment, edits its own, deletes one as the web lets it.
             "POST /api/v1/objects/{objectId:guid}/comments",
+            "PUT /api/v1/objects/{objectId:guid}/comments/{commentId:guid}",
+            "DELETE /api/v1/objects/{objectId:guid}/comments/{commentId:guid}",
         }.Order(StringComparer.Ordinal), mutations.Select(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Single() + " " + e.RoutePattern.RawText).Order(StringComparer.Ordinal));
         Assert.All(mutations, endpoint => Assert.Contains(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>(),
             data => data.Policy == PersonalApiEndpoints.WritePolicy));

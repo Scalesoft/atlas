@@ -95,6 +95,8 @@ public sealed class AtlasEndpointsTests
         "DELETE /api/objects/{objectId:guid}/comments/{commentId:guid}",
         "GET /api/v1/objects/{objectId:guid}/comments",
         "POST /api/v1/objects/{objectId:guid}/comments",
+        "PUT /api/v1/objects/{objectId:guid}/comments/{commentId:guid}",
+        "DELETE /api/v1/objects/{objectId:guid}/comments/{commentId:guid}",
         "DELETE /api/objects/{objectId:guid}",
         "GET /api/objects/trash",
         "POST /api/objects/{objectId:guid}/restore",

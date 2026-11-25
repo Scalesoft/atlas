@@ -84,8 +84,11 @@ public sealed class ModuleCommandCoverageTests
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification)] = ("atlas_set_verification", "PUT /api/v1/pages/{id:guid}/verification"),
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetSpaceVerification)] = ("atlas_set_verification", "POST /api/v1/spaces/{spaceId:guid}/content-health/bulk"),
         [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportPageOutdated)] = ("atlas_report_outdated", "POST /api/v1/pages/{id:guid}/verification/report"),
-        // 5.2: discussions are the collaboration channel (the page chat): an agent reads them (atlas_list_comments) and answers.
+        // 5.2: discussions are the collaboration channel (the page chat): an agent reads them (atlas_list_comments), answers, corrects
+        // its own comment and deletes one as the web lets its owner (the author, or the object's manager).
         [typeof(Atlas.Server.Features.Comments.Commands.PostComment)] = ("atlas_post_comment", "POST /api/v1/objects/{objectId:guid}/comments"),
+        [typeof(Atlas.Server.Features.Comments.Commands.EditComment)] = ("atlas_edit_comment", "PUT /api/v1/objects/{objectId:guid}/comments/{commentId:guid}"),
+        [typeof(Atlas.Server.Features.Comments.Commands.DeleteComment)] = ("atlas_delete_comment", "DELETE /api/v1/objects/{objectId:guid}/comments/{commentId:guid}"),
         // „Řadit abecedně“ of a tree level (3.6).
         [typeof(SortTreeLevel)] = ("atlas_sort_pages", "POST /api/v1/spaces/{spaceId:guid}/tree/sort"),
     };
@@ -102,8 +105,6 @@ public sealed class ModuleCommandCoverageTests
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetMcpVerification)] = "atlas_set_verification's G5 wrapper of SetPageVerification, not a user command.",
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetMcpSpaceVerification)] = "atlas_set_verification's G5 wrapper of SetSpaceVerification, not a user command.",
         [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportMcpOutdated)] = "atlas_report_outdated's G5 wrapper of ReportPageOutdated, not a user command.",
-        [typeof(Atlas.Server.Features.Comments.Commands.EditComment)] = "An agent corrects itself with a new comment; editing a posted one stays the web's (5.2 scope: read and answer).",
-        [typeof(Atlas.Server.Features.Comments.Commands.DeleteComment)] = "Deleting a comment stays the web's, where its author or the object's manager sees what goes (5.2 scope: read and answer).",
     };
 
     [PostgreSqlFact]
