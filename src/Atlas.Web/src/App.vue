@@ -59,6 +59,8 @@ import { liveAccount } from "./live/accountChannel";
 import { liveConnection } from "./live/liveConnection";
 import { pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
+import type { PageVerification as PageVerificationState } from "./verification/pageVerification";
+import { verificationMark } from "./verification/verificationMark";
 import { isSpacePinned, pinnedFirst, setSpacePinned, SPACE_PIN_REQUIRED } from "./spacePins";
 import { downloadContentExport, rememberCoverDetails, rememberedCoverDetails, type PdfCoverDetail } from "./contentExport";
 import { plainTitle } from "./objects/relationsApi";
@@ -273,6 +275,8 @@ const PagePdfExportDialog = lazyComponent(() => import("./components/PagePdfExpo
 const PagePdfExportStatus = lazyComponent(() => import("./components/PagePdfExportStatus.vue"));
 const PagePdfDownloadDialog = lazyComponent(() => import("./components/PagePdfDownloadDialog.vue"));
 const PageHistoryPanel = lazyComponent(() => import("./components/PageHistoryPanel.vue"), { loading: dialogSkeleton(t.common.pageHistory, "side") });
+// Ověřený obsah (5.2): the chip at the title; it draws from the bundle, so its chunk is the only wait.
+const PageVerification = lazyComponent(() => import("./components/PageVerification.vue"));
 const PageReadership = lazyComponent(() => import("./components/PageReadership.vue"), { loading: dialogSkeleton(t.common.readership, "side", "min(880px, calc(100vw - 64px))") });
 const PageConnections = lazyComponent(pageChrome.connections);
 // Comments are secondary data: their component loads after the article and reads only near the viewport (Fast first).
@@ -604,6 +608,11 @@ const canSaveEditor = computed(() => browserOnline.value && editorReady.value &&
 const shownVersion = computed(() => !page.value ? 0 : pageCanWrite.value || page.value.live ? page.value.version : page.value.publishedVersion ?? page.value.version);
 /** A writer's page's publication (mode, when it was published), read for a published page; undefined until it arrives. */
 const publication = shallowRef<PagePublication>();
+/** Ověření stránky (5.2): from the page's bundle, replaced by the answer of every change made in the chip or the dock. */
+const verification = shallowRef<PageVerificationState | null>(null);
+const verificationOpen = ref(false);
+watch(() => page.value?.bundle?.verification, (value) => { if (value) verification.value = value; });
+watch(() => page.value?.id, () => { verification.value = page.value?.bundle?.verification ?? null; verificationOpen.value = false; }, { immediate: true });
 /** A writer's page published live (Publikace Živě, `PagePublication.effective`): readers already read its saved state. */
 const publishedLive = computed(() => publication.value?.effective === "Live");
 /** Neither a reader nor a live page's writer has anything waiting for Publikovat (a reader never sees unpublished state). */
@@ -4904,6 +4913,7 @@ onUnmounted(() => {
             <div class="document-meta" :data-writable="(pageCanWrite && browserOnline) || undefined">
               <AssistantLauncher variant="page" :page-reading="assistantPageReading" :can-ask="canAsk" @launch="launchAssistant(true)" />
               <StatusBadge v-if="catalogPage" tone="info" icon="book-open" size="sm" :label="t.nav.catalogBadge" data-page-catalog />
+              <PageVerification v-if="verification && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
               <Button v-if="page.isTemplate && canManageTemplates" variant="ghost" size="sm" @click="openSpaceTemplates(currentSpace!.id)">{{ t.nav.templateManage }}</Button>
               <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" :data-transient="documentStatusTransient || undefined" role="status" aria-live="polite" aria-atomic="true">
                 <StatusBadge v-if="documentStatusTransient" :key="documentStatusText" tone="success" :label="documentStatusText" confirmed />
@@ -5057,7 +5067,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" @publication="value => { publication = value; }" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="page.bundle?.readers" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>
@@ -5265,7 +5275,7 @@ onUnmounted(() => {
               <span class="space-icon" :data-color="item.color"><AtlasIcon :name="item.icon" :size="18" /></span>
               <span class="search-result-main"><span class="search-result-head"><strong class="search-result-title"><span v-if="item.widget?.key" class="search-issue-key">{{ item.widget.key }}</span><SearchHighlight :text="item.title" :query="query" /></strong>
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
-                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><SemanticBadge v-if="item.semantic" />
+                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="verificationMark(item.result.verification?.state)" :name="verificationMark(item.result.verification?.state)!.icon" :size="13" class="search-verification" :data-warn="verificationMark(item.result.verification?.state)!.warn || undefined" role="img" :aria-label="verificationMark(item.result.verification?.state)!.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="verificationMark(item.result.verification?.state)!.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
                   <span v-if="item.board" class="search-live-label" data-search-type>{{ t.common.board }}</span>
                   <span v-else-if="item.widget">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
                 </small>

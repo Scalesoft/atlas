@@ -4,6 +4,8 @@ import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue
 import type { MarkdownRichValue } from "@atlas/markdown/core";
 import { errorMessage } from "../api";
 import { channelText } from "../channel";
+import tv from "../i18n/verification";
+import { pageVerificationApi, verificationShown, type PageVerification, type PageVerificationApi } from "../verification/pageVerification";
 import { formatDate, formatDateTime } from "../formatDate";
 import { historyApi, type PageRevisionSummary } from "../history";
 import { animateAtlas, motionMs, riseIn, RISE_IN_ROWS } from "../motion/aiMotion";
@@ -49,9 +51,15 @@ const props = withDefaults(defineProps<{
   connections?: PageConnectionsApi;
   usage?: UsageApi;
   publicationApi?: PagePublicationApi;
-}>(), { usage: undefined, publicationApi: () => pagePublicationApi, document: undefined, updatedAt: null, relatedEnabled: true, refreshKey: 0, history: () => historyApi, sharing: () => sharingApi, connections: () => pageConnectionsApi });
+  /** Ověřený obsah (5.2): the page's verification and the 90-day reader count (both the bundle's), whether the reader edits it, and the source of its changes. */
+  verification?: PageVerification | null;
+  canEdit?: boolean;
+  verificationApi?: PageVerificationApi;
+  readers?: number;
+}>(), { usage: undefined, publicationApi: () => pagePublicationApi, verification: null, canEdit: false, verificationApi: () => pageVerificationApi, readers: undefined,
+  document: undefined, updatedAt: null, relatedEnabled: true, refreshKey: 0, history: () => historyApi, sharing: () => sharingApi, connections: () => pageConnectionsApi });
 /** `publication`: the page's publication as read or set here (the header's chip and Publikovat follow its mode). */
-const emit = defineEmits<{ openHistory: [revision?: PageRevisionSummary]; openAccess: []; openPlace: [id: string, typeId: string]; publication: [value: PagePublication] }>();
+const emit = defineEmits<{ openHistory: [revision?: PageRevisionSummary]; openAccess: []; openPlace: [id: string, typeId: string]; publication: [value: PagePublication]; verification: [value: PageVerification]; openReadership: []; openVerification: [] }>();
 
 // The draft (koncept) in the top bar's words: what readers read meanwhile.
 const state = computed(() => !props.isPublished ? t.side.draftUnpublished : props.version > (props.publishedVersion ?? 0) ? t.side.draftReaders(props.publishedVersion) : t.side.published);
@@ -164,6 +172,29 @@ watch(() => props.pageId, () => { pageSearchQuery.value = ""; if (root.value) an
 watch(() => props.tab, () => { void load(); if (props.tab === "outline" && publicationOf.value !== props.pageId) void loadPublication(); }, { immediate: true });
 onBeforeUnmount(() => { abort?.abort(); generation++; publicationGeneration++; });
 
+// Ověřování (5.2 §3.2, §5.1): the facts and the choice show while the space or the page has verification on; the 90-day reader count loads after the shell.
+const verifying = computed(() => !!props.verification && (props.verification.state !== "off" || props.verification.spaceIntervalMonths !== null));
+const verificationSaving = shallowRef(false);
+const verificationError = shallowRef("");
+const intervalChoices = computed(() => [
+  { value: "inherit", label: tv.bySpace(props.verification?.spaceIntervalMonths ?? null) },
+  ...[3, 6, 12].map((months) => ({ value: String(months), label: tv.months(months) })),
+  { value: "0", label: tv.never },
+]);
+async function setIntervalChoice(choice: string) {
+  const intervalMonths = choice === "inherit" ? null : Number(choice) as 0 | 3 | 6 | 12;
+  if (verificationSaving.value || intervalMonths === (props.verification?.intervalMonths ?? null)) return;
+  verificationSaving.value = true;
+  verificationError.value = "";
+  try {
+    emit("verification", await props.verificationApi.change(props.pageId, intervalMonths === null ? { inheritInterval: true } : { intervalMonths }));
+  } catch (failure) {
+    verificationError.value = errorMessage(failure);
+  } finally {
+    verificationSaving.value = false;
+  }
+}
+
 const viewers = computed(() => { const counts = access.value?.counts; return counts ? counts.manage + counts.edit + counts.read : 0; });
 const ownAccess = computed(() => {
   const me = access.value?.myAccess;
@@ -179,6 +210,19 @@ const ownAccess = computed(() => {
       <dl class="page-side-facts" :aria-label="t.side.aboutPage">
         <dt>{{ t.side.version }}</dt><dd>{{ version }} · {{ state }}</dd>
         <template v-if="updatedAt"><dt>{{ t.side.edited }}</dt><dd><time :datetime="updatedAt">{{ formatDate(updatedAt) }}</time></dd></template>
+        <template v-if="verificationShown(verification)">
+          <dt>{{ tv.steward }}</dt>
+          <dd data-verification-steward>
+            <button v-if="canEdit" type="button" class="page-side-link" data-verification-steward-open @click="emit('openVerification')">{{ verification.stewardName ?? tv.setForEditor }}</button>
+            <template v-else>{{ verification.stewardName ?? tv.noSteward }}</template>
+          </dd>
+            <dt>{{ tv.verifiedRow }}</dt>
+            <dd data-verification-row>{{ tv.verifiedRowText(verification.verifiedAt ? formatDate(verification.verifiedAt) : null, verification.verifiedUntil ? formatDate(verification.verifiedUntil) : null) }}<template v-if="verification.changedSinceVerification"><br><span class="page-side-warn">{{ tv.changedVersions(verification.verifiedVersion, publishedVersion ?? version) }}</span></template></dd>
+          <template v-if="readers !== undefined">
+            <dt>{{ tv.readership }}</dt>
+            <dd><button type="button" class="page-side-link" :aria-label="tv.readershipOpen" data-verification-readers @click="emit('openReadership')">{{ tv.readershipText(readers) }}</button></dd>
+          </template>
+        </template>
       </dl>
       <!-- „Použito na“: the count at once, the places on request (they read the blocks that use the page). -->
       <UsagePanel :key="pageId" collapsible :object-id="pageId" :api="usage" @open="(id, typeId) => emit('openPlace', id, typeId)" />
@@ -194,6 +238,11 @@ const ownAccess = computed(() => {
           </dl>
           <OptionPills v-if="publication.canChange" :model-value="publication.mode ?? 'inherit'" :label="t.side.publicationOfPage" :options="publicationChoices" :disabled="publicationSaving || publicationOf !== pageId" data-publication-choice @update:model-value="setPublication" />
         </template>
+      </section>
+      <!-- Ověřování under Publikace, the same pills: the page's own interval, by the space, or never. Editors only; the others read the facts above. -->
+      <section v-if="verifying && canEdit && verification" class="page-side-publication" :aria-label="tv.interval" data-page-verification-interval>
+        <OptionPills :model-value="verification.intervalMonths === null ? 'inherit' : String(verification.intervalMonths)" :label="tv.interval" :options="intervalChoices" :disabled="verificationSaving" @update:model-value="setIntervalChoice" />
+        <p v-if="verificationError" class="notice error" role="alert">{{ verificationError }}</p>
       </section>
     </template>
 
@@ -258,5 +307,9 @@ const ownAccess = computed(() => {
 .page-side-chip[data-tone="success"] { background: var(--success-bg, var(--hover)); color: var(--success, var(--muted)); }
 .page-side-action { align-self: flex-start; }
 .page-side-publication { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.page-side-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-align: left; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .page-side-link:hover { text-decoration: underline; } }
+.page-side-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+.page-side-warn { color: var(--warning); }
 .page-side-publication-skeleton { min-height: 84px; }
 </style>

@@ -7,6 +7,8 @@ import { translate, plural } from ".";
  */
 const cs = {
   common: {
+    verifiedPage: "Ověřená stránka",
+    verificationExpired: "Ověření stránky vypršelo",
     back: "Zpět",
     close: "Zavřít",
     open: "Otevřít",

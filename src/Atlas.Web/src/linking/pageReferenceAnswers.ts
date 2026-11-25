@@ -1,6 +1,6 @@
 // The answers of POST /api/pages/references, apart from editorDirectories so that the shell can seed and forget them
 // without pulling the editor's page and people services onto the library's first screen (bundle budget).
-interface Titled { readonly id: string; readonly title: string; readonly type?: string }
+interface Titled { readonly id: string; readonly title: string; readonly type?: string; /** Ověřený obsah (5.2): the state of the page's verification, when it is on (the link chip's shield). */ readonly verification?: string }
 
 /**
  * Answers kept for 30 s and shared by every renderer: the static page and the live editor built hidden under it (O10) asked for the same

@@ -972,6 +972,7 @@ const notCovered: Record<string, string> = {
   "components/PageHistoryPanel.vue": "filters the versions by author with SearchField (the first Esc clears the filter, the second closes the side panel): SearchField is the descriptor",
   "components/SpaceDirectory.vue": "filters the space cards with SearchField: SearchField is the descriptor",
   "components/SpaceDraftApproval.vue": "filters drafts with SearchField: SearchField is the descriptor",
+  "components/settings/space/SpaceContentHealthPage.vue": "filters its list with SearchField and FilterMenu (the descriptors) and picks an owner with SearchableChoiceList (first result preselected, Enter picks); the rows' ↑ ↓ Space V G keys are covered by SpaceContentHealthPage.test",
   "components/settings/FilterMenu.vue": "a filter's dropdown menu; its search over more than eight options preselects the first and Enter picks it (FilterMenu.test)",
   "components/settings/access/PrincipalAccessView.vue": "filters a table with SearchField: SearchField is the descriptor",
   "components/settings/access/ResourceAccessPanel.vue": "filters a table with SearchField: SearchField is the descriptor",

@@ -9,6 +9,7 @@ const SpaceAiPage = lazySettings(() => import("./SpaceAiPage.vue"));
 const SpaceTrashCleanupPage = lazySettings(() => import("./SpaceTrashCleanupPage.vue"));
 const SpaceAccessPage = lazySettings(() => import("./SpaceAccessPage.vue"));
 const SpaceSearchGapsPage = lazySettings(() => import("./SpaceSearchGapsPage.vue"));
+const SpaceContentHealthPage = lazySettings(() => import("./SpaceContentHealthPage.vue"));
 const SpaceSetsPage = lazySettings(() => import("./SpaceSetsPage.vue"));
 const SpaceSharingPage = lazySettings(() => import("./SpaceSharingPage.vue"));
 const SpaceVaultsPage = lazySettings(() => import("./SpaceVaultsPage.vue"));
@@ -20,6 +21,7 @@ const AccessRequestsPage = lazySettings(() => import("../requests/AccessRequests
 <script setup lang="ts">
 import { computed } from "vue";
 import t from "../../../i18n/settings-space";
+import tv from "../../../i18n/verification";
 import AtlasIcon from "../../AtlasIcon.vue";
 import { Button } from "../../ui/button";
 import EmptyState from "../EmptyState.vue";
@@ -78,6 +80,8 @@ const groups = computed<SettingsNavGroup[]>(() => {
         // Only while the AI is available (AI-24); the readers of the space never see it.
         ...(spaceAiAvailable.value ? [{ path: "ai", label: t.nav.ai, icon: "ai" }] : []),
         { path: "search-gaps", label: t.nav.searchGaps, icon: "search" },
+        // Ověřený obsah (5.2): the space's content health (what is verified, what expires, what is read).
+        { path: "content-health", label: tv.health.nav, icon: "shield-check" },
       ],
     },
     {
@@ -140,6 +144,7 @@ function openWikiSettings(event: MouseEvent) {
     <SpaceSetsPage v-else-if="segments[0] === 'sets' && projector" key="sets" :space-id="spaceId" />
     <SpaceTrashCleanupPage v-else-if="segments[0] === 'trash'" key="trash" :space-id="spaceId" />
     <SpaceSearchGapsPage v-else-if="segments[0] === 'search-gaps'" key="search-gaps" :space-id="spaceId" />
+    <SpaceContentHealthPage v-else-if="segments[0] === 'content-health'" key="content-health" :space-id="spaceId" />
     <SpaceAiPage v-else-if="segments[0] === 'ai' && spaceAiAvailable" key="ai" :space-id="spaceId" :ai="aiAvailable" :mcp="context.mcpEnabled === true"><DuplicatePagesSection :space-id="spaceId" /></SpaceAiPage>
     <SpaceAccessPage v-else-if="segments[0] === 'access'" :key="`access-${segments.slice(1).join('/')}`" :space-id="spaceId" :part="segments.slice(1)" />
     <AddVaultPage v-else-if="segments[0] === 'vaults' && segments[1] === 'new'" key="vault-new" :space-id="spaceId" back-path="vaults" />

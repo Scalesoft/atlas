@@ -58,6 +58,8 @@ export interface PageSummary {
   title: string;
   version: number;
   isPublished: boolean;
+  /** Ověřený obsah (5.2): the state of the page's verification when the space has it on; the link chip's shield. */
+  verification?: import("./verification/pageVerification").VerificationState;
 }
 /**
  * What `GET /pages/{id}?bundle=true` answers beside the page (server PageBundle): each part as its own endpoint would, null when that part
@@ -67,7 +69,11 @@ export interface PageBundle {
   personalState?: { isFavorite: boolean; visitedAt: string | null } | null;
   tags?: { tags: { id: string; name: string }[] } | null;
   contacts?: { items: Record<string, { state: "ok" | "hidden" | "trashed" | "missing"; contactId?: string; contact?: unknown }> } | null;
-  pages?: { items: { id: string; title: string; type?: string }[] } | null;
+  pages?: { items: { id: string; title: string; type?: string; verification?: string }[] } | null;
+  /** Ověřený obsah (5.2): the page's verification, so the chip draws at once; absent from a server without it. */
+  verification?: import("./verification/pageVerification").PageVerification | null;
+  /** Distinct readers of the page in the last 90 days (the panel's Čtenost row); missing while verification is off. */
+  readers?: number;
   /** The page's live session, for a writer when it opens as is, for a reader of a Živě page (`readOnly`). */
   collaboration?: {
     documentId: string; generation: string; currentVersion: number; readOnly: boolean;
@@ -141,6 +147,8 @@ export interface SearchResult {
   matchedAlias?: string | null;
   /** Meaning-only hit (hybrid search): `snippet` is the passage, `headingTitle`/`headingId` its anchor. */
   semantic?: boolean;
+  /** Ověřený obsah (5.2): the state of the page's verification (the icon beside the title); absent when it is off. */
+  verification?: { state: import("./verification/pageVerification").VerificationState } | null;
   passage?: { text: string; headingTitle?: string | null; headingId?: string | null } | null;
 }
 export class ApiError extends Error {

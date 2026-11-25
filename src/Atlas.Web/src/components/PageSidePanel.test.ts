@@ -13,7 +13,45 @@ const publication = (extra = {}) => ({ mode: null, spaceMode: "Manual", effectiv
 const checked = (wrapper: { get: (selector: string) => { attributes: (name: string) => string | undefined } }) => wrapper.get("[data-publication-choice] [aria-checked=true]").attributes("data-value");
 const publicationApi = (state = publication()) => ({ get: vi.fn(async () => state as never), set: vi.fn(async (_: string, mode: string | null) => ({ ...state, mode, effective: mode ?? state.spaceMode }) as never) });
 
+const verification = (over = {}) => ({ state: "expiring", stewardId: "u1", stewardName: "Jana Malá", verifiedAt: "2026-11-03T08:00:00Z", verifiedUntil: "2027-05-03T08:00:00Z", verifiedVersion: 1, changedSinceVerification: true, intervalMonths: null, spaceIntervalMonths: 6, ...over });
+
 describe("PageSidePanel", () => {
+  it("shows the owner, the verification and the 90-day readership, opens the dialog and lets an editor change the interval (5.2)", async () => {
+    const verificationApi = { change: vi.fn(async (_: string, change: object) => verification(change) as never), report: vi.fn() };
+    const wrapper = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification() as never, canEdit: true, verificationApi, readers: 12 } });
+    await flushPromises();
+    expect(wrapper.get("[data-verification-steward]").text()).toBe("Jana Malá");
+    expect(wrapper.get("[data-verification-row]").text()).toContain("do 3. 5. 2027");
+    expect(wrapper.get("[data-verification-row]").text()).toContain("Změněno po ověření (v. 1 → 2)");
+    expect(wrapper.get("[data-verification-readers]").text()).toBe("12 čtenářů za 90 dní");
+    await wrapper.get("[data-verification-readers]").trigger("click");
+    expect(wrapper.emitted("openReadership")).toHaveLength(1);
+    await wrapper.get("[data-verification-steward-open]").trigger("click");
+    expect(wrapper.emitted("openVerification")).toHaveLength(1);
+    expect(wrapper.get("[data-page-verification-interval] [aria-checked=true]").attributes("data-value")).toBe("inherit");
+    expect(wrapper.get("[data-page-verification-interval] [data-value=inherit]").text()).toBe("Podle prostoru (6 měsíců)");
+    await wrapper.get("[data-page-verification-interval] [data-value='12']").trigger("click");
+    await flushPromises();
+    expect(verificationApi.change).toHaveBeenCalledWith("p1", { intervalMonths: 12 });
+    await wrapper.setProps({ verification: verification({ intervalMonths: 12 }) as never });
+    await wrapper.get("[data-page-verification-interval] [data-value=inherit]").trigger("click");
+    await flushPromises();
+    expect(verificationApi.change).toHaveBeenLastCalledWith("p1", { inheritInterval: true });
+    expect(wrapper.emitted("verification")![0]![0]).toMatchObject({ intervalMonths: 12 });
+  });
+
+  it("shows a reader only the facts, and nothing of verification while it is off", async () => {
+    const reader = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification({ stewardName: null }) as never, readers: 1 } });
+    await flushPromises();
+    expect(reader.get("[data-verification-steward]").text()).toBe("bez garanta");
+    expect(reader.find("[data-page-verification-interval]").exists()).toBe(false);
+    expect(reader.get("[data-verification-readers]").text()).toBe("1 čtenář za 90 dní");
+    const off = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification({ state: "off", spaceIntervalMonths: null }) as never, readers: undefined } });
+    await flushPromises();
+    expect(off.find("[data-verification-steward]").exists()).toBe(false);
+    expect(off.find("[data-verification-readers]").exists()).toBe(false);
+  });
+
   it("shows the publication, lets an editor change it and shows a reader only the state", async () => {
     const api = publicationApi();
     const wrapper = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: api } });
