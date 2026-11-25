@@ -140,6 +140,16 @@ body {
   line-height: 1.5;
   white-space: nowrap;
 }
+/* A key inside a button („Ověřit V“): on the button's own colour, not a grey box; also in a popover portalled outside .atlas. */
+.atlas [data-slot="button"] kbd:not(.md-editor *), [data-slot="button"] kbd {
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 4px;
+  background: color-mix(in srgb, currentColor 18%, transparent);
+  color: inherit;
+  font: 600 11px var(--font-mono, ui-monospace, monospace);
+}
 @media (pointer: coarse) {
   .atlas kbd:not(.md-editor):not(.md-editor *) {
     display: none;

@@ -2,6 +2,7 @@ import { api, post, put } from "../../api";
 import { contentItemLink, pageCommentLink } from "../../pageLinks";
 import { unreadNotificationsApi } from "../../notifications";
 import { spaceSettingsHash } from "../../settingsRoutes";
+import { verificationMark } from "../../verification/verificationMark";
 import t from "../../i18n/components-search";
 
 /**
@@ -42,10 +43,11 @@ export const kindLabels = (): Record<NotificationKind, { title: string; action: 
   // To the wiki administrators, from no one: the row says what happened, the subject is the job.
   "job.failed": { title: t.notifications.jobFailed, action: "", icon: "alert" },
   // 5.2: the steward's reminders, from no one (their preference is page.verification_due), and a reader's report with its note as the excerpt.
-  "page.verification_due": { title: t.notifications.verificationReminders, action: "", icon: "shield-check" },
-  "page.verification_expiring": { title: t.notifications.verificationExpiring, action: "", icon: "shield-check" },
-  "page.verification_expired": { title: t.notifications.verificationExpired, action: "", icon: "alert" },
-  "page.reported_outdated": { title: t.notifications.outdatedReports, action: t.notifications.reportedOutdated, icon: "alert" },
+  // The icons are the chip's (verificationMark) and the report's own („Nahlásit neaktuální“).
+  "page.verification_due": { title: t.notifications.verificationReminders, action: "", icon: verificationMark("expiring")!.icon },
+  "page.verification_expiring": { title: t.notifications.verificationExpiring, action: "", icon: verificationMark("expiring")!.icon },
+  "page.verification_expired": { title: t.notifications.verificationExpired, action: "", icon: verificationMark("expired")!.icon },
+  "page.reported_outdated": { title: t.notifications.outdatedReports, action: t.notifications.reportedOutdated, icon: "megaphone" },
   // To the space's administrators, from the deactivated steward: the subject is the space, the link its Stav obsahu.
   "space.steward_deactivated": { title: t.notifications.stewardDeactivated, action: t.notifications.stewardDeactivatedAction, icon: "shield-check" },
 });

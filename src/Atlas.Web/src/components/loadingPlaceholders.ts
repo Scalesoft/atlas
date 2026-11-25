@@ -14,5 +14,8 @@ export const formSkeleton = () =>
   h("div", { style: { width: "100%", maxWidth: "1080px", margin: "0 auto", padding: "20px var(--atlas-page-gutter, 24px) 40px", boxSizing: "border-box" } },
     h(LoadingSkeleton, { rows: 5, rowHeight: "64px" }));
 
-/** A lazy status chip loads as a quiet pill of its size (a small StatusBadge), so the line it stands in does not move when the chip arrives. */
-export const badgePlaceholder = () => h("span", { "aria-hidden": "true", "data-badge-placeholder": "", style: { display: "inline-block", width: "96px", height: "22px", borderRadius: "7px", background: "var(--hover)" } });
+/**
+ * A lazy status chip loads as a quiet pill of its size (a small StatusBadge), so the line it stands in does not move when the chip arrives;
+ * like LoadingSkeleton it waits --atlas-motion-defer and then fades, so a fast chunk never flashes it.
+ */
+export const badgePlaceholder = () => h("span", { "aria-hidden": "true", "data-badge-placeholder": "", style: { display: "inline-block", width: "96px", height: "22px", borderRadius: "7px", background: "var(--hover)", animation: "st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both" } });
