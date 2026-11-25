@@ -126,8 +126,16 @@ public sealed class LiveSeedsTests
     public async Task An_old_shape_page_opened_through_the_bundle_comes_back_as_headings_with_its_live_state_seeded_from_them()
     {
         await using var f = await McpSite.CreateAsync(services: services => services.AddSingleton<ILiveWriteAuthority>(Authority()));
-        // The conversion's own job is not run here: holding its key during the open, it would leave the page as stored (repair on open).
-        await f.Site.ExecuteAsync($"""DELETE FROM "JobRun" WHERE "JobId"='{RequirementsHeadingsJob.JobId}'""");
+        // The conversion's jobs (headings, and the systems that take the same key) are not run here: holding the key during the open, they
+        // would leave the page as stored (repair on open). Their queued runs go; a run already taken (slow on a loaded host) is waited for.
+        var conversions = $"'{RequirementsHeadingsJob.JobId}','{RequirementSystemsJob.JobId}'";
+        await f.Site.ExecuteAsync($"""DELETE FROM "JobRun" WHERE "JobId" IN ({conversions}) AND "State"='{JobStates.Queued}'""");
+        for (var watch = System.Diagnostics.Stopwatch.StartNew();
+             (long)(await f.Site.ScalarAsync($"""SELECT count(*) FROM "JobRun" WHERE "JobId" IN ({conversions}) AND "State"='{JobStates.Running}'"""))! > 0;)
+        {
+            Assert.True(watch.Elapsed < TimeSpan.FromMinutes(1), "A conversion job did not end within a minute.");
+            await Task.Delay(50);
+        }
         var space = (await AtlasHttpSite.Json(await f.Admin.GetAsync("/api/spaces"), HttpStatusCode.OK))[0]!["id"]!.GetValue<string>();
         var (id, _) = await McpSite.PageAsync(f.Admin, space, "Nasazení", McpSite.Rich(McpSite.Paragraph("Zatím text.")), "Zatím text.");
         // As 3.5 stored it: the requirement block, and no live state (the last write was outside a live session), its collaboration row just
