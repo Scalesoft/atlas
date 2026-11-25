@@ -1193,8 +1193,8 @@ describe("BoardCanvas: neighbours and detail (objects spec §5.3, §6)", () => {
     Object.assign(editor, { editor: { view } });
     node("p").element.appendChild(editor);
     editor.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
-    await new Promise(resolve => setTimeout(resolve));
-    expect(insertText).toHaveBeenCalledWith("Ahoj", 3, 3);
+    // The letters go in a task after the focus: wait for them, not for one timer turn that may come first.
+    await vi.waitFor(() => expect(insertText).toHaveBeenCalledWith("Ahoj", 3, 3));
     expect(view.dispatch).toHaveBeenCalledOnce();
     editor.remove();
 

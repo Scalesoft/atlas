@@ -2,12 +2,13 @@ import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import { loadMarkdownDialect } from "@atlas/markdown/core";
 import BoardEditorExample from "./BoardEditorExample.vue";
+import { previewRefreshDelayMs } from "../boards/preview/PagePreview.vue";
 
 // Editor 0.18.0 loads the dialect of `a-` components (the contact block) on demand; in the app DocumentEditor's module starts it.
 beforeAll(() => loadMarkdownDialect());
 
 let wrapper: VueWrapper | undefined;
-afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.replaceChildren(); });
+afterEach(() => { vi.useRealTimers(); wrapper?.unmount(); wrapper = undefined; document.body.replaceChildren(); });
 
 it("shows the editor's blocks on a board, the unknown one as a fallback, and the board's component menu", async () => {
   wrapper = mount(BoardEditorExample, { attachTo: document.body });
@@ -34,8 +35,12 @@ it("previews the page, one section, a section that is gone and a page the reader
   expect(wrapper.get("[data-example-preview-section]").text()).not.toContain("Jana");
   expect(wrapper.get("[data-example-preview-missing]").text()).toContain("Sekce už ve stránce není");
   await vi.waitFor(() => expect(wrapper!.get("[data-example-preview-locked]").text()).toBe("Stránka není dostupná"));
+  // The previews reload once the burst of changes settles (previewRefreshDelayMs): the test advances that time instead of waiting it out.
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
   await wrapper.get("[data-example-change-page]").trigger("click");
-  await vi.waitFor(() => expect(wrapper!.get("[data-example-preview-page]").text()).toContain("Verze 2."), { timeout: 3000 });
+  await vi.advanceTimersByTimeAsync(previewRefreshDelayMs);
+  vi.useRealTimers();
+  await vi.waitFor(() => expect(wrapper!.get("[data-example-preview-page]").text()).toContain("Verze 2."));
 });
 
 it("draws a deployment's product and service from the page, folds a category and follows a change of the page", async () => {

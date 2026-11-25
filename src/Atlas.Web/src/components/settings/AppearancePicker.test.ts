@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 
 // The icon pack is shared module state (iconPack.ts), so every case starts from a pack nobody has requested. The
@@ -7,6 +7,9 @@ import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 const pack = { catalogFailures: 0 };
 let wrapper: VueWrapper;
 
+// Transformed once up front (resetModules below forgets the modules, not their transform): cold, the first case spent most of
+// its 5 s on it under CPU load.
+beforeAll(() => Promise.all([import("./AppearancePicker.vue"), import("./AppearanceIconBrowser.vue"), import("../../assets/icon-pack/catalog.json")]));
 beforeEach(() => {
   vi.resetModules();
   pack.catalogFailures = 0;

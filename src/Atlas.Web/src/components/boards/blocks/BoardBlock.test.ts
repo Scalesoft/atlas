@@ -8,6 +8,8 @@ import BoardBlock from "./BoardBlock.vue";
 
 // The board loads the editor's `a-` dialect as it opens (BoardView); a block's editor writes its Markdown with it.
 beforeAll(() => loadMarkdownDialect());
+// Mermaid, which the inserted diagram renders with, loaded cold within the insertion case: half its time, most of 5 s under CPU load.
+beforeAll(() => import("mermaid"));
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.replaceChildren(); });
 

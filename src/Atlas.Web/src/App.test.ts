@@ -2624,9 +2624,10 @@ describe("unapplied OpenAPI YAML draft guards", () => {
     const { app } = await editingWithYamlDraft(requestMock(path => path.includes('/history') ? Promise.resolve(response({ pageId: page.id, currentVersion: 1, items: [], nextBeforeVersion: null })) : undefined));
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     await app.get('[aria-label="Další akce stránky"]').trigger('click'); await settleMenu();
-    menuItems().find(item => item.textContent?.includes('Historie'))!.click(); await settleLazyViews();
+    menuItems().find(item => item.textContent?.includes('Historie'))!.click();
+    // The panel itself, not every chunk the app prefetches meanwhile (vi.dynamicImportSettled took them all cold, most of the 5 s).
+    await vi.waitFor(() => expect(app.findComponent({ name: 'PageHistoryPanel' }).exists()).toBe(true));
     expect(confirm).not.toHaveBeenCalled();
-    expect(app.findComponent({ name: 'PageHistoryPanel' }).exists()).toBe(true);
     confirm.mockRestore();
   });
 
