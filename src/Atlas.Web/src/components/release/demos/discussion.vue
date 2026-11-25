@@ -64,7 +64,7 @@ useDemoLoop(root, (at) => {
   transition: opacity var(--atlas-motion-slow) var(--atlas-ease-out), translate var(--atlas-motion-slow) var(--atlas-ease-out);
 }
 .demo-discussion-bubble.is-shown { opacity: 1; translate: none; }
-.demo-discussion-bubble.is-docked { opacity: 0; translate: 120px 0; }
+.demo-discussion-bubble.is-docked { opacity: 0; translate: calc(var(--atlas-rise, 8px) * 15) 0; }
 .demo-discussion-avatar { flex: none; width: 24px; height: 24px; border: 0; }
 .demo-discussion-body { display: grid; gap: 2px; min-width: 0; }
 .demo-discussion-reply { justify-self: start; margin-top: 2px; color: var(--accent); font-size: 11.5px; font-weight: 600; }
@@ -81,7 +81,7 @@ useDemoLoop(root, (at) => {
 .demo-discussion-dock {
   position: absolute; top: 40px; right: 0; padding: 5px 10px; border: 1px solid var(--line); border-right: 0; border-radius: 8px 0 0 8px;
   background: var(--surface); color: var(--accent); font-size: 11.5px; font-weight: 600;
-  opacity: 0; translate: 100% 0; transition: opacity var(--atlas-motion-slow) var(--atlas-ease-out), translate var(--atlas-motion-slow) var(--atlas-ease-out);
+  opacity: 0; translate: var(--atlas-rise, 8px) 0; transition: opacity var(--atlas-motion-slow) var(--atlas-ease-out), translate var(--atlas-motion-slow) var(--atlas-ease-out);
 }
 .demo-discussion-dock.is-shown { opacity: 1; translate: none; }
 </style>

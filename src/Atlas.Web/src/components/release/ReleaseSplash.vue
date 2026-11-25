@@ -128,7 +128,7 @@ onBeforeUnmount(skip);
       <p class="release-splash-eyebrow" data-wave>{{ patch ? t.splash.patchVersion(patch.version) : major ? (since ? t.splash.newMajorVersion : t.splash.majorVersion) : since ? t.splash.newVersion : t.splash.version }}<template v-if="(patch ?? note).date"> · {{ (patch ?? note).date }}</template></p>
       <h1 :id="titleId" class="release-splash-title">
         <span class="release-splash-version" data-wave>{{ `${label} ` }}</span>
-        <span class="release-splash-codename"><span v-for="(word, index) in words" :key="index" class="release-splash-word" data-wave>{{ index ? ` ${word}` : word }}</span></span>
+        <span class="release-splash-codename" :data-wave="composed ? undefined : ''"><span v-for="(word, index) in words" :key="index" class="release-splash-word" :data-wave="composed ? '' : undefined">{{ index ? ` ${word}` : word }}</span></span>
       </h1>
       <p v-if="patch" class="release-splash-lead" data-wave>{{ t.splash.patchLead }}</p>
       <p v-else-if="note.lead" class="release-splash-lead" data-wave>{{ note.lead }}</p>
@@ -187,6 +187,10 @@ onBeforeUnmount(skip);
 .release-splash-codename { display: block; text-wrap: balance; }
 .release-splash-word {
   font-family: "Fraunces Variable", Georgia, "Times New Roman", serif; font-size: clamp(38px, 6vw, 64px); font-weight: 600; letter-spacing: -.02em; text-wrap: balance;
+}
+/* One gradient stroke over the whole codename: on the block outside the composition (the words are inline there, so they cannot move
+   and would each restart the gradient), on each word inside it. */
+.release-splash[data-composed] .release-splash-word, .release-splash:not([data-composed]) .release-splash-codename {
   background: linear-gradient(100deg, var(--release-ink-1), var(--release-ink-2) 52%, var(--release-ink-3)); -webkit-background-clip: text; background-clip: text; color: transparent;
   /* The gradient paints only inside the box, and at line-height 1 the last line's descenders (the g of Tangerine) hang below it:
      the box reaches under them, the layout keeps its place. */
@@ -250,8 +254,8 @@ onBeforeUnmount(skip);
   border: 1px solid color-mix(in srgb, var(--release-ink-2) 45%, transparent); opacity: 0; animation: release-ring 6s ease-out 1s infinite;
 }
 .release-splash[data-major] .release-splash-eyebrow { color: var(--release-ink-1); }
-.release-splash[data-major] .release-splash-word {
-  font-size: clamp(52px, 10vw, 120px);
+.release-splash[data-major] .release-splash-word { font-size: clamp(52px, 10vw, 120px); }
+.release-splash[data-major][data-composed] .release-splash-word, .release-splash[data-major]:not([data-composed]) .release-splash-codename {
   background-image: linear-gradient(100deg, var(--release-ink-1), var(--release-ink-2) 30%, var(--release-ink-3) 45%, color-mix(in srgb, var(--release-ink-3) 40%, white) 50%, var(--release-ink-3) 55%, var(--release-ink-2) 70%, var(--release-ink-1));
   background-size: 300% 100%; background-position: 100% 0; animation: release-sheen 7s ease-in-out 1.6s infinite;
 }
@@ -273,9 +277,9 @@ onBeforeUnmount(skip);
 @keyframes release-ring { 0% { scale: .7; opacity: .55; } 100% { scale: 1.7; opacity: 0; } }
 @keyframes release-aurora { from { translate: -3% 2%; rotate: -4deg; scale: 1; } to { translate: 4% -3%; rotate: 6deg; scale: 1.12; } }
 @keyframes release-sheen { 0%, 55% { background-position: 100% 0; } 100% { background-position: 0 0; } }
-@media (prefers-reduced-motion: reduce) { .release-splash[data-major]::before, .release-splash[data-major] .release-splash-hero::before, .release-splash[data-major] .release-splash-hero::after, .release-splash[data-major] .release-splash-word { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .release-splash[data-major]::before, .release-splash[data-major] .release-splash-hero::before, .release-splash[data-major] .release-splash-hero::after, .release-splash[data-major] .release-splash-word, .release-splash[data-major] .release-splash-codename { animation: none; } }
 :global(html[data-atlas-reduced-motion] .release-splash[data-major]::before), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-hero::before),
-:global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-hero::after), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-word) { animation: none; }
+:global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-hero::after), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-word), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-codename) { animation: none; }
 /* A small update of a known release: the motif smaller and quieter, the fixes as a plain two-column list instead of cards. */
 .release-splash[data-patch] { grid-template-columns: minmax(0, 160px) minmax(0, 1fr); }
 .release-splash[data-patch] .release-splash-hero :deep(.release-mark[data-variant]) { width: 150px; }
