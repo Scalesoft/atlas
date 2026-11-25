@@ -52,6 +52,12 @@ export interface MarkdownIntention {
   readonly checked?: boolean
   /** The keys of the same action elsewhere, written for the platform (`formatMarkdownShortcut`); shown at the row's end. */
   readonly shortcut?: string
+  /** Deletes or removes something (Přesunout do koše): drawn red. */
+  readonly destructive?: boolean
+  /** A thin line parts it from the row shown above it: a host's groups of rows (the tree's Otevřít, Vytvořit, Upravit, Koš). */
+  readonly separated?: boolean
+  /** Shown, not offered now (a running action): it cannot be chosen. */
+  readonly disabled?: boolean
   run(): void | Promise<void>
 }
 export type MarkdownIntentionProvider = (context: MarkdownIntentionContext) => readonly MarkdownIntention[] | Promise<readonly MarkdownIntention[]>
@@ -200,7 +206,8 @@ export function openMarkdownIntentionsMenu(options: {
     if (heading) { heading.textContent = filter ? intentionsStrings.filtered(filter) : ''; heading.hidden = !filter }
     const items = shown()
     if (!items.length && pending) { list.setStatus('loading'); return }
-    list.update(items.map((row): MarkdownSuggestionItem => ({ id: row.id, title: row.label, ...row.description ? { description: row.description } : {}, ...row.icon ? { icon: row.icon } : {}, ...row.checked ? { checked: true } : {}, ...row.shortcut ? { shortcut: row.shortcut } : {} })))
+    list.update(items.map((row): MarkdownSuggestionItem => ({ id: row.id, title: row.label, ...row.description ? { description: row.description } : {}, ...row.icon ? { icon: row.icon } : {}, ...row.checked ? { checked: true } : {}, ...row.shortcut ? { shortcut: row.shortcut } : {},
+      ...row.destructive ? { destructive: true } : {}, ...row.separated ? { separated: true } : {}, ...row.disabled ? { disabled: true } : {} })))
   }
   const add = (more: readonly MarkdownIntention[] | undefined) => {
     const ids = new Set(rows.map(row => row.id))
