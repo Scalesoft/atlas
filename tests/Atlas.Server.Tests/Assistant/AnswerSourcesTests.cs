@@ -272,6 +272,13 @@ public sealed class AnswerSourcesTests
         // The embeddings time out: the answer waits its budget of one second (fake clock), then retrieves lexically.
         f.Fake.SetMode(AiProfileKind.Embeddings, FakeAiMode.Timeout);
         var embedding = f.EmbedAsync(question);
+        // The budget starts with the call: advance the clock once the call is there. Under load the way to it (configuration, access)
+        // took longer than the loop below, whose advances then went by before the budget's timer existed.
+        for (var watch = System.Diagnostics.Stopwatch.StartNew(); !embedding.IsCompleted && !f.Fake.Calls.Any(call => call.Task == AiTaskCatalog.SearchEmbedQuery);)
+        {
+            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(30), "The question's embedding call never came.");
+            await Task.Delay(10);
+        }
         for (var i = 0; i < 40 && !embedding.IsCompleted; i++)
         {
             // Well below the fake's 30 s timeout: only the budget can end the wait.

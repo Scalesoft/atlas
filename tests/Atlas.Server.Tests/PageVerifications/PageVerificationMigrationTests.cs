@@ -7,8 +7,17 @@ using Xunit;
 
 namespace Atlas.Server.Tests.PageVerifications;
 
+/// <summary>Timed tests run alone after the parallel ones, as Projector's measured tests do.</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class PageVerificationPerformanceCollection
+{
+    public const string Name = "Page verification performance";
+}
+
 /// <summary>Migration 2026112400 over an installation's rows (plan §8): every space keeps verification off and no page gets a row, so
-/// every existing page is „off“; and the perf guard of the space's readership (plan §5.2).</summary>
+/// every existing page is „off“; and the perf guard of the space's readership (plan §5.2), timed, so the class runs alone after the
+/// parallel tests (in a full run the busy cores took it from 115 ms to 378 ms).</summary>
+[Collection(PageVerificationPerformanceCollection.Name)]
 public sealed class PageVerificationMigrationTests
 {
     private const long Version = 2026112400;

@@ -18,9 +18,16 @@ using Xunit.Abstractions;
 
 namespace Atlas.Server.Tests.AppLogs;
 
-/// <summary>Systémový log (3.6): the provider queues without waiting, the writer stores redacted and capped batches, the retention ages and
-/// counts the log, and a wiki administrator (a Hub one too) pages and filters it with one statement a page.</summary>
-public sealed class AppLogTests(ITestOutputHelper output)
+/// <summary>Timed tests run alone after the parallel ones, as Projector's measured tests do.</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class AppLogPerformanceCollection
+{
+    public const string Name = "App log performance";
+}
+
+/// <summary>The provider queues without waiting: timed, so it runs alone (in a full run all cores are busy with other tests).</summary>
+[Collection(AppLogPerformanceCollection.Name)]
+public sealed class AppLogQueueTimingTests(ITestOutputHelper output)
 {
     [Fact]
     public void Ten_thousand_log_calls_only_queue_and_a_full_queue_drops_and_counts()
@@ -45,7 +52,12 @@ public sealed class AppLogTests(ITestOutputHelper output)
         Assert.Equal(2, queue.Dropped);
         Assert.Equal(10_000, queue.Reader.Count);
     }
+}
 
+/// <summary>Systémový log (3.6): the provider queues without waiting, the writer stores redacted and capped batches, the retention ages and
+/// counts the log, and a wiki administrator (a Hub one too) pages and filters it with one statement a page.</summary>
+public sealed class AppLogTests(ITestOutputHelper output)
+{
     [Fact]
     public void The_minimum_level_follows_the_longest_category_prefix_and_configuration_overrides_a_default()
     {

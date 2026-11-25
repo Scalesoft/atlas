@@ -48,8 +48,11 @@ public sealed class WolverineScheduledIndexMigrationTests
             """));
         // The page is not there, so the checkpoint has nothing to store: delivered means read and handled, not a dead letter.
         await DrainAsync(host);
-        Assert.Equal("Handled|0", await ScalarAsync(host.ConnectionString, $"""
+        var state = await ScalarAsync(host.ConnectionString, $"""
             SELECT status || '|' || (SELECT count(*) FROM wolverine_dead_letters) FROM wolverine_incoming_envelopes WHERE id = '{EnvelopeId}'
-            """));
+            """);
+        // A dead letter leaves the incoming table: say why it failed.
+        Assert.True(Equals("Handled|0", state), $"The envelope: {state ?? "not incoming"}; dead letters: {await ScalarAsync(host.ConnectionString,
+            "SELECT string_agg(message_type || ' ' || exception_type || ': ' || exception_message, '; ') FROM wolverine_dead_letters")}");
     }
 }
