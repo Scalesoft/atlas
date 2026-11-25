@@ -41,6 +41,11 @@ public static class PersonalLibraryEndpoints
             .WithSummary("Co se změnilo: the pages the caller may read changed in the last 30 days, newest change first, one row per page with its newest " +
                 "version (author, channel, AI, token for its owner) and how many further versions. filter: all, ai or mine; author: only the changes of this account " +
                 "(a person's activity, a contact's directoryId; no 30-day window); space: only the pages of this space; limit 1–50; cursor: next of the previous page.");
+        var days = group.MapGet("/me/changes/days", async (Guid? author, IMessageBus bus, CancellationToken ct) =>
+                Results.Ok(await bus.InvokeAsync<PersonActivity>(new GetPersonActivity(author), ct)))
+            .Produces<PersonActivity>()
+            .WithSummary("A person's last 365 days (their profile's calendar): versions by day (Prague) and space of the pages the caller may read, " +
+                "as Co se změnilo decides them. author: the account (a contact's directoryId); the caller's own without it.");
         list.Produces<PersonalLibraryList>().ProducesProblem(400)
             .WithSummary("List the owner's accessible library. kind: favorites, recent, drafts, updates or changes; offset 0–1000, limit 1–50.");
         state.Produces<PersonalPageState>().ProducesProblem(404).WithSummary("Read the owner's favorite and visit state for an accessible page.");
@@ -50,6 +55,7 @@ public static class PersonalLibraryEndpoints
         {
             list.WithName("ListPersonalLibrary");
             changes.WithName("ListRecentChanges");
+            days.WithName("GetPersonActivity");
             state.WithName("GetPersonalPageState");
             favorite.WithName("SetPersonalFavorite");
             visit.WithName("RecordPersonalVisit");

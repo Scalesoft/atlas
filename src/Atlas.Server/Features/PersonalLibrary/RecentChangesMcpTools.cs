@@ -23,7 +23,7 @@ public sealed class RecentChangesMcpTools(IMessageBus bus)
     [McpToolScope(ApiScopes.Read)]
     [Description("Vypíše stránky změněné za posledních 30 dní, které vlastník tokenu smí číst, nejnovější změna první, jedna řádka na stránku: pageId, název, " +
         "prostor, kdo a kdy, kanál (web, mcp, api, assistant), zda šlo o změnu s AI a kolik dalších verzí. Neuveřejněné změny jen u stránek, které smí upravovat. " +
-        "S authorId jen změny jednoho člověka (co dělal a kdy), bez omezení na 30 dní, se spaceId jen v jednom prostoru. Historii stránky čte atlas_get_history. " + McpText.TrustNotice)]
+        "S authorId jen změny jednoho člověka (co dělal a kdy), bez omezení na 30 dní, a na první stránce i jeho rok po dnech a prostorech (days), se spaceId jen v jednom prostoru. Historii stránky čte atlas_get_history. " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListAsync(
         [Description("Volitelně all (výchozí), ai (jen změny s AI) nebo mine (stránky, které vlastní, upravoval nebo má v oblíbených).")] string? filter = null,
         [Description("Volitelně next z předchozí stránky výpisu.")] string? cursor = null,
@@ -31,8 +31,10 @@ public sealed class RecentChangesMcpTools(IMessageBus bus)
         [Description("Volitelně spaceId z atlas_list_spaces: jen stránky toho prostoru.")] string? spaceId = null,
         CancellationToken ct = default)
     {
-        var list = await bus.InvokeAsync<RecentChangeList>(new ListRecentChanges(filter ?? "all", cursor, 20,
-            McpArguments.OptionalId(authorId, "authorId"), McpArguments.OptionalId(spaceId, "spaceId")), ct);
+        var author = McpArguments.OptionalId(authorId, "authorId");
+        var list = await bus.InvokeAsync<RecentChangeList>(new ListRecentChanges(filter ?? "all", cursor, 20, author, McpArguments.OptionalId(spaceId, "spaceId")), ct);
+        // A person's year by space (their profile's calendar), on the first page of their changes.
+        var year = author is { } person && cursor is null ? await bus.InvokeAsync<PersonActivity>(new GetPersonActivity(person), ct) : null;
         var body = new StringBuilder();
         var items = new JsonArray();
         foreach (var item in list.Items)
@@ -54,8 +56,19 @@ public sealed class RecentChangesMcpTools(IMessageBus bus)
                 ["isAi"] = item.IsAi, ["apiToken"] = item.ApiToken?.Name, ["furtherChanges"] = item.FurtherChanges
             });
         }
+        if (year is not null)
+        {
+            body.Append("Za posledních 365 dní po prostorech: ").AppendJoin(", ", year.Days.GroupBy(day => day.SpaceName ?? "bez prostoru")
+                .Select(space => $"{McpText.Line(space.Key, 100)} {space.Sum(day => day.Changes)}")).Append(".\n");
+        }
+        var structured = new JsonObject { ["items"] = items, ["next"] = list.Next };
+        if (year is not null)
+        {
+            structured["days"] = new JsonArray(year.Days.Select(day => (JsonNode)new JsonObject
+                { ["day"] = day.Day, ["spaceId"] = day.SpaceId, ["spaceName"] = day.SpaceName, ["changes"] = day.Changes }).ToArray());
+        }
         return McpText.Result(McpText.Wrap($"Co se změnilo: {list.Items.Count} stránek.",
-                list.Items.Count == 0 ? "Žádné změny." : body.ToString(), list.Next is { } next ? $"Další stránky: cursor {next}." : null),
-            new JsonObject { ["items"] = items, ["next"] = list.Next });
+                list.Items.Count == 0 && year is null ? "Žádné změny." : body.ToString(), list.Next is { } next ? $"Další stránky: cursor {next}." : null),
+            structured);
     }
 }

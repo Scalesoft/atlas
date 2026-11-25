@@ -160,6 +160,33 @@ public sealed class RecentChangesTests
         Assert.DoesNotContain(await List(f, f.Reader), x => x.PageId == old.Id);
     }
 
+    [PostgreSqlFact]
+    public async Task A_persons_year_by_day_and_space_counts_only_what_the_viewer_may_read_and_on_mcp_nothing_out_of_ai()
+    {
+        await using var f = await PersonalLibraryFixture.CreateAsync();
+        var plan = await Published(f, "Writer plan");
+        await f.Pages.SaveAsync(plan.Id, new SavePageRequest("Writer plan", PersonalLibraryFixture.Rich("more"), null, plan.Version), f.Writer, default);
+        await Published(f, "Colleague plan", owner: f.OtherWriter);
+        var hiddenSpace = await f.Host.SeedSpaceAsync("Hidden", (f.Writer, SpaceRole.Writer));
+        await Published(f, "Hidden plan", hiddenSpace);
+        var outOfAi = await f.Host.SeedSpaceAsync("Out of AI", (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+        await Published(f, "Not for AI", outOfAi);
+        await f.As<SpaceAiSettingsView>(f.Admin, new SaveSpaceAiSettings(outOfAi, new SaveSpaceAiSettingsRequest(false, null)));
+        var today = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Europe/Prague").ToString("yyyy-MM-dd");
+
+        // The reader sees the published version of the writer's plan (the newer work is unpublished), and nothing of the hidden space.
+        var reader = (await f.As<PersonActivity>(f.Reader, new GetPersonActivity(f.Writer.Id))).Days;
+        Assert.All(reader, day => Assert.Equal(today, day.Day));
+        Assert.Equal([(f.SpaceId, 1), (outOfAi, 1)], reader.Select(day => (day.SpaceId!.Value, day.Changes)).OrderBy(x => x.Item1 == outOfAi));
+        var writer = (await f.As<PersonActivity>(f.Writer, new GetPersonActivity(f.Writer.Id))).Days;
+        Assert.Equal(4, writer.Sum(day => day.Changes));
+
+        var token = await TestApiTokens.SeedAsync(f.Host, f.Reader, "agent");
+        f.Host.Channel.Current = new RequestChannel(ContentChannel.Mcp, token);
+        Assert.Equal([f.SpaceId], (await f.As<PersonActivity>(f.Reader, new GetPersonActivity(f.Writer.Id))).Days.Select(day => day.SpaceId!.Value));
+        f.Host.Channel.Current = RequestChannel.Web;
+    }
+
     private static async Task<PageDto> Published(PersonalLibraryFixture f, string title, Guid? spaceId = null, UserAccount? owner = null)
     {
         var author = owner ?? f.Writer;

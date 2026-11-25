@@ -31,15 +31,19 @@ public sealed class RecentChangesHttpTests
         // A person's activity: the author's changes, nobody else's.
         Assert.Equal(page, (await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/me/changes?author={authorId}&space={space}"), HttpStatusCode.OK))["items"]![0]!["pageId"]!.GetValue<string>());
         Assert.Empty((await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/me/changes?author={Guid.NewGuid()}"), HttpStatusCode.OK))["items"]!.AsArray());
+        Assert.Equal(space, (await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/me/changes/days?author={authorId}"), HttpStatusCode.OK))["days"]![0]!["spaceId"]!.GetValue<string>());
 
         var agent = await f.ClientAsync((await IssueAsync(author, f.Site.Password, ["read"], ["mcp"])).Secret);
         var listed = Assert.Single(Items(await CallAsync(agent, "atlas_list_recent_changes")))!;
         Assert.Equal((page, "Plán"), (listed["pageId"]!.GetValue<string>(), listed["title"]!.GetValue<string>()));
-        Assert.Single(Items(await CallAsync(agent, "atlas_list_recent_changes", new { authorId = authorId.ToString() })));
+        var person = await CallAsync(agent, "atlas_list_recent_changes", new { authorId = authorId.ToString() });
+        Assert.Single(Items(person));
+        Assert.Equal(space, Structured(person)["days"]![0]!["spaceId"]!.GetValue<string>());
         await f.ExcludeFromAiAsync(space);
         Assert.Empty(Items(await CallAsync(agent, "atlas_list_recent_changes")));
         Assert.Empty(Items(await CallAsync(agent, "atlas_list_recent_changes", new { authorId = authorId.ToString() })));
         // The personal API's tokens serve AI tools too: a space out of AI is gone there as well.
         Assert.Empty((await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/me/changes?author={authorId}"), HttpStatusCode.OK))["items"]!.AsArray());
+        Assert.Empty((await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/me/changes/days?author={authorId}"), HttpStatusCode.OK))["days"]!.AsArray());
     }
 }
