@@ -141,7 +141,10 @@ public sealed class LiveSeedsTests
             await Task.Delay(50);
         }
         var space = (await AtlasHttpSite.Json(await f.Admin.GetAsync("/api/spaces"), HttpStatusCode.OK))[0]!["id"]!.GetValue<string>();
-        var (id, _) = await McpSite.PageAsync(f.Admin, space, "Nasazení", McpSite.Rich(McpSite.Paragraph("Zatím text.")), "Zatím text.");
+        var (id, _) = await McpSite.PageAsync(f.Admin, space, "Nasazení", McpSite.Rich(McpSite.Paragraph("Zatím text.")), "Zatím text.", publish: false);
+        // Its one announcement's seed lands first (a draft: no publication to announce). Late on a loaded host, that seed's repair on open
+        // would hold the conversion's key during the open below, which then serves the page as stored.
+        await StoredStateAsync(f, id);
         // As 3.5 stored it: the requirement block, and no live state (the last write was outside a live session), its collaboration row just
         // stamped by a reader's open with nothing unsaved (conversion bug 2 of the 3.6 handoff: that stamp once deferred the repair).
         await f.Site.ScalarAsync("""UPDATE "PageRevision" SET "ContentJson" = @json WHERE "PageId" = @page""",

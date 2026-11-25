@@ -12,6 +12,16 @@ beforeAll(() => loadMarkdownDialect());
 beforeAll(() => import("mermaid"));
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.replaceChildren(); });
+// The insertion's own lazy chunks (the module's runtime and what its editor loads on insert) were most of the insertion case cold, past
+// its 5 s under CPU load: one insertion here loads them before the tests.
+beforeAll(async () => {
+  show({ insert: useEditorBlockModules().find(module => module.id === "diagrams.insert"), editing: true });
+  const editor = await vi.waitFor(() => document.querySelector<HTMLElement & { editor?: Editor }>(".board-block .ProseMirror[contenteditable=true]")?.editor
+    ?? Promise.reject(new Error("no live editor yet")), { timeout: 10_000 });
+  await vi.waitFor(() => expect(editor.state.doc.firstChild?.type.name).toBe("diagram"), { timeout: 10_000 });
+  escape();
+  wrapper!.unmount(); wrapper = undefined; document.body.replaceChildren();
+});
 
 const contact: BoardBlockNode = { type: "contactCard", attrs: { data: { version: 1, contacts: [{ name: "Jana Nováková", emails: ["jana@example.cz"] }] } } };
 const issue: BoardBlockNode = { type: "youtrackIssue", attrs: { id: "2-1", key: "ATL-1", title: "Oprava přihlášení", url: "https://yt.example/issue/ATL-1", state: "Open" } };

@@ -82,19 +82,24 @@ public sealed class PageAccessHttpTests
             $"/api/pages/{page["id"]!.GetValue<Guid>()}/publish", new { expectedVersion = 1 }), HttpStatusCode.OK);
         var personId = Guid.NewGuid();
         var excludedId = Guid.NewGuid();
+        var colleagueId = Guid.NewGuid();
         var groupId = Guid.NewGuid();
         var outsiderLogin = TestLogin.For("outsider");
-        var personLogin = TestLogin.For("person");
+        // The test's own people share a tag, so their pages are not shifted by administrators other tests add to the shared site meanwhile.
+        var tag = Guid.NewGuid().ToString("N")[..8];
+        var personLogin = "person-" + tag;
         var editors = TestLogin.For("Editors");
         await site.ExecuteAsync("""
             INSERT INTO "UserAccount" ("Id","Username","DisplayName","SecurityStamp","IsWikiAdmin","IsActive") VALUES
-                (@person,@personLogin,'Person','person-stamp',false,true),(@excluded,@outsiderLogin,'Outsider','outsider-stamp',false,true);
+                (@person,@personLogin,'Person','person-stamp',false,true),(@excluded,@outsiderLogin,'Outsider','outsider-stamp',false,true),
+                (@colleague,@colleagueLogin,'Colleague','colleague-stamp',false,true);
             INSERT INTO "UserGroup" ("Id","Name") VALUES (@group,@editors);
             INSERT INTO "GroupMember" ("Id","GroupId","UserId","ActiveFrom") VALUES (gen_random_uuid(),@group,@person,now());
             INSERT INTO "SpaceGrant" ("Id","SpaceId","UserId","GroupId","Role","ActiveFrom") VALUES
-                (gen_random_uuid(),@space,@person,NULL,1,now()),(gen_random_uuid(),@space,NULL,@group,2,now());
-            """, ("person", personId), ("excluded", excludedId), ("group", groupId), ("space", spaceId),
-            ("personLogin", personLogin), ("outsiderLogin", outsiderLogin), ("editors", editors));
+                (gen_random_uuid(),@space,@person,NULL,1,now()),(gen_random_uuid(),@space,NULL,@group,2,now()),
+                (gen_random_uuid(),@space,@colleague,NULL,1,now());
+            """, ("person", personId), ("excluded", excludedId), ("colleague", colleagueId), ("group", groupId), ("space", spaceId),
+            ("personLogin", personLogin), ("colleagueLogin", "colleague-" + tag), ("outsiderLogin", outsiderLogin), ("editors", editors));
         var access = await AtlasHttpSite.Json(await admin.GetAsync(path), HttpStatusCode.OK);
         // Every wiki administrator of the shared installation comes first in the list: this test's person is read by its login.
         var people = await AtlasHttpSite.Json(await admin.GetAsync(path + "?q=" + personLogin), HttpStatusCode.OK);
@@ -110,10 +115,10 @@ public sealed class PageAccessHttpTests
         // The list holds only people a grant reaches; the directory search of the add wizard is a separate endpoint.
         var probe = await AtlasHttpSite.Json(await admin.GetAsync(path + "?q=" + outsiderLogin), HttpStatusCode.OK);
         Assert.Empty(probe["items"]!.AsArray());
-        var first = await AtlasHttpSite.Json(await admin.GetAsync(path + "?limit=1"), HttpStatusCode.OK);
+        var first = await AtlasHttpSite.Json(await admin.GetAsync(path + "?q=" + tag + "&limit=1"), HttpStatusCode.OK);
         Assert.True(first["hasMore"]!.GetValue<bool>());
-        var next = await AtlasHttpSite.Json(await admin.GetAsync(path + "?limit=1&offset=1"), HttpStatusCode.OK);
-        Assert.NotEqual(first["items"]![0]!["userId"]!.GetValue<Guid>(), next["items"]![0]!["userId"]!.GetValue<Guid>());
+        var next = await AtlasHttpSite.Json(await admin.GetAsync(path + "?q=" + tag + "&limit=1&offset=1"), HttpStatusCode.OK);
+        Assert.Equal(new[] { personId, colleagueId }.Order(), new[] { first, next }.Select(x => Assert.Single(x["items"]!.AsArray())!["userId"]!.GetValue<Guid>()).Order());
         await site.ExecuteAsync("""
             UPDATE "UserAccount" SET "IsWikiAdmin"=false WHERE "Id"=@actor;
             """, ("actor", actorId), ("space", spaceId));
