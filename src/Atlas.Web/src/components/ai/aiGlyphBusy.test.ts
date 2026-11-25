@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { iconMarkup } from "@atlas/markdown/icons";
-import { AI_GLYPH_MOVES, cycleBusy } from "./aiGlyphBusy";
+import { AI_GLYPH_MOVE_COUNT, cycleBusy } from "./aiGlyphBusy";
 
 function glyph() {
   const element = document.createElement("span");
@@ -36,6 +36,6 @@ describe("cycleBusy", () => {
   it("names exactly the variants the stylesheet defines", () => {
     const css = readFileSync(resolve(process.cwd(), "src/styles/aiBusy.css"), "utf8");
     const defined = [...css.matchAll(/\[data-move="(\d+)"\]/g)].map((match) => Number(match[1]));
-    expect(defined).toEqual(AI_GLYPH_MOVES.map((_, index) => index + 1));
+    expect(defined).toEqual(Array.from({ length: AI_GLYPH_MOVE_COUNT }, (_, index) => index + 1));
   });
 });
