@@ -416,6 +416,8 @@ public sealed class PageVerificationTests
                 await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
             }
         }
+        // The administrator who switched the steward's reminders off still hears of it (the notice has no preference).
+        await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationPreferenceDto>(admin, new Atlas.Server.Features.Notifications.Commands.SetNotificationPreference(NotificationKinds.VerificationDue, false));
         var user = Assert.Single(await f.As<IReadOnlyList<Atlas.Server.Features.Administration.Contracts.UserSummary>>(f.Admin,
             new Atlas.Server.Features.Administration.Queries.ListUsers(Id: f.Writer.Id)));
         await f.As<Atlas.Server.Features.Administration.Contracts.UserSummary>(f.Admin,

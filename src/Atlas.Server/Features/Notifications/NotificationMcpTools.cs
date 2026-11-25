@@ -23,7 +23,8 @@ public sealed class NotificationMcpTools(IMessageBus bus)
 {
     [McpServerTool(Name = "atlas_list_notifications", Title = "Oznámení", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true)]
     [McpToolScope(ApiScopes.Read)]
-    [Description("Vypíše oznámení vlastníka tokenu (zmínky v komentářích a stránkách, sdílení), nejnovější událost první, 30 na stránku: notificationId, " +
+    [Description("Vypíše oznámení vlastníka tokenu (zmínky v komentářích a stránkách, sdílení, připomínky ověření stránek, kterým je garantem, " +
+        "nahlášení neaktuální stránky a správcům prostoru deaktivovaného garanta), nejnovější událost první, 30 na stránku: notificationId, " +
         "druh, objectId a typ objektu, název, kdo naposledy, počet událostí, zda je přečtené a text komentáře nebo poznámky nahlášení (excerpt). Jen ta, jejichž objekt smíte číst. " +
         "Označí je atlas_mark_notifications_read. " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListAsync(
