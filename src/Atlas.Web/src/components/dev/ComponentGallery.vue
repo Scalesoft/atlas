@@ -45,6 +45,8 @@ import type { Space } from "../../api";
 import { themeAccents } from "../../profile";
 import AccountStatusBadge from "../settings/people/AccountStatusBadge.vue";
 import PageStatusBadge from "../PageStatusBadge.vue";
+import RelativeTime from "../RelativeTime.vue";
+import { formatDateTime, formatShortDate } from "../../formatDate";
 import PageIcon from "../PageIcon.vue";
 import PageTree from "../PageTree.vue";
 import { resolveTreeInsert, resolveTreeMove, type TreeDrop, type TreePage } from "../../treeMove";
@@ -545,6 +547,9 @@ const steps: FlowStep[] = [
         <SettingsSection title="PageStatusBadge + AccountStatusBadge" description="PageStatusBadge.vue odvozuje stav publikace (při čtení ho autor vidí u tlačítka Publikovat, viz AI galerie › Publikace), settings/people/AccountStatusBadge.vue stav účtu. Pro tyto use casy nepoužívat ručně sestavený obecný badge.">
           <div class="st-actions"><PageStatusBadge :is-published="false" :version="1" :published-version="null" /><PageStatusBadge :is-published="true" :version="2" :published-version="1" /><PageStatusBadge :is-published="true" :version="2" :published-version="2" /></div>
           <div class="st-actions"><AccountStatusBadge :account="{ isActive: true, credentialState: 'active' }" /><AccountStatusBadge :account="{ isActive: true, credentialState: 'pending' }" /><AccountStatusBadge :account="{ isActive: false, credentialState: 'active' }" /></div>
+        </SettingsSection>
+        <SettingsSection title="RelativeTime" description="RelativeTime.vue — jedno pravidlo pro datum: řádek seznamu = „před …“ s přesným datem a časem v title (RelativeTime, obnovuje se jednou sdílenou minutovou hodinou), sloupec tabulky = formatShortDate + title, detail nebo dok = formatDateTime. Ručně sestavený čas v řádku seznamu nepsat.">
+          <div class="st-actions"><RelativeTime :value="new Date(Date.now() - 5 * 60_000).toISOString()" /><time :title="formatDateTime('2026-09-07T16:33:00Z')">{{ formatShortDate('2026-09-07T16:33:00Z') }}</time><time>{{ formatDateTime('2026-09-07T16:33:00Z') }}</time></div>
         </SettingsSection>
         <SettingsSection title="PageIcon + SearchHighlight" description="PageIcon.vue — dekorace stránky. SearchHighlight.vue — bezpečné zvýraznění nalezeného textu.">
           <div class="gallery-choice"><PageIcon :decoration="{ revisionId: 'gallery', icon: 'book-open', color: 'blue' }" /><SearchHighlight text="Provozní dokumentace a návody" query="dokumentace" /></div>

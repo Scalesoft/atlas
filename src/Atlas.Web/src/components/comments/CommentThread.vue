@@ -5,7 +5,8 @@ import { errorMessage } from "../../api";
 import { inertBlockHost, type BoardBlockHost } from "../../boards/editorBlocks";
 import { commentApi, type CommentApi, type ObjectComment } from "../../comments/commentApi";
 import { createCommentThread, isCommentsChange } from "../../comments/commentThread";
-import { formatAgo, formatDateTime } from "../../formatDate";
+import { formatDateTime } from "../../formatDate";
+import RelativeTime from "../RelativeTime.vue";
 import { focusWhenPresent } from "../../keyboard/navigation";
 import { requestedComment, requestedQuote } from "../../comments/commentFocus";
 import { scrollBehavior } from "../../motion/aiMotion";
@@ -219,7 +220,7 @@ const hidden = () => status.value === "missing" || (!!props.title && status.valu
         <div class="comment-main">
           <div class="comment-meta">
             <strong class="comment-author" :title="comment.authorName">{{ comment.authorName }}</strong>
-            <time class="comment-time" :datetime="comment.createdAt" :title="formatDateTime(comment.createdAt)">{{ formatAgo(comment.createdAt) }}</time>
+            <RelativeTime class="comment-time" :value="comment.createdAt" />
             <span v-if="comment.editedAt && !comment.deleted" class="comment-edited" :title="t.comments.editedTitle(formatDateTime(comment.editedAt))" data-comment-edited>{{ t.comments.edited }}</span>
             <button v-if="comment.anchor && !comment.deleted" type="button" class="comment-anchor" data-comment-anchor @click="emit('anchor', comment.anchor)">
               <AtlasIcon name="map-pin" :size="13" />{{ t.comments.place }}</button>
