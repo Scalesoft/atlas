@@ -1,6 +1,6 @@
 import { posToDOMRect, type Editor } from '@tiptap/core'
 import type { Node as PMNode } from '@tiptap/pm/model'
-import { createSuggestionList, createSuggestionPopup, dismissMarkdownRecognition, dispatchMarkdownHistoryOperation, markdownRecognitionAt, markdownRecognitionCandidates, nameKey, tokenize, type MarkdownIntention, type MarkdownIntentionProvider, type MarkdownRecognitionHit } from '../../core'
+import { createSuggestionList, createSuggestionPopup, dismissMarkdownRecognition, dispatchMarkdownHistoryOperation, markdownChangeMapping, markdownRecognitionAt, markdownRecognitionCandidates, nameKey, tokenize, type MarkdownIntention, type MarkdownIntentionProvider, type MarkdownRecognitionHit } from '../../core'
 import { contactsStrings } from './strings'
 import { linkInserted, normalizeContact, type ContactsPluginOptions, type MarkdownContact } from './data'
 import { inlineContactJson, replaceWithContacts, selectedName } from './pick'
@@ -171,7 +171,7 @@ const peopleNamed = async (editor: Editor, options: ContactsPluginOptions, name:
 /** An explicit pick in place of a written name, linked as every insert is; the name stays when they go back or it changed meanwhile. */
 async function put(editor: Editor, options: ContactsPluginOptions, range: { from: number; to: number }, written: string, person: MarkdownContact) {
   let { from, to } = range
-  const follow = ({ transaction }: { transaction: import('@tiptap/pm/state').Transaction }) => { from = transaction.mapping.map(from, 1); to = Math.max(from, transaction.mapping.map(to, -1)) }
+  const follow = ({ transaction }: { transaction: import('@tiptap/pm/state').Transaction }) => { const mapping = markdownChangeMapping(transaction); from = mapping.map(from, 1); to = Math.max(from, mapping.map(to, -1)) }
   const abort = new AbortController(), stop = () => abort.abort()
   editor.on('transaction', follow); editor.on('destroy', stop)
   const anchor = () => { try { return posToDOMRect(editor.view, from, to) } catch { return editor.view.dom.getBoundingClientRect() } }

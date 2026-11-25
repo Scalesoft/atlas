@@ -3,6 +3,7 @@ import { NodeSelection, Selection, type Transaction } from '@tiptap/pm/state'
 import { autoUpdate, computePosition, flip, hide, offset, shift, size, type VirtualElement } from '@floating-ui/dom'
 import { markdownOverlaysFor, registerMarkdownOverlay } from '../../core/overlay'
 import { copyMarkdownOverlayTheme } from '../../core/overlayTheme'
+import { markdownChangeMapping } from '../../core/changeMapping'
 import { activeMarkdownPopover, bindMarkdownMenu, leaveMarkdownPopover, registerMarkdownPopover } from './popoverInteraction'
 import { isMarkdownComposition, trackMarkdownComposition } from './composition'
 import { createUndoFromControls } from './undoFromControls'
@@ -304,7 +305,7 @@ export function openMarkdownContextPopover(options: { editor: Editor; anchor: HT
     if (editor.isDestroyed || (!options.readonly && !editor.isEditable) || !anchor.isConnected || toolbar?.hidden || (nodeSelection && (!(editor.state.selection instanceof NodeSelection) || editor.state.selection.from !== position))) close(false)
   }
   const transaction = ({ transaction }: { transaction: Transaction }) => {
-    position = transaction.mapping.map(position)
+    position = markdownChangeMapping(transaction).map(position)
     queueMicrotask(validate)
   }
   const observer = doc.defaultView?.MutationObserver ? new doc.defaultView.MutationObserver(validate) : undefined

@@ -4,7 +4,7 @@ import { Mapping } from '@tiptap/pm/transform'
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view'
 import { autoUpdate, computePosition, offset, shift } from '@floating-ui/dom'
 import {
-  closeMarkdownHistory, createIconElement, defineMarkdownCommand, openMarkdownContextPopover, type MarkdownCommand, type MarkdownDispatchOptions, type MarkdownIntention, type MarkdownPlugin, type MarkdownPluginController,
+  closeMarkdownHistory, createIconElement, defineMarkdownCommand, markdownChangeMapping, openMarkdownContextPopover, type MarkdownCommand, type MarkdownDispatchOptions, type MarkdownIntention, type MarkdownPlugin, type MarkdownPluginController,
 } from '../core'
 import { assistDecorationsKey, assistDecorationsPlugin, assistMeta, inline, sameDecorations, widget, type AssistDecorationSpec } from './decorations'
 import { AssistList } from './list'
@@ -215,7 +215,7 @@ class AssistRuntime {
     const remote = all.some(remoteOrigin)
     const local = docChanged && !remote
     const mapping = new Mapping()
-    for (const item of all) mapping.appendMapping(item.mapping)
+    for (const item of all) mapping.appendMapping(markdownChangeMapping(item))
     const previousCaret = this.caret === null ? null : mapping.map(this.caret, 1)
     if (docChanged) this.map(mapping, local)
     if (this.attempt && all.some(item => item.getMeta('pointer'))) this.attempt.author = null

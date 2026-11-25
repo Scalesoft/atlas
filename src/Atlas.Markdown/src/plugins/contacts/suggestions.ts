@@ -1,7 +1,7 @@
 import { Extension } from '@tiptap/core'
 import { PluginKey, type Transaction } from '@tiptap/pm/state'
 import Suggestion from '@tiptap/suggestion'
-import { createMarkdownSuggestionRenderer, dispatchMarkdownHistoryOperation, shouldShowMarkdownSuggestion } from '../../core'
+import { createMarkdownSuggestionRenderer, dispatchMarkdownHistoryOperation, markdownChangeMapping, shouldShowMarkdownSuggestion } from '../../core'
 import { contactsStrings } from './strings'
 import { linkInserted, normalizeContact, type ContactsPluginOptions, type MarkdownContact } from './data'
 import { loadNames, namesNow } from './namesLoader'
@@ -46,7 +46,7 @@ export function contactSuggestions(options: ContactsPluginOptions) {
           // the person goes where it was; going back brings the typed text, and with it the list, back.
           let at = range.from
           editor.view.dispatch(editor.state.tr.delete(range.from, range.to))
-          const follow = ({ transaction }: { transaction: Transaction }) => { at = transaction.mapping.map(at) }
+          const follow = ({ transaction }: { transaction: Transaction }) => { at = markdownChangeMapping(transaction).map(at) }
           const abort = new AbortController(), stop = () => abort.abort()
           editor.on('transaction', follow); editor.on('destroy', stop)
           const anchor = () => { const { left, top, bottom } = editor.view.coordsAtPos(Math.min(at, editor.state.doc.content.size)); return new DOMRect(left, top, 1, bottom - top) }

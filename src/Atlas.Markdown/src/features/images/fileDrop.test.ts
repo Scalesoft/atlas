@@ -37,6 +37,12 @@ function drop(editor: Editor, files: File[], position = 9) {
   return { event, handled: handleMarkdownFileDrop(editor, event, position) }
 }
 const nodes = (editor: Editor): JSONContent[] => editor.getJSON().content ?? []
+/** As y-tiptap 3.3 applies a collaborator's typing: one step replacing the whole top-level block it changed. */
+function remoteInsert(editor: Editor, text: string, at: number) {
+  const from = editor.state.doc.resolve(at).before(1), block = editor.state.doc.nodeAt(from)!
+  const changed = editor.state.tr.insertText(text, at).doc.nodeAt(from)!
+  editor.view.dispatch(editor.state.tr.replaceWith(from, from + block.nodeSize, changed).setMeta('y-sync$', { isChangeOrigin: true }))
+}
 
 describe('whole-editor file drop routing', () => {
   it('shows typed previews immediately without serializing them, follows typing, and replaces them in one undo step', async () => {
@@ -153,6 +159,20 @@ describe('whole-editor file drop routing', () => {
     editor.commands.undo()
     expect(nodes(editor).map(node => node.type)).toEqual(['paragraph', 'paragraph', 'paragraph'])
     expect(nodes(editor)[0]!.content![0]!.text).toBe('prefix before')
+  })
+
+  it('inserts the image when a collaborator types into the block holding the target', async () => {
+    let complete!: (value: { url: string }) => void; let signal!: AbortSignal
+    const { editor } = setup((_file, context) => { signal = context.signal; return new Promise(resolve => { complete = resolve }) })
+    const states: number[] = []
+    editor.view.dom.addEventListener(markdownFileDropStateEvent, event => states.push((event as CustomEvent).detail.pending))
+    // The target is inside „target“, after „ta“; the collaborator's character lands at the paragraph's end.
+    drop(editor, [new File(['png'], 'photo.png', { type: 'image/png' })], 11)
+    remoteInsert(editor, 'x', 15)
+    expect(signal.aborted).toBe(false)
+    complete({ url: '/photo.png' })
+    await vi.waitFor(() => expect(states).toEqual([1, 0]))
+    expect(nodes(editor).map(node => node.type === 'image' ? node.attrs!.src : node.content?.[0]?.text)).toEqual(['before', 'ta', '/photo.png', 'rgetx', 'after'])
   })
 
   it('cancels pending mixed imports when the mapped target is deleted or editor becomes readonly', async () => {

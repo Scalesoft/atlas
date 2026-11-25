@@ -4,7 +4,7 @@ import {
   openMarkdownContextPopover, openMarkdownReaderPopover, type MarkdownContextToolbar, type MarkdownIconName, type MarkdownPlugin, type MarkdownReadonlyJSONContent,
 } from '../../core'
 import { secretsStrings } from './strings'
-import { createUndoFromControls, markdownChipDeleteKeys, defineMarkdownEntityKind, trackMarkdownApplyForm } from '../../core'
+import { createUndoFromControls, markdownChangeMapping, markdownChipDeleteKeys, defineMarkdownEntityKind, trackMarkdownApplyForm } from '../../core'
 import type { ConcealedContent, ConcealedContentOptions } from '../../concealment'
 import { NodeSelection, type Transaction } from '@tiptap/pm/state'
 import './style.css'
@@ -185,7 +185,7 @@ async function swapReference(editor: Editor, at: number, pick: NonNullable<Secre
   let position: number | null = at
   const follow = ({ transaction }: { transaction: Transaction }) => {
     if (position === null) return
-    const mapped = transaction.mapping.mapResult(position)
+    const mapped = markdownChangeMapping(transaction).mapResult(position)
     position = mapped.deletedAfter ? null : mapped.pos
   }
   editor.on('transaction', follow)

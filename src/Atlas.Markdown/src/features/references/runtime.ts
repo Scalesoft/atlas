@@ -4,6 +4,7 @@ import { NodeSelection, type Selection, type Transaction } from '@tiptap/pm/stat
 import { ReplaceStep } from '@tiptap/pm/transform'
 import type { MarkdownReferenceProvider, MarkdownReferenceValue } from '../../core/plugins/types'
 import { dispatchMarkdownHistoryOperation } from '../../engine/historyBoundary'
+import { markdownChangeMapping } from '../../core/changeMapping'
 import { markdownStrings as words } from '../../ui/strings'
 import { referencesStrings as strings } from '../../ui/strings/references'
 import { createMarkdownContextToolbar, openMarkdownContextPopover, type MarkdownContextToolbar } from '../modules/contextToolbar'
@@ -54,14 +55,15 @@ export class ReferenceRuntime {
     const target = this.target
     if (!target) return
     let start = target.from, end = target.to
-    for (const map of transaction.mapping.maps) {
+    const mapping = markdownChangeMapping(transaction)
+    for (const map of mapping.maps) {
       let touched = false
       map.forEach((from, to) => { if (from < end && to > start || from === to && from > start && from < end) touched = true })
       if (touched) { this.cancel(); return }
       start = map.map(start, 1); end = map.map(end, -1)
     }
-    target.selection = target.selection.map(transaction.doc, transaction.mapping)
-    const from = transaction.mapping.mapResult(target.from, 1), to = transaction.mapping.mapResult(target.to, -1)
+    target.selection = target.selection.map(transaction.doc, mapping)
+    const from = mapping.mapResult(target.from, 1), to = mapping.mapResult(target.to, -1)
     target.from = from.pos; target.to = to.pos
     if (from.deletedAcross || to.deletedAcross || !this.valid(target, transaction.doc, transaction.selection)) this.cancel()
   }
