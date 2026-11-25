@@ -36,6 +36,8 @@
 .md-suggestion-list .ic { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 var(--icon-sm, 16px); width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); color: var(--text-dim); font-size: 13px; }
 .md-suggestion-list .ic img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
 .md-suggestion-list .row.on .ic { color: var(--chip-accent-fg); }
+/* A destructive row (Přesunout do koše) stays red when lit. A group's line (`separated`, .sep) is the image menu's (imageControls.css). */
+.md-suggestion-list .row.danger, .md-suggestion-list .row.danger .ic { color: var(--chip-red-fg); }
 .md-suggestion-list .body { display: flex; flex-direction: column; gap: 1px; min-width: 0; overflow-wrap: anywhere; }
 .md-suggestion-list .t { font-size: 13px; font-weight: 500; }
 .md-suggestion-list .d { font-size: 11px; color: var(--text-dimmer); }

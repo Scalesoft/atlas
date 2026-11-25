@@ -5,7 +5,7 @@ const sharedTypeAhead = typeAheadBuffer();
 <script setup lang="ts">
 import componentsTree from "../i18n/components-tree";
 import { opensActions, typeAheadIndex } from "../keyboard/navigation";
-import { computed, inject, nextTick, provide, ref, watch, type ComponentPublicInstance } from "vue";
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, provide, ref, watch, type ComponentPublicInstance } from "vue";
 import { contentItemLink, isPlainNavigationClick } from "../pageLinks";
 import AtlasIcon from "./AtlasIcon.vue";
 import PageIcon from './PageIcon.vue';
@@ -16,7 +16,8 @@ import { truncatedTitle } from "../lib/truncatedTitle";
 import { visibleHeight } from "../lib/visibleHeight";
 import { carriesReference, readReferenceDrop, startObjectDrag, type ReferenceDrop } from "../boards/boardDrop";
 import { isBoardNode, isLeafNode, isPageNode, isReferenceNode, resolveTreeInsert, resolveTreeMove, visibleTreeOrder, type DropPosition, type TreeDrop, type TreePage } from "../treeMove";
-import ActionMenu, { type ActionMenuItem } from "./ActionMenu.vue";
+import type { ActionMenuItem } from "./ActionMenu.vue";
+import { closeRowActionsMenu, openRowActionsMenu, preheatActionsMenu, rowActionsMenuOpen } from "./boards/canvas/actionsMenuChunk";
 import { hintLabel } from "../keyboard/shortcuts";
 import SearchHighlight from "./SearchHighlight.vue";
 import { plainTitle, typeInfo } from "../objects/relationsApi";
@@ -268,16 +269,22 @@ function dropOn(page: TreePage, event: DragEvent) {
   event.preventDefault(); emit("drop", drop);
 }
 
-// The row menu (spec §5.3): one editor-style menu for the whole tree, opened from a row's „⋯“, the right button, Ctrl+Space, Alt+Enter,
-// Ctrl+., Shift+F10 or the menu key; F2 or a double click renames in place, Delete trashes (or removes a reference), Ctrl/⌘+Enter
-// opens the page's own board.
+// The row menu (spec §5.3): the page editor's own menu (openRowActionsMenu, as list rows and the board; typing filters it), opened from
+// a row's „⋯“, the right button, Ctrl+Space, Alt+Enter, Ctrl+., Shift+F10 or the menu key; F2 or a double click renames in place,
+// Delete trashes (or removes a reference), Ctrl/⌘+Enter opens the page's own board.
 const referenceIcon = (page: TreePage) => page.readable === false ? "lock" : typeInfo(page.targetTypeId ?? "").icon;
 const plain = (page: TreePage) => plainTitle(page.title);
 const titleOf = (page: TreePage) => page.readable === false ? componentsTree.tree.noAccessLink : plain(page);
 function openMenu(page: TreePage, reference: Element | { getBoundingClientRect(): DOMRect }) {
-  if (props.busy) return;
+  const items = menuItems(page);
+  const host = rowElement(page) ?? list.value;
+  if (props.busy || !items.length || !host) return;
   focusedId.value = page.id;
   menuFor.value = { page, reference };
+  // The focus stays on the row while the menu is open and goes back to it after (renaming then takes it to its field).
+  openRowActionsMenu({ items, label: componentsTree.tree.actionsOf(titleOf(page)), anchor: () => reference.getBoundingClientRect(), host,
+    select: id => (id === "rename" ? startRename(page) : emit("action", id as TreeAction, page)),
+    onClose: () => { if (menuFor.value?.page.id === page.id) menuFor.value = undefined; focusItem(page.id); } });
 }
 function rowElement(page: TreePage) {
   return document.querySelector<HTMLElement>(`.tree-row[data-tree-row="${CSS.escape(page.id)}"]`);
@@ -285,6 +292,7 @@ function rowElement(page: TreePage) {
 function contextMenu(page: TreePage, event: MouseEvent) {
   if (!props.menu || event.shiftKey) return; // Shift + right-click: the browser's own menu
   event.preventDefault();
+  if (rowActionsMenuOpen()) return; // the menu key sends it after its keydown opened the menu
   // The menu key fires it at 0,0 on the focused row: it then opens at the row's „⋯“.
   const { clientX: x, clientY: y } = event;
   openMenu(page, x || y ? { getBoundingClientRect: () => new DOMRect(x, y, 0, 0) } : rowElement(page)?.querySelector(".tree-row-more") ?? event.currentTarget as Element);
@@ -304,9 +312,7 @@ function renameByDoubleClick(page: TreePage, event: MouseEvent) {
   event.preventDefault();
   startRename(page);
 }
-const menuItems = computed<ActionMenuItem[]>(() => {
-  const page = menuFor.value?.page;
-  if (!page) return [];
+function menuItems(page: TreePage): ActionMenuItem[] {
   const edit = !!page.canEdit && props.canReorder, readable = page.readable !== false, isPage = isPageNode(page);
   const rows: (ActionMenuItem | false)[] = [
     readable && { id: "open", label: componentsTree.tree.open, icon: "arrow-right", group: "open" },
@@ -323,30 +329,6 @@ const menuItems = computed<ActionMenuItem[]>(() => {
       : { id: "trash", label: componentsTree.tree.moveToTrash, icon: "trash", shortcut: "Delete", group: "trash", destructive: true }),
   ];
   return rows.filter((row): row is ActionMenuItem => !!row);
-});
-// The menu's trigger is one anchor for the whole tree, moved over where the menu opens (a row's „⋯“, the row or the pointer) inside
-// the tree's own box, so it scrolls with the rows; ActionMenu positions at its trigger.
-const menuAnchor = computed(() => {
-  const at = menuFor.value?.reference.getBoundingClientRect(), box = list.value?.getBoundingClientRect();
-  return at && box ? { left: `${at.left - box.left}px`, top: `${at.top - box.top}px`, width: `${at.width}px`, height: `${at.height}px` } : undefined;
-});
-let menuReturn: string | undefined;
-function runAction(id: string) {
-  const page = menuFor.value?.page;
-  menuFor.value = undefined;
-  if (!page) return;
-  menuReturn = page.id;
-  if (id === "rename") startRename(page);
-  else emit("action", id as TreeAction, page);
-}
-function menuOpened(open: boolean) {
-  if (!open) { menuReturn ??= menuFor.value?.page.id; menuFor.value = undefined; }
-}
-// The menu's trigger is only an anchor: the focus goes back to the row it was opened for (or the rename field).
-function menuClosed(event: Event) {
-  event.preventDefault();
-  const id = menuReturn; menuReturn = undefined;
-  if (id && renamingId.value !== id) focusItem(id);
 }
 const renameDraft = ref("");
 function startRename(page: TreePage) {
@@ -366,6 +348,8 @@ function finishRename(page: TreePage, save: boolean, refocus = true) {
 // A node that moved glides to its new place and a new one rises in (spec §5.5, FLIP on --atlas-ease-travel): only the root measures,
 // before and after the list changes, and only when a few rows changed (a whole tree loading or replaced does not move).
 const list = ref<HTMLElement>();
+onMounted(() => { if (props.depth === 0 && props.menu) preheatActionsMenu(); });
+onBeforeUnmount(() => { if (props.depth === 0 && menuFor.value) closeRowActionsMenu(); });
 let tops = new Map<string, number>();
 const rowTops = () => new Map([...(list.value?.querySelectorAll<HTMLElement>(".tree-row[data-tree-row]") ?? [])].map(row => [row.dataset.treeRow!, row.getBoundingClientRect().top]));
 watch(() => props.pages, () => { if (props.depth === 0) tops = rowTops(); }, { flush: "pre" });
@@ -607,14 +591,7 @@ function selectRow(page: TreePage, event: MouseEvent) {
         @toggle-collapsed="emit('toggleCollapsed', $event)"
       />
     </li>
-    <!-- One menu for the whole tree; its trigger is only an anchor (ActionMenu `reference` places it at the row or the pointer). -->
     <li v-if="depth === 0" role="none" class="sr-only"><span role="status">{{ notice }}</span></li>
-    <li v-if="depth === 0 && menu" role="none" class="tree-menu-host">
-      <ActionMenu actions :open="!!menuFor" :items="menuItems" :label="menuFor ? componentsTree.tree.actionsOf(titleOf(menuFor.page)) : componentsTree.tree.actions" item-attr="data-tree-action" side="bottom" align="start"
-        @update:open="menuOpened" @select="runAction" @close-auto-focus="menuClosed">
-        <span class="tree-menu-anchor" aria-hidden="true" :style="menuAnchor" />
-      </ActionMenu>
-    </li>
   </ul>
 </template>
 
@@ -675,8 +652,6 @@ function selectRow(page: TreePage, event: MouseEvent) {
   background: var(--surface); color: var(--text); font: inherit; font-size: 13.5px;
 }
 .page-tree[role="tree"] { position: relative; }
-.tree-menu-host { height: 0; }
-.tree-menu-anchor { position: absolute; top: 0; left: 0; width: 0; height: 0; pointer-events: none; }
 /* A draft says so by its dot (and to a screen reader in words). The word „Koncept“ that slid over the row on hover covered
    the end of the name it marked (review cycle 2, U2-16); hover never truncates a row differently. */
 </style>

@@ -47,7 +47,11 @@ export function createSuggestionPopup(opts: SuggestionPopupOptions): SuggestionP
   const ownerDocument = opts.contextElement?.ownerDocument ?? opts.content.ownerDocument
   const wrap = ownerDocument.createElement('div')
   wrap.className = 'md-suggestion-popup'
-  wrap.style.position = 'absolute'
+  // An anchor inside an open native dialog (a list row in Atlas's Uspořádat): the popup joins its top layer, fixed, so the dialog's
+  // inert outside and its own scrolling neither hide nor clip it.
+  const layer = opts.contextElement?.closest('dialog[open]')
+  const strategy = layer ? 'fixed' : 'absolute'
+  wrap.style.position = strategy
   wrap.style.top = '0'
   wrap.style.left = '0'
   wrap.style.zIndex = '10000'
@@ -58,7 +62,7 @@ export function createSuggestionPopup(opts: SuggestionPopupOptions): SuggestionP
   wrap.inert = true
   wrap.appendChild(opts.content)
   const releaseOverlay = registerMarkdownOverlayForElement(opts.contextElement, wrap)
-  ownerDocument.body.appendChild(wrap)
+  ;(layer ?? ownerDocument.body).appendChild(wrap)
   const source = opts.contextElement as HTMLElement | undefined
   let themed = !source
   const releasePopover = opts.editor ? registerMarkdownPopover(opts.editor, {
@@ -82,7 +86,7 @@ export function createSuggestionPopup(opts: SuggestionPopupOptions): SuggestionP
     stopAutoUpdate ??= autoUpdate(reference, wrap, update)
     const version = ++updateVersion
     void computePosition(reference, wrap, {
-      placement,
+      placement, strategy,
       middleware: [offset(8), flip(), shift({ padding: 8 }), size({ padding: 8, apply({ availableHeight }) {
         if (!disposed) opts.content.style.maxHeight = `${Math.max(0, Math.min(320, availableHeight))}px`
       } })],
