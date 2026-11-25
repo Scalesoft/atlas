@@ -233,4 +233,35 @@ public sealed class PageVerificationTests
         var other = await ReportAsync(f.Admin, "Opravdu.");
         Assert.Equal((false, 1, f.Admin.Id), (other.Read, other.Count, other.ActorId));
     }
+
+    [PostgreSqlFact]
+    public async Task The_SQL_interval_is_the_CSharp_interval()
+    {
+        short?[] values = [null, 0, 3, 6, 12];
+        var cases = (from own in values from space in values from template in new[] { false, true } select (own, space, template)).ToArray();
+        static string Value(short? value) => value is { } x ? $"{x}::smallint" : "NULL::smallint";
+        await using var schema = await DisposableSchema.CreateMigratedAsync("atlas_verification_interval_");
+        await using var connection = new NpgsqlConnection(schema.ConnectionString);
+        await connection.OpenAsync();
+        // The fragment reads its aliases p, v and s: here each is a view of one case row.
+        await using var command = new NpgsqlCommand($"""
+            SELECT c.n, {PageVerificationStates.IntervalSql}, {PageVerificationStates.IntervalSql}>0
+            FROM (VALUES {string.Join(",", cases.Select((x, n) => $"({n},{(x.template ? "true" : "false")},{Value(x.own)},{Value(x.space)})"))})
+              AS c(n, "IsTemplate", "IntervalMonths", "VerificationIntervalMonths")
+            CROSS JOIN LATERAL (SELECT c."IsTemplate") p("IsTemplate")
+            CROSS JOIN LATERAL (SELECT c."IntervalMonths") v("IntervalMonths")
+            CROSS JOIN LATERAL (SELECT c."VerificationIntervalMonths") s("VerificationIntervalMonths")
+            """, connection);
+        await using var reader = await command.ExecuteReaderAsync();
+        var checkedCases = 0;
+        while (await reader.ReadAsync())
+        {
+            var (own, space, template) = cases[reader.GetInt32(0)];
+            var expected = PageVerificationStates.Interval(own, space, template);
+            Assert.Equal(expected, reader.IsDBNull(1) ? (int?)null : reader.GetInt16(1));
+            Assert.Equal(expected > 0, !reader.IsDBNull(2) && reader.GetBoolean(2));
+            checkedCases++;
+        }
+        Assert.Equal(cases.Length, checkedCases);
+    }
 }

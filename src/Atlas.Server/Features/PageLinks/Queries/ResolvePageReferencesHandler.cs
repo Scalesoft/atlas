@@ -6,7 +6,8 @@ namespace Atlas.Server.Features.PageLinks.Queries;
 /// <summary>Batch verification of rendered page links for the editor: replaces one GET /api/pages/{id} per link, which read
 /// every linked body and recorded a page.opened event for each. Ids that are no page the actor may open go, in one query each, to the
 /// other content types (a board link, UX PG4-4).</summary>
-public sealed class ResolvePageReferencesHandler(IContentAccess access, PageLinkStore store, ContentParticipants participants, NHibernate.ISession session)
+public sealed class ResolvePageReferencesHandler(IContentAccess access, PageLinkStore store, ContentParticipants participants,
+    PageVerifications.PageVerificationReader verifications)
 {
     public const int MaxIds = 100;
 
@@ -43,7 +44,7 @@ public sealed class ResolvePageReferencesHandler(IContentAccess access, PageLink
         }
         // 5.2: the link chip's verification state, one statement for the pages among them.
         var pages = found.Values.Where(x => x.Type is null).Select(x => x.Id).ToList();
-        var states = pages.Count == 0 ? [] : await PageVerifications.PageVerificationReader.StatesAsync(session, pages, ct);
+        var states = pages.Count == 0 ? [] : await verifications.StatesAsync(pages, ct);
         return new PageReferenceList(ids.Where(found.ContainsKey)
             .Select(id => states.TryGetValue(id, out var state) ? found[id] with { Verification = state } : found[id]).ToArray());
     }

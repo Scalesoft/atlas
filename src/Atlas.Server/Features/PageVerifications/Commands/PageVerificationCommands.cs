@@ -223,17 +223,16 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
     /// <summary>The space's published pages that are verified (own or inherited interval), have no active steward and the actor may edit
     /// (EffectivePageAccess), at most <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
     private async Task<List<Guid>> WithoutStewardAsync(Space space, UserAccount actor, CancellationToken ct)
-        => (await session.CreateSQLQuery("""
-                SELECT p."Id" AS "Id" FROM "Page" p
+        => (await session.CreateSQLQuery($"""
+                SELECT p."Id" AS "Id" FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId"
                 JOIN "EffectivePageAccess" e ON e."PageId"=p."Id" AND e."UserId"=:actor AND e."Role">=2
                 LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
-                LEFT JOIN "UserAccount" s ON s."Id"=v."StewardId" AND s."IsActive"
-                WHERE p."SpaceId"=:space AND NOT p."IsTrashed" AND NOT p."IsTemplate" AND p."PublishedRevisionId" IS NOT NULL
-                  AND coalesce(v."IntervalMonths",:spaceInterval,0)>0 AND s."Id" IS NULL
+                LEFT JOIN "UserAccount" st ON st."Id"=v."StewardId" AND st."IsActive"
+                WHERE p."SpaceId"=:space AND NOT p."IsTrashed" AND p."PublishedRevisionId" IS NOT NULL
+                  AND {PageVerificationStates.IntervalSql}>0 AND st."Id" IS NULL
                 ORDER BY p."Id" LIMIT :limit
                 """).AddScalar("Id", NHibernateUtil.Guid).SetParameter("space", space.Id).SetParameter("actor", actor.Id)
-            .SetParameter("spaceInterval", (int?)space.VerificationIntervalMonths, NHibernateUtil.Int32).SetParameter("limit", MaxBulk)
-            .ListAsync<Guid>(ct)).ToList();
+            .SetParameter("limit", MaxBulk).ListAsync<Guid>(ct)).ToList();
 }
 
 /// <summary>5.2 (plan §2.3): a new page of a space that verifies its pages starts with its author as the steward, unverified.</summary>

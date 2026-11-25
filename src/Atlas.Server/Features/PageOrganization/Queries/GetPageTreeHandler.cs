@@ -15,14 +15,17 @@ public sealed class GetPageTreeHandler
     private readonly PageListing m_listing;
     private readonly PageDecorationReader m_decorations;
     private readonly ContentParticipants m_participants;
+    private readonly PageVerifications.PageVerificationReader m_verifications;
 
-    public GetPageTreeHandler(ISession session, OrganizationLocks locks, PageListing listing, PageDecorationReader decorations, ContentParticipants participants)
+    public GetPageTreeHandler(ISession session, OrganizationLocks locks, PageListing listing, PageDecorationReader decorations, ContentParticipants participants,
+        PageVerifications.PageVerificationReader verifications)
     {
         m_session = session;
         m_locks = locks;
         m_listing = listing;
         m_decorations = decorations;
         m_participants = participants;
+        m_verifications = verifications;
     }
 
     public async Task<PageTreeDto> Handle(GetPageTree query, CancellationToken ct)
@@ -47,7 +50,7 @@ public sealed class GetPageTreeHandler
             .ListAsync<object[]>(ct);
         var visible = rows.Select(row => (Guid)row[0]).ToHashSet();
         var decorations = await m_decorations.ReadManyAsync(visible.ToArray(), ct);
-        var verifications = await PageVerifications.PageVerificationReader.StatesInSpaceAsync(m_session, spaceId, ct);
+        var verifications = await m_verifications.StatesInSpaceAsync(spaceId, ct);
         // D8: a page whose parent is hidden is shown at the root, without a placeholder for the parent.
         var items = rows.Select(row =>
         {
