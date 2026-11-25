@@ -8,7 +8,8 @@ import ActionMenu, { type ActionMenuItem } from "./ActionMenu.vue";
  * five gestures: Ctrl+mezerník, Alt+Enter, Ctrl+., Shift+F10 / the menu key, and the right button (Shift + right button leaves the browser's).
  * Put it inside the row (the closest `li` or `[data-row-actions]`); it listens on that row and offers the rows its owner would run from the
  * row's own buttons, so a row without items (a locked one, a read-only list) stays as the browser has it. The focus goes back where it was.
- * Typing fields inside the row keep their keys. Use it for a list of rows; the tree keeps its own host (one menu for many rows with drag).
+ * Typing fields inside the row keep their keys. A row whose item names a key as its `shortcut` („Delete“, „F2“) runs it on that key
+ * without the menu, as the tree and the board do. Use it for a list of rows; the tree keeps its own host (one menu for many rows with drag).
  */
 const props = defineProps<{ items: readonly ActionMenuItem[]; label: string }>();
 const emit = defineEmits<{ select: [id: string] }>();
@@ -25,7 +26,11 @@ function show(x: number, y: number, from: EventTarget | null) {
   open.value = true;
 }
 function onKeydown(event: KeyboardEvent) {
-  if (!props.items.length || event.defaultPrevented || !opensActions(event) || inField(event.target)) return;
+  if (!props.items.length || event.defaultPrevented || inField(event.target)) return;
+  const direct = (event.key === "Delete" || event.key === "F2") && !event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey
+    ? props.items.find(item => item.shortcut === event.key && !item.disabled) : undefined;
+  if (direct) { event.preventDefault(); emit("select", direct.id); return; }
+  if (!opensActions(event)) return;
   event.preventDefault();
   const box = (event.target instanceof Element ? event.target : row)!.getBoundingClientRect();
   show(box.left, box.bottom, event.target);

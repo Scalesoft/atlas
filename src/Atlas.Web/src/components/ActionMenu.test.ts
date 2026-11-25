@@ -1,7 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
-import { h } from "vue";
+import { defineComponent, h, ref } from "vue";
 import ActionMenu from "./ActionMenu.vue";
+import AppDialog from "./AppDialog.vue";
+import RowActionsMenu from "./RowActionsMenu.vue";
 
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.replaceChildren(); });
@@ -38,6 +40,63 @@ describe("ActionMenu", () => {
     rows()[1]!.click();
     await flushPromises();
     expect(wrapper!.emitted("select")).toEqual([["ellipse"]]);
+    expect(menu()).toBeNull();
+  });
+
+  it("stays inside a native modal dialog (its top layer) and Escape closes only the menu (Uspořádat › Koš)", async () => {
+    const inside = defineComponent({ setup: () => { const open = ref(true); return () => h(ActionMenu, { items, label: "Řádek", itemAttr: "data-row-action", open: open.value, "onUpdate:open": (value: boolean) => { open.value = value; } },
+      () => h("button", { type: "button" }, "Řádek")); } });
+    wrapper = mount(AppDialog, { attachTo: document.body, props: { title: "Uspořádat", open: true }, slots: { default: () => h(inside) } });
+    await flushPromises();
+    const dialog = wrapper.get("dialog").element as HTMLDialogElement;
+    expect(menu()!.closest("dialog")).toBe(dialog);
+    menu()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    await flushPromises();
+    expect(document.querySelector('[role="menu"][data-state="open"]')).toBeNull();
+    expect(dialog.open).toBe(true);
+    expect(wrapper.emitted("close")).toBeUndefined();
+  });
+
+  it("is not modal: the first click outside closes it and still acts; a route change closes it too", async () => {
+    const outside = document.createElement("button");
+    const act = vi.fn();
+    outside.addEventListener("click", act);
+    document.body.append(outside);
+    show({ open: true, "onUpdate:open": (open: boolean) => wrapper!.setProps({ open }) });
+    await flushPromises();
+    expect(document.body.style.pointerEvents).not.toBe("none");
+    outside.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+    outside.click();
+    await flushPromises();
+    expect(act).toHaveBeenCalledOnce();
+    expect(menu()).toBeNull();
+    await wrapper!.setProps({ open: true });
+    await flushPromises();
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+    await flushPromises();
+    expect(menu()).toBeNull();
+  });
+
+  it("an action menu has no title (the owner's rule for action and choice menus)", async () => {
+    show({ open: true, actions: true });
+    await flushPromises();
+    expect(menu()!.textContent).toBe("ObdélníkElipsaNedostupné");
+  });
+});
+
+describe("RowActionsMenu", () => {
+  it("runs the row's Delete or F2 item on that key without the menu; other keys and fields stay the row's", async () => {
+    const row = defineComponent({ setup: () => () => h("li", { tabindex: 0 }, [h("input"), h(RowActionsMenu, { label: "Řádek",
+      items: [{ id: "edit", label: "Upravit", shortcut: "F2" }, { id: "trash", label: "Smazat", shortcut: "Delete", destructive: true }] })]) });
+    wrapper = mount(row, { attachTo: document.body });
+    const li = wrapper.get("li").element;
+    const press = (target: Element, key: string, init: KeyboardEventInit = {}) => target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
+    press(li, "Delete");
+    press(li, "F2");
+    press(li, "Delete", { shiftKey: true });
+    press(wrapper.get("input").element, "Delete");
+    await flushPromises();
+    expect(wrapper.findComponent(RowActionsMenu).emitted("select")).toEqual([["trash"], ["edit"]]);
     expect(menu()).toBeNull();
   });
 });
