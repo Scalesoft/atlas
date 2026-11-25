@@ -9,6 +9,6 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Authors>Atlas contributors</Authors>
     <VersionPrefix>5.2.0</VersionPrefix>
-    <VersionSuffix>dev</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
   </PropertyGroup>
 </Project>

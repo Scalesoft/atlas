@@ -4,7 +4,9 @@ Změny Atlasu evidované od zavedení verzování.
 
 Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · Performant Pear`) a pod ním své opravné verze jako menší oddíly (`### 3.5.1 — datum`), od nejstarší.
 
-## 5.2 · Unerring Ume (nevydáno)
+## 5.2 · Unerring Ume
+
+*5.2.0 — 2026-11-25*
 
 ### Ověřený obsah
 - Stránka má garanta a datum, do kdy je ověřená; prostor ověřování zapíná v nastavení s intervalem 3, 6 nebo 12 měsíců, stránka může mít vlastní interval nebo se neověřovat. Výchozí stav: vypnuto, prostor vypadá jako v 5.1.
