@@ -1,4 +1,4 @@
-import { markdownUserColor } from "@atlas/markdown/core";
+import { userColor } from "./collaboratorColors";
 import type { ObjectPresence } from "./viewSession";
 import t from "../i18n/shell";
 
@@ -57,4 +57,4 @@ export function presenceActivity(name: string, viewTitle: string | null) {
 // The colour of an account where no presence message comes (history, cards of objects): "Automaticky" of the one palette, the server's
 // starting point (CollaboratorPalette.Auto) before it moves a colour aside for someone present, or the person's own choice, which
 // only a live page or board knows (the stamped colour of the presence message wins there).
-export const userColor = markdownUserColor;
+export { userColor };

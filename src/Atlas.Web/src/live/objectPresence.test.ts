@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createPresenceRoster, presenceActivity, userColor } from "./objectPresence";
-import { collaboratorChoices } from "../collaboratorColors";
+import { collaboratorChoices } from "./collaboratorColors";
 
 const at = (userId: string, extra: Record<string, unknown> = {}) => ({
   objectId: "p1", userId, displayName: userId === "u2" ? "Jana" : "Petr", color: "#2a9d8f", payload: { editing: true }, via: "page:p1", ...extra,

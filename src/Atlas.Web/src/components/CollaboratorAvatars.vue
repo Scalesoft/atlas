@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import AtlasIcon from "./AtlasIcon.vue";
 import AiGlyph from "./ai/AiGlyph.vue";
 import { isAgentUser } from "../live/agentUser";
-import { themedCollaboratorColor } from "../collaboratorColors";
+import { themedCollaboratorColor } from "../live/collaboratorColors";
 import t from "../i18n/components-a";
 import type { CollaborationPeer } from "../collaborationPresence";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";

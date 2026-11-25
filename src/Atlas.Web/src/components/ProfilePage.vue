@@ -16,7 +16,7 @@ import AtlasIcon from "./AtlasIcon.vue";
 import AiPreferencesSection from "./profile/AiPreferencesSection.vue";
 import AccentPicker from "./profile/AccentPicker.vue";
 import InlineReveal from "./settings/InlineReveal.vue";
-import { automaticCollaboratorColorId, collaboratorChoices } from "../collaboratorColors";
+import { automaticCollaboratorColorId, collaboratorChoices } from "../live/collaboratorColors";
 import ThemePreview from "./profile/ThemePreview.vue";
 import type { TokenCatalog } from "./auth/PersonalApiTokens.vue";
 import LoadingSkeleton from "./LoadingSkeleton.vue";

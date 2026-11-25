@@ -5,7 +5,7 @@ import ThemePreview from "../../profile/ThemePreview.vue";
 import OptionPills from "../../settings/OptionPills.vue";
 import SettingsSection from "../../settings/SettingsSection.vue";
 import { themeAccents, type ThemeAccentId } from "../../../profile";
-import { collaboratorChoices } from "../../../collaboratorColors";
+import { collaboratorChoices } from "../../../live/collaboratorColors";
 
 // Já → Vzhled (board 12, 15): the accent the interface leans to and the three themes it paints. Local state only.
 const accent = ref<ThemeAccentId>("ocean");

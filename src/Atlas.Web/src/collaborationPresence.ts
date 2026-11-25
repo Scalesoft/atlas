@@ -10,7 +10,7 @@ import { createAgentReveal } from "./live/agentReveal";
 import { isAgentUser } from "./live/agentUser";
 import { createPointerGlide } from "./live/pointerGlide";
 import { mountAiGlyph } from "./components/ai/mountAiGlyph";
-import { themedCollaboratorColor } from "./collaboratorColors";
+import { themedCollaboratorColor } from "./live/collaboratorColors";
 import "./collaborationPresence.css";
 
 type StatePeer = MarkdownEditorState["peers"][number];

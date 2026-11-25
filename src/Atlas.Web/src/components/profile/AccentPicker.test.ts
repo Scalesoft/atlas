@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mount } from "@vue/test-utils";
 import AccentPicker from "./AccentPicker.vue";
-import { collaboratorChoices } from "../../collaboratorColors";
+import { collaboratorChoices } from "../../live/collaboratorColors";
 
 // „Moje barva“: the picker of the interface accent drawn with the exact colours of the collaborator palette.
 describe("AccentPicker with the collaborator palette", () => {

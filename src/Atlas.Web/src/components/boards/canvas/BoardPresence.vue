@@ -5,7 +5,7 @@ import type { Viewport } from "../../../boards/boardViewport";
 import { motionMs } from "../../../motion/aiMotion";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import { isAgentUser } from "../../../live/agentUser";
-import { themedCollaboratorColor } from "../../../collaboratorColors";
+import { themedCollaboratorColor } from "../../../live/collaboratorColors";
 import CollaborationPointer from "../../CollaborationPointer.vue";
 
 /**

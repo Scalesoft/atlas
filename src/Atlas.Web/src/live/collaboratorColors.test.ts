@@ -1,6 +1,6 @@
 import { afterEach, expect, it } from "vitest";
 import { automaticCollaboratorColorId, collaboratorChoices, themedCollaboratorColor } from "./collaboratorColors";
-import { userColor } from "./live/objectPresence";
+import { userColor } from "./objectPresence";
 
 afterEach(() => { delete document.documentElement.dataset.mode; });
 
