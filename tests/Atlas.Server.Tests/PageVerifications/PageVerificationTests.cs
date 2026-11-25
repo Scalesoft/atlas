@@ -8,6 +8,7 @@ using Atlas.Server.Features.PageVerifications.Domain;
 using Atlas.Server.Tests.Boards;
 using Atlas.Server.Tests.Mcp;
 using Atlas.Server.Tests.Platform;
+using Npgsql;
 using Xunit;
 using static Atlas.Server.Tests.Mcp.McpSite;
 
@@ -99,15 +100,13 @@ public sealed class PageVerificationTests
             HttpStatusCode.OK);
         Assert.Equal(PageVerificationStates.Expiring, Assert.Single(references["items"]!.AsArray())!["verification"]!.GetValue<string>());
 
-        // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader changes nothing.
+        // Bulk: a writer clears the steward, a page of nobody is skipped with its reason; a reader is refused.
         var bulk = $"/api/spaces/{space}/content-health/bulk";
         var cleared = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
             new { action = "steward", pageIds = new[] { page.Id, Guid.NewGuid().ToString() }, stewardId = (string?)null }), HttpStatusCode.OK);
         Assert.Equal((1, 1), (cleared["changed"]!.GetValue<int>(), cleared["skipped"]!.AsArray().Count));
         Assert.Null((await AtlasHttpSite.Json(await writer.GetAsync(url), HttpStatusCode.OK))["stewardId"]);
-        var refused = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, bulk, new { action = "verify", pageIds = new[] { page.Id } }),
-            HttpStatusCode.OK);
-        Assert.Equal((0, 1), (refused["changed"]!.GetValue<int>(), refused["skipped"]!.AsArray().Count));
+        Assert.Equal(HttpStatusCode.Forbidden, (await AtlasHttpSite.SendAsync(reader, HttpMethod.Post, bulk, new { action = "verify", pageIds = new[] { page.Id } })).StatusCode);
 
         // Over MCP: verifying needs the write scope, is marked „přes AI“, and atlas_get_page and the content health show it.
         await f.SetLevelAsync(f.AdminId, "write");
@@ -144,5 +143,68 @@ public sealed class PageVerificationTests
             Assert.Equal((day == now ? NotificationKinds.VerificationExpiring : NotificationKinds.VerificationExpired, day == now ? 1 : 2),
                 (notice.Kind, notice.Count));
         }
+    }
+
+    [PostgreSqlFact]
+    public async Task The_bulk_change_needs_the_space_write_right_and_selects_only_pages_the_actor_may_edit()
+    {
+        await using var f = await McpSite.CreateAsync();
+        var space = await f.FirstSpaceAsync();
+        await f.Site.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=@space""", ("space", Guid.Parse(space)));
+        var open = await PageAsync(f.Admin, space, "Postup", Rich(Paragraph("Text.")), "Text.");
+        var restricted = await PageAsync(f.Admin, space, "Mzdy", Rich(Paragraph("Text.")), "Text.");
+        await f.Site.ExecuteAsync("""UPDATE "Page" SET "OwnAccess"=true WHERE "Id"=@page""", ("page", Guid.Parse(restricted.Id)));
+        await f.Site.ExecuteAsync("""UPDATE "PageVerification" SET "StewardId"=NULL""");
+        var (reader, readerId) = await f.UserAsync("reader", "write");
+        await f.GrantAsync(space, readerId, "Reader");
+        var (writer, writerId) = await f.UserAsync("writer");
+        await f.GrantAsync(space, writerId, "Writer");
+        var (stranger, _) = await f.UserAsync("stranger");
+        var bulk = $"/api/spaces/{space}/content-health/bulk";
+        var all = new { action = "stewardFromLastAuthor" };
+
+        // A page row held FOR UPDATE elsewhere: a refused caller still answers at once, so it neither selected nor locked a page, and
+        // its answer names none.
+        await using (var holder = new NpgsqlConnection(f.Site.ConnectionString))
+        {
+            await holder.OpenAsync();
+            await using var hold = await holder.BeginTransactionAsync();
+            await using (var locking = new NpgsqlCommand("""SELECT 1 FROM "Page" WHERE "Id"=@page FOR UPDATE""", holder, hold))
+            {
+                locking.Parameters.AddWithValue("page", Guid.Parse(open.Id));
+                await locking.ExecuteScalarAsync();
+            }
+            foreach (var (client, payload, status) in new (HttpClient, object, HttpStatusCode)[]
+            {
+                (stranger, all, HttpStatusCode.NotFound), (stranger, new { action = "verify", pageIds = new[] { open.Id } }, HttpStatusCode.NotFound),
+                (reader, all, HttpStatusCode.Forbidden),
+            })
+            {
+                var send = AtlasHttpSite.SendAsync(client, HttpMethod.Post, bulk, payload);
+                Assert.Same(send, await Task.WhenAny(send, Task.Delay(TimeSpan.FromSeconds(20))));
+                var response = await send;
+                Assert.Equal(status, response.StatusCode);
+                var body = await response.Content.ReadAsStringAsync();
+                Assert.DoesNotContain(open.Id, body, StringComparison.OrdinalIgnoreCase);
+                Assert.DoesNotContain(restricted.Id, body, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        // Over MCP the same: G5 lets the reader in, the space's write right does not.
+        var mcp = await f.ClientAsync((await IssueAsync(reader, f.Site.Password, ["read", "write"], ["mcp"], "Write")).Secret);
+        var refused = await CallAsync(mcp, "atlas_set_verification", new { spaceId = space, stewardFromLastAuthor = true });
+        Assert.True(refused.IsError);
+        Assert.DoesNotContain(open.Id, Text(refused), StringComparison.OrdinalIgnoreCase);
+
+        // A writer: the restricted page is neither changed nor listed among the skipped.
+        var result = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk, all), HttpStatusCode.OK);
+        Assert.Equal(1, result["changed"]!.GetValue<int>());
+        Assert.Empty(result["skipped"]!.AsArray());
+        Assert.Equal(f.AdminId, (await AtlasHttpSite.Json(await writer.GetAsync($"/api/pages/{open.Id}/verification"), HttpStatusCode.OK))["stewardId"]!.GetValue<string>());
+        Assert.Null((await AtlasHttpSite.Json(await f.Admin.GetAsync($"/api/pages/{restricted.Id}/verification"), HttpStatusCode.OK))["stewardId"]);
+        // A page of another space named by id is missing here, untouched.
+        var other = await PageAsync(f.Admin, await f.SpaceAsync("Jiný"), "Cizí", Rich(Paragraph("Text.")), "Text.");
+        var foreign = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
+            new { action = "verify", pageIds = new[] { other.Id } }), HttpStatusCode.OK);
+        Assert.Equal((0, "404"), (foreign["changed"]!.GetValue<int>(), Assert.Single(foreign["skipped"]!.AsArray())!["reason"]!.GetValue<string>()));
     }
 }

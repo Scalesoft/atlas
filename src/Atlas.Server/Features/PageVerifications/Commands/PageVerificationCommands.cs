@@ -25,8 +25,8 @@ public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationR
 /// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
 public sealed record ReportMcpOutdated(ReportPageOutdated Command);
 
-public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, PageGate gate, PageVerificationReader reader,
-    IRequestChannel channel, Outbox outbox, TimeProvider clock)
+public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, IContentAccess access, PageGate gate,
+    PageVerificationReader reader, IRequestChannel channel, Outbox outbox, TimeProvider clock)
 {
     public const int MaxBulk = 500;
     public const int MaxNote = 500;
@@ -48,6 +48,9 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             throw new ApiException(404, "Prostor nebyl nalezen nebo k němu nemáte přístup.");
         }
+        // Stav obsahu's writers only, decided before any page is selected or locked (the space row first: the lock order of every write).
+        var actor = await locks.LockForWriteAsync(space.Id, ct);
+        await access.RequireSpaceAsync(space.Id, SpaceRole.Writer, ct);
         List<Guid> ids;
         if (request.PageIds is null)
         {
@@ -55,7 +58,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             {
                 throw new ApiException(400, "Bez výběru stránek lze jen nastavit garanta podle posledního autora.");
             }
-            ids = await WithoutStewardAsync(space, ct);
+            ids = await WithoutStewardAsync(space, actor, ct);
         }
         else
         {
@@ -65,6 +68,9 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             throw new ApiException(400, "Najednou lze změnit nejvýše {max} stránek.", args: new Dictionary<string, object?> { ["max"] = MaxBulk });
         }
+        // A page of another space is missing here: skipped before anything locks it or its space.
+        var inSpace = ids.Count == 0 ? [] : (await session.QueryOver<Page>().Where(x => x.SpaceId == space.Id).WhereRestrictionOn(x => x.Id).IsIn(ids)
+            .Select(x => x.Id).ListAsync<Guid>(ct)).ToHashSet();
         var single = request.Action switch
         {
             "verify" => new SetPageVerificationRequest(Verify: true),
@@ -76,9 +82,14 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         var skipped = new List<SkippedPage>();
         foreach (var id in ids)
         {
+            if (!inSpace.Contains(id))
+            {
+                skipped.Add(new SkippedPage(id, "404"));
+                continue;
+            }
             try
             {
-                var (page, actor) = await locks.LockPageAsync(id, false, AccessOperation.EditContent, ct);
+                var (page, _) = await locks.LockPageAsync(id, false, AccessOperation.EditContent, ct);
                 if (page.SpaceId != command.SpaceId)
                 {
                     skipped.Add(new SkippedPage(id, "404"));
@@ -209,17 +220,18 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             ? await session.QueryOver<PageRevision>().Where(x => x.Id == revision).Select(x => x.Version).SingleOrDefaultAsync<int?>(ct)
             : null;
 
-    /// <summary>The space's published pages that are verified (own or inherited interval) and have no active steward, at most
-    /// <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
-    private async Task<List<Guid>> WithoutStewardAsync(Space space, CancellationToken ct)
+    /// <summary>The space's published pages that are verified (own or inherited interval), have no active steward and the actor may edit
+    /// (EffectivePageAccess), at most <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
+    private async Task<List<Guid>> WithoutStewardAsync(Space space, UserAccount actor, CancellationToken ct)
         => (await session.CreateSQLQuery("""
                 SELECT p."Id" AS "Id" FROM "Page" p
+                JOIN "EffectivePageAccess" e ON e."PageId"=p."Id" AND e."UserId"=:actor AND e."Role">=2
                 LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
                 LEFT JOIN "UserAccount" s ON s."Id"=v."StewardId" AND s."IsActive"
                 WHERE p."SpaceId"=:space AND NOT p."IsTrashed" AND NOT p."IsTemplate" AND p."PublishedRevisionId" IS NOT NULL
                   AND coalesce(v."IntervalMonths",:spaceInterval,0)>0 AND s."Id" IS NULL
                 ORDER BY p."Id" LIMIT :limit
-                """).AddScalar("Id", NHibernateUtil.Guid).SetParameter("space", space.Id)
+                """).AddScalar("Id", NHibernateUtil.Guid).SetParameter("space", space.Id).SetParameter("actor", actor.Id)
             .SetParameter("spaceInterval", (int?)space.VerificationIntervalMonths, NHibernateUtil.Int32).SetParameter("limit", MaxBulk)
             .ListAsync<Guid>(ct)).ToList();
 }
