@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 import AtlasIcon from "./AtlasIcon.vue";
 import AiGlyph from "./ai/AiGlyph.vue";
 import { isAgentUser } from "../live/agentUser";
+import { themedCollaboratorColor } from "../live/collaboratorColors";
 import t from "../i18n/components-a";
 import type { CollaborationPeer } from "../collaborationPresence";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -50,7 +51,7 @@ function navigate(peer: CollaborationPeer) {
               type="button"
               class="collaborator-avatar"
               :class="{ 'is-unavailable': !peer.cursorAvailable && !peer.activity && !isAgent(peer), 'is-elsewhere': !!peer.activity, 'is-agent': isAgent(peer) }"
-              :style="{ '--collaborator-color': peer.color }"
+              :style="{ '--collaborator-color': themedCollaboratorColor(peer.color) }"
               :data-client-id="peer.clientId"
               :aria-label="peerLabel(peer)"
               :aria-disabled="!peer.cursorAvailable || undefined"
@@ -85,7 +86,7 @@ function navigate(peer: CollaborationPeer) {
             :aria-disabled="!peer.cursorAvailable || undefined"
             @click="navigate(peer)"
           >
-            <span class="collaborator-menu-avatar" :style="{ '--collaborator-color': peer.color }" aria-hidden="true">{{ initials(peer.name) }}</span>
+            <span class="collaborator-menu-avatar" :style="{ '--collaborator-color': themedCollaboratorColor(peer.color) }" aria-hidden="true">{{ initials(peer.name) }}</span>
             <span class="collaborator-menu-name">{{ peer.name }}</span>
             <small v-if="peer.activity || !peer.cursorAvailable">{{ peer.activity ?? t.collaborators.cursorUnavailable }}</small>
           </button>
@@ -111,12 +112,14 @@ function navigate(peer: CollaborationPeer) {
   width: 30px; height: 30px; flex: 0 0 30px; border-radius: 999px;
   font-size: 10px; font-weight: 700; line-height: 1;
   border: 2px solid var(--surface); background: var(--collaborator-color); color: white;
+  /* A new colour (their choice, or one moved aside for someone who was there first) fades in. */
+  transition: background-color var(--atlas-motion-base) var(--atlas-ease-out);
 }
 /* The button's hit area stays still while its face moves between its neighbours. */
 .collaborator-avatar-face {
   pointer-events: none;
   box-shadow: 0 1px 3px color-mix(in srgb, var(--text) 16%, transparent);
-  transition: transform var(--atlas-motion-slow) var(--atlas-ease-out), opacity var(--atlas-motion-base);
+  transition: transform var(--atlas-motion-slow) var(--atlas-ease-out), opacity var(--atlas-motion-base), background-color var(--atlas-motion-base) var(--atlas-ease-out);
 }
 .collaborator-mode {
   position: absolute; right: -3px; bottom: -2px; width: 14px; height: 14px;

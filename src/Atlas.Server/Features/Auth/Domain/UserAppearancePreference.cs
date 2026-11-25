@@ -26,5 +26,8 @@ public class UserAppearancePreference
     /// <summary>"auto" leaves the language of the tool to the browser; "cs" or "en" fixes it (4.1).</summary>
     public virtual string Language { get; set; } = "auto";
 
-    public virtual Appearance Appearance => new(Layout, Accent, Mode, Motion, OpenLocked, DragPages, Language);
+    /// <summary>"auto" or a palette id of the colour in live pages and boards (5.2).</summary>
+    public virtual string CollaboratorColor { get; set; } = "auto";
+
+    public virtual Appearance Appearance => new(Layout, Accent, Mode, Motion, OpenLocked, DragPages, Language, CollaboratorColor);
 }

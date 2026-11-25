@@ -7,6 +7,8 @@ internal sealed class Peer
 {
     public required string ConnectionId { get; init; }
     public required CollabUser User { get; init; }
+    /// <summary>The colour this document gave the participant at its join (<see cref="CollaboratorPalette.Effective"/>), kept until it leaves.</summary>
+    public string Color { get; init; } = "#888888";
     public required bool CanWrite { get; set; }
     /// <summary>The newest revalidation (<see cref="DocumentAccessCoordinator.Revalidations"/>) applied to this peer; 0 after its join,
     /// whose lookups all precede a refresh that finds the peer.</summary>
@@ -146,6 +148,9 @@ internal sealed class LiveDocument(string documentId)
     public DateTimeOffset? WarmSince { get; set; }
 
     public int PeerCount => Peers.Count;
+
+    /// <summary>The colour a participant joining now gets (<see cref="CollaboratorPalette.Effective"/> among the peers present). Call under the gate.</summary>
+    public string ColorFor(CollabUser user) => CollaboratorPalette.Effective(user.Id, user.Color, Peers.Values.Select(peer => (peer.User.Id, peer.Color)));
 
     public bool TryGetSequence(Guid clientUpdateId, out long sequence)
         => RecentUpdateIds.TryGetValue(clientUpdateId, out sequence);

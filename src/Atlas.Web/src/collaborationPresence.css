@@ -17,7 +17,7 @@
   width: 2px;
   height: 1.35em;
   background: var(--collaboration-color);
-  transition: transform var(--atlas-motion-fast) var(--atlas-ease-out);
+  transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-base) var(--atlas-ease-out);
 }
 
 .collaboration-presence__label {
@@ -29,6 +29,7 @@
   padding: 2px 5px;
   border-radius: 4px 4px 4px 0;
   background: var(--collaboration-color);
+  transition: background-color var(--atlas-motion-base) var(--atlas-ease-out);
   color: white;
   font: 600 11px/1.25 system-ui, sans-serif;
   text-overflow: ellipsis;

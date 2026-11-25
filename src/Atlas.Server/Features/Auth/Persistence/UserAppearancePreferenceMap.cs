@@ -25,5 +25,6 @@ public sealed class UserAppearancePreferenceMap : ClassMapping<UserAppearancePre
         Property(x => x.OpenLocked);
         Property(x => x.DragPages);
         Property(x => x.Language);
+        Property(x => x.CollaboratorColor);
     }
 }

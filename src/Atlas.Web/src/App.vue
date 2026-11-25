@@ -906,6 +906,7 @@ const canEditSource = computed(() => !!page.value
 const appearanceDirty = computed(() => !!user.value && (appearance.layout !== user.value.appearance.layout || appearance.accent !== user.value.appearance.accent || appearance.mode !== user.value.appearance.mode
   || appearance.motion !== (user.value.appearance.motion ?? "system") || !!appearance.openLocked !== !!user.value.appearance.openLocked
   || (appearance.dragPages !== false) !== (user.value.appearance.dragPages !== false) || (appearance.language ?? "auto") !== (user.value.appearance.language ?? "auto")
+  || (appearance.collaboratorColor ?? "auto") !== (user.value.appearance.collaboratorColor ?? "auto")
   || readingWidth.value !== savedReadingWidth.value));
 const searchIsOpen = ref(false);
 /** The same search as a dialog or as the whole page (Ctrl+Shift+Enter, `searchView=page` in its address; 2026-10-28). */
@@ -4836,7 +4837,7 @@ onUnmounted(() => {
         <!-- The workspace row under the top bar: the view, and beside it the one side panel (boards 03, 18). -->
         <div class="workspace-body">
         <ProfilePage v-if="profileOpen" :key="user.id" :tab="profileTab" :appearance="appearance"
-          :username="user.username" :is-wiki-admin="user.isWikiAdmin" :version="status?.version"
+          :username="user.username" :user-id="user.id" :is-wiki-admin="user.isWikiAdmin" :version="status?.version"
           :appearance-dirty="appearanceDirty" :appearance-pending="profilePending" :appearance-error="profileError" :back-label="settingsBackLabel"
           :reading-width="readingWidth" @preview-reading-width="readingWidth = $event"
           @navigate="openProfile($event)" @back="cancelProfile" @preview="Object.assign(appearance, $event)"

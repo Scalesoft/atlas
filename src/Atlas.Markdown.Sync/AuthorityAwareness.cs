@@ -6,8 +6,9 @@ namespace Atlas.Markdown.Sync;
 internal static class AuthorityAwareness
 {
     internal sealed record Validated(long ClientId, long Clock, byte[] Payload);
+    /// <param name="color">The colour the document assigned this participant (<see cref="CollaboratorPalette.Effective"/>); never the client's own claim.</param>
     /// <param name="presenceOnly">A read-only participant (a reader of a live page): only its identity goes out, no cursor or selection.</param>
-    internal static Validated Validate(byte[] payload, CollabUser user, int maxBytes, bool presenceOnly = false)
+    internal static Validated Validate(byte[] payload, CollabUser user, int maxBytes, bool presenceOnly = false, string? color = null)
     {
         if (payload is null || payload.Length > maxBytes) throw new InvalidDataException("Awareness exceeds its byte budget.");
         var offset = 0;
@@ -43,8 +44,7 @@ internal static class AuthorityAwareness
                     }
                     writer.WritePropertyName("user"); writer.WriteStartObject();
                     writer.WriteString("id", user.Id); writer.WriteString("name", user.Name);
-                    // A host without its own caret colour keeps the client's, as long as it is only a colour.
-                    writer.WriteString("color", user.Color ?? ClaimedColor(root) ?? "#888888"); writer.WriteEndObject(); writer.WriteEndObject();
+                    writer.WriteString("color", color ?? user.Color ?? "#888888"); writer.WriteEndObject(); writer.WriteEndObject();
                 }
                 else throw new InvalidDataException("Awareness state must be an object or null.");
             }
@@ -62,13 +62,6 @@ internal static class AuthorityAwareness
         Write(framed, 1); Write(framed, clientId); Write(framed, clock); Write(framed, 4); framed.Write("null"u8);
         return framed.ToArray();
     }
-    private static string? ClaimedColor(JsonElement state)
-        => state.TryGetProperty("user", out var claimed) && claimed.ValueKind == JsonValueKind.Object
-           && claimed.TryGetProperty("color", out var color) && color.ValueKind == JsonValueKind.String
-           && color.GetString() is { Length: >= 4 and <= 9 } value && value[0] == '#' && value[1..].All(char.IsAsciiHexDigit)
-            ? value
-            : null;
-
     private static long Read(byte[] bytes, ref int offset)
     {
         long result = 0, multiplier = 1;

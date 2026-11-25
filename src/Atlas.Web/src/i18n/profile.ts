@@ -15,6 +15,13 @@ const cs = {
       cs: "Čeština",
       en: "English",
     },
+    collaboratorColor: {
+      label: "Moje barva",
+      help: "Barva vašeho kurzoru, avataru a ukazatele, když s vámi na stránce nebo tabuli pracují další. Je-li vaše barva mezi přítomnými obsazená, Atlas vám přidělí nejbližší volnou; kdo přišel dřív, svou barvu si ponechá.",
+      auto: "Automaticky",
+      custom: "Vlastní",
+      swatches: "Barva kurzoru a avataru",
+    },
     mode: { label: "Motiv", help: "Platí jen pro vás, na všech zařízeních.", light: "Světlý", dark: "Tmavý", system: "Podle systému" },
     accent: { label: "Barva zvýraznění", help: "Do ní se jemně tónuje tmavý motiv. Ve světlém mění tlačítka, odkazy a výběr.", default: "výchozí" },
     layout: {

@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Atlas.Markdown.Sync;
+using Atlas.Server.Features.Auth.Queries;
 using Atlas.Server.Features.Objects.Queries;
 using Microsoft.AspNetCore.SignalR;
 using Wolverine;
@@ -40,10 +42,6 @@ public sealed class ViewSessions
 
     /// <summary>The largest presence payload relayed, as JSON text (a cursor, a selection, an active field).</summary>
     public const int MaxPresenceCharacters = 2048;
-
-    // shortcut: one colour per account from this palette; the page editor's awareness colours are still the client's, so the web
-    // (package W) should take this one everywhere to keep "the same colour per user".
-    private static readonly string[] s_colors = ["#c34e62", "#228175", "#457b9d", "#9c683e", "#8556e7", "#ae5f05", "#027cbb", "#b63bc9", "#12863d", "#dc2626"];
 
     private readonly LiveSubscriptions m_subscriptions;
     private readonly IHubContext<LiveHub> m_hub;
@@ -88,6 +86,8 @@ public sealed class ViewSessions
                 }
             }
             var decided = await ResolveAsync(subscriber, Snapshot(session).Keys, ct);
+            // Read before the lock; used only when this connection is new to the session (the gate keeps Colors from changing meanwhile).
+            var preferred = session.Colors.ContainsKey(connectionId) ? null : await PreferredColorAsync(subscriber.UserId, ct);
             lock (m_lock)
             {
                 if (!decided.TryGetValue(viewId, out var self) || !self.Readable)
@@ -101,6 +101,8 @@ public sealed class ViewSessions
                 {
                     participant.Views.Add(key);
                     session.Viewports[connectionId] = null;
+                    var userId = participant.Subscriber.UserId.ToString();
+                    session.Colors[connectionId] = (userId, CollaboratorPalette.Effective(userId, preferred, session.Colors.Values));
                     foreach (var member in readable)
                     {
                         Reference(participant, member.ObjectId);
@@ -178,18 +180,22 @@ public sealed class ViewSessions
             throw new HubException("invalid_presence");
         }
         string? via;
+        string color;
         List<(string Connection, bool Detail, bool SeesVia)> recipients;
         lock (m_lock)
         {
             // The view the sender joined first among those showing the object: where they work on it.
             via = sender.Views.FirstOrDefault(key => m_sessions.TryGetValue(key, out var session) && session.Members.ContainsKey(objectId));
             var viaChannel = via is null ? null : Channel(m_sessions[via].ViewObjectId);
+            // The colour the person has in the view they work from: the same one every screen of that view shows.
+            color = via is not null && m_sessions[via].Colors.TryGetValue(connectionId, out var assigned)
+                ? assigned.Color
+                : CollaboratorPalette.Effective(sender.Subscriber.UserId.ToString(), null, []);
             recipients = Recipients(objectId, connectionId, false)
                 .Select(recipient => (recipient.Connection, recipient.Detail, viaChannel is not null && m_subscriptions.CanWrite(recipient.Connection, viaChannel) is not null))
                 .ToList();
         }
         var from = sender.Subscriber;
-        var color = s_colors[(int)(BitConverter.ToUInt32(from.UserId.ToByteArray(), 0) % (uint)s_colors.Length)];
         foreach (var group in recipients.GroupBy(recipient => (recipient.Detail, recipient.SeesVia)))
         {
             var message = new ObjectPresenceMessage(objectId, from.UserId, from.DisplayName, color, group.Key.Detail ? payload.Clone() : null, group.Key.SeesVia ? via : null);
@@ -547,6 +553,7 @@ public sealed class ViewSessions
     /// <summary>Takes the connection out of the session (under the session's gate and the lock); an empty session closes.</summary>
     private void Remove(string connectionId, Session session)
     {
+        session.Colors.Remove(connectionId);
         if (session.Viewports.Remove(connectionId) && m_participants.TryGetValue(connectionId, out var participant))
         {
             participant.Views.Remove(session.Key);
@@ -633,6 +640,12 @@ public sealed class ViewSessions
         session.Gate.Release();
     }
 
+    private async Task<string?> PreferredColorAsync(Guid userId, CancellationToken ct)
+    {
+        await using var scope = m_scopes.CreateAsyncScope();
+        return await CollaboratorColorPreference.ReadAsync(scope.ServiceProvider.GetRequiredService<NHibernate.ISession>(), userId, ct);
+    }
+
     private async Task<ViewMemberList> MembersAsync(string kind, Guid viewId, CancellationToken ct)
     {
         await using var scope = m_scopes.CreateAsyncScope();
@@ -659,6 +672,8 @@ public sealed class ViewSessions
         public Dictionary<Guid, ViewMember> Members { get; } = [];
         /// <summary>The participants and their viewports (null: everything in detail).</summary>
         public Dictionary<string, HashSet<Guid>?> Viewports { get; } = new(StringComparer.Ordinal);
+        /// <summary>The colour each participant has in this view (user id, colour), handed out at its join and free again when it leaves.</summary>
+        public Dictionary<string, (string UserId, string Color)> Colors { get; } = new(StringComparer.Ordinal);
         public bool Loaded { get; set; }
         public bool Closed { get; set; }
     }

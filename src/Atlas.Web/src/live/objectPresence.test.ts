@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createPresenceRoster, presenceActivity, userColor } from "./objectPresence";
+import { collaboratorChoices } from "./collaboratorColors";
 
 const at = (userId: string, extra: Record<string, unknown> = {}) => ({
   objectId: "p1", userId, displayName: userId === "u2" ? "Jana" : "Petr", color: "#2a9d8f", payload: { editing: true }, via: "page:p1", ...extra,
@@ -39,12 +40,10 @@ describe("object presence", () => {
     expect(presenceActivity("Jana", null)).toBe("Jana upravuje jinde");
   });
 
-  it("gives a user the server's colour (ViewSessions), from the first group of the id", () => {
-    expect(userColor("0000000a-0000-0000-0000-000000000000")).toBe("#c34e62");
-    expect(userColor("00000003-ffff-ffff-ffff-ffffffffffff")).toBe("#9c683e");
-    expect(userColor("FFFFFFFF-0000-0000-0000-000000000000")).toBe(userColor("ffffffff-0000-0000-0000-000000000000"));
-    // 4294967295 % 10 = 5
-    expect(userColor("ffffffff-0000-0000-0000-000000000000")).toBe("#ae5f05");
+  it("gives an account the colour the server starts from (CollaboratorPalette.Auto), the same one for the same id", () => {
+    expect(userColor("00000000-0000-0000-0000-000000000001")).toBe(collaboratorChoices[1]!.swatch.light);
+    expect(userColor("ffffffff-0000-0000-0000-000000000000")).toBe(collaboratorChoices[8]!.swatch.light);
+    expect(userColor("ffffffff-0000-0000-0000-000000000000")).toBe(userColor("ffffffff-0000-0000-0000-000000000000"));
   });
 
   it("keeps white name tags readable (AA 4.5:1) on every palette colour", () => {
@@ -52,6 +51,6 @@ describe("object presence", () => {
       const [r, g, b] = [1, 3, 5].map(i => Number.parseInt(hex.slice(i, i + 2), 16) / 255).map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
       return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
     };
-    for (let i = 0; i < 10; i++) expect(1.05 / (luminance(userColor(`0000000${i}-0000-0000-0000-000000000000`)) + 0.05)).toBeGreaterThanOrEqual(4.5);
+    for (const choice of collaboratorChoices) for (const color of [choice.swatch.light, choice.swatch.dark]) expect(1.05 / (luminance(color) + 0.05)).toBeGreaterThanOrEqual(4.5);
   });
 });

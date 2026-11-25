@@ -1,3 +1,4 @@
+using Atlas.Server.Features.Auth.Queries;
 using Atlas.Server.Features.Collaboration.Contracts;
 using ISession = NHibernate.ISession;
 
@@ -20,6 +21,6 @@ public sealed class AuthenticateCollaboratorHandler
         {
             throw new ApiException(401, "Přihlášení vypršelo.");
         }
-        return new CollaboratorIdentity(user.Id, user.DisplayName, user.SecurityStamp, query.SessionId);
+        return new CollaboratorIdentity(user.Id, user.DisplayName, user.SecurityStamp, query.SessionId, await CollaboratorColorPreference.ReadAsync(m_session, user.Id, ct));
     }
 }

@@ -228,6 +228,7 @@ public sealed partial class MarkdownSyncHub(
                 {
                     ConnectionId = Context.ConnectionId,
                     User = user,
+                    Color = doc.ColorFor(user),
                     CanWrite = access.CanWrite,
                     JoinOrder = doc.NextJoinOrder(),
                 };
@@ -492,7 +493,7 @@ public sealed partial class MarkdownSyncHub(
             }
             // Identity comes from the handshake in both protocols: one owned state, its user rewritten, its client id bound to this connection.
             AuthorityAwareness.Validated validated;
-            try { validated = AuthorityAwareness.Validate(payload, peer.User, authorityOptions.MaxAwarenessBytes, presenceOnly: !peer.CanWrite); }
+            try { validated = AuthorityAwareness.Validate(payload, peer.User, authorityOptions.MaxAwarenessBytes, presenceOnly: !peer.CanWrite, color: peer.Color); }
             catch (InvalidDataException) { return; }
             if (peer.AwarenessReplaced || peer.AwarenessClientId is { } bound && bound != validated.ClientId) return;
             // A client reconnecting keeps its awareness client id (the provider keeps its Awareness): the same person's old connection, which

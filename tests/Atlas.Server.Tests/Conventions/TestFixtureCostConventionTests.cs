@@ -46,7 +46,7 @@ public sealed partial class TestFixtureCostConventionTests
         (EmptyDatabase(), "an empty database: use DisposableSchema.CreateMigratedAsync, AtlasTestHost.CreateAsync(prefix) or AtlasHttpSite.CreateAsync",
         [
             "AccessAudit/AccessSqlParityTests.cs", "AccessAudit/LegacyAuditFixture.cs", "Administration/GrantValidityTests.cs", "AppLogs/AppLogTests.cs",
-            "Auth/AppearanceDragPagesTests.cs", "Auth/AppearanceLanguageTests.cs", "Auth/AppearanceOpenLockedTests.cs", "Backups/BackupImportTests.cs",
+            "Auth/AppearanceCollaboratorColorTests.cs", "Auth/AppearanceDragPagesTests.cs", "Auth/AppearanceLanguageTests.cs", "Auth/AppearanceOpenLockedTests.cs", "Backups/BackupImportTests.cs",
             "Backups/InstallationBackupTests.cs", "Collaboration/CollaborationPendingTotalsTests.cs", "Collaboration/LiveSeedsTests.cs",
             "Contacts/AccountContactTests.cs", "Contacts/ContactDirectoryTests.cs", "Contacts/ContactLinkRunTests.cs", "Contacts/ContactPhotoTests.cs",
             "Conventions/SchemaWithoutLogicTests.cs", "Entities/EntityCatalogTests.cs", "Events/OutboxTests.cs", "Jobs/JobGateATests.cs",

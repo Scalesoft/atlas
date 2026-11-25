@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Atlas.Markdown.Sync;
+using Atlas.Server.Features.Auth.Commands;
 using Atlas.Server.Features.Boards.Contracts;
 using Atlas.Server.Platform.Live;
 using Atlas.Server.Tests.AiIndex;
@@ -105,6 +107,43 @@ public sealed class ViewSessionsTests
         t.Views.ExpireLingering();
         Assert.Null(f.Subscriptions.CanWrite(writer, "obj:" + page));
         Assert.False(t.Views.Contains(page));
+    }
+
+    /// <summary>„Moje barva“ (5.2): each person present has one colour per view; who prefers a taken colour gets the next free one in
+    /// palette order, who came first keeps theirs, and a colour is free again once its holder leaves.</summary>
+    [PostgreSqlFact]
+    public async Task Two_people_who_prefer_one_colour_get_different_ones_and_a_leaver_frees_theirs()
+    {
+        await using var t = await ViewTest.CreateAsync();
+        var f = t.Fixture;
+        var board = await f.CreateBoardAsync(f.Admin);
+        var teal = CollaboratorPalette.SlotOf("teal");
+        var prefer = Atlas.Server.Platform.Validation.Appearance.Default with { CollaboratorColor = "teal" };
+        await f.As<Atlas.Server.Platform.Validation.Appearance>(f.Admin, new UpdateAppearance(prefer));
+        await f.As<Atlas.Server.Platform.Validation.Appearance>(f.Writer, new UpdateAppearance(prefer));
+        var admin = t.Connect(f.Admin);
+        var writer = t.Connect(f.Writer);
+        var reader = t.Connect(f.Reader);
+        foreach (var connection in new[] { admin, writer, reader })
+        {
+            await t.Views.JoinAsync(connection, "board:" + board, default);
+        }
+
+        async Task<string> ColorOfAsync(string sender, string receiver)
+        {
+            var mark = t.Mark();
+            await t.Views.SendPresenceAsync(sender, board, s_cursor);
+            return Assert.Single(t.Since<ObjectPresenceMessage>(mark, receiver, "ObjectPresence")).Color;
+        }
+        var first = await ColorOfAsync(admin, reader);
+        var second = await ColorOfAsync(writer, reader);
+        Assert.Equal(CollaboratorPalette.Entries[teal].Light, first);
+        Assert.Equal(CollaboratorPalette.Entries[(teal + 1) % CollaboratorPalette.Count].Light, second);
+
+        await t.Views.LeaveAsync(admin, "board:" + board);
+        Assert.Equal(second, await ColorOfAsync(writer, reader));            // the one who stayed keeps theirs
+        await t.Views.JoinAsync(admin, "board:" + board, default);
+        Assert.Equal(first, await ColorOfAsync(admin, reader));              // and the freed colour can be had again
     }
 
     /// <summary>A page edited in its own view shows up on the board that holds its card, and the other way round: one object, one
