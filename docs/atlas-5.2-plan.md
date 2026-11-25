@@ -291,38 +291,45 @@ Jediný diskusní systém je `Features/Comments` + `CommentThread.vue` (`/api/ob
 - **Stránka:** sekce „Komentáře“ pod obsahem (líná, jedna řádka bez komentářů). V doku stránky záložka chyběla.
 - Pohyb, klávesnice (Ctrl+Enter, Esc, koncept), tmavý motiv, cs+en a galerie (`CommentsExample`) jsou hotové.
 
-### 12.2 Co 5.2 přidá (jen to, co tabule nemají a je levné)
+### 12.2 Rozvržení (rozhodnutí vlastníka 2026-11-25)
 
-- **Záložka „Diskuse“ v doku stránky** (`PageSidePanel`), stejné `CommentThread` jako u tabule (stejné objekty, hostitel, živé
-  oznámení). Dok už vyjíždí z okraje, je nemodální, drží šířku a vrací fokus; nic dalšího se nestaví.
-- **Bublina u avatarů** v liště stránky otevře tuto záložku; ukazuje počet komentářů a při novém komentáři od jiného
-  (oznámení relace) se počet krátce „vykoukne“ (pulz tokenem pohybu, při omezeném pohybu jen prolnutí).
-- **Alt C** otevře záložku a dá kurzor do pole; **Esc** v poli vrátí kurzor do textu na původní místo (už umí fokus doku).
-- **Citace výběru:** je-li ve stránce označený text, začne nový komentář jeho citací (`> text`) a kurzorem pod ní. Citace je
-  obyčejný Markdown komentáře, žádná změna serveru ani úložiště.
-- Zmínka `@` už řadí lidi podle vztahu ke stránce a první návrh je předvybraný (Enter vloží). **Přítomní na stránce první**
-  není hotové: řazení bere ID kontaktů, přítomnost nese ID účtů; spojení účtu s kontaktem je zvlášť (O10).
-- Esc zavře dok (`WorkspaceSidePanel`) a vrátí fokus tam, odkud se otevřel (text stránky); rozepsaný komentář zůstane jako
-  koncept.
+Dva povrchy jedné diskuse, nikdy oba naráz:
+
+- **Nahoře (peek):** rychlé místo pod avatary spolupracovníků. Nový komentář kolegy sem **vletí jako bublina** z rohu avatarů,
+  zůstane 6 s (nehybně, dokud na ní je ukazatel nebo fokus) a odejde. Klik, Enter nebo „Odpovědět“ otevře diskusi s kurzorem
+  v poli. Je to živá oblast (`role="log"`), čte ji i čtečka. Tlačítko bubliny ukazuje počet komentářů, nepřečtené zvýrazněné.
+- **Vpravo (panel):** celá diskuse s historií je záložka „Diskuse“ stávajícího doku stránky (`PageSidePanel`), tedy stejné
+  `CommentThread` jako diskuse tabule (stejný objekt, hostitel, relace, koncept, úpravy). Třetí povrch se nestaví.
+- **Předání:** otevřením panelu bubliny nahoře odlétnou doprava k panelu (tokenová vzdálenost, jedna po druhé po 40 ms)
+  a nová fronta se nehromadí; počet nepřečtených se vynuluje. Zavřením se peek vrací a nové komentáře se znovu objevují nahoře.
+  Co přišlo při otevřeném panelu, četl čtenář v jeho seznamu.
+- **Klávesnice:** **Alt C** přepíná (otevře panel s kurzorem v poli, podruhé zavře), **Esc** zavře panel a vrátí kurzor do textu
+  na původní místo, rozepsané zůstane jako koncept. Peek je dosažitelný Tabem (bubliny jsou tlačítka).
+- **Citace výběru:** je-li ve stránce označený text, nový komentář začne jeho citací (`> text`) a kurzorem pod ní. Je to
+  obyčejný Markdown komentáře; server a úložiště se nemění.
+- **Pohyb:** bublina vstupuje z rohu avatarů (`--atlas-rise`, `--st-pop-from`, `--atlas-motion-pop`), odchází nahoru nebo
+  k panelu, číslo na tlačítku „vykoukne“, panel vyjíždí z okraje dokem. Vše přes tokeny; při omezeném pohybu jen prolnutí.
+  Tmavý motiv v šedých (`--surface`, `--line`, `--hover`). Na telefonu (≤ 760 px) bublina i peek zmizí, zůstává sekce pod obsahem.
 
 ### 12.3 Co z původního návrhu odpadá
 
-- Efemérní zprávy v awareness, pole `chat`, rozpočty awareness a změna propouštění pro čtenáře: **ne**. Komentář je trvalý,
-  ukládá se, hledá se, jde do záloh a do MCP stejně jako dnes.
-- Bubliny letící od avataru odesílatele u zavřené karty a „píše…“: **ne** v 5.2 (vyžadují efemérní kanál). Nahrazuje je počet
-  u bubliny.
-- „Do komentáře“ a štítek „odešla“: zbytečné, protože všechno je už komentář.
-- Příslib „nic se neukládá“ z promo scény tím **nelze** dát; scéna mluví o rychlé domluvě, ne o neukládání.
+- Efemérní zprávy v awareness, pole `chat`, rozpočty awareness a propouštění pro čtenáře: **ne**. Komentář je trvalý, ukládá se,
+  hledá se, jde do záloh a do MCP jako dnes. Příslib „nic se neukládá“ z promo scény tím **nelze** dát.
+- „Píše…“ (tři tečky) potřebuje efemérní kanál, takže **není** v 5.2; tečky se přidají, až bude důvod stavět ten kanál.
+- „Do komentáře“ a štítek „odešla“: zbytečné, všechno už je komentář.
+- Samostatné pole rychlé odpovědi v peeku **není**: „Odpovědět“ otevře panel s kurzorem v poli (stejný editor, koncept, `@`).
 
 ### 12.4 Testy
 
-Vitest: záložka Diskuse v doku, klávesa Alt C (včetně AltGr, který nesmí zachytit), citace výběru do pole, živý počet. Server se
-nemění (žádný server test, žádná migrace).
+Vitest: feed (první čtení jen osévá, cizí komentáře jako bubliny a nepřečtené, vlastní ne, otevřený panel nic nefrontuje,
+zavření bubliny nemění nepřečtené), peek (TTL, podržení ukazatelem, Odpovědět, `docked`), Alt C (včetně AltGr), citace
+výběru, záložka v doku. Server se nemění: žádný serverový test ani migrace. Galerie (`#/gallery/comments`) ukazuje peek,
+tlačítko a panel s předáním naživo.
 
 ### 12.5 Otázky pro vlastníka
 
 | # | Otázka | Návrh |
 |---|---|---|
-| O10 | Řadit v `@` přítomné na stránce první? | ano, jen pokud jde spojit účet s kontaktem; jinak zůstane stávající řazení |
-| O11 | Bubliny od avataru při zavřené diskusi (efemérní „toast“ z oznámení relace)? | ne v 5.2; stačí počet, případně později |
-| O12 | Diskuse jako plovoucí karta pod avatary místo záložky doku? | ne; dok je totéž a už zná šířky, telefon a fokus |
+| O10 | Řadit v `@` přítomné na stránce první? | ano, až půjde spojit účet s kontaktem (řazení bere ID kontaktů, přítomnost ID účtů) |
+| O11 | „Píše…“ a skutečný chat bez ukládání? | ne v 5.2; vyžaduje efemérní kanál (awareness) |
+| O12 | Samostatné pole rychlé odpovědi přímo v bublině? | ne; „Odpovědět“ otevře panel |

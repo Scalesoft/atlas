@@ -56,6 +56,7 @@ const en: ComponentsSearchMessages = {
     deleteTitle: "Delete comment?",
     deleteText: "The comment text is removed. The discussion keeps the line “The comment was removed”.",
     placeholder: "Write a comment…",
+    peek: { label: "New comments", from: (name: string, text: string) => `${name}: ${text}`, reply: "Reply", hide: "Hide" },
     send: "Send",
     hint: "Ctrl+Enter sends",
     today: "today",

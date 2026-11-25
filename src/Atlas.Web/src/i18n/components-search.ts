@@ -57,6 +57,7 @@ const cs = {
     deleteTitle: "Smazat komentář?",
     deleteText: "Text komentáře se odstraní. V diskusi zůstane řádek „Komentář byl odstraněn“.",
     placeholder: "Napsat komentář…",
+    peek: { label: "Nové komentáře", from: (name: string, text: string) => `${name}: ${text}`, reply: "Odpovědět", hide: "Skrýt" },
     send: "Odeslat",
     hint: "Ctrl+Enter odešle",
     today: "dnes",

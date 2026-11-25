@@ -17,7 +17,7 @@ const cs = {
     notifications: "Oznámení",
     comments: "Komentáře",
     discussion: "Diskuse",
-    discussionCount: (count: number) => count ? `Diskuse, komentářů: ${count}` : "Diskuse",
+    discussionCount: (count: number, unread = 0) => count ? `Diskuse, komentářů: ${count}${unread ? `, nepřečtených: ${unread}` : ""}` : "Diskuse",
     pages: "Stránky",
     settings: "Nastavení",
     wikiAdmin: "Správa wiki",

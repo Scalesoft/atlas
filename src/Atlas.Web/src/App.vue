@@ -135,7 +135,7 @@ import AppDialog from "./components/AppDialog.vue";
 import UnsavedChangesDialog from "./components/UnsavedChangesDialog.vue";
 // The help carries the editor's keymap (@atlas/markdown/core): it loads when first asked for, not with the shell.
 const KeyboardHelpDialog = lazyComponent(() => import("./components/KeyboardHelpDialog.vue"), { loading: dialogSkeleton(t.common.keyboardShortcuts, "wide") });
-import { appShortcuts, chordLabel, createShortcutMatcher, type AppShortcutId } from "./keyboard/shortcuts";
+import { appShortcuts, createShortcutMatcher, type AppShortcutId } from "./keyboard/shortcuts";
 import { matchCommands } from "./keyboard/commandMatch";
 import { focusWhenPresent, landFocusWhenRendered, listKeys, tablistKeys } from "./keyboard/navigation";
 import ActionDisclosureGroup from "./components/ActionDisclosureGroup.vue";
@@ -276,6 +276,7 @@ const PageHistoryPanel = lazyComponent(() => import("./components/PageHistoryPan
 const PageReadership = lazyComponent(() => import("./components/PageReadership.vue"), { loading: dialogSkeleton(t.common.readership, "side", "min(880px, calc(100vw - 64px))") });
 const PageConnections = lazyComponent(pageChrome.connections);
 // Comments are secondary data: their component loads after the article and reads only near the viewport (Fast first).
+const PageDiscussionButton = lazyComponent(() => import("./components/comments/PageDiscussionButton.vue"));
 const CommentThread = lazyComponent(pageChrome.comments, { loading: skeletonOf({ rows: 1, rowHeight: "41px" }) });
 // The page dock (refresh 2.5): Obsah, Historie and Přístup beside the article, and the outline row without it.
 const PageSidePanel = lazyComponent(pageChrome.dock, { loading: skeletonOf({ rows: 3, rowHeight: "44px" }) });
@@ -285,7 +286,6 @@ const PageUndoWedge = lazyComponent(() => import("./components/PageUndoWedge.vue
 import type { PageSideTab } from "./components/PageSidePanel.vue";
 import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearch";
 import { quoteMarkdown, requestedComment, requestedQuote } from "./comments/commentFocus";
-import { usePageCommentCount } from "./comments/pageCommentCount";
 import { articleArrives } from "./editor/articleMotion";
 import { useStageHeight } from "./components/library/stageHeight";
 import { useTabIndicator } from "./components/library/tabIndicator";
@@ -3011,8 +3011,6 @@ async function undoRestore(restored: Page) {
 // Automatic opening reserves a comfortable article next to the dock, even with a widened rail.
 const pageDockHasRoom = computed(() => viewportWidth.value >= 1280 && workspaceWidth.value >= 1000);
 const pageDockTab = ref<PageSideTab>("outline");
-// The quiet count at the discussion button; read after the page's text, live through the page's view session.
-const pageDiscussion = usePageCommentCount(() => (afterContent.value && documentOpen.value ? page.value?.id : undefined));
 const documentBody = ref<HTMLElement | null>(null);
 const pageDockShown = computed(() => workspacePanel.content.value === PageSidePanel);
 const pageDockTabs = computed(() => documentOpen.value && page.value ? [
@@ -3025,6 +3023,10 @@ const pageDockTabs = computed(() => documentOpen.value && page.value ? [
 ] : undefined);
 const pageDockActive = computed(() => pageDockShown.value ? pageDockTab.value : assistant.open.value ? "assistant" : undefined);
 const pageDockOpen = computed(() => workspacePanel.open.value && !!pageDockTabs.value && (pageDockShown.value || assistant.open.value));
+// The discussion is open while the dock shows its Diskuse: then the peek under the avatars hands over to it (never both).
+const discussionOpen = computed(() => pageDockOpen.value && pageDockShown.value && pageDockTab.value === "comments");
+// The discussion button's count and the peek's bubbles are PageDiscussionButton's (lazy, read after the page's text); the open thread tells it its count.
+const discussionButton = ref<InstanceType<typeof PageDiscussionButton>>();
 function pageDockRemembered() {
   return !user.value || readStored(`atlas:reading:${user.value.id}:dock`) !== "closed";
 }
@@ -3037,8 +3039,9 @@ function showPageDock(tab: PageSideTab, focus = true) {
   workspacePanel.show({ label: t.common.sidePanel, content: PageSidePanel, focus });
 }
 /**
- * The page's Diskuse (the button beside the avatars, Alt C): the dock's tab with the same thread a board has; the text selected in the
- * page becomes the quote of a new comment, and the caret goes into the field (Escape closes the dock and returns to the text).
+ * The page's Diskuse (the button beside the avatars, a bubble of the peek, Alt C): the dock's tab with the same thread a board has; the text
+ * selected in the page becomes the quote of a new comment, and the caret goes into the field (Escape closes the dock and returns to the text).
+ * The peek under the avatars hands over to it: its bubbles fly out while the dock slides in. The button and Alt C toggle it.
  */
 async function openDiscussion() {
   if (!documentOpen.value || !pageDockTabs.value) return false;
@@ -3049,9 +3052,13 @@ async function openDiscussion() {
   if (picked) requestedQuote.value = picked;
   showPageDock("comments");
   rememberPageDock(true);
-  pageDiscussion.seen();
   if (!picked) { await nextTick(); const side = document.querySelector("[data-page-side=comments]"); if (side) void focusWhenPresent(side, '.comment-composer [contenteditable="true"]', 90); }
   return true;
+}
+function toggleDiscussion() {
+  if (!discussionOpen.value) return void openDiscussion();
+  workspacePanel.hide();
+  rememberPageDock(false);
 }
 function selectPageDockTab(id: string) {
   if (id === "comments") { void openDiscussion(); return; }
@@ -4250,7 +4257,7 @@ function runShortcut(id: AppShortcutId, event: KeyboardEvent): boolean {
     }
     case "discussion":
       if (modal || !documentOpen.value || !pageDockTabs.value) return false;
-      void openDiscussion();
+      toggleDiscussion();
       return true;
     case "treeFilter": return !modal && treeFilterShortcut();
     case "goLibrary": return go(() => openLibrary("spaces"));
@@ -4749,7 +4756,7 @@ onUnmounted(() => {
             <div v-if="page && documentValue && !pageAccessTab && !libraryTab && !administrationOpen" class="document-actions">
                 <CollaboratorAvatars v-if="collaborationEnabled && browserOnline" :peers="pagePeers" @navigate="editor?.navigateToPeer($event)" />
                 <!-- The page's Diskuse like a board's: the count is the comments', accented while a colleague's new one is unseen (Alt C opens it too). -->
-                <Tooltip v-if="pageDockTabs"><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="page-discussion-button text-muted-foreground" :aria-label="t.common.discussionCount(pageDiscussion.count.value)" :aria-pressed="pageDockOpen && pageDockTab === 'comments'" :data-fresh="pageDiscussion.fresh.value || undefined" @click="openDiscussion"><AtlasIcon name="quote" /><Transition name="page-discussion-count" mode="out-in"><span v-if="pageDiscussion.count.value" :key="pageDiscussion.count.value" class="page-discussion-count" data-page-discussion-count aria-hidden="true">{{ pageDiscussion.count.value }}</span></Transition></Button></TooltipTrigger><TooltipContent>{{ t.common.discussion }} · {{ chordLabel("Alt+c") }}</TooltipContent></Tooltip>
+                <span v-if="pageDockTabs" class="page-discussion-anchor"><PageDiscussionButton v-if="afterContent" ref="discussionButton" :page-id="page.id" :self-id="user?.id" :open="discussionOpen" @toggle="toggleDiscussion" @open="openDiscussion" /></span>
                 <div class="document-secondary-actions">
                 <CopyPageLink ref="copyPageLink" :page-id="page.id" />
                 <!-- Icon-only like „Kopírovat odkaz“ beside them, so they say what they do the same way when pointed at or focused. -->
@@ -5085,7 +5092,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" :host="commentHost?.(page.id, page.spaceId)" @comments="pageDiscussion.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" :host="commentHost?.(page.id, page.spaceId)" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>

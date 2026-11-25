@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import t from "../i18n/components-b";
-import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import type { MarkdownRichValue } from "@atlas/markdown/core";
 import { errorMessage } from "../api";
 import { channelText } from "../channel";
@@ -14,7 +14,8 @@ import { peopleCount } from "./sharing/pageAccessText";
 import type { BoardBlockHost } from "../boards/editorBlocks";
 import type { CommentApi } from "../comments/commentApi";
 import type { ViewSessions } from "../live/viewSession";
-import LoadingSkeleton from "./LoadingSkeleton.vue";
+import { lazyComponent } from "../lazyComponent";
+import { skeletonOf } from "./loadingPlaceholders";
 import AtlasIcon from "./AtlasIcon.vue";
 import PageConnections from "./PageConnections.vue";
 import PageOutline from "./PageOutline.vue";
@@ -34,7 +35,7 @@ import { Button } from "./ui/button";
  * Přístup the page's access view (grants, links, opening history).
  */
 export type PageSideTab = "outline" | "search" | "history" | "access" | "comments";
-const CommentThread = defineAsyncComponent({ loader: () => import("./comments/CommentThread.vue"), loadingComponent: LoadingSkeleton, delay: 120 });
+const CommentThread = lazyComponent(() => import("./comments/CommentThread.vue"), { loading: skeletonOf({ rows: 1, rowHeight: "41px" }) });
 const props = withDefaults(defineProps<{
   tab: PageSideTab;
   pageId: string;

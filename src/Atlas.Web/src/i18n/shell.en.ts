@@ -13,7 +13,7 @@ const en: ShellMessages = {
     notifications: "Notifications",
     comments: "Comments",
     discussion: "Discussion",
-    discussionCount: (count: number) => count ? `Discussion, comments: ${count}` : "Discussion",
+    discussionCount: (count: number, unread = 0) => count ? `Discussion, comments: ${count}${unread ? `, unread: ${unread}` : ""}` : "Discussion",
     pages: "Pages",
     settings: "Settings",
     wikiAdmin: "Wiki administration",

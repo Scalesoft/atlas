@@ -296,6 +296,8 @@
 /* ---------- F. Page actions in the top bar (board 03) ---------- */
 .atlas .document-actions :is(.page-dock-toggle, .page-discussion-button)[aria-pressed="true"]:not(.md-editor *) { background: var(--accent-soft); color: var(--accent); }
 /* The discussion button: the count sits over its corner, so a new number or a first comment never resizes the bar. */
+/* The anchor is the peek's positioning box: its bubbles hang under the button, over the page. */
+.atlas .document-actions .page-discussion-anchor:not(.md-editor *) { position: relative; display: inline-flex; min-width: 32px; min-height: 32px; }
 .atlas .document-actions .page-discussion-button:not(.md-editor *) { position: relative; }
 .atlas .document-actions .page-discussion-count:not(.md-editor *) { position: absolute; top: -3px; right: -3px; min-width: 16px; padding: 0 4px; border-radius: 999px; background: var(--hover); color: var(--muted);
   font-size: 10.5px; font-weight: 650; line-height: 16px; text-align: center; transition: background-color var(--atlas-motion-base) var(--atlas-ease-out), color var(--atlas-motion-base) var(--atlas-ease-out); }
@@ -307,7 +309,7 @@
 /* ---------- G. Narrow and phone (board 13) ---------- */
 @media (max-width: 760px) {
   /* The dock covers the screen there; the outline row, the ⋯ menu and the bottom bar carry its parts. */
-  .atlas .document-actions :is(.page-dock-toggle, .page-discussion-button):not(.md-editor *) { display: none; }
+  .atlas .document-actions :is(.page-dock-toggle, .page-discussion-anchor):not(.md-editor *) { display: none; }
 }
 @media (max-width: 680px) {
   .atlas { --article-gutter: 20px; }
