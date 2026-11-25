@@ -262,7 +262,8 @@ describe("board session", () => {
     session.presence({ dragging: [] });
     await vi.advanceTimersByTimeAsync(5000);
     expect(api.submit).toHaveBeenCalledTimes(1);
-    expect(view.presence).not.toHaveBeenCalled();
+    // Only the editor's announcement when it joined: nothing once the board is revoked.
+    expect(view.presence.mock.calls).toEqual([["b1", { editing: true }]]);
   });
 
   it("stays in its view and sends what waits when a revoked board is still readable", async () => {
@@ -626,7 +627,7 @@ describe("board session", () => {
     expect(view.viewport).toHaveBeenCalledWith(["p1"]);
     const dragging = Array.from({ length: 50 }, (_, n) => ({ itemId: crypto.randomUUID(), x: n + 0.123456789, y: -12345.987654, width: 240.5, height: 140.25 }));
     session.presence({ cursor: { x: 1.6, y: 2.4 }, dragging });
-    const [objectId, payload] = view.presence.mock.calls[0]!;
+    const [objectId, payload] = view.presence.mock.calls.at(-1)!;
     expect(objectId).toBe("b1");
     expect(payload).toMatchObject({ cursor: { x: 2, y: 2 } });
     expect(payload.dragging[0]).toMatchObject({ x: 0, y: -12346, width: 241, height: 140 });

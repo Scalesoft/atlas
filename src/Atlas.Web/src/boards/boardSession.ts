@@ -2,7 +2,8 @@ import { api, ApiError, errorMessage } from "../api";
 import type { CollaborationPeer } from "../collaborationPresence";
 import { isCommentsChange } from "../comments/commentThread";
 import type { LiveStatus } from "../live/liveConnection";
-import { createPresenceRoster, presenceActivity } from "../live/objectPresence";
+import { createPresenceRoster, presenceActivity, type PresentPerson } from "../live/objectPresence";
+import { pagePresenceHeartbeatMs } from "../composables/usePageViewPresence";
 import { throttleLatest } from "../live/throttleLatest";
 import { viewSessions, type ObjectListener, type ViewHandle, type ViewSessions } from "../live/viewSession";
 import { liveObjects, type LiveObjects } from "../objects/liveObjects";
@@ -65,6 +66,8 @@ export interface BoardSessionState {
   canUndo: boolean;
   canRedo: boolean;
   remote: readonly RemoteDrag[];
+  /** Who else edits the board now (the bar's avatars), as a page's co-editors: renewed by a heartbeat while they have it open, not only while they point. */
+  present: readonly PresentPerson[];
 }
 
 export interface BoardSessionDeps {
@@ -290,6 +293,7 @@ export function createBoardSession(boardId: string, changed: () => void, deps: B
         if (!view) {
           view = views.open(viewKey, viewListener);
           view.watch(boardId, boardListener, model.sequence);
+          announce();
         }
         resolveTargets();
         void flush();
@@ -412,6 +416,10 @@ export function createBoardSession(boardId: string, changed: () => void, deps: B
     }
   }
 
+  // An editor says it is here as an edited page does (usePageViewPresence): at once, then every heartbeat, and `editing: false` when it leaves.
+  function announce(editing = true) { if (editable()) view?.presence(boardId, { editing }); }
+  const heartbeat = setInterval(announce, pagePresenceHeartbeatMs);
+
   function closeView() {
     watched.forEach(stop => stop());
     watched.clear();
@@ -443,8 +451,11 @@ export function createBoardSession(boardId: string, changed: () => void, deps: B
     // A comment notice is no change of the board: the comment threads read it themselves.
     changed(change) { if (isBatch(change)) receive(change); else if (!isCommentsChange(change)) void catchUp(); },
     missed() { void catchUp(); },
-    presence({ userId, displayName, color, payload }) {
-      if (typeof userId === "string") presenceOf(userId, typeof displayName === "string" ? displayName : "", typeof color === "string" ? color : "", (payload ?? undefined) as PresencePayload | undefined);
+    presence(presence) {
+      const { userId, displayName, color, payload } = presence;
+      roster.receive(presence);
+      // A heartbeat says only who is here: the pointer and drag previews stay as they were.
+      if (typeof userId === "string" && payload?.editing !== true) presenceOf(userId, typeof displayName === "string" ? displayName : "", typeof color === "string" ? color : "", (payload ?? undefined) as PresencePayload | undefined);
     },
     revoked() {
       // Which does not say the board is lost: load it again and let HTTP decide (see `load`).
@@ -477,6 +488,7 @@ export function createBoardSession(boardId: string, changed: () => void, deps: B
         canUndo: editable() && !!model?.canUndo,
         canRedo: editable() && !!model?.canRedo,
         remote: [...remote.values()].map(({ timer: _timer, ...user }) => user),
+        present: roster.of(boardId),
       };
     },
     /**
@@ -528,6 +540,8 @@ export function createBoardSession(boardId: string, changed: () => void, deps: B
      * flight, so a batch that reached the server too early (and was refused) goes again in its turn. */
     dispose() {
       flushOnHide();
+      announce(false);
+      clearInterval(heartbeat);
       disposed = true;
       clearTimeout(retry);
       clearTimeout(catchRetry);

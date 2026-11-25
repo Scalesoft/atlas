@@ -211,7 +211,7 @@ const whatsNewSince = ref<string>();
 const boardId = ref<string>();
 /** What the board view reports once the board has loaded: its space, title and whether the reader may change it. */
 const boardFrame = shallowRef<{ spaceId: string; title: string; canEdit: boolean }>();
-const boardPeers = shallowRef<CollaborationPeer[]>([]);
+const boardPeers = shallowRef<readonly CollaborationPeer[]>([]);
 const boardView = ref<{ goToPeer: (clientId: number) => void; locked: boolean; lockPulse: number; toggleLock: () => void;
   discussionOpen: boolean; toggleDiscussion: () => void; toggleDock: () => void; host: import("./boards/editorBlocks").BoardBlockHost }>();
 const copyBoardLink = ref<InstanceType<typeof CopyPageLink>>();

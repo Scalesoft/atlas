@@ -19,6 +19,7 @@ import { editorUndo } from "../../boards/editorUndo";
 import { lazyComponent } from "../../lazyComponent";
 import { holdUnsavedWork } from "../../lib/unsavedWork";
 import type { CollaborationPeer } from "../../collaborationPresence";
+import { keepPeers } from "../../composables/usePageViewPresence";
 import DocumentTitle from "../DocumentTitle.vue";
 import ConflictNote from "../settings/ConflictNote.vue";
 import EmptyState from "../settings/EmptyState.vue";
@@ -58,7 +59,7 @@ const BoardPageEditor = lazyComponent(() => import("./preview/BoardPageEditor.vu
 const props = defineProps<{ boardId: string; deps?: BoardSessionDeps; comments?: CommentApi; /** Opened locked (a touch screen, the profile's „Stránky otevírat: jen pro čtení“), as a page. */ openLocked?: boolean }>();
 interface BoardFrameMeta { spaceId: string; title: string; canEdit: boolean }
 /** `sessionExpired`: a save was answered 401; the shell checks the session and, if it is over, shows the sign-in as it does everywhere. */
-const emit = defineEmits<{ meta: [meta: BoardFrameMeta]; peers: [peers: CollaborationPeer[]]; openPage: [pageId: string, heading?: string, block?: string]; openObject: [id: string, typeId: string]; sessionExpired: [] }>();
+const emit = defineEmits<{ meta: [meta: BoardFrameMeta]; peers: [peers: readonly CollaborationPeer[]]; openPage: [pageId: string, heading?: string, block?: string]; openObject: [id: string, typeId: string]; sessionExpired: [] }>();
 
 const state = shallowRef<BoardSessionState>();
 const session = createBoardSession(props.boardId, () => { state.value = session.state; }, props.deps);
@@ -172,20 +173,17 @@ function openOwnerPage(event: MouseEvent) {
 
 // Who else is on the board, as a page shows its co-editors: the same avatars and the same colour per person.
 const canvas = ref<InstanceType<typeof BoardCanvas>>();
-const peerIds = new Map<string, number>();
-// The same list while the same people are here as before: a drag preview moves a cursor 20 times a second, and the bar's avatars
-// (a TransitionGroup that measures them on every render, a layout of the whole board) must not draw again for it (COL2-1).
-const peers = computed<CollaborationPeer[]>(previous => {
-  const next = (state.value?.remote ?? []).map(user => {
-    if (!peerIds.has(user.userId)) peerIds.set(user.userId, peerIds.size + 1);
-    return { clientId: peerIds.get(user.userId)!, id: user.userId, name: user.displayName || t.session.colleague, color: user.color, cursorAvailable: !!user.cursor };
-  });
-  const same = (a: CollaborationPeer, b: CollaborationPeer) => a.clientId === b.clientId && a.id === b.id && a.name === b.name && a.color === b.color && a.cursorAvailable === b.cursorAvailable;
-  return previous && previous.length === next.length && next.every((peer, index) => same(peer, previous[index]!)) ? previous : next;
-});
+const cursorOf = (userId: string) => state.value?.remote.find(user => user.userId === userId)?.cursor;
+// Everyone who has the board open to edit (its heartbeat), a click going to their pointer while they show one. The same list while
+// the same people are here as before: a drag preview moves a cursor 20 times a second, and the bar's avatars (a TransitionGroup that
+// measures them on every render, a layout of the whole board) must not draw again for it (COL2-1).
+const peers = computed<readonly CollaborationPeer[]>(previous => keepPeers(previous, (state.value?.present ?? []).map(person => ({
+  clientId: person.clientId, id: person.userId, name: person.displayName || t.session.colleague, color: person.color, cursorAvailable: !!cursorOf(person.userId),
+}))));
 function goToPeer(clientId: number) {
-  const user = state.value?.remote.find(person => peerIds.get(person.userId) === clientId);
-  if (user?.cursor) canvas.value?.centreOn(user.cursor);
+  const person = state.value?.present.find(entry => entry.clientId === clientId);
+  const cursor = person && cursorOf(person.userId);
+  if (cursor) canvas.value?.centreOn(cursor);
 }
 
 // The levels of the kinds the board holds an overview of (overviewKinds.ts): data-overview-<kind> on the board's root, one state per
