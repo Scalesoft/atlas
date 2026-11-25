@@ -1183,7 +1183,6 @@ body {
   .atlas .search-query-controls { padding: 10px 12px; }
 }
 .atlas .search-result { scroll-margin-top: 8px; }
-.atlas .search-filter-toggle { flex-shrink: 0; white-space: nowrap; gap: 6px; }
 .atlas .search-active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 10px 0; }
 .atlas .omnisearch-input:not(.md-editor):not(.md-editor *) {
   display: flex;
@@ -1441,8 +1440,6 @@ body {
 }
 
 /* Chips: real buttons on the accent surface, not a text "×". */
-.atlas .search-filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 12px;margin-top:6px}
-.atlas .search-filters .field{flex:1 1 160px;min-width:140px;margin-bottom:0}
 .atlas .search-load-more{display:block;margin-left:auto}
 @media(max-width:760px){.atlas .search-filters{gap:10px}}
 

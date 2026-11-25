@@ -91,10 +91,7 @@
 .atlas .app-dialog.search-dialog .omnisearch-input input:not(.md-editor *) { height: auto; padding: 0; border: 0; background: transparent; box-shadow: none; font-size: 18px; line-height: 1.4; color: var(--text); }
 .atlas .app-dialog.search-dialog .omnisearch-input input::placeholder { color: var(--muted); }
 .atlas .app-dialog.search-dialog .search-meaning-status:not(.md-editor *) { flex: none; max-width: 40%; }
-.atlas .app-dialog.search-dialog .search-scope:not(.md-editor *) { display: flex; flex: none; align-items: center; gap: 8px; }
-.atlas .app-dialog.search-dialog .search-filter-toggle:not(.md-editor *) { height: 30px; min-height: 30px; border-radius: 8px; font-size: 13px; font-weight: 500; }
-/* Opened, the button is as tinted as the count's pill, which then vanished: the count keeps its own surface. */
-.atlas .app-dialog.search-dialog .search-filter-toggle[aria-expanded="true"] [data-slot="badge"]:not(.md-editor *) { background: var(--surface); }
+.atlas .app-dialog.search-dialog .search-scope:not(.md-editor *) { display: flex; flex: 0 1 auto; flex-wrap: wrap; min-width: 0; align-items: center; gap: 8px; }
 
 /* Typing ">" (or choosing Příkazy) takes the scope chips away while the dialog narrows; they used to vanish in one frame, so the
    field widened by their width (and its clear button jumped right by 216 px) at once. They fold into the field's side instead
@@ -269,7 +266,7 @@
 }
 /* UX SE5-2: the dialog's own control sizes (30 px) beat the 44 px touch target of shell.css, so a finger met 28-30 px chips and tabs. */
 @media (pointer: coarse) {
-  .atlas .app-dialog.search-dialog :is(.search-filter-toggle, .search-scope .filter-menu-trigger, .search-tabs .search-modes > button):not(.md-editor *) { min-height: 44px; }
+  .atlas .app-dialog.search-dialog :is(.search-scope .filter-menu-trigger, .search-tabs .search-modes > button):not(.md-editor *) { min-height: 44px; }
 }
 @media (max-width: 680px) {
   /* The command mode's own width (above) is more specific; on a phone both modes fill the screen. */

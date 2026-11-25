@@ -5,7 +5,6 @@ import AiQuotaStatus from "./components/ai/AiQuotaStatus.vue";
 import AtlasBrandLogo from "./components/AtlasBrandLogo.vue";
 import LoginLayout from "./components/auth/LoginLayout.vue";
 import AtlasVersionInfo from "./components/AtlasVersionInfo.vue";
-import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
 import { Toaster } from "./components/ui/sonner";
 import { useToast } from "./composables/useToast";
@@ -32,6 +31,7 @@ import {
   shallowRef,
   watch,
   type ComponentPublicInstance,
+  type Ref,
 } from "vue";
 import { useElementVisibility } from "@vueuse/core";
 import {
@@ -336,7 +336,6 @@ import type { RecentChange } from "./components/home/homeApi";
 import InlineReveal from "./components/settings/InlineReveal.vue";
 import FilterMenu from "./components/settings/FilterMenu.vue";
 // Only the search's folded filters use it, and its radio group (reka-ui, ohash) is about 5.5 KiB gzip the first screen does not need.
-const OptionPills = lazyComponent(() => import("./components/settings/OptionPills.vue"));
 import type { EditorPluginAction } from "./editorActions";
 import { MarkdownIcon, type MarkdownIconName } from "@atlas/markdown/icons";
 import t from "./i18n/shell";
@@ -919,7 +918,6 @@ const appearanceDirty = computed(() => !!user.value && (appearance.layout !== us
 const searchIsOpen = ref(false);
 /** The same search as a dialog or as the whole page (Ctrl+Shift+Enter, `searchView=page` in its address; 2026-10-28). */
 const searchView = ref<"dialog" | "page">("dialog");
-const filtersOpen = ref(false);
 const templateView = ref<PageCreationKind>();
 const templateDirty = ref(false);
 const templateBusy = ref(false);
@@ -1134,11 +1132,15 @@ const searchScopeHint = computed(() => searchContent.value === "drafts"
     : t.search.hintAll);
 const searchSortLatestLabel = computed(() => searchContent.value === "drafts" ? t.search.sortDrafts : searchContent.value === "published" ? t.search.sortPublished : t.search.lastChange);
 const searchSpaceOptions = computed(() => [{ value: "", label: t.search.allSpaces }, ...spacesPinnedFirst.value.map(space => ({ value: space.id, label: space.name }))]);
-const searchChangedOptions = computed(() => [{ value: "any", label: t.search.anytime }, { value: "day", label: t.search.last24 }, { value: "week", label: t.search.last7 }, { value: "month", label: t.search.last30 }]);
-const searchContentOptions = computed(() => [{ value: "all", label: t.common.all }, { value: "published", label: t.search.scopePublished }, { value: "drafts", label: t.search.scopeDrafts }]);
-const searchSortOptions = computed(() => [{ value: "relevance", label: t.search.byRelevance }, { value: "published", label: searchSortLatestLabel.value }]);
+const searchChangedOptions = computed(() => [{ value: "", label: t.search.anytime }, { value: "day", label: t.search.last24 }, { value: "week", label: t.search.last7 }, { value: "month", label: t.search.last30 }]);
+const searchContentOptions = computed(() => [{ value: "", label: t.common.all }, { value: "published", label: t.search.scopePublished }, { value: "drafts", label: t.search.scopeDrafts }]);
+const searchSortOptions = computed(() => [{ value: "", label: t.search.byRelevance }, { value: "published", label: searchSortLatestLabel.value }]);
+// FilterMenu's "no filter" is the empty value; the search state keeps its named defaults.
+const defaulted = (state: Ref<string>, fallback: string) => computed({ get: () => state.value === fallback ? "" : state.value, set: value => { state.value = value || fallback; } });
+const searchChangedModel = defaulted(searchChangedWithin, "any");
+const searchContentModel = defaulted(searchContent, "all");
+const searchSortModel = defaulted(searchSort, "relevance");
 const searchFiltered = computed(() => !!searchTag.value || !!searchSpace.value || searchContent.value !== "all" || searchChangedWithin.value !== "any" || searchSort.value !== "relevance");
-const activeFilterCount = computed(() => Number(!!searchTag.value) + Number(!!searchSpace.value) + Number(searchContent.value !== "all") + Number(searchChangedWithin.value !== "any") + Number(searchSort.value !== "relevance"));
 const searchSpaces = ref<{ id: string; name: string; icon: string; color: string }[]>([]);
 const searchNextOffset = ref<number | null>(null);
 const loadingMore = ref(false);
@@ -1617,7 +1619,6 @@ function resetSessionState() {
   searchUrl(false);
   query.value = "";
   resetSearchFilters();
-  filtersOpen.value = false;
   results.value = []; searchSpaces.value = []; searchResources.value = []; suggestedPages.value = [];
   searchNextOffset.value = null; hasMore.value = false; searchIndex.value = 0;
   searchError.value = ""; searchAttempted.value = false;
@@ -3868,8 +3869,7 @@ async function openSearch(fromHistory: boolean | Event = false) {
     searchSort.value = linked.searchParams.get("sort") === "published" ? "published" : "relevance";
   } else if (!searchIsOpen.value) {
     searchViewToRestore = undefined;
-    filtersOpen.value = false;
-    query.value = "";
+      query.value = "";
     resetSearchFilters();
   }
   if (!searchIsOpen.value) {
@@ -4198,12 +4198,6 @@ function selectSearchPointer(event: PointerEvent, index: number) {
   searchResultChosen.value = true;
 }
 function searchDialogKeys(event: KeyboardEvent) {
-  // Tab in a typed field takes the first result (P8), so the scope and Filtry after the field have a key of their own: Ctrl+Shift+F lands on Filtry, Shift+Tab goes on to Prostor.
-  if ((event.ctrlKey || event.metaKey) && event.shiftKey && !event.altKey && !event.isComposing && event.key.toLowerCase() === 'f' && !commandMode.value) {
-    event.preventDefault();
-    document.querySelector<HTMLElement>('.search-dialog .search-filter-toggle')?.focus();
-    return;
-  }
   if (event.key === 'F6' && !event.isComposing) {
     event.preventDefault();
     const field = fieldElement(searchField.value);
@@ -5277,7 +5271,9 @@ onUnmounted(() => {
         <Transition name="search-scope">
         <div v-if="!commandMode" class="search-scope" role="group" :aria-label="t.search.scopeGroup">
           <FilterMenu v-model="searchSpace" :options="searchSpaceOptions" :label="t.search.spaceLabel" :search-label="t.search.findSpace" icon="folder" data-search-space />
-          <Button variant="outline" type="button" size="sm" class="search-filter-toggle" aria-controls="search-filters" aria-keyshortcuts="Control+Shift+F" :aria-expanded="filtersOpen" @click="filtersOpen = !filtersOpen">{{ t.search.filters }}<Badge variant="secondary" v-if="searchFiltered">{{ activeFilterCount }}</Badge></Button>
+          <FilterMenu v-model="searchChangedModel" :options="searchChangedOptions" :label="t.search.edited" icon="clock" data-search-changed />
+          <FilterMenu v-model="searchContentModel" :options="searchContentOptions" :label="t.search.content" icon="file-text" data-search-content />
+          <FilterMenu v-model="searchSortModel" :options="searchSortOptions" :label="t.search.sorting" icon="list" data-search-sort />
         </div>
         </Transition>
         <Tooltip>
@@ -5313,21 +5309,9 @@ onUnmounted(() => {
         </template>
         <template v-else>
         <TagSearchSuggestions v-if="user && searchIsOpen && !searchTag" :query="query" :user-id="user.id" @select-tag="openTagSearch" />
-        <InlineReveal :open="searchFiltered">
+        <InlineReveal :open="!!searchTag">
         <div class="search-active-filters tags-ui" :aria-label="t.search.activeFilters">
           <button v-if="searchTag" type="button" class="tag-chip selected-search-tag" :data-tone="tagTone(searchTag.name)" :aria-label="t.search.clearTag(searchTag.name)" @click="searchTag = undefined"><AtlasIcon name="hash" :size="14" />{{ searchTag.name }}<AtlasIcon name="close" :size="14" /></button>
-          <Badge variant="secondary" v-if="searchSpace" as="button" type="button" class="max-w-full cursor-pointer break-words bg-accent-soft text-primary hover:brightness-[0.96]" :aria-label="t.search.clearSpace(spaces.find(s => s.id === searchSpace)?.name)" @click="searchSpace = ''">{{ spaces.find(s => s.id === searchSpace)?.name }}<AtlasIcon name="close" :size="14" /></Badge>
-          <Badge variant="secondary" v-if="searchContent !== 'all'" as="button" type="button" class="max-w-full cursor-pointer break-words bg-accent-soft text-primary hover:brightness-[0.96]" :aria-label="t.search.clearScope" @click="searchContent = 'all'">{{ searchContent === 'drafts' ? t.search.drafts : t.search.published }}<AtlasIcon name="close" :size="14" /></Badge>
-          <Badge variant="secondary" v-if="searchChangedWithin !== 'any'" as="button" type="button" class="max-w-full cursor-pointer break-words bg-accent-soft text-primary hover:brightness-[0.96]" :aria-label="t.search.clearChanged" @click="searchChangedWithin = 'any'">{{ searchChangedWithin === 'day' ? t.search.h24 : searchChangedWithin === 'week' ? t.search.d7 : t.search.d30 }}<AtlasIcon name="close" :size="14" /></Badge>
-          <Badge variant="secondary" v-if="searchSort !== 'relevance'" as="button" type="button" class="max-w-full cursor-pointer break-words bg-accent-soft text-primary hover:brightness-[0.96]" :aria-label="t.search.resetSort" @click="searchSort = 'relevance'">{{ t.search.newest }}<AtlasIcon name="close" :size="14" /></Badge>
-        </div>
-        </InlineReveal>
-        <InlineReveal id="search-filters" :open="filtersOpen" keep-mounted>
-        <div class="search-filters">
-          <OptionPills v-model="searchChangedWithin" :label="t.search.edited" :options="searchChangedOptions" />
-          <OptionPills v-model="searchContent" :label="t.search.content" :options="searchContentOptions" />
-          <OptionPills v-model="searchSort" :label="t.search.sorting" :options="searchSortOptions" />
-          <Button variant="ghost" v-if="searchFiltered" type="button" @click="resetSearchFilters">{{ t.search.clearFilters }}</Button>
         </div>
         </InlineReveal>
         <p id="search-hint" class="visually-hidden">
@@ -5407,7 +5391,6 @@ onUnmounted(() => {
           <span><kbd>↑</kbd><kbd>↓</kbd> {{ t.search.select }}</span>
           <span><kbd>Enter</kbd> {{ commandMode ? t.search.run : askMode && !searchResultChosen ? t.search.ask : t.common.open }}</span>
           <span v-if="!commandMode"><kbd>&gt;</kbd> {{ t.search.commands }}</span>
-          <span v-if="!commandMode"><kbd>Ctrl ⇧ F</kbd> {{ t.search.scopeAndFilters }}</span>
           <span v-if="aiCapabilities.answer && !commandMode" id="search-mode-hint" class="search-mode-hint" data-search-shortcut-hint><kbd>?</kbd> {{ t.search.askAiHint }} · <kbd>F6</kbd> {{ t.search.answerOrQuery }}</span>
           <span class="search-view-hint"><kbd>Ctrl ⇧ Enter</kbd> {{ searchView === 'page' ? t.search.toWindow : t.search.wholePage }}</span>
           <span><kbd>Esc</kbd> {{ t.common.close }}</span>

@@ -23,7 +23,6 @@ test('search reveals filters and answers without an empty column or hidden activ
   await page.locator('.search-launch').click();
   const dialog = page.locator('.search-dialog');
   const input = dialog.locator('.omnisearch-input input');
-  const filters = dialog.locator('#search-filters');
   for (const width of [1366, 390, 1920]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
     // The answer pane leaves as a wipe of a finished pane: what is inside keeps its width while the pane's track shrinks (it used to
@@ -46,21 +45,18 @@ test('search reveals filters and answers without an empty column or hidden activ
       const content = el.querySelector('.search-content')!.getBoundingClientRect();
       return Math.abs(content.width - el.getBoundingClientRect().width);
     })).toBeLessThan(2);
-    await expect(filters).toHaveAttribute('aria-hidden', 'true');
-    await dialog.getByRole('button', { name: 'Filtry', exact: true }).click();
-    await filters.getByRole('radio', { name: 'Posledních 7 dní', exact: true }).click();
-    await dialog.locator('.search-filter-toggle').click();
-    await expect(filters).toHaveAttribute('aria-hidden', 'true');
-    await expect(dialog.getByRole('button', { name: 'Zrušit filtr poslední změny' })).toBeVisible();
+    await dialog.getByRole('button', { name: /^Upraveno: / }).click();
+    await page.getByRole('menuitemradio', { name: 'Posledních 7 dní', exact: true }).click();
+    await expect(dialog.getByRole('button', { name: 'Upraveno: Posledních 7 dní' })).toBeVisible();
     await input.fill('VPN');
     await expect(dialog.locator('.search-answer-pane')).toBeVisible();
     await expect(dialog.locator('.search-source-status')).toContainText('hotovo');
     await expect.poll(() => dialog.locator('.search-columns').evaluate(el => el.getAnimations().filter(animation => animation.playState === 'running').length)).toBe(0);
-    await expect(filters).toHaveAttribute('hidden', 'until-found');
     await expect(dialog.locator('.search-answer-pane')).toHaveCSS('opacity', '1');
     await expect.poll(() => dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
     await page.screenshot({ path: resolve(shots, `search-disclosure-${width}.png`) });
-    await dialog.getByRole('button', { name: 'Zrušit filtr poslední změny' }).click();
+    await dialog.getByRole('button', { name: /^Upraveno: / }).click();
+    await page.getByRole('menuitemradio', { name: 'Kdykoli', exact: true }).click();
   }
   await input.fill('');
   await dialog.locator('[data-search-ask-mode]').click();

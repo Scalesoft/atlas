@@ -97,24 +97,18 @@ test('omnisearch filters drafts, restores history, and opens real links on deskt
   await expect(keyboardResults.nth(1)).toHaveAttribute('aria-selected', 'true');
   await searchField.press('ArrowUp');
   await expect(keyboardResults.nth(0)).toHaveAttribute('aria-selected', 'true');
-  // Tab follows the palette from top to bottom: the space scope, the filter toggle and the
-  // whole-page switch of the field row, the mode tabs, then the visible space chip and the result list;
-  // collapsed filter fields must stay outside the focus order.
+  // Tab follows the palette from top to bottom: the four filter menus (Prostor, Upraveno, Obsah, Řazení) and the
+  // whole-page switch of the field row, then the mode tabs and the result list.
   await search.getByRole('button', { name: 'Vymazat dotaz', exact: true }).focus();
-  await page.keyboard.press('Tab');
-  await expect(search.getByRole('button', { name: /^Prostor: / })).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(search.getByRole('button', { name: /^Filtry/ })).toBeFocused();
+  for (const name of [/^Prostor: /, /^Upraveno: /, /^Obsah: /, /^Řazení: /]) {
+    await page.keyboard.press('Tab');
+    await expect(search.getByRole('button', { name })).toBeFocused();
+  }
   await page.keyboard.press('Tab');
   await expect(search.getByRole('button', { name: 'Hledání na celou stránku', exact: true })).toBeFocused();
-  // Last change is secondary, alongside content and order; none can receive focus while collapsed.
-  await expect(search.locator('#search-filters')).toHaveAttribute('aria-hidden', 'true');
-  await expect(search.getByRole('radiogroup', { name: 'Upraveno', exact: true })).toBeHidden();
   const modes = search.getByRole('group', { name: 'Režim hledání', exact: true }).getByRole('button');
   for (let index = 0, count = await modes.count(); index < count; index++) await page.keyboard.press('Tab');
   await expect(modes.last()).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(search.getByRole('button', { name: /^Zrušit filtr prostoru/ })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(keyboardResults.nth(0)).toBeFocused();
   await page.keyboard.press('ArrowDown');
@@ -135,20 +129,13 @@ test('omnisearch filters drafts, restores history, and opens real links on deskt
   await expect(search).toBeVisible();
   await expect(search.getByRole('option').filter({ hasText: selectedTitle! })).toHaveAttribute('aria-selected', 'true');
   await expect.poll(() => searchContent.evaluate(element => element.scrollTop)).toBe(savedScroll);
-  await search.getByRole('button', { name: /^Filtry/ }).focus();
-  await page.keyboard.press('Enter');
-  await expect(search.locator('#search-filters')).not.toHaveAttribute('aria-hidden', 'true');
-  // Each filter is one radiogroup with a single Tab stop: its checked pill.
-  const stop = (name: string) => search.getByRole('radiogroup', { name, exact: true }).getByRole('radio', { checked: true });
-  await stop('Upraveno').focus();
-  await expect(stop('Upraveno')).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(stop('Obsah')).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(stop('Řazení')).toBeFocused();
-  await search.getByRole('radio', { name: 'Dostupné koncepty', exact: true }).click();
-  await search.getByRole('radio', { name: 'Posledních 7 dní', exact: true }).click();
-  await search.getByRole('radio', { name: 'Poslední uložená změna', exact: true }).click();
+  const pick = async (menu: RegExp, option: string) => {
+    await search.getByRole('button', { name: menu }).click();
+    await page.getByRole('menuitemradio', { name: option, exact: true }).click();
+  };
+  await pick(/^Obsah: /, 'Dostupné koncepty');
+  await pick(/^Upraveno: /, 'Posledních 7 dní');
+  await pick(/^Řazení: /, 'Poslední uložená změna');
   await expect(search.getByRole('option').filter({ hasText: draft.title })).toBeVisible();
   await expect(search.getByRole('option').filter({ hasText: published.title })).toHaveCount(0);
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -157,8 +144,8 @@ test('omnisearch filters drafts, restores history, and opens real links on deskt
   await expect(search).not.toBeVisible();
   await page.goBack();
   await expect(search).toBeVisible();
-  await expect(search.getByRole('radio', { name: 'Dostupné koncepty', exact: true })).toBeChecked();
-  await expect(search.getByRole('radio', { name: 'Posledních 7 dní', exact: true })).toBeChecked();
+  await expect(search.getByRole('button', { name: 'Obsah: Dostupné koncepty' })).toBeVisible();
+  await expect(search.getByRole('button', { name: 'Upraveno: Posledních 7 dní' })).toBeVisible();
   await expect(search.getByRole('option').filter({ hasText: draft.title })).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   expect(await search.evaluate(element => element.scrollWidth <= element.clientWidth + 1)).toBe(true);
@@ -174,8 +161,7 @@ test('omnisearch filters drafts, restores history, and opens real links on deskt
   await page.keyboard.press('Control+k');
   await expect(searchField).toHaveValue('');
   await expect(searchField).toHaveAccessibleName('Hledat ve wiki – Vše');
-  // The filters are collapsed on every opening; their radios are reachable once expanded.
-  await search.getByRole('button', { name: /^Filtry/ }).click();
-  await expect(search.getByRole('radio', { name: 'Kdykoli', exact: true })).toBeChecked();
+  // The filters are reset on every opening.
+  await expect(search.getByRole('button', { name: 'Upraveno: Kdykoli' })).toBeVisible();
   expect(unexpected).toEqual([]);
 });

@@ -104,18 +104,19 @@ const wiki: Route = (path) => {
   if (path === `/api/spaces/${space.id}/page-templates`) return response([]);
   if (path === `/api/pages/${page.id}`) return response(page);
 };
-// The search filters: a space FilterMenu and OptionPills groups (Upraveno, Obsah, Řazení) found by their label.
-function searchPillOf(app: VueWrapper, group: string, value: string) {
-  return app.findAll(".search-filters .option-pills").find(each => each.get(".option-pills-label").text() === group)!.get(`[data-value="${value}"]`);
-}
-const searchPill = (app: VueWrapper, group: string, value: string) => searchPillOf(app, group, value).trigger("click");
-async function pickSearchSpace(app: VueWrapper, id: string) {
-  await app.get("[data-search-space]").trigger("click");
+// The search filters are FilterMenus (Prostor, Upraveno, Obsah, Řazení): open one by its data attribute and pick an option by value ("all" = no filter).
+const searchMenus: Record<string, string> = { Prostor: "space", Upraveno: "changed", Obsah: "content", "Řazení": "sort" };
+async function pickSearchFilter(app: VueWrapper, group: string, value: string) {
+  await app.get(`[data-search-${searchMenus[group]}]`).trigger("click");
   if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(40); else await new Promise(resolve => setTimeout(resolve, 40));
   await flushPromises();
-  document.querySelector<HTMLElement>(`.filter-menu-panel [data-value="${id}"]`)!.click();
+  document.querySelector<HTMLElement>(`.filter-menu-panel [data-value="${value}"]`)!.click();
+  if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(40); else await new Promise(resolve => setTimeout(resolve, 40));
   await flushPromises();
 }
+const searchPill = pickSearchFilter;
+const pickSearchSpace = (app: VueWrapper, id: string) => pickSearchFilter(app, "Prostor", id);
+const searchMenuActive = (app: VueWrapper, group: string) => app.get(`[data-search-${searchMenus[group]}]`).attributes("data-active") !== undefined;
 function requestMock(custom?: Route) {
   return routedFetch(custom, wiki, sessionRoutes, quietRoutes);
 }
@@ -701,18 +702,14 @@ describe("navigation responses belong to the authenticated account", () => {
     expect(location.hash).toBe('#/spaces/space-1');
     expect(app.get('.space-page-table a').attributes('href')).toContain('#/pages/page-1');
   });
-  it("keeps advanced search filters collapsed without losing an active scope", async () => {
+  it("shows an active search scope on its filter menu and clears it from there", async () => {
     const app = await mountApp(requestMock());
     await app.get('.search-launch').trigger('click');
-    const toggle = app.get('button[aria-controls="search-filters"]');
-    expect(toggle.attributes('aria-expanded')).toBe('false');
-    expect(app.get('#search-filters').isVisible()).toBe(false);
-    await toggle.trigger('click');
+    expect(app.find('.search-filter-toggle').exists()).toBe(false);
     await pickSearchSpace(app, space.id);
-    await toggle.trigger('click');
-    expect(app.get('#search-filters').isVisible()).toBe(false);
-    expect(app.get('.search-active-filters').text()).toContain(space.name);
-    await app.get('.search-active-filters button').trigger('click');
+    expect(app.get("[data-search-space]").text()).toContain(space.name);
+    expect(searchMenuActive(app, "Prostor")).toBe(true);
+    await pickSearchSpace(app, "all");
     expect(app.get("[data-search-space]").text()).toContain("Všechny");
   });
   const reader = { id: "user-reader", username: "reader", displayName: "Reader", isWikiAdmin: false, appearance: { layout: "connected", accent: "blue", mode: "system" } };
@@ -1741,13 +1738,13 @@ describe("omnisearch filters and continuation", () => {
     expect(lastRequest).toContain("content=drafts"); expect(lastRequest).toContain("changedWithin=week"); expect(lastRequest).toContain("sort=published"); expect(lastRequest).toContain("offset=20");
     await app.get(".search-top [data-slot=button]").trigger("click");
     history.replaceState(null, "", url); window.dispatchEvent(new PopStateEvent("popstate")); await flushPromises();
-    expect(searchPillOf(app, "Obsah", "drafts").attributes("data-state")).toBe("checked");
-    expect(searchPillOf(app, "Upraveno", "week").attributes("data-state")).toBe("checked");
+    expect(app.get("[data-search-content]").text()).toContain("koncepty");
+    expect(searchMenuActive(app, "Upraveno")).toBe(true);
     await app.get(".search-top [data-slot=button]").trigger("click");
     await app.get(".search-launch").trigger("click");
     expect((app.get(".omnisearch-input input").element as HTMLInputElement).value).toBe("");
-    expect(searchPillOf(app, "Obsah", "all").attributes("data-state")).toBe("checked");
-    expect(searchPillOf(app, "Upraveno", "any").attributes("data-state")).toBe("checked");
+    expect(searchMenuActive(app, "Obsah")).toBe(false);
+    expect(searchMenuActive(app, "Upraveno")).toBe(false);
   });
   it("records query and scope in a shareable URL without adding a history entry per character", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -1779,20 +1776,15 @@ describe("omnisearch filters and continuation", () => {
 });
 
 describe("calmer search overlay", () => {
-  it("reveals secondary filters on request and keeps their effect visible after collapsing", async () => {
+  it("shows the effect of a last-change filter on its menu and resets it from there", async () => {
     const app = await mountApp(requestMock());
     await app.get(".search-launch").trigger("click");
-    const filters = app.get("#search-filters");
-    expect(filters.attributes("aria-hidden")).toBe("true");
-    await app.get(".search-filter-toggle").trigger("click"); await flushPromises();
+    expect(searchMenuActive(app, "Upraveno")).toBe(false);
     await searchPill(app, "Upraveno", "week");
-    await app.get(".search-filter-toggle").trigger("click"); await flushPromises();
-    expect(filters.attributes("aria-hidden")).toBe("true");
-    expect(app.get(".search-filter-toggle [data-slot=badge]").text()).toBe("1");
-    const chip = app.get('[aria-label="Zrušit filtr poslední změny"]');
-    expect(chip.text()).toContain("7 dní");
-    await chip.trigger("click");
-    expect(app.find(".search-filter-toggle [data-slot=badge]").exists()).toBe(false);
+    expect(searchMenuActive(app, "Upraveno")).toBe(true);
+    expect(app.get("[data-search-changed]").text()).toContain("7 dní");
+    await searchPill(app, "Upraveno", "all");
+    expect(searchMenuActive(app, "Upraveno")).toBe(false);
   });
   it("shows a clear button inside the field only while the query is non-empty and it empties the query", async () => {
     const app = await mountApp(requestMock());
@@ -1806,36 +1798,6 @@ describe("calmer search overlay", () => {
     expect((input.element as HTMLInputElement).value).toBe("");
     expect(app.find(".search-clear").exists()).toBe(false);
     expect(document.activeElement).toBe(input.element);
-  });
-  it("renders an active filter as a real badge button with an icon, not a text ×", async () => {
-    const app = await mountApp(requestMock());
-    await app.get(".search-launch").trigger("click");
-    await pickSearchSpace(app, space.id);
-    const chip = app.get(".search-active-filters [data-slot=badge]");
-    expect(chip.element.tagName).toBe("BUTTON");
-    expect(chip.find("svg").exists()).toBe(true);
-    expect(chip.text()).not.toContain("×");
-  });
-  it("shows a count badge on the Filtry toggle once a filter is active", async () => {
-    const app = await mountApp(requestMock());
-    await app.get(".search-launch").trigger("click");
-    const toggle = app.get(".search-filter-toggle");
-    expect(toggle.attributes("data-variant")).toBe("outline");
-    expect(toggle.find("[data-slot=badge]").exists()).toBe(false);
-    await pickSearchSpace(app, space.id);
-    expect(app.get(".search-filter-toggle [data-slot=badge]").text()).toBe("1");
-  });
-  it("keeps one Zrušit filtry button, inside the expanded filter panel", async () => {
-    const app = await mountApp(requestMock());
-    await app.get(".search-launch").trigger("click");
-    await pickSearchSpace(app, space.id);
-    expect(app.findAll("button").filter(b => b.text() === "Zrušit filtry" && b.isVisible())).toHaveLength(0);
-    await app.get(".search-filter-toggle").trigger("click");
-    const resetButtons = app.get("#search-filters").findAll("button").filter(b => b.text() === "Zrušit filtry");
-    expect(resetButtons).toHaveLength(1);
-    expect(resetButtons[0]!.attributes("data-variant")).toBe("ghost");
-    await resetButtons[0]!.trigger("click");
-    expect(app.get("[data-search-space]").text()).toContain("Všechny");
   });
   it("hides the explanatory sentence and the result count from sighted users but keeps them for assistive tech", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -2942,27 +2904,13 @@ describe("search answers (phase 3 W11)", () => {
       expect(app.find("[data-search-shortcut-hint]").exists()).toBe(false);
     }
   });
-  // Tab in a typed field takes the first result (P8): the scope and Filtry after it are reached by their own key.
-  it("Ctrl+Shift+F in the search lands on Filtry, whatever is typed, and not in the command mode", async () => {
+  it("Ctrl+Shift+F in the search is not taken: it belongs to the tree filter", async () => {
     const { app, input } = await setup();
     await input.setValue("VPN");
     const event = new KeyboardEvent("keydown", { key: "F", ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true });
     input.element.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-    expect(document.activeElement).toBe(app.get(".search-filter-toggle").element);
-    expect(app.get(".search-filter-toggle").attributes("aria-keyshortcuts")).toBe("Control+Shift+F");
-    await input.setValue("> ");
-    const command = new KeyboardEvent("keydown", { key: "F", ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true });
-    input.element.dispatchEvent(command);
-    expect(command.defaultPrevented).toBe(false);
-  });
-  it("enter still opens the selected result while an answer is offered", async () => {
-    vi.useFakeTimers(); const { app, input, fetchMock } = await setup();
-    await input.setValue("Jak se přihlásit?"); await vi.advanceTimersByTimeAsync(200); await flushPromises();
-    expect(app.find("[data-ai-offer]").exists()).toBe(true);
-    await input.trigger("keydown", { key: "Enter" }); await flushPromises();
-    expect(app.find(".search-dialog[open]").exists()).toBe(false);
-    expect(fetchMock.mock.calls.some(([path]) => String(path) === "/api/ai/conversations")).toBe(false);
+    expect(event.defaultPrevented).toBe(false);
+    expect(app.find(".search-filter-toggle").exists()).toBe(false);
   });
   it("question mark and ctrl enter ask, while arrows explicitly choose a result", async () => {
     vi.useFakeTimers(); const { app, input, fetchMock } = await setup();

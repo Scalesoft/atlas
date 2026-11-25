@@ -158,8 +158,8 @@ test('search finds the fixture and opens it using the keyboard', async ({ page }
   const search = page.getByRole('dialog', { name: 'Hledat ve wiki', exact: true });
   const input = search.getByRole('combobox', { name: /^Hledat (publikované|dostupné|ve)/ });
   await expect(input).toBeFocused();
-  await search.getByRole('button', { name: 'Filtry', exact: true }).click();
-  await search.getByRole('radio', { name: (process.env.ATLAS_E2E_READING_SCOPE ?? 'published') === 'drafts' ? 'Dostupné koncepty' : 'Publikované stránky', exact: true }).click();
+  await search.getByRole('button', { name: /^Obsah: / }).click();
+  await page.getByRole('menuitemradio', { name: (process.env.ATLAS_E2E_READING_SCOPE ?? 'published') === 'drafts' ? 'Dostupné koncepty' : 'Publikované stránky', exact: true }).click();
   await input.fill(title!);
   const results = search.getByRole('listbox', { name: 'Výsledky hledání', exact: true });
   const result = results.getByRole('option').and(page.locator(`a[href*="#/pages/${pageId}"]`));
