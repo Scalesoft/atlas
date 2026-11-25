@@ -57,7 +57,8 @@ const contact = computed(() => {
     : !object.available || !object.data ? { status: "missing" as const }
     : { status: "ready" as const, data: object.data as unknown as ContactData, canEdit: object.canEdit, name: object.title };
 });
-// A colleague's profile: their card names them and says what they do; the object's head and facts would only repeat it.
+// The contact of an account (a colleague): competences, activity and the account. Any contact's card names them and says what they do,
+// so a profile has no object head or facts.
 const person = computed(() => (contact.value?.status === "ready" ? contact.value.data.directoryId : undefined));
 const editError = ref("");
 async function change(patch: ContactPatch) {
@@ -69,7 +70,7 @@ async function change(patch: ContactPatch) {
 <template>
   <div class="content-detail" :data-content-detail="tab">
     <template v-if="tab === 'overview'">
-      <header v-if="!person" class="content-detail-head">
+      <header v-if="contact?.status !== 'ready'" class="content-detail-head">
         <AtlasIcon :name="type.icon" :size="18" />
         <h3 class="content-detail-title" :title="title">{{ title }}</h3>
       </header>
@@ -84,7 +85,7 @@ async function change(patch: ContactPatch) {
           <ContactSkillLine :key="row.id" :contact-id="row.id" bars :name="title" />
         </template>
       </template>
-      <dl v-if="!person" class="content-detail-facts">
+      <dl v-if="contact?.status !== 'ready'" class="content-detail-facts">
         <dt>{{ t.detail.kind }}</dt><dd>{{ type.label }}</dd>
         <template v-if="row.path"><dt>{{ t.detail.location }}</dt><dd>{{ row.hostId ? t.detail.belongsTo(row.path) : row.path }}</dd></template>
         <template v-if="row.scope"><dt>{{ t.detail.scope }}</dt><dd>{{ scope }}</dd></template>

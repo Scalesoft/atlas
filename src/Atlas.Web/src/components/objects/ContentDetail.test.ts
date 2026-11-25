@@ -36,6 +36,9 @@ it("shows any contact's profile: its card, edited in place through the directory
   expect(app.findComponent({ name: "PersonActivity" }).exists()).toBe(false);
   expect(app.findComponent({ name: "SkillGraph" }).exists()).toBe(false);
   expect(app.findComponent({ name: "PersonAccount" }).props()).toMatchObject({ accountId: undefined, contact: { id, name: "Ota Dodavatel" } });
+  // Every contact's profile names them once (the card) and has no object facts (Druh: Kontakt).
+  expect(app.find(".content-detail-head").exists()).toBe(false);
+  expect(app.find(".content-detail-facts").exists()).toBe(false);
   // A contact has no frame of its own to open; a host without a graph offers none.
   expect(app.find("[data-content-detail-open]").exists()).toBe(false);
   expect(app.find("[data-content-detail-focus]").exists()).toBe(false);

@@ -103,20 +103,27 @@ function option() {
     tooltip: { renderMode: "richText", confine: true, backgroundColor: surface, borderColor: line, textStyle: { color: text, fontSize: 12 },
       formatter: (params: { dataType: string; data: { name: string; detail?: string } }) => params.dataType === "node" ? [params.data.name, params.data.detail].filter(Boolean).join("\n") : "" },
     series: [{
-      type: "graph", layout: "force", roam: true, draggable: true, label: { show: true, position: "right", color: text, fontSize: 11 },
+      type: "graph", layout: props.contactId ? "none" : "force", roam: true, draggable: true, label: { show: true, position: "right", color: text, fontSize: 11 },
       // Hundreds of nodes (§7a): a tighter layout, and people's names on hover only, so the topics stay readable.
       force: crowded ? { repulsion: 70, edgeLength: [25, 70], gravity: 0.25 } : { repulsion: 320, edgeLength: [80, 170], gravity: 0.05 },
       emphasis: { focus: "adjacency", lineStyle: { width: 3 }, label: { show: true } },
       data: shown.value.nodes.map(node => ({ id: node.id, name: node.name, detail: node.kind === "topic" ? t.skills.knownBy(node.people) : [node.title, node.organization].filter(Boolean).join(" · "),
         symbol: node.kind === "topic" ? "roundRect" : "circle", symbolSize: node.kind === "topic" ? (crowded ? 8 + Math.min(10, node.people) : 14 + Math.min(18, node.people * 3)) : crowded ? 7 : 12,
         itemStyle: node.kind === "topic" ? { color: topicInk } : { color: surface, borderColor: accent, borderWidth: 2 },
-        label: { show: !crowded || node.kind === "topic" }, node })),
+        label: { show: !crowded || node.kind === "topic" }, node, ...star(node) })),
       links: shown.value.links.map(link => ({ source: link.source, target: link.target,
         lineStyle: link.kind === "skill" ? { color: accent, opacity: 0.25 + 0.15 * (link.level ?? 1), width: 1 + (link.level ?? 1) / 2 }
           : { color: link.kind === "related" ? muted : topicInk, type: link.kind === "related" ? "dashed" : "solid", width: 1.5, opacity: 0.8 } })),
       lineStyle: { color: line, curveness: 0.1 },
     }],
   };
+}
+/** One person's graph (their profile) as a star: them in the middle, their topics around at even angles; ECharts fits it to the canvas. */
+function star(node: SkillNode) {
+  if (!props.contactId) return {};
+  const topics = shown.value.nodes.filter(each => each.kind === "topic");
+  const index = topics.indexOf(node);
+  return index < 0 ? { x: 0, y: 0 } : { x: Math.cos((2 * Math.PI * index) / topics.length - Math.PI / 2) * 100, y: Math.sin((2 * Math.PI * index) / topics.length - Math.PI / 2) * 100 };
 }
 async function draw() {
   if (!showGraph.value || !host.value || disposed) return;
