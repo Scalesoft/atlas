@@ -228,7 +228,7 @@ public sealed class BoardContent : IContentTreeParticipant, IContentLibraryParti
     private static string Followed(string update, string spaces) => $$"""
         WITH board AS ({{update}} RETURNING "Id", "SpaceId", "TrashedAt"),
           envelope AS (UPDATE "ContentResource" r SET "SpaceId"=board."SpaceId", "TrashedAt"=board."TrashedAt" FROM board WHERE r."Id"=board."Id"),
-          tree AS (UPDATE "SpaceOrganization" SET "Version"="Version"+1 WHERE {{spaces}} AND EXISTS (SELECT 1 FROM board))
+          tree AS (UPDATE "SpaceOrganization" SET "Version"="Version"+1 WHERE {{spaces}} AND EXISTS (SELECT 1 FROM board) RETURNING {{Pages.Live.PageChangeListener.TreeChanged("\"SpaceId\"")}})
         SELECT "Id" FROM board
         """;
 

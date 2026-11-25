@@ -8,7 +8,7 @@ import { liveConnection, type LiveConnection } from "./liveConnection";
  * feed cannot be had, `unavailable` says so and the page offers a manual refresh (LiveUpdateNote).
  *
  * Events only say "read again": `JobRunChanged { runId, jobId, state, spaceId }`, `LogsWritten { level }`, `PdfExportChanged { pageId }`,
- * `PageChanged { pageId }`. The jobs and log feeds are derived by the server from the account's rights (SubscribeAll): a client never
+ * `PageChanged { pageId }`, `TreeChanged { spaceId }`. The jobs and log feeds are derived by the server from the account's rights (SubscribeAll): a client never
  * names a space; a space administrator hears only their spaces' runs, the log only effective wiki administrators.
  */
 export interface LiveTopic {
@@ -42,6 +42,13 @@ const pageOf = (payload: unknown) => {
 };
 /** A page's own channel: `PageChanged` for its readers, `PdfExportChanged` for its editors. */
 export const pageTopic = (pageId: string, event: "PageChanged" | "PdfExportChanged"): LiveTopic => ({ channel: `page:${pageId.toLowerCase()}`, event, route: pageOf });
+
+const spaceOf = (payload: unknown) => {
+  const id = payload && typeof payload === "object" ? (payload as { spaceId?: unknown }).spaceId : undefined;
+  return typeof id === "string" ? `tree:${id.toLowerCase()}` : undefined;
+};
+/** A space's tree: `TreeChanged` whenever anything one of its rows shows may have changed (place, title, publication, icon, verification, a page's own board), by anyone. */
+export const treeTopic = (spaceId: string): LiveTopic => ({ channel: `tree:${spaceId.toLowerCase()}`, event: "TreeChanged", route: spaceOf });
 
 /** The job runs as JobRunChanged names them. */
 export interface JobRunChange { runId: number; jobId: string; state: string; spaceId: string | null }
@@ -85,6 +92,16 @@ function serialized(read: () => unknown) {
       if (again) { again = false; go(); }
     });
   };
+}
+
+/**
+ * Follows a loaded tree of a space until the returned close: `read` (the shell's loadTree) runs on every TreeChanged, one read at a time,
+ * and after a reconnect (a change may have been missed); not on the first subscription, which comes right after the read that loaded it.
+ */
+export function followTree(spaceId: string, read: () => unknown, source: LiveFeedSource = defaultSource) {
+  const refresh = serialized(read);
+  let subscriptions = 0;
+  return source(treeTopic(spaceId), { message: refresh, subscribed: () => { if (subscriptions++) refresh(); }, unavailable: () => {} });
 }
 
 /**

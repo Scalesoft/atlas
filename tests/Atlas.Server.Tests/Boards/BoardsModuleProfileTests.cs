@@ -36,7 +36,7 @@ public sealed class BoardsModuleProfileTests
 
         Assert.DoesNotContain(Routes(site), route => route.Contains("boards", StringComparison.Ordinal));
         Assert.Empty(BoardChains(site));
-        Assert.Equal(["ai", "ai-admin", "jobs", "logs", "obj", "page", "user"], site.Services.GetServices<ILiveChannel>().Select(channel => channel.Kind).Order());
+        Assert.Equal(["ai", "ai-admin", "jobs", "logs", "obj", "page", "tree", "user"], site.Services.GetServices<ILiveChannel>().Select(channel => channel.Kind).Order());
         using (var scope = site.Services.CreateScope())
         {
             Assert.Null(scope.ServiceProvider.GetService<BoardAccess>());
@@ -74,7 +74,7 @@ public sealed class BoardsModuleProfileTests
 
         Assert.Equal(23, Routes(site).Count(route => route.Contains("/boards", StringComparison.Ordinal)));
         Assert.Contains(typeof(GetBoard), BoardChains(site));
-        Assert.Equal(["ai", "ai-admin", "board", "jobs", "logs", "obj", "page", "user"], site.Services.GetServices<ILiveChannel>().Select(channel => channel.Kind).Order());
+        Assert.Equal(["ai", "ai-admin", "board", "jobs", "logs", "obj", "page", "tree", "user"], site.Services.GetServices<ILiveChannel>().Select(channel => channel.Kind).Order());
         var modules = await AtlasHttpSite.Json(await admin.GetAsync("/api/modules"), HttpStatusCode.OK);
         Assert.Equal("""{"modules":[{"id":"pages","version":1},{"id":"boards","version":1}],"contentTypes":["atlas.page","atlas.board"]}""", modules.ToJsonString());
     }

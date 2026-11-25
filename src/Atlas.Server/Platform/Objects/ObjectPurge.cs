@@ -37,7 +37,8 @@ public static class ObjectPurge
             DELETE FROM "EntityOccurrence" WHERE "ResourceId" = {GuidList.Any(":ids")};
             DELETE FROM "ObjectChange" WHERE "ObjectId" = {GuidList.Any(":ids")};
             WITH node AS (DELETE FROM "TreeReference" WHERE "TargetId" = {GuidList.Any(":ids")} RETURNING "SpaceId")
-              UPDATE "SpaceOrganization" SET "Version" = "Version" + 1 WHERE "SpaceId" IN (SELECT "SpaceId" FROM node);
+              UPDATE "SpaceOrganization" SET "Version" = "Version" + 1 WHERE "SpaceId" IN (SELECT "SpaceId" FROM node)
+                RETURNING {Features.Pages.Live.PageChangeListener.TreeChanged("\"SpaceId\"")};
             """).SetParameter("ids", GuidList.Param(ids)).ExecuteUpdateAsync(ct);
     }
 

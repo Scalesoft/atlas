@@ -130,7 +130,7 @@ public sealed class TreeReferenceContent : IContentTreeParticipant, IContentPurg
     /// node NHibernate writes (ContentRowEffects).</summary>
     private static string Followed(string write, string spaces) => $$"""
         WITH node AS ({{write}} RETURNING "Id")
-        UPDATE "SpaceOrganization" SET "Version"="Version"+1 WHERE {{spaces}} AND EXISTS (SELECT 1 FROM node)
+        UPDATE "SpaceOrganization" SET "Version"="Version"+1 WHERE {{spaces}} AND EXISTS (SELECT 1 FROM node) RETURNING {{Pages.Live.PageChangeListener.TreeChanged("\"SpaceId\"")}}
         """;
 
     /// <summary>One statement over the nodes under <paramref name="pageIds"/>, as BoardContent writes its boards.</summary>

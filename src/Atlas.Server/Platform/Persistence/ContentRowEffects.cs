@@ -2,6 +2,8 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 using Atlas.Server.Features.Boards.Domain;
+using Atlas.Server.Features.PageDecorations.Domain;
+using Atlas.Server.Features.PageVerifications.Domain;
 using Atlas.Server.Features.Pages.Domain;
 using Atlas.Server.Features.Pages.Live;
 using Atlas.Server.Features.TreeReferences;
@@ -18,8 +20,10 @@ public sealed class PageHousekeepingTriggersMigration() : EmbeddedSchemaMigratio
 /// What the rows of pages, revisions, boards, tree references and spaces bring along, written by NHibernate right after the row in the
 /// same transaction (the triggers of migrations 011–2026110630 did it until 2026110930): the content envelope (ContentResource), the
 /// tree's history and concurrency token (PageOrganizationRevision, SpaceOrganization), a space's metadata history, each author's newest
-/// revision (PageContribution) and the live page channel (<see cref="PageChangeListener.Channel"/>: NOTIFY is delivered only when the
-/// transaction commits, once per distinct payload, so a rolled back write announces nothing). The one place every entity writer passes
+/// revision (PageContribution), the live page channel (<see cref="PageChangeListener.Channel"/>: NOTIFY is delivered only when the
+/// transaction commits, once per distinct payload, so a rolled back write announces nothing) and the space's tree signal
+/// (<see cref="PageChangeListener.TreeChanged"/>) for every change of what a tree row shows: its place, a title, a publication, a board,
+/// a page's icon (PageDecoration) or verification (PageVerification). The one place every entity writer passes
 /// through; the history reads the row as written, so no value is converted here. Bare SQL that writes these columns does the same in its
 /// own statement (BoardContent, TreeReferenceContent, BoardPurge, ObjectPurge).
 /// </summary>
@@ -57,7 +61,13 @@ public sealed class ContentRowEffects : IPreInsertEventListener, IPostInsertEven
         SELECT "Id",'atlas.board','space',"SpaceId","Sequence",now(),"CreatedBy",now(),"TrashedAt","Title" FROM "Board" WHERE "Id"=@id;
         """;
 
-    private const string SpaceOrganizationBump = """UPDATE "SpaceOrganization" SET "Version"="Version"+1 WHERE "SpaceId" IN (@space,@old);""";
+    private static readonly string SpaceOrganizationBump = $"""UPDATE "SpaceOrganization" SET "Version"="Version"+1 WHERE "SpaceId" IN (@space,@old) RETURNING {PageChangeListener.TreeChanged("\"SpaceId\"")};""";
+
+    /// <summary>The tree signal of the page's space, for a row that changed what its tree row shows without moving it.</summary>
+    private static readonly string PageTreeChanged = $"""SELECT {PageChangeListener.TreeChanged("\"SpaceId\"")} FROM "Page" WHERE "Id"=@page;""";
+
+    /// <summary>The verification columns its state (PageVerificationStates) is derived from.</summary>
+    private static readonly string[] VerificationState = ["IntervalMonths", "VerifiedAt", "VerifiedUntil", "VerifiedVersion"];
 
     private ContentRowEffects()
     {
@@ -218,13 +228,18 @@ public sealed class ContentRowEffects : IPreInsertEventListener, IPostInsertEven
                 INSERT INTO "PageContribution"("UserId","PageId","LastRevisionVersion") VALUES(@author,@page,@version)
                   ON CONFLICT("UserId","PageId") DO UPDATE SET "LastRevisionVersion"=greatest("PageContribution"."LastRevisionVersion",EXCLUDED."LastRevisionVersion");
                 SELECT pg_notify('{PageChangeListener.Channel}',@payload);
-                """, ("author", revision.AuthorId), ("page", revision.PageId), ("version", revision.Version), ("payload", $"{revision.PageId}:working:{revision.Title}")),
+                SELECT {PageChangeListener.TreeChanged("p.\"SpaceId\"")} FROM "Page" p WHERE p."Id"=@page AND @title IS DISTINCT FROM
+                  (SELECT r."Title" FROM "PageRevision" r WHERE r."PageId"=@page AND r."Version"<@version ORDER BY r."Version" DESC LIMIT 1);
+                """, ("author", revision.AuthorId), ("page", revision.PageId), ("version", revision.Version), ("payload", $"{revision.PageId}:working:{revision.Title}"),
+                ("title", revision.Title)),
             Page page => new Effect(PageEnvelopeInsert + $"""
                 INSERT INTO "PageOrganizationRevision"("Id","PageId",{PageColumns},"ActorId","ActiveFrom")
                 SELECT gen_random_uuid(),"Id",{PageColumns},@actor,clock_timestamp() FROM "Page" WHERE "Id"=@id;
                 """ + SpaceOrganizationBump, ("id", page.Id), ("space", page.SpaceId), ("old", page.SpaceId), ("actor", TransactionActor.Of(session))),
             Board board => new Effect(BoardEnvelopeInsert + SpaceOrganizationBump, ("id", board.Id), ("space", board.SpaceId), ("old", board.SpaceId)),
             TreeReference reference => new Effect(SpaceOrganizationBump, ("space", reference.SpaceId), ("old", reference.SpaceId)),
+            PageDecoration decoration => new Effect(PageTreeChanged, ("page", decoration.PageId)),
+            PageVerification verification => new Effect(PageTreeChanged, ("page", verification.PageId)),
             Features.Spaces.Domain.Space space => new Effect($"""
                 INSERT INTO "SpaceOrganization"("SpaceId") VALUES(@id);
                 INSERT INTO "SpaceMetadataRevision"("Id","SpaceId",{SpaceColumns},"ChangedBy","ActiveFrom")
@@ -263,6 +278,11 @@ public sealed class ContentRowEffects : IPreInsertEventListener, IPostInsertEven
                 {
                     sql.Append($"SELECT pg_notify('{PageChangeListener.Channel}',@payload);");
                 }
+                // A reader's tree shows the published title, a writer's whether the page is published.
+                if (Changed(@event, "PublishedRevisionId"))
+                {
+                    sql.Append($"SELECT {PageChangeListener.TreeChanged("@space")};");
+                }
                 return sql.Length == 0 ? null : new Effect(sql.ToString(), ("id", page.Id), ("space", page.SpaceId), ("old", old),
                     ("actor", TransactionActor.Of(@event.Session)), ("payload", page.Id + ":published"));
             case Board board:
@@ -277,17 +297,34 @@ public sealed class ContentRowEffects : IPreInsertEventListener, IPostInsertEven
                 {
                     sql.Append(SpaceOrganizationBump);
                 }
+                else if (Changed(@event, "Title"))
+                {
+                    sql.Append($"SELECT {PageChangeListener.TreeChanged("@space")};");
+                }
                 return sql.Length == 0 ? null : new Effect(sql.ToString(), ("id", board.Id), ("space", board.SpaceId), ("old", (Guid)Old(@event, "SpaceId")!));
             case TreeReference reference:
                 return Changed(@event, TreeOrganization) ? new Effect(SpaceOrganizationBump, ("space", reference.SpaceId), ("old", (Guid)Old(@event, "SpaceId")!)) : null;
+            case PageDecoration decoration:
+                return new Effect(PageTreeChanged, ("page", decoration.PageId));
+            case PageVerification verification:
+                return Changed(@event, VerificationState) ? new Effect(PageTreeChanged, ("page", verification.PageId)) : null;
             case Features.Spaces.Domain.Space space:
-                return Changed(@event, SpaceMetadata) ? new Effect($"""
-                    WITH closed AS (
-                      UPDATE "SpaceMetadataRevision" SET "ActiveTo"=greatest(clock_timestamp(),"ActiveFrom"+interval '1 microsecond')
-                      WHERE "SpaceId"=@id AND "ActiveTo" IS NULL RETURNING "ActiveTo")
-                    INSERT INTO "SpaceMetadataRevision"("Id","SpaceId",{SpaceColumns},"ChangedBy","ActiveFrom")
-                    SELECT gen_random_uuid(),"Id",{SpaceColumns},@actor,coalesce((SELECT "ActiveTo" FROM closed),clock_timestamp()) FROM "Space" WHERE "Id"=@id;
-                    """, ("id", space.Id), ("actor", TransactionActor.Of(@event.Session))) : null;
+                if (Changed(@event, SpaceMetadata))
+                {
+                    sql.Append($"""
+                        WITH closed AS (
+                          UPDATE "SpaceMetadataRevision" SET "ActiveTo"=greatest(clock_timestamp(),"ActiveFrom"+interval '1 microsecond')
+                          WHERE "SpaceId"=@id AND "ActiveTo" IS NULL RETURNING "ActiveTo")
+                        INSERT INTO "SpaceMetadataRevision"("Id","SpaceId",{SpaceColumns},"ChangedBy","ActiveFrom")
+                        SELECT gen_random_uuid(),"Id",{SpaceColumns},@actor,coalesce((SELECT "ActiveTo" FROM closed),clock_timestamp()) FROM "Space" WHERE "Id"=@id;
+                        """);
+                }
+                // The space's interval is every inheriting page's verification state.
+                if (Changed(@event, "VerificationIntervalMonths"))
+                {
+                    sql.Append($"SELECT {PageChangeListener.TreeChanged("@id")};");
+                }
+                return sql.Length == 0 ? null : new Effect(sql.ToString(), ("id", space.Id), ("actor", TransactionActor.Of(@event.Session)));
             default:
                 return null;
         }

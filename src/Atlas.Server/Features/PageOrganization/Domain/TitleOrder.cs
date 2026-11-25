@@ -69,8 +69,9 @@ public static class TitleOrder
             (await session.GetAsync<Page>(id, ct)).SortChildrenByTitle = byTitle;
             await session.FlushAsync(ct);
         }
-        await session.CreateSQLQuery("""
+        await session.CreateSQLQuery($"""
             UPDATE "SpaceOrganization" SET "SortRootByTitle"=CASE WHEN :root THEN :byTitle ELSE "SortRootByTitle" END,"Version"="Version"+1 WHERE "SpaceId"=:space
+            RETURNING {Pages.Live.PageChangeListener.TreeChanged("\"SpaceId\"")}
             """).SetParameter("root", parentId is null).SetParameter("byTitle", byTitle).SetParameter("space", spaceId).ExecuteUpdateAsync(ct);
         return true;
     }
