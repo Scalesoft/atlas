@@ -5,7 +5,7 @@ import AtlasIcon from "../AtlasIcon.vue";
 
 // A person (initials in a circle) or a group (icon in a rounded square). Decorative: the name is
 // always written next to it. `photo`: a contact's logo or photo over it (package G); the initials stay when it fails.
-// `color`: the person's own colour (live/objectPresence userColor, the colour of their cursor) where people are told apart (history).
+// `color`: the person's own colour (live/collaboratorColors userColor, the colour of their cursor) where people are told apart (history).
 const props = withDefaults(defineProps<{ kind: "user" | "group"; name?: string; size?: "sm" | "md"; photo?: string; color?: string }>(), { name: undefined, size: "md", photo: undefined, color: undefined });
 const failed = ref("");
 const initials = computed(() =>

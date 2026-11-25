@@ -1,4 +1,3 @@
-import { userColor } from "./collaboratorColors";
 import type { ObjectPresence } from "./viewSession";
 import t from "../i18n/shell";
 
@@ -53,8 +52,3 @@ export type PresenceRoster = ReturnType<typeof createPresenceRoster>;
 export function presenceActivity(name: string, viewTitle: string | null) {
   return viewTitle ? t.presence.via(name, viewTitle) : t.presence.elsewhere(name);
 }
-
-// The colour of an account where no presence message comes (history, cards of objects): the person's „Moje barva“, else "Automaticky"
-// of the one palette, the server's starting point before it moves a colour aside for someone present (the stamped colour of a presence
-// message wins there).
-export { userColor };

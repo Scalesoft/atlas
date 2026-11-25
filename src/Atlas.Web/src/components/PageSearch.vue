@@ -4,9 +4,10 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useId,
 import { findInEditor, openEditorSearch } from "@atlas/markdown/plugins/editor-tools";
 import { riseIn, RISE_IN_ROWS, scrollBehavior } from "../motion/aiMotion";
 import {
-  editingEditor, findMatches, hideShownBlocks, indexPage, pageSearchFocus, pageSearchQuery, placeOf, pulseMatch as pulse, rangeOf, revealMatch, snippetAround, stepResult,
+  editingEditor, findMatches, hideShownBlocks, indexPage, placeOf, pulseMatch as pulse, rangeOf, revealMatch, snippetAround, stepResult,
   type PageIndex,
 } from "../editor/pageSearch";
+import { pageSearchFocus, pageSearchQuery } from "../editor/pageSearchState";
 import AtlasIcon from "./AtlasIcon.vue";
 import SearchField from "./settings/SearchField.vue";
 import SearchHighlight from "./SearchHighlight.vue";

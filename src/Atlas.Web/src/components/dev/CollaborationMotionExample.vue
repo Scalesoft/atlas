@@ -13,7 +13,7 @@ import type { RemoteDrag } from "../../boards/boardSession";
 import { createCollaborationPresence, type CollaborationPeer } from "../../collaborationPresence";
 import BoardPresence from "../boards/canvas/BoardPresence.vue";
 import CollaboratorAvatars from "../CollaboratorAvatars.vue";
-import { userColor } from "../../live/objectPresence";
+import { userColor } from "../../live/collaboratorColors";
 import StatusBadge from "../settings/StatusBadge.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 import { Button } from "../ui/button";

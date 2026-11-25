@@ -11,7 +11,7 @@ import { runInteractionContract, type InteractionDescriptor, type Probe, type Pr
 import deviations from "./deviations/app.json";
 import { jsonResponse, memoryStorage, mountApp as mountShell, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "../testing/appHarness";
 import { refreshLexicon } from "../linking/lexicon";
-import { pageSearchQuery } from "../editor/pageSearch";
+import { pageSearchQuery } from "../editor/pageSearchState";
 import { emptyDocument } from "../document";
 import { entityApi, type EntityItem } from "../entities/entityApi";
 import type { Job, JobApi } from "../jobs/jobApi";

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
-import { userColor } from "../../../live/objectPresence";
+import { userColor } from "../../../live/collaboratorColors";
 import CollaborationPointer from "../../CollaborationPointer.vue";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import { drawContactQr } from "../../../contacts/contactQr";
