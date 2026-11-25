@@ -252,7 +252,7 @@ async function openCatalog(early: boolean) {
     arrive: async () => { await wrapper.setProps(known); await flush(); } });
 }
 
-/** The tag editor of a page: the dialog's combobox fed by GET /tags?q, the page's tags empty. */
+/** The tag editor of a page: the anchored panel's combobox fed by GET /tags?q, the page's tags empty. */
 const tagCatalog = ["API", "Návody", "Nasazení", "Onboarding"];
 const foldedTag = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 function tagRoutes() {
@@ -278,9 +278,9 @@ async function openTagEditor() {
 }
 async function openPageTags(early: boolean) {
   await openTagEditor();
-  const dialog = find<HTMLDialogElement>("dialog")!;
+  const panel = find<HTMLElement>("[role=dialog]")!;
   return session({ early, field: find<HTMLInputElement>("[role=combobox]")!, rows: all("[role=option]"), pre: () => find("[role=option][aria-selected=true]"),
-    taken: () => [...document.querySelectorAll(".tag-draft")].map(words), closed: () => !dialog.hasAttribute("open") });
+    taken: () => [...document.querySelectorAll(".tag-draft")].map(words), closed: () => !panel.isConnected });
 }
 
 const places = [{ id: "a", parentId: null, title: "Návody", canEdit: true }, { id: "b", parentId: null, title: "Nasazení", canEdit: true }, { id: "c", parentId: null, title: "Provoz", canEdit: true }];
@@ -740,7 +740,7 @@ const scenarios: Record<string, AppDescriptor["scenario"]> = {
       const opener = await openTagEditor();
       press(find("[role=combobox]")!, "Escape");
       await flush(300);
-      return document.activeElement === opener ? true : `closing the tag dialog left the keyboard on ${document.activeElement?.tagName.toLowerCase()}, not on „Upravit tagy“`;
+      return document.activeElement === opener ? true : `closing the tag panel left the keyboard on ${document.activeElement?.tagName.toLowerCase()}, not on „Upravit tagy“`;
     },
     async "P17.cached"() {
       await openTagEditor();

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from './ui/button';
 import { api } from '../api';
@@ -42,7 +42,7 @@ onBeforeUnmount(() => { generation++; clearTimeout(timer); controller?.abort(); 
         <span class="tag-suggestion-label">{{ t.tagSearch.tags }}</span>
         <div class="tag-chip-list"><button v-for="tag in shown.tags" :key="tag.id" type="button" class="tag-chip" :data-tone="tagTone(tag.name)" :aria-label="t.tagSearch.pagesWith(tag.name)" @click="emit('selectTag', tag)"><AtlasIcon name="hash" :size="14" />{{ tag.name }}</button></div>
       </template>
-      <p v-else class="tag-lookup-error">{{ t.tagSearch.failed }} <Button variant="outline" type="button" @click="load">{{ t.tagSearch.retry }}</Button></p>
+      <p v-else class="notice error">{{ t.tagSearch.failed }} <Button variant="link" size="sm" type="button" @click="load">{{ t.tagSearch.retry }}</Button></p>
     </section>
   </InlineReveal>
 </template>
