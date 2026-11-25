@@ -4335,6 +4335,8 @@ let lastPrintableAt = -Infinity;
 const TYPING_MS = 1000;
 function globalKeys(event: KeyboardEvent) {
   if (!user.value) return;
+  // Ctrl+Z outside a field, an editor, a board and a dialog (the tree's own moves too): the „Zpět“ of the undo toast still on screen (P6).
+  if ((event.ctrlKey || event.metaKey) && event.key === "z" && !(event.target as Element).closest?.('input, textarea, select, [contenteditable="true"], [data-board-canvas], dialog') && toaster.undoLatest()) return event.preventDefault();
   const typing = event.timeStamp - lastPrintableAt < TYPING_MS;
   if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) lastPrintableAt = event.timeStamp;
   const shortcut = matchShortcut(event);

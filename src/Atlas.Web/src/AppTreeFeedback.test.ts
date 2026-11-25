@@ -67,6 +67,29 @@ const undo = (spy: { mock: { calls: unknown[][] } }) => {
 };
 
 describe("the tree says what it did, with Zpět", () => {
+  // First: a toast of the same id left by an earlier test in sonner's state would be updated instead of shown anew.
+  it("takes the toast's Zpět back with Ctrl+Z outside a field (the tree too), once, while the toast is on screen", async () => {
+    const success = vi.spyOn(toast, "success");
+    await start();
+    row("page-2").focus();
+    key(row("page-2"), { key: "ArrowRight", altKey: true });
+    await settle();
+    const moves = () => requests.filter(request => request.path.endsWith("/move")).map(request => request.body);
+    expect(moves()).toHaveLength(1);
+    // In a field Ctrl+Z is the field's own.
+    const field = document.body.appendChild(document.createElement("input"));
+    expect(key(field, { key: "z", ctrlKey: true })).toBe(true);
+    await settle();
+    expect(moves()).toHaveLength(1);
+    expect(key(row("page-2"), { key: "z", ctrlKey: true })).toBe(false);
+    await settle();
+    expect(moves().at(-1)).toEqual({ parentId: null, beforePageId: null, expectedTreeVersion: 1 });
+    expect(success).toHaveBeenLastCalledWith("Přesun je vrácen.", expect.anything());
+    key(document.body, { key: "z", ctrlKey: true });
+    await settle();
+    expect(moves()).toHaveLength(2);
+  });
+
   it("renames a page in place and Zpět names the old title back", async () => {
     const success = vi.spyOn(toast, "success");
     await start();

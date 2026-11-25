@@ -67,7 +67,7 @@ it("never resolves an unresolved name: a press on its chip must not create one m
 
 it("says a contact the page has already when the editor plugin puts one in, never while linking in the background", async () => {
   const warning = vi.fn();
-  vi.mocked(useToast).mockReturnValue({ success: vi.fn(), error: vi.fn(), warning, dismissAll: vi.fn(), progress: vi.fn(), dismiss: vi.fn() });
+  vi.mocked(useToast).mockReturnValue({ success: vi.fn(), error: vi.fn(), warning, dismissAll: vi.fn(), progress: vi.fn(), dismiss: vi.fn(), undoLatest: vi.fn() });
   const signal = new AbortController().signal, insert = { editor: {} as never, anchor: () => new DOMRect() };
   const options = contactPluginOptions({ place: () => ({ kind: "page", id: "p1" }), count: () => 1 });
   expect(await options.link!({ name: "Jana", objectId: id }, { signal, insert })).toEqual({ name: "Jana", objectId: id });
