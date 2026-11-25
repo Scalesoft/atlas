@@ -1,6 +1,6 @@
 ﻿import { expect, test } from '@playwright/test';
 
-test('settings sections stay reachable around the application rail breakpoint and restore keyboard focus', async ({ page }) => {
+test('settings sections stay in the application left panel around its breakpoint', async ({ page }) => {
   await page.route('**/api/**', async route => {
     const path = new URL(route.request().url()).pathname;
     const json = path === '/api/setup/status' ? { version: '2.6.0-dev+ui-fixture', databaseReady: true, requiresSetup: false }
@@ -14,22 +14,20 @@ test('settings sections stay reachable around the application rail breakpoint an
   await page.goto('/#/profile/account');
   const shell = page.locator('.settings-shell');
   await expect(shell).toHaveAttribute('data-rail-outside', 'true');
-  const sections = shell.getByRole('button', { name: /^Sekce/ });
+  const rail = page.locator('#atlas-settings-rail');
+  const sections = rail.locator('.settings-nav-link[aria-current="page"]');
   for (const width of [1024, 900, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
+    // No "Sekce" bar or sheet: the sections are in the left panel, a drawer below 1025 px, like the rest of the app.
+    await expect(shell.getByRole('button', { name: /^Sekce/ })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
     await expect(sections).toBeVisible();
-    await sections.click();
-    const sheet = page.getByRole('dialog', { name: 'Sekce', exact: true });
-    await expect(sheet).toBeVisible();
-    await sheet.getByRole('button', { name: 'Zavřít sekce' }).press('Escape');
-    await expect(sheet).toBeHidden();
-    await expect(sections).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(sections).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
-  await sections.click();
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.getByRole('button', { name: 'Zavřít sekce' }).press('Escape');
-  await expect(page.locator('#atlas-settings-rail .settings-nav-link[aria-current="page"]')).toBeFocused();
+  await expect(sections).toBeVisible();
 });
 
 test('settings rows contain long metadata and wrapping actions at their actual container width', async ({ page }) => {

@@ -22,7 +22,7 @@ const en: SettingsShellMessages = {
     more: (more, typing) => `+${formatNumber(more)} more – ${typing ? "refine the search" : "search"}`,
   },
   choiceList: { empty: "Nothing matches the search. Try another word.", search: (label) => `${label}: search` },
-  shell: { searchSections: "Search sections", noMatch: "Nothing like that here.", sections: "Sections", closeSections: "Close sections" },
+  shell: { searchSections: "Search sections", noMatch: "Nothing like that here." },
   advanced: "Advanced",
   summary: "Summary",
   lazy: {

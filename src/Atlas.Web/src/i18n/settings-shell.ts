@@ -21,7 +21,7 @@ const cs = {
     more: (more: number, typing: boolean) => `+${formatNumber(more)} ${typing ? "dalších – upřesněte hledání" : "dalších – hledejte"}`,
   },
   choiceList: { empty: "Nic neodpovídá hledání. Zkuste jiné slovo.", search: (label: string) => `${label}: hledat` },
-  shell: { searchSections: "Hledat sekci", noMatch: "Nic takového tu není.", sections: "Sekce", closeSections: "Zavřít sekce" },
+  shell: { searchSections: "Hledat sekci", noMatch: "Nic takového tu není." },
   advanced: "Pokročilé",
   summary: "Souhrn",
   lazy: {

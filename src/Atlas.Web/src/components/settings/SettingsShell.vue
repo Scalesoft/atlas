@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import t from "../../i18n/settings-shell";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "reka-ui";
 import AtlasIcon from "../AtlasIcon.vue";
-import CommandIcon from "../CommandIcon.vue";
 import { foldText } from "../../lib/foldText";
 import { useSearchKeys } from "../../lib/searchKeys";
 import { listKeys } from "../../keyboard/navigation";
@@ -17,7 +15,7 @@ import "./settings-tailwind.css";
 
 /**
  * One frame for every settings level (space and global): heading, a rail of sections on wide
- * screens and a "Sekce" sheet on narrow ones, content on the right. Width is measured on the
+ * screens (on narrow ones the sections are in the application drawer), content on the right. Width is measured on the
  * shell itself (container query), so it adapts to the application sidebar as well as to the viewport.
  */
 const props = withDefaults(
@@ -38,24 +36,11 @@ const props = withDefaults(
   { subtitle: undefined, eyebrow: undefined, icon: "settings", guard: undefined, titleId: undefined, currentPath: undefined },
 );
 const router = useOptionalSettingsRoute();
-const sheetOpen = ref(false);
-const sectionsTrigger = ref<HTMLButtonElement>();
-function restoreSectionsFocus(event: Event) {
-  event.preventDefault();
-  // A dismissed sheet has no DialogTrigger ancestor; return focus to its visible opener.
-  // Navigation or an unsaved-changes dialog may already have placed focus elsewhere.
-  const active = document.activeElement;
-  if (active && active !== document.body && !active.closest('.settings-sheet')) return;
-  const trigger = sectionsTrigger.value;
-  const rail = railTarget.value ? document.querySelector(railTarget.value) : trigger?.closest('.settings-shell')?.querySelector('.settings-shell-rail');
-  const target = trigger?.getClientRects().length ? trigger : (rail?.querySelector<HTMLElement>('.settings-nav-link[aria-current="page"]') ?? rail?.querySelector<HTMLElement>('.settings-nav-link'));
-  if (target?.getClientRects().length) target.focus({ preventScroll: true });
-}
 /** The application rail hosts the sections when it offers a place for them (refresh 2.5); the gallery and tests keep the inner rail. */
 const railTarget = ref<string>();
 onMounted(() => { if (document.getElementById("atlas-settings-rail")) railTarget.value = "#atlas-settings-rail"; });
 /** Below 1025 px the application rail is a closed drawer, so the surface keeps its own header and its actions (the way
- * back) there, as before the rail; the sections stay one tap away in the "Sekce" sheet. */
+ * back) there; the sections are in that drawer, like everywhere else in the app. */
 const narrowQuery = window.matchMedia?.("(max-width: 1024px)");
 const narrow = ref(narrowQuery?.matches ?? false);
 const narrowChanged = () => { narrow.value = narrowQuery?.matches ?? false; };
@@ -99,15 +84,6 @@ const visibleGroups = computed(() => {
     .filter((group) => group.items.length);
 });
 
-const currentItem = computed(() => {
-  const path = props.currentPath ?? router?.route.value.path ?? "";
-  const items = props.groups.flatMap((group) => group.items);
-  return (
-    items.find((item) => path === item.path) ??
-    [...items].sort((a, b) => b.path.length - a.path.length).find((item) => !item.exact && path.startsWith(`${item.path}/`))
-  );
-});
-
 /**
  * „Hledat sekci“: once something is typed the first section found is preselected (`data-first` on its link, set here since the links
  * are the nav's), Enter opens it, ↓ steps onto it (keyboard pass), the first Esc empties the search and the next one goes on to the
@@ -131,8 +107,6 @@ function railSearchKeys(event: KeyboardEvent) {
   first.focus();
 }
 function navigate(item: SettingsNavItem, event: MouseEvent) {
-  // The sheet closes first: a leave confirmation the guard opens must not sit behind a modal sheet.
-  sheetOpen.value = false;
   if (item.disabled || (props.guard && !props.guard(item))) event.preventDefault();
 }
 </script>
@@ -163,15 +137,6 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
       <div v-if="$slots.actions && (!railTarget || narrow)" class="settings-shell-actions"><slot name="actions" /></div>
     </header>
 
-    <div class="settings-shell-mobile-bar">
-      <button ref="sectionsTrigger" type="button" class="settings-shell-sections" aria-haspopup="dialog" :aria-expanded="sheetOpen" @click="sheetOpen = true">
-        <AtlasIcon name="menu" :size="17" />
-        <span class="settings-shell-sections-label">{{ t.shell.sections }}</span>
-        <span v-if="currentItem" class="settings-shell-sections-current"><CommandIcon :name="currentItem.icon" :size="15" />{{ currentItem.label }}</span>
-        <AtlasIcon name="down" :size="16" />
-      </button>
-    </div>
-
     <div class="settings-shell-body">
       <aside v-if="!railTarget" class="settings-shell-rail" @keydown="listKeys">
         <SettingsNav :groups="groups" :label="navLabel" :current-path="currentPath" @navigate="navigate" />
@@ -185,20 +150,6 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
       </div>
     </div>
 
-    <DialogRoot v-model:open="sheetOpen">
-      <DialogPortal>
-        <DialogOverlay class="settings-sheet-overlay" data-atlas-motion />
-        <DialogContent class="settings-ui settings-sheet" data-atlas-motion @close-auto-focus="restoreSectionsFocus">
-          <div class="settings-sheet-header">
-            <DialogTitle class="settings-sheet-title">{{ t.shell.sections }}</DialogTitle>
-            <DialogDescription class="st-sr-only">{{ title }}</DialogDescription>
-            <DialogClose class="settings-sheet-close" :aria-label="t.shell.closeSections"><AtlasIcon name="close" :size="18" /></DialogClose>
-          </div>
-          <SettingsNav :groups="groups" :label="navLabel" :current-path="currentPath" @navigate="navigate" />
-          <slot name="rail-footer" />
-        </DialogContent>
-      </DialogPortal>
-    </DialogRoot>
   </div>
 </template>
 
@@ -229,30 +180,6 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
 .settings-shell-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 .settings-shell-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
-.settings-shell-mobile-bar { display: block; margin: -6px 0 16px; }
-.settings-shell-sections {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  cursor: pointer;
-  transition: border-color var(--atlas-motion-fast), transform var(--atlas-motion-fast) var(--atlas-ease-out);
-}
-@media (hover: hover) and (pointer: fine) {
-  .settings-shell-sections:hover { border-color: var(--accent); }
-}
-.settings-shell-sections:active { transform: scale(var(--atlas-press)); }
-.settings-shell-sections:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.settings-shell-sections-label { font-weight: 650; }
-.settings-shell-sections-current { display: inline-flex; align-items: center; gap: 6px; flex: 1; min-width: 0; color: var(--accent); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-
 .settings-shell-body { display: block; }
 .settings-shell-rail { display: none; }
 .settings-shell-content { position: relative; min-width: 0; }
@@ -262,13 +189,12 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
 .settings-shell-notice > :deep(.result-banner) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
 
 @container settings-shell (min-width: 780px) {
-  .settings-shell-mobile-bar { display: none; }
   .settings-shell-body { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 24px; align-items: start; }
   .settings-shell-rail { display: grid; gap: 18px; position: sticky; top: calc(var(--atlas-topbar-height, 52px) + 12px); padding-top: 2px; }
 }
 /* The sections live in the application rail on a desktop, which also carries the scope and the way back, so the
    surface heading stays only for assistive technology there. Below 1025 px the rail is a closed drawer: the heading
-   with its actions shows again and the sections are in the "Sekce" sheet. */
+   with its actions shows again and the sections are in the drawer. */
 /* Centred in the workspace with the same gutter as every page frame, but capped by the settings measure
    (--st-frame-max, settings.css) and not by the 1600 px of a grid of cards: a settings page is rows of a label and a
    control and lists, and at 1,500 px a text field or a label 800 px from its control stops being readable. */
@@ -278,12 +204,9 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
   .settings-shell[data-rail-outside] .settings-shell-header {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); border: 0; white-space: nowrap;
   }
-  .settings-shell[data-rail-outside] .settings-shell-mobile-bar { display: none; }
 }
 @media (max-width: 1024px) {
   .settings-shell[data-rail-outside] { padding: 20px 20px 48px; }
-  /* The shell may still exceed 780 px while the application rail is already a drawer. */
-  .settings-shell[data-rail-outside] .settings-shell-mobile-bar { display: block; }
 }
 @media (max-width: 680px) {
   .settings-shell { padding: 16px 16px 72px; }
@@ -296,49 +219,7 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
 </style>
 
 <style>
-/* The sheet is portalled to <body>, outside .atlas: it carries its own base styles. */
-.settings-sheet-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  background: var(--backdrop);
-}
-.settings-sheet-overlay[data-state="open"] { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
-.settings-sheet-overlay[data-state="closed"] { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in); }
-.settings-sheet {
-  position: fixed;
-  z-index: 61;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  max-height: min(82dvh, 640px);
-  overflow-y: auto;
-  padding: 10px 14px calc(18px + env(safe-area-inset-bottom));
-  border-radius: 18px 18px 0 0;
-  background: var(--surface);
-  box-shadow: var(--shadow-modal);
-  font-family: "DM Sans", system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  box-sizing: border-box;
-}
-.settings-sheet *, .settings-sheet *::before, .settings-sheet *::after { box-sizing: border-box; }
-.settings-sheet[data-state="open"] { animation: st-rise-in var(--atlas-motion-slow) var(--atlas-ease-out); }
-.settings-sheet[data-state="closed"] { animation: st-rise-out var(--atlas-motion-base) var(--atlas-ease-in); }
-.settings-sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 12px; }
-.settings-sheet-title { margin: 0; font-size: 16px; font-weight: 650; }
-.settings-sheet-close {
-  display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 10px;
-  background: transparent; color: var(--muted); cursor: pointer; font: inherit;
-}
-@media (hover: hover) and (pointer: fine) {
-  .settings-sheet-close:hover { background: var(--hover); color: var(--text); }
-}
-.settings-sheet-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-</style>
-
-<style>
-/* The rail's sections and the phone's Sekce sheet (refresh 2.5) come with this lazy shell, not with the eager refresh.css. */
+/* The rail's sections (refresh 2.5) come with this lazy shell, not with the eager refresh.css. */
 .atlas .settings-rail-outside:not(.md-editor):not(.md-editor *) { display: grid; gap: 10px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .atlas .settings-rail-search:not(.md-editor):not(.md-editor *) {
   display: flex;
@@ -384,28 +265,4 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
   border-radius: 0;
 }
 
-/* The "Sekce" sheet of a phone answers the navigation drawer (refresh-theme.css §5): the same backdrop, a
-   grab handle, rounded corners towards the page, and it slides in from its edge (motion.css 2.5 theme).
-   `body` outranks the sheet's own rules, which load later with the lazy settings chunk. */
-body .settings-sheet[data-state="open"] { animation: atlas-sheet-in var(--atlas-motion-slow) var(--atlas-ease-out); }
-body .settings-sheet[data-state="closed"] { animation: atlas-sheet-out var(--atlas-motion-base) var(--atlas-ease-out); }
-body .settings-sheet { padding-top: 18px; border-top: 1px solid var(--line); }
-body .settings-sheet::before {
-  content: "";
-  position: absolute;
-  top: 7px;
-  left: 50%;
-  width: 36px;
-  height: 4px;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--muted) 45%, transparent);
-  translate: -50% 0;
-}
-[data-mode="dark"] body .settings-sheet { background: var(--atlas-glow) no-repeat, var(--surface); box-shadow: var(--shadow-modal), var(--atlas-glow-ring); }
-@media (prefers-reduced-motion: reduce) {
-  body .settings-sheet[data-state="open"] { animation-name: st-fade-in; }
-  body .settings-sheet[data-state="closed"] { animation-name: st-fade-out; }
-}
-[data-atlas-reduced-motion] body .settings-sheet[data-state="open"] { animation-name: st-fade-in; }
-[data-atlas-reduced-motion] body .settings-sheet[data-state="closed"] { animation-name: st-fade-out; }
 </style>
