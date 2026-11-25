@@ -165,7 +165,7 @@ onUnmounted(() => { summaryRequest?.abort(); detailRequest?.abort(); popularRequ
       <SettingsSection v-if="authors.length" :title="t.activity.topAuthors" icon="users" :count="authors.length" :description="t.activity.topAuthorsNote(summaryYear)">
         <SettingsList :key="summaryKey" :label="t.activity.topAuthors" class="activity-fade">
           <SettingsListRow v-for="author in authors" :key="author.userId" :title="author.userName" :description="`${t.activity.changes(author.revisions)} · ${t.activity.pages(author.pages)}`">
-            <template #leading><SubjectAvatar kind="user" :name="author.userName" /></template>
+            <template #leading><SubjectAvatar kind="user" :name="author.userName" :user-id="author.userId" /></template>
           </SettingsListRow>
         </SettingsList>
       </SettingsSection>

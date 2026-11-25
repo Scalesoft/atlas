@@ -29,7 +29,7 @@ function open(event: MouseEvent) {
 <template>
   <div class="change-row" data-change-row :data-ai="change.isAi || undefined">
     <a class="change-open" :href="href" :aria-label="t.changes.openPage(change.title)" @click="open">
-      <SubjectAvatar kind="user" :name="change.authorName" size="sm" />
+      <SubjectAvatar kind="user" :name="change.authorName" :user-id="change.authorId" size="sm" />
       <span class="change-copy">
         <strong class="change-title" :title="change.title">{{ change.title }}</strong>
         <span class="change-meta">

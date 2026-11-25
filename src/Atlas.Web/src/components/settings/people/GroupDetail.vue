@@ -292,7 +292,7 @@ onBeforeUnmount(() => {
       <ErrorState v-else-if="membersError" :title="t.groupDetail.membersFailed" :text="membersError" :busy="membersLoading" @retry="loadMembers()" />
       <SettingsList v-else-if="members.length" :label="t.groupDetail.membersList">
         <SettingsListRow v-for="member in members" :key="member.id" :title="member.displayName" :description="member.username" :highlighted="flash.highlight.value === member.id" :data-member="member.id">
-          <template #leading><SubjectAvatar kind="user" :name="member.displayName" /></template>
+          <template #leading><SubjectAvatar kind="user" :name="member.displayName" :user-id="member.id" /></template>
           <template #meta>
             <StatusBadge v-if="!member.isActive" tone="neutral" icon="ban" :label="t.common.deactivated" size="sm" />
           </template>
