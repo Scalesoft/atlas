@@ -169,6 +169,41 @@ public sealed class AnswerSourcesTests
         Assert.Equal(3, (await f.RetrieveAsync(f.Reader, question, take: 1)).Sources[0].Chunk!.Ordinal);
     }
 
+    /// <summary>The owner's case (5.2): „co nám běží v …ústavu?“ cited English naming pages first, because „nám“ was searched as the
+    /// prefix nam:* (naming) and a title match ranks above meaning, while „ústavu“ never matched the institute's own page „… ústav“.</summary>
+    [PostgreSqlFact]
+    public async Task Entity_question_takes_the_entity_pages_and_no_page_matching_a_pronoun_prefix()
+    {
+        const string question = "co nám běží v testovacím ústavu?";
+        const string concept = "institute deployment portal";
+        await using var f = await AnswerSourcesFixture.CreateAsync(text =>
+            text.Contains(question, StringComparison.Ordinal) || text.Contains("Testovací ústav", StringComparison.Ordinal) ? concept
+            : text.Contains("Nemocnice Jinde", StringComparison.Ordinal) ? FakeAi.Near(concept)
+            : text);
+        var space = await f.PublishAsync("Testovací ústav",
+            "## Popis prostředí\nPortál pro pacienty a MPI.\n\n## Požadavky\nSíťové prostupy a přístup k API.", null,
+            ("Popis prostředí", "popis"), ("Požadavky", "pozadavky"));
+        var order = await f.PublishAsync("Testovací ústav — zakázka 2026 (D99)",
+            "## Stav\nHotovo 34 %, čeká se na termín.\n\n## Předmět dodávky\nOnline služby pro pacienty.", null,
+            ("Stav", "stav"), ("Předmět dodávky", "predmet"));
+        var naming = await f.PublishAsync("C# naming convention", "## Repository methods naming\nMethods start with a verb.", null,
+            ("Repository methods naming", "repository"));
+        var terms = await f.PublishAsync("Terms and naming standards", "## Glossary\nUse one term per concept.", null, ("Glossary", "glossary"));
+        await f.PublishAsync("Nemocnice Jinde — zakázka 2026 (D98)", "## Stav\nHotovo 80 %.", null, ("Stav", "stav"));
+        await f.IndexAsync();
+
+        foreach (var semantic in new[] { true, false })
+        {
+            var pages = (await f.RetrieveAsync(f.Reader, question, semantic: semantic)).Sources.Select(source => source.Chunk!.PageId).ToArray();
+
+            Assert.DoesNotContain(naming, pages);
+            Assert.DoesNotContain(terms, pages);
+            Assert.Contains(space, pages);
+            Assert.Contains(order, pages);
+            Assert.True(pages.Take(2).All(page => page == space || page == order), "The institute's own pages lead.");
+        }
+    }
+
     [PostgreSqlFact]
     public async Task Exact_title_match_precedes_focused_short_sections_of_other_pages()
     {

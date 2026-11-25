@@ -5,8 +5,9 @@ namespace Atlas.Server.Features.Assistant.Sources;
 /// <summary>
 /// The lexical arguments of <c>atlas_answer_sources</c> for a question (plan phase 3 R3). Search ANDs every word of a query; a
 /// question is a sentence ("Jak se připojím k VPN z domova?") whose words rarely all appear in one page, so the answer ORs its
-/// significant words (prefix match like search, at least 3 characters, without the most common Czech question and function
-/// words; at most 16) and ranks by the lexical score of search. The prototype's lexical baseline was OR'ed too
+/// significant words (prefix or stem like search's fallback, at least 3 characters, without the most common Czech question and
+/// function words; at most 16) and ranks by the lexical score of search. A word of three characters matches only itself: OR'ed, its
+/// prefix hits unrelated titles ("nám" was nam:*, naming) and a title hit ranks above meaning. The prototype's lexical baseline was OR'ed too
 /// (the retrieval prototype). <see cref="Query"/> is the normalized question cut to 200
 /// characters at a word, for the title tiers of search.
 /// </summary>
@@ -45,7 +46,7 @@ public sealed record AnswerQueryText(string Query, string Prefix, string Fts)
             // Only short or common words: search by them rather than by nothing.
             terms = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries).Distinct(StringComparer.Ordinal).Where(word => word.Length >= 2).Take(MaxTerms).ToArray();
         }
-        return terms.Count == 0 ? null : new AnswerQueryText(normalized, normalized + "%", string.Join(" | ", terms.Select(term => term + ":*")));
+        return terms.Count == 0 ? null : new AnswerQueryText(normalized, normalized + "%", string.Join(" | ", terms.Select(term => term.Length > 3 ? SearchText.WordTerm(term) : term)));
     }
 
     /// <summary>The first <paramref name="max"/> characters, cut at a word when one ends in the second half.</summary>
