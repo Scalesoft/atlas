@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import t from "../../i18n/contacts-ui";
-import { computed, nextTick, ref, useId, watch } from "vue";
+import { computed, nextTick, ref, useId } from "vue";
 import { aliasesEdit, contactFieldEdit, maxContactAddress, maxContactLine, type ContactData, type ContactPatch } from "../../contacts/contactData";
 import type { ContactFormValues } from "../../contacts/contactForm";
 import { inertBlockHost, type BoardBlockHost } from "../../boards/editorBlocks";
@@ -11,8 +11,9 @@ import type { TextBinding } from "../boards/text/textBinding";
 import AtlasIcon from "../AtlasIcon.vue";
 import InlineReveal from "../settings/InlineReveal.vue";
 import { plainTitle } from "../../objects/relationsApi";
-import { drawContactQr } from "../../contacts/contactQr";
-import type { MarkdownContact } from "@atlas/markdown/plugins/contacts";
+import { downloadCard } from "../../contacts/contactShare";
+import { useContactQr } from "../../contacts/useContactQr";
+import ContactQr from "./ContactQr.vue";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 
@@ -32,8 +33,12 @@ import { Textarea } from "../ui/textarea";
  */
 const props = withDefaults(defineProps<{ contact: ContactData; editable?: boolean; compact?: boolean; host?: BoardBlockHost;
   /** Uploads a chosen logo or photo (contactPhoto.ts) and answers the photo field; without it the card offers no upload. */
-  upload?: (file: File) => Promise<string> }>(), { editable: false, compact: false, host: () => inertBlockHost, upload: undefined });
-const emit = defineEmits<{ change: [patch: ContactPatch] }>();
+  upload?: (file: File) => Promise<string>;
+  /** A card of a board, whose box the person sizes (ContactObjectCard): what it shows follows its room (small: the name and what the person does; medium: and the first e-mail and phone;
+   *  large: everything), and the vCard and QR code are no icons on it but the board toolbar's (contactCardShare.ts), the code drawn in the card's place while `qr` is on. At rest only:
+   *  an edited card shows every field and scrolls. */
+  fit?: boolean; qr?: boolean }>(), { editable: false, compact: false, host: () => inertBlockHost, upload: undefined, fit: false, qr: false });
+const emit = defineEmits<{ change: [patch: ContactPatch]; closeQr: [] }>();
 
 // The aliases („Zkratky a přezdívky“, one per line) are the directory's own: no field of the editor's contact form.
 type Field = keyof ContactFormValues | "aliases";
@@ -119,29 +124,11 @@ async function reveal() {
   (field?.tabIndex === 0 ? field : field?.querySelector<HTMLElement>(".contact-edit-link"))?.focus();
 }
 // The card for a phone, as the editor's card of a person offers it: the .vcf to download, or its QR code unfolded at the bottom
-// (the contacts plugin's contactQr: the whole card inside the code, no link to the wiki, so it works in a closed network).
+// (ContactQr); a board's card (`fit`) shows the code in its own place instead, risen from the centre as everywhere else.
 const qrId = useId();
 const qrOpen = ref(false);
-const qr = ref<{ svg: string; omitted: string[] } | null>(null);
-/** The card as a phone shows it: every field here is inline Markdown, a vCard carries its plain text. */
-function plainContact(): MarkdownContact {
-  const { name, title, organization, department, emails, phones, website, address } = props.contact;
-  const plain = (value?: string) => plainTitle(value) || undefined;
-  return { name: plainTitle(name), title: plain(title), organization: plain(organization), department: plain(department), emails, phones, website,
-    address: address?.split("\n").map(line => plainTitle(line)).filter(Boolean).join("\n") || undefined };
-}
-async function downloadCard() {
-  const { downloadContacts } = await import("../../contacts/pageContacts");
-  downloadContacts([plainContact()]);
-}
-watch([qrOpen, () => props.contact], async () => {
-  if (!qrOpen.value) return;
-  try {
-    const { contactQr } = await import("@atlas/markdown/plugins/contacts");
-    const drawn = await contactQr(plainContact(), drawContactQr);
-    qr.value = { svg: drawn.svg, omitted: drawn.omitted.map(field => labels[field === "website" ? "website" : "address"]) };
-  } catch { qr.value = { svg: "", omitted: [] }; }
-});
+const place = useContactQr(() => props.contact, () => props.fit && props.qr, true);
+const qrName = computed(() => plainTitle(props.contact.name));
 const href = (kind: "mailto" | "tel", value: string) => `${kind}:${kind === "tel" ? value.replace(/[^\d+]/g, "") : value}`;
 
 // The logo or photo (package G): over the initials, which stay when it fails to load.
@@ -167,10 +154,10 @@ async function photoPicked(file: File | undefined) {
 </script>
 
 <template>
-  <article ref="root" class="contact-card" :class="{ 'is-compact': compact, 'is-editable': editable }" data-contact-card @focusin="entered" @focusout="left" @keydown.capture="escapeCapture">
-    <span class="contact-avatar" aria-hidden="true">{{ initials }}<img v-if="contact.photo && contact.photo !== failedPhoto" :src="contact.photo" alt="" loading="lazy" decoding="async"
+  <article ref="root" class="contact-card" :class="{ 'is-compact': compact, 'is-editable': editable, 'is-fit': fit, 'is-qr': fit && qr }" data-contact-card @focusin="entered" @focusout="left" @keydown.capture="escapeCapture">
+    <span class="contact-avatar" aria-hidden="true" :inert="fit && qr ? true : undefined">{{ initials }}<img v-if="contact.photo && contact.photo !== failedPhoto" :src="contact.photo" alt="" loading="lazy" decoding="async"
       class="contact-photo" data-contact-photo @error="failedPhoto = contact.photo ?? ''"></span>
-    <div class="contact-body">
+    <div class="contact-body" :inert="fit && qr ? true : undefined">
       <div class="contact-head">
       <div class="contact-field contact-name" :class="{ 'is-editing': editing === 'name' }" :tabindex="editable && editing !== 'name' ? 0 : undefined"
         :role="editable && editing !== 'name' ? 'button' : undefined" :aria-label="editable && editing !== 'name' ? t.card.edit(labels.name) : undefined"
@@ -180,8 +167,8 @@ async function photoPicked(file: File | undefined) {
       </div>
       <button v-if="editable && !compact && !showEmpty && hasEmpty" type="button" class="contact-edit-link contact-reveal" :title="t.card.fill" data-contact-reveal
         @click="reveal"><AtlasIcon name="plus" :size="13" />{{ t.card.fillShort }}</button>
-      <span v-if="!compact && contact.name" class="contact-share">
-        <button type="button" class="contact-share-button" :title="t.card.vcf" :aria-label="t.card.vcf" data-contact-vcf @click="downloadCard"><AtlasIcon name="download" :size="15" /></button>
+      <span v-if="!compact && !fit && contact.name" class="contact-share">
+        <button type="button" class="contact-share-button" :title="t.card.vcf" :aria-label="t.card.vcf" data-contact-vcf @click="downloadCard(contact)"><AtlasIcon name="download" :size="15" /></button>
         <button type="button" class="contact-share-button" :title="t.card.qr" :aria-label="t.card.qr" :aria-expanded="qrOpen" :aria-controls="qrId" data-contact-qr
           @click="qrOpen = !qrOpen"><AtlasIcon name="qr-code" :size="15" /></button>
       </span>
@@ -239,14 +226,18 @@ async function photoPicked(file: File | undefined) {
         </div>
       </template>
       <p v-if="error" class="contact-error" role="alert" data-contact-error>{{ error }}</p>
-      <InlineReveal v-if="!compact" :id="qrId" v-model:open="qrOpen">
-        <figure class="contact-qr" data-contact-qr-panel>
-          <!-- uqr's drawing of the code (rects and a path, no text of the contact in it). -->
-          <div v-if="qr?.svg" class="contact-qr-code" role="img" :aria-label="t.card.qr" v-html="qr.svg" />
-          <div v-else class="contact-qr-code" aria-hidden="true" />
-          <figcaption class="contact-qr-hint">{{ qr && !qr.svg ? t.card.qrFailed : t.card.qrHint }}<template v-if="qr?.omitted.length"> {{ t.card.qrOmitted(qr.omitted.join(", ")) }}</template></figcaption>
-        </figure>
+      <InlineReveal v-if="!compact && !fit" :id="qrId" v-model:open="qrOpen">
+        <ContactQr class="contact-qr-inline" :contact="contact" :active="qrOpen" />
       </InlineReveal>
+    </div>
+    <!-- A board's card shows its QR code in its own place, over its fields, sized by the card's short side (inert and unseen until then). -->
+    <div v-if="fit" class="contact-qrview" :class="{ 'is-open': qr }" :inert="qr ? undefined : true" data-contact-qrview>
+      <div class="contact-qrview-code"><div v-if="place.svg.value" :key="`qr-${place.run.value}`" class="contact-qr-svg" role="img" :aria-label="t.card.qr" v-html="place.svg.value" /></div>
+      <div class="contact-qrview-side">
+        <strong class="contact-qrview-name">{{ qrName }}</strong>
+        <span class="contact-qrview-hint">{{ place.failed.value ? t.card.qrFailed : t.card.qrHint }}<template v-if="place.omitted.value.length"> {{ t.card.qrOmitted(place.omitted.value.join(", ")) }}</template></span>
+        <button type="button" class="contact-qrview-back" :title="t.card.qrBackTitle" data-contact-qr-back @click="emit('closeQr')"><AtlasIcon name="arrow-left" :size="14" />{{ t.card.qrBack }}</button>
+      </div>
     </div>
   </article>
 </template>
@@ -294,10 +285,71 @@ async function photoPicked(file: File | undefined) {
 .contact-share-button:active { scale: var(--atlas-press); }
 .contact-share-button[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); }
 .contact-share-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-/* A phone reads black modules on white only: the code keeps its own white, quiet zone included, in the dark theme too. */
-.contact-qr { display: grid; justify-items: start; gap: 8px; margin: 10px 0 2px; }
-.contact-qr-code { width: 216px; height: 216px; max-width: 100%; border-radius: var(--atlas-radius-md); overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line); }
-.contact-qr-code :deep(svg) { width: 100%; height: 100%; }
-.contact-qr-hint { max-width: 340px; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.contact-qr-inline { margin: 10px 0 2px; }
+/*
+ * A board's card (fit): the card's own room decides what it shows (container queries on the card, so the sidebar or the dock being open
+ * changes nothing), the name and surname always the largest thing on it. Small: name and what the person does, one line each. Medium: and
+ * the first e-mail and phone. Large: everything. The corner on the right is the card's grip (ContactObjectCard): the name keeps clear of it.
+ * Not while the card is edited: every field is there then and the card scrolls.
+ */
+/* Out of flow, filling its holder (which is positioned and has no padding of its own): a size container whose box the holder decides, never the other way round. */
+.contact-card.is-fit { position: absolute; inset: 0; box-sizing: border-box; padding: 12px 14px; container: contact / size; }
+.is-fit .contact-avatar { width: clamp(30px, 24cqh, 52px); height: clamp(30px, 24cqh, 52px); font-size: clamp(12px, 8.5cqh, 18px); }
+.is-fit .contact-head { flex-wrap: nowrap; padding-right: 24px; }
+.is-fit .contact-avatar { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent); }
+.is-fit .contact-name { flex: 1; font-size: clamp(16px, 11cqh, 26px); font-weight: 650; line-height: 1.22; letter-spacing: -.012em; }
+/* What a larger room brings in arrives with a fade (the levels change as the card is resized); nothing already there moves. */
+.is-fit:not(.is-editable) :is(.contact-lines, .contact-links, .contact-address) { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.is-fit:not(.is-editable) .contact-lines { overflow: hidden; max-height: 1.45em; }
+.is-fit .contact-name { overflow-wrap: anywhere; }
+.is-fit:not(.is-editable) :is(.contact-links, .contact-address) { display: none; }
+@container contact (max-height: 79px) { .is-fit:not(.is-editable) .contact-lines { display: none; } }
+@container contact (min-height: 110px) and ((max-height: 199px) or (max-width: 339px)) {
+  .is-fit:not(.is-editable) .contact-links { display: grid; }
+  .is-fit:not(.is-editable) .contact-links > li:not([data-contact-field="emails"], [data-contact-field="phones"]) { display: none; }
+  .is-fit:not(.is-editable) .contact-link-values > a:nth-of-type(n + 2) { display: none; }
+}
+@container contact (min-height: 200px) and (min-width: 340px) {
+  .is-fit:not(.is-editable) .contact-links { display: grid; }
+  .is-fit:not(.is-editable) .contact-address { display: flex; }
+  .is-fit .contact-body { gap: 6px; }
+  /* What the person does, one thing a row without the separators of the one-line form; the ways to reach them under a hairline. */
+  .is-fit:not(.is-editable) .contact-lines { display: grid; gap: 1px; margin-bottom: 4px; }
+  .is-fit:not(.is-editable) .contact-lines > .contact-field + .contact-field::before { content: none; }
+  .is-fit:not(.is-editable) .contact-links { padding-top: 8px; border-top: 1px solid var(--line); }
+  .is-fit:not(.is-editable) .contact-lines { max-height: none; }
+}
+/* The QR code takes the card's place: the fields fade and settle back, the code comes in over them and rises from its centre (contactQr.css). */
+.is-fit > :is(.contact-avatar, .contact-body) { transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out); }
+.is-fit.is-qr > :is(.contact-avatar, .contact-body) { opacity: 0; scale: .98; }
+.contact-qrview { position: absolute; inset: 0; display: flex; align-items: center; gap: 14px; opacity: 0; scale: .98; pointer-events: none;
+  transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), scale var(--atlas-motion-base) var(--atlas-ease-out); }
+.contact-qrview.is-open { opacity: 1; scale: 1; pointer-events: auto; }
+.contact-qrview-code { flex: none; width: min(100cqh, 50cqw); aspect-ratio: 1; border-radius: var(--atlas-radius-md); overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--line);
+  scale: .55; opacity: 0; transition: scale var(--atlas-motion-slow) var(--atlas-ease-out), opacity var(--atlas-motion-base) var(--atlas-ease-out); }
+.is-open > .contact-qrview-code { scale: 1; opacity: 1; }
+.contact-qrview-side { opacity: 0; translate: 0 var(--atlas-rise); transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), translate var(--atlas-motion-base) var(--atlas-ease-out); }
+.is-open > .contact-qrview-side { opacity: 1; translate: 0 0; transition-delay: calc(var(--atlas-motion-fast) * .6); }
+.contact-qr-svg, .contact-qr-svg :deep(svg) { display: block; width: 100%; height: 100%; }
+.contact-qrview-side { display: grid; gap: 4px; min-width: 0; align-content: center; justify-items: start; }
+@media (prefers-reduced-motion: reduce) { .contact-qrview-code { scale: 1; } .contact-qrview-side { translate: none; } }
+[data-atlas-reduced-motion] .contact-qrview-code { scale: 1; }
+[data-atlas-reduced-motion] .contact-qrview-side { translate: none; }
+.contact-qrview-name { max-width: 100%; font-size: 15px; font-weight: 650; line-height: 1.25; overflow-wrap: break-word; }
+.contact-qrview-hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+@container contact (max-height: 219px) { .contact-qrview-hint { display: none; } }
+.contact-qrview-back { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), scale var(--atlas-motion-fast) var(--atlas-ease-out); }
+@media (hover: hover) and (pointer: fine) { .contact-qrview-back:hover { background: var(--hover); } }
+.contact-qrview-back:active { scale: var(--atlas-press); }
+.contact-qrview-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* A card nearer a square than a wide one: the code over its caption. */
+@container contact (max-aspect-ratio: 5/4) {
+  .contact-qrview { flex-direction: column; justify-content: center; gap: 8px; }
+  .contact-qrview-code { width: min(100cqw, calc(100cqh - 52px)); }
+  .contact-qrview-side { justify-items: center; padding-right: 0; text-align: center; }
+  .contact-qrview-name { font-size: 13px; max-height: 2.5em; overflow: hidden; }
+  .contact-qrview-hint, .contact-qrview-back { display: none; }
+}
 .contact-error { margin: 2px 0 0; color: var(--error); font-size: 12.5px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 </style>

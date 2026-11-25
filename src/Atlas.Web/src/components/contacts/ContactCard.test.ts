@@ -25,6 +25,23 @@ it("unfolds the card's QR code under it: the plain-text card drawn black on whit
   expect(wrapper.findAll("[data-contact-qr-panel] svg path")).toHaveLength(9);
 });
 
+// A board's card (ContactObjectCard) has no share icons: the vCard and the QR code are the board toolbar's, the code drawn in the card's place.
+it("draws its QR code in its own place on a board, over its fields, and asks to be closed from there", async () => {
+  wrapper = mount(ContactCard, { attachTo: document.body, props: { contact: jana, fit: true, qr: false } });
+  expect(wrapper.find(".contact-share").exists()).toBe(false);
+  expect(wrapper.find("[data-contact-qr-panel]").exists()).toBe(false);
+  const view = wrapper.get("[data-contact-qrview]");
+  expect(view.attributes("inert")).toBeDefined();
+  expect(view.find(".contact-qr-svg svg").exists()).toBe(false);
+  await wrapper.setProps({ qr: true });
+  await vi.waitFor(() => expect(view.find(".contact-qr-svg svg").exists()).toBe(true));
+  expect(view.attributes("inert")).toBeUndefined();
+  expect(wrapper.classes()).toContain("is-qr");
+  expect(view.get("[role=img]").attributes("aria-label")).toBeTruthy();
+  await view.get("[data-contact-qr-back]").trigger("click");
+  expect(wrapper.emitted("closeQr")).toHaveLength(1);
+});
+
 it("edits an identifier in place and emits the change of just that field, validated by the editor's rules", async () => {
   wrapper = mount(ContactCard, { attachTo: document.body, props: { contact: jana, editable: true } });
   await wrapper.get('[data-contact-field="emails"] .contact-edit-link').trigger("click");

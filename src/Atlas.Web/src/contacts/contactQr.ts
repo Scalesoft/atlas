@@ -20,7 +20,7 @@ const finder = (x: number, y: number) => rounded(x, y, 7, 2.1) + rounded(x + 1, 
  * as rounded modules and finder squares, black on white with a four-module quiet zone. The modules come in rings from the centre
  * (contactQr.css: opacity and scale per ring from the motion tokens, a fade under reduced motion, nothing under `[data-still]`).
  */
-export async function drawContactQr(text: string): Promise<ContactQrCode> {
+export async function drawContactQr(text: string, replay = false): Promise<ContactQrCode> {
   const { encode } = await import("uqr");
   const { data, size, version } = encode(text, { ecc: "M", border: 0 });
   const inFinder = (x: number, y: number) => (x < 7 || x >= size - 7) && (y < 7 || y >= size - 7) && !(x >= size - 7 && y >= size - 7);
@@ -33,7 +33,7 @@ export async function drawContactQr(text: string): Promise<ContactQrCode> {
   const far = size - 7 + QUIET_ZONE;
   const paths = [...bands, finder(QUIET_ZONE, QUIET_ZONE) + finder(far, QUIET_ZONE) + finder(QUIET_ZONE, far)]
     .map((d, band) => `<path class="atlas-qr-band" style="--qr-band:${band}" fill-rule="evenodd" d="${d}"/>`).join("");
-  const side = size + 2 * QUIET_ZONE, now = Date.now(), again = now - (shown.get(text) ?? -Infinity) < REPLAY_AFTER_MS;
+  const side = size + 2 * QUIET_ZONE, now = Date.now(), again = !replay && now - (shown.get(text) ?? -Infinity) < REPLAY_AFTER_MS;
   if (shown.size >= 200) shown.clear(); // the keys are whole cards: do not keep them all session
   shown.set(text, now);
   return { version, svg: `<svg xmlns="http://www.w3.org/2000/svg" class="atlas-qr"${again ? " data-shown" : ""} viewBox="0 0 ${side} ${side}"><rect width="${side}" height="${side}" fill="white"/><g fill="black">${paths}</g></svg>` };
