@@ -342,7 +342,7 @@ public sealed class ProjectorLinksTests
         // Only the draft holds portal.dns: the Writer sees it as a draft's use, the Reader not at all.
         Assert.True(Assert.Single((await f.As<ObjectUsageList>(f.Writer, new GetObjectUsage(catalog, Part: "portal.dns"))).Items).Draft);
         var reader = await f.As<UsageCount>(f.Reader, new CountObjectUsage(catalog, Part: "portal.dns"));
-        Assert.Equal((1, 0, 1), (reader.Total, reader.Visible, reader.Hidden));
+        Assert.Equal((0, true), (reader.Total, reader.Hidden));
     }
 
     private const string B1 = "00000000-0000-4000-8000-0000000000b1", B2 = "00000000-0000-4000-8000-0000000000b2", S1 = "00000000-0000-4000-8000-0000000000a1",

@@ -147,7 +147,6 @@ function drag(event: DragEvent, place: Place) {
               </ul>
             </section>
           </div>
-          <p v-if="page.hidden" class="usage-hidden" data-usage-hidden><AtlasIcon name="lock" :size="14" />{{ t.usage.hidden(page.items.length > 0, page.hidden) }}</p>
           <LoadMoreButton v-if="page.nextCursor" class="usage-more" :busy="loading" data-usage-more @click="load(true)" />
         </template>
       </LoadingRegion>
@@ -185,7 +184,6 @@ function drag(event: DragEvent, place: Place) {
 .usage-kind { display: inline-flex; align-items: center; gap: 4px; }
 .usage-draft { margin-left: 4px; padding: 0 6px; border-radius: 6px; background: var(--warning-bg, var(--hover)); color: var(--warning, var(--muted)); font-size: 11px; font-weight: 600; }
 .usage-excerpt { display: -webkit-box; overflow: hidden; color: var(--muted); font-size: 12px; font-style: italic; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.usage-hidden { display: flex; align-items: center; gap: 6px; margin: 0; padding: 0 2px; color: var(--muted); font-size: 12px; }
 .usage-more { align-self: flex-start; }
 @media (prefers-reduced-motion: reduce) { .usage-chevron { transition: none; } }
 </style>

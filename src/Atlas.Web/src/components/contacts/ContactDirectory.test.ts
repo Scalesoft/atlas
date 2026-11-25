@@ -13,7 +13,7 @@ const summary = (id: string, name: string, emails: string[] = []): ObjectSummary
   ({ id, typeId: "atlas.contact", scope: "wiki", spaceId: null, title: name, version: 1, updatedAt: "2026-10-26T10:00:00Z", data: { name, emails } });
 const listOf = (items: ObjectSummary[], canCreate = true): ObjectList => ({ items, total: items.length, page: 1, pageSize: 50, canCreate });
 
-function show(items: ObjectSummary[], canCreate = true, overrides: Record<string, unknown> = {}, uses = 2) {
+function show(items: ObjectSummary[], canCreate = true, overrides: Record<string, unknown> = {}, uses = 2, hidden = false) {
   const source = {
     list: vi.fn(async () => listOf(items, canCreate)),
     create: vi.fn(async (): Promise<ObjectDto> => { throw new ApiError(409, "Duplicita", "duplicate_contact", { contactId: "c2" }); }),
@@ -25,7 +25,7 @@ function show(items: ObjectSummary[], canCreate = true, overrides: Record<string
   };
   const get = vi.fn(async (id: string) => ({ ...summary(id, "Karel", ["karel@example.cz"]), canEdit: true }) as unknown as ObjectDto);
   const store = createLiveObjects({ get, change: vi.fn() });
-  wrapper = mount(ContactDirectory, { attachTo: document.body, props: { source, store, usage: { count: vi.fn(async (id: string) => ({ objectId: id, total: uses, visible: uses, hidden: 0 })) } } });
+  wrapper = mount(ContactDirectory, { attachTo: document.body, props: { source, store, usage: { count: vi.fn(async (id: string) => ({ objectId: id, total: uses, hidden })) } } });
   return { source, get };
 }
 const names = () => wrapper!.findAll("[data-contact-row]").map(row => row.get('[data-contact-field="name"]').text());
@@ -78,6 +78,15 @@ it("warns with the number of uses before a used contact goes to the trash", asyn
   await flushPromises();
   expect(source.trash).toHaveBeenCalledWith("c1");
   expect(names()).toEqual(["Karel"]);
+});
+
+it("asks, without a number, before a contact used only where the reader may not look goes to the trash", async () => {
+  const { source } = show([summary("c1", "Jana")], true, {}, 0, true);
+  await flushPromises();
+  await wrapper!.findAll("[data-contact-trash]")[0]!.trigger("click");
+  await flushPromises();
+  expect(document.body.textContent).toContain("se možná někde používá");
+  expect(source.trash).not.toHaveBeenCalled();
 });
 
 it("moves an unused contact to the trash without a dialog", async () => {

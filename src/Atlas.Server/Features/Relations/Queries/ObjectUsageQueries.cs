@@ -47,7 +47,7 @@ public sealed class GetObjectUsageHandler(IContentAccess access, ObjectUsage usa
                 use.Edge.Anchor, use.Edge.Draft, reason?.PartId, reason?.Excerpt, reason?.Card ?? false);
         }).ToArray();
         var next = from + page.Length;
-        return new ObjectUsageList(query.ObjectId, rows, uses.Total, uses.Hidden, next < uses.Visible.Count ? UsagePaging.Cursor(next) : null);
+        return new ObjectUsageList(query.ObjectId, rows, uses.Visible.Count, next < uses.Visible.Count ? UsagePaging.Cursor(next) : null);
     }
 }
 
@@ -64,7 +64,7 @@ public sealed class CountObjectUsageHandler(IContentAccess access, ObjectUsage u
             await mentions.RefreshStaleAsync(query.ObjectId, ct);
         }
         var uses = await usage.ReadAsync(actor, query.ObjectId, query.Drafts, ct, query.Part);
-        return new UsageCount(query.ObjectId, uses.Total, uses.Visible.Count, uses.Hidden);
+        return new UsageCount(query.ObjectId, uses.Visible.Count, uses.Hidden > 0);
     }
 }
 
@@ -98,7 +98,7 @@ public sealed class ListSpaceUsageHandler(IContentAccess access, PageListing lis
             {
                 var used = uses.GetValueOrDefault(node.Id);
                 var inTree = node.TypeId is PagesAtlasModule.ContentType or BoardsAtlasModule.ContentType;
-                return new UsageInventoryRow(node.Id, node.TypeId, node.Title, node.Scope, used?.Visible.Count ?? 0, used?.Hidden ?? 0, !inTree && (used?.Total ?? 0) == 0);
+                return new UsageInventoryRow(node.Id, node.TypeId, node.Title, node.Scope, used?.Visible.Count ?? 0, !inTree && (used?.Total ?? 0) == 0);
             })
             .ToArray();
         var shown = rows.Where(row => (query.Type is null || row.TypeId == query.Type) && (!query.Unused || row.Unused))

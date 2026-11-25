@@ -1,9 +1,15 @@
 using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Server;
 using Wolverine;
@@ -21,13 +27,14 @@ using static Atlas.Server.Tests.Mcp.McpSite;
 namespace Atlas.Server.Tests.Mcp;
 
 /// <summary>
-/// G5 (D10) for every MCP tool the server registers, not only the ones a test remembers (SEC-Z-4): a space switched out of AI and MCP
-/// is invisible to MCP. Each tool is called by the space's administrator with the ids of a page, a board, a tree node, a contact, an
-/// attachment and a tag of such a space, its name as the query, and a plain value for anything else required. A required id the test has
-/// none of fails here unless <see cref="OwnIds"/> says why the tool needs no id of the space for it. A tool answers a missing one (not_found,
-/// target_not_found, contact_missing…), or succeeds
-/// without showing anything of the space; nothing there changes. A tool whose plain call stops at its own argument check before
-/// G5 gets the arguments that reach it in <see cref="Reaching"/>; any other error fails here.
+/// G5 (D10) for every MCP tool and every /api/v1 route the server registers, not only the ones a test remembers (SEC-Z-4): a space
+/// switched out of AI and MCP is invisible to MCP and to the personal API, whose tokens AI tools use too; and the same sweep by an account
+/// without any grant on the space (included in AI) proves that a token reads only what its owner reads in the web. Each tool or route is
+/// called with the ids of a page, a board, a tree node, a contact, an attachment and a tag of such a space, its name as the query, and a
+/// plain value for anything else required. A required id the test has none of fails here unless <see cref="OwnIds"/> says why the tool
+/// needs no id of the space for it. A tool answers a missing one (not_found, target_not_found, contact_missing…; forbidden for a tool only
+/// a WikiAdmin may use, to the outsider), or succeeds without showing anything of the space; nothing there changes. A tool whose plain call
+/// stops at its own argument check before G5 gets the arguments that reach it in <see cref="Reaching"/>; any other error fails here.
 /// </summary>
 [Trait("Category", "Guard")]
 public sealed class McpG5CoverageTests
@@ -47,18 +54,34 @@ public sealed class McpG5CoverageTests
         ["noteId"] = "A personal note belongs to its owner, not to a space.",
         ["jobId"] = "A background job is the platform's, not a space's content: its runs of a space belong to the space's administrators (3.3 plan §4.6).",
         ["runId"] = "A run of a background job, as jobId.",
+        ["notificationId"] = "A notification belongs to its recipient, not to a space.",
     };
 
-    [PostgreSqlFact]
-    public async Task Every_mcp_tool_answers_a_space_out_of_ai_as_missing_and_changes_nothing_there()
+    /// <summary>The space's content in its places, with an attachment, a tag, an icon and a comment; the actor of a sweep and its tokens.</summary>
+    /// <remarks>Disposed, it leaves the space out of AI: the site is shared, and a later sweep by the administrator reads every space in AI.</remarks>
+    private sealed record Marked(string Home, (string Id, int Version) Included, string Space, (string Id, int Version) Page, string Board, string Contact,
+        string Reference, string Comment, string Attachment, string Tag, HttpClient Actor, McpSite Site) : IAsyncDisposable
     {
-        await using var f = await McpSite.CreateAsync(settings: settings =>
+        public async ValueTask DisposeAsync()
         {
-            foreach (var (key, value) in TestModules.AllEnabledSettings)
+            if (!ReferenceEquals(Actor, Site.Admin))
             {
-                settings[key] = value;
+                await Site.ExcludeFromAiAsync(Space);
             }
-        });
+        }
+
+        public Dictionary<string, string> Ids => new(StringComparer.Ordinal)
+        {
+            ["spaceId"] = Space, ["targetSpaceId"] = Space, ["pageId"] = Page.Id, ["sourcePageId"] = Page.Id, ["parentId"] = Page.Id,
+            ["boardId"] = Board, ["referenceId"] = Reference, ["contactId"] = Contact, ["objectId"] = Contact, ["sourceId"] = Contact,
+            ["targetId"] = Contact, ["attachmentId"] = Attachment, ["tagId"] = Tag, ["commentId"] = Comment,
+        };
+    }
+
+    /// <summary>The space of the marker with its content; out of AI for the space's administrator, or in AI for an account without a grant
+    /// on it (<paramref name="outsider"/>), whose cookie client is the actor then.</summary>
+    private static async Task<Marked> MarkAsync(McpSite f, bool outsider)
+    {
         var home = await f.FirstSpaceAsync();
         var included = await PageAsync(f.Admin, home, "Viditelná", Rich(Paragraph("Text.")), "Text.");
         var space = await f.SpaceAsync(Marker + " prostor");
@@ -66,15 +89,15 @@ public sealed class McpG5CoverageTests
         var board = (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Post, $"/api/spaces/{space}/boards",
             new { title = Marker + " tabule" }), HttpStatusCode.Created))["id"]!.GetValue<string>();
         var contact = (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Post, "/api/objects",
-            new { typeId = "atlas.contact", scope = "space", spaceId = space, data = new { name = Marker + " Kontakt", emails = new[] { "kvasarlex@example.com" } } }),
+            new { typeId = "atlas.contact", scope = "space", spaceId = space, data = new { name = Marker + " Kontakt", emails = new[] { $"kvasarlex-{Guid.NewGuid():N}@example.com" } } }),
             HttpStatusCode.Created))["id"]!.GetValue<string>();
         var reference = (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Post, $"/api/spaces/{space}/tree/references",
             new { targetId = contact }), HttpStatusCode.Created))["id"]!.GetValue<string>();
         var comment = (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Post, $"/api/objects/{page.Id}/comments",
             new { body = "Komentář." }), HttpStatusCode.Created))["id"]!.GetValue<string>();
         var agent = await f.ClientAsync(await f.AdminTokenAsync("read", "write"));
-        // Labels and an attachment, so a write of them and a read by their own ids reach the space.
-        var file = Encoding.UTF8.GetBytes("Kvasarlex.");
+        // Labels and an attachment, so a write of them and a read by their own ids reach the space; its content is the space's text.
+        var file = Encoding.UTF8.GetBytes(Marker + " obsah přílohy.");
         var attachment = Structured(await CallAsync(agent, "atlas_upload_attachment", new
         {
             pageId = page.Id, kind = "file", fileName = Marker + " příloha.txt", contentBase64 = Convert.ToBase64String(file),
@@ -84,15 +107,42 @@ public sealed class McpG5CoverageTests
         Assert.NotEqual(true, (await CallAsync(agent, "atlas_set_decoration", new { pageId = page.Id, icon = "book-open", color = "blue-3" })).IsError);
         // The check below can see the space: before the switch, the agent finds it.
         Assert.Contains(Marker + " stránka", Text(await CallAsync(agent, "atlas_search", new { query = Marker })), StringComparison.Ordinal);
-        await f.ExcludeFromAiAsync(space);
-        var before = await StateAsync(f, space, home);
-
-        var ids = new Dictionary<string, string>(StringComparer.Ordinal)
+        var actor = f.Admin;
+        if (outsider)
         {
-            ["spaceId"] = space, ["targetSpaceId"] = space, ["pageId"] = page.Id, ["sourcePageId"] = page.Id, ["parentId"] = page.Id,
-            ["boardId"] = board, ["referenceId"] = reference, ["contactId"] = contact, ["objectId"] = contact, ["sourceId"] = contact,
-            ["targetId"] = contact, ["attachmentId"] = attachment, ["tagId"] = tag, ["commentId"] = comment,
-        };
+            actor = (await f.UserAsync("Cizí", "write")).Client;
+        }
+        else
+        {
+            await f.ExcludeFromAiAsync(space);
+        }
+        return new Marked(home, included, space, page, board, contact, reference, comment, attachment, tag, actor, f);
+    }
+
+    private static async Task<string> TokenAsync(McpSite f, Marked marked, string channel)
+        => ReferenceEquals(marked.Actor, f.Admin) && channel == "mcp"
+            ? await f.AdminTokenAsync("read", "write")
+            : (await IssueAsync(marked.Actor, f.Site.Password, ["read", "write"], [channel])).Secret;
+
+    /// <param name="outsider">The sweep by an account without a grant on the space, which is in AI; otherwise by the space's
+    /// administrator, with the space out of AI.</param>
+    [PostgreSqlTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Every_mcp_tool_answers_a_space_out_of_ai_or_out_of_reach_as_missing_and_changes_nothing_there(bool outsider)
+    {
+        await using var f = await McpSite.CreateAsync(settings: settings =>
+        {
+            foreach (var (key, value) in TestModules.AllEnabledSettings)
+            {
+                settings[key] = value;
+            }
+        });
+        await using var marked = await MarkAsync(f, outsider);
+        var (home, included, space, page, board, contact, _, comment, attachment, tag, _, _) = marked;
+        var before = await StateAsync(f, space, home);
+        var ids = marked.Ids;
+        var agent = await f.ClientAsync(await TokenAsync(f, marked, "mcp"));
         var note = new { kind = "note", x = 0, y = 0, width = 200, height = 120, z = 1, props = new { } };
         var reaching = Reaching(page, included, space, board, contact, home, attachment, note, tag, comment);
         var tools = f.Site.Services.GetServices<McpServerTool>().Select(tool => tool.ProtocolTool).OrderBy(tool => tool.Name, StringComparer.Ordinal).ToArray();
@@ -113,7 +163,7 @@ public sealed class McpG5CoverageTests
                 // A token may send 120 requests a minute ("personal-api"): the sweep takes a fresh one before it runs out.
                 if (++sent % 80 == 0)
                 {
-                    agent = await f.ClientAsync(await f.AdminTokenAsync("read", "write"));
+                    agent = await f.ClientAsync(await TokenAsync(f, marked, "mcp"));
                 }
                 var result = await CallAsync(agent, tool.Name, arguments);
                 var answer = Text(result) + result.StructuredContent?.GetRawText();
@@ -122,7 +172,8 @@ public sealed class McpG5CoverageTests
                 {
                     failures.Add($"{tool.Name} {JsonSerializer.Serialize(arguments)} shows \"{leaked}\" of a space out of AI.");
                 }
-                else if (code is not null && !code.EndsWith("not_found", StringComparison.Ordinal) && !code.EndsWith("_missing", StringComparison.Ordinal))
+                else if (code is not null && !code.EndsWith("not_found", StringComparison.Ordinal) && !code.EndsWith("_missing", StringComparison.Ordinal)
+                    && !(outsider && code == "forbidden"))
                 {
                     failures.Add($"{tool.Name} {JsonSerializer.Serialize(arguments)} stopped with {code} before G5: give it arguments that reach it. {Text(result)}");
                 }
@@ -130,6 +181,184 @@ public sealed class McpG5CoverageTests
         }
         Assert.True(failures.Count == 0, string.Join("\n", failures));
         Assert.Equal(before, await StateAsync(f, space, home));
+    }
+
+    /// <summary>The same sweep over every /api/v1 route with a REST token: the space's administrator with the space out of AI, or an
+    /// account without a grant on it. Route ids by name (an {id} by the segment before it), the marker as the query, the request type's
+    /// plain body for a write; an {objectId} with each object kind of the space (contact, page, board). A route answers 404 or 403, or
+    /// succeeds without showing anything of the space; nothing there changes.</summary>
+    [PostgreSqlTheory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Every_api_route_answers_a_space_out_of_ai_or_out_of_reach_as_missing_and_changes_nothing_there(bool outsider)
+    {
+        await using var f = await McpSite.CreateAsync(settings: settings =>
+        {
+            foreach (var (key, value) in TestModules.AllEnabledSettings)
+            {
+                settings[key] = value;
+            }
+        });
+        await using var marked = await MarkAsync(f, outsider);
+        var before = await StateAsync(f, marked.Space, marked.Home);
+        var routes = f.Site.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
+            .Where(endpoint => endpoint.RoutePattern.RawText?.StartsWith("/api/v1/", StringComparison.Ordinal) == true)
+            .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? []).Where(method => method != "HEAD")
+                .Select(method => (Method: method, Endpoint: endpoint)))
+            .OrderBy(route => route.Endpoint.RoutePattern.RawText, StringComparer.Ordinal).ThenBy(route => route.Method, StringComparer.Ordinal).ToArray();
+        Assert.NotEmpty(routes);
+        // Every object kind behind {objectId}: the space's contact, page and board, each decided by its own type.
+        var sweep = routes.SelectMany(route => (route.Endpoint.RoutePattern.Parameters.Any(parameter => parameter.Name == "objectId")
+                ? new[] { marked.Contact, marked.Page.Id, marked.Board } : [marked.Contact])
+            .Select(objectId => (route.Method, route.Endpoint, ObjectId: objectId))).ToArray();
+        var reaching = RestReaching(marked);
+        Assert.Empty(reaching.Keys.Except(routes.Select(route => $"{route.Method} {route.Endpoint.RoutePattern.RawText}")));
+        var api = f.Site.Client();
+        var failures = new List<string>();
+        for (var sent = 0; sent < sweep.Length; sent++)
+        {
+            // A token may send 120 requests a minute ("personal-api"): the sweep takes a fresh one before it runs out.
+            if (sent % 80 == 0)
+            {
+                api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await TokenAsync(f, marked, "rest"));
+            }
+            var (method, endpoint, objectId) = sweep[sent];
+            var ids = new Dictionary<string, string>(marked.Ids) { ["objectId"] = objectId };
+            var name = $"{method} {endpoint.RoutePattern.RawText}";
+            var label = objectId == marked.Contact ? name : $"{name} (objectId {(objectId == marked.Board ? "board" : "page")})";
+            var segments = endpoint.RoutePattern.PathSegments.Select(segment => segment.Parts.Single()).ToArray();
+            var path = new List<string>();
+            string? unknown = null;
+            for (var i = 0; i < segments.Length; i++)
+            {
+                if (segments[i] is not RoutePatternParameterPart parameter)
+                {
+                    path.Add(((RoutePatternLiteralPart)segments[i]).Content);
+                    continue;
+                }
+                var key = parameter.Name == "id" ? IdOf(path[^1]) : parameter.Name;
+                if (parameter.Name == "kind" && Kinds.TryGetValue(path[^1], out var kind))
+                {
+                    path.Add(kind);
+                }
+                else if (key is not null && ids.TryGetValue(key, out var id))
+                {
+                    path.Add(id);
+                }
+                else if (key is not null && OwnIds.ContainsKey(key))
+                {
+                    path.Add(parameter.ParameterPolicies.Any(policy => policy.Content == "long") ? "1" : parameter.ParameterPolicies.Count > 0 ? Guid.NewGuid().ToString() : "x");
+                }
+                else
+                {
+                    unknown = parameter.Name;
+                    break;
+                }
+            }
+            if (unknown is not null)
+            {
+                failures.Add($"{label}: {{{unknown}}} needs an id of the space or a reason in OwnIds (an {{id}} by the segment before it in IdOf).");
+                continue;
+            }
+            // The query names everything a route may require; a route ignores what it does not read.
+            using var request = new HttpRequestMessage(new HttpMethod(method), "/" + string.Join('/', path)
+                + $"?q={Marker}&query={Marker}&topic={Marker}&spaceId={marked.Space}&after=0&key=x&keys=x&expectedVersion={marked.Page.Version}");
+            if (reaching.TryGetValue(name, out var own))
+            {
+                request.Content = JsonContent.Create(own);
+            }
+            else if (method != "GET" && endpoint.Metadata.GetMetadata<IAcceptsMetadata>()?.RequestType is { } type)
+            {
+                request.Content = JsonContent.Create(Body(type, ids, marked.Page.Version));
+            }
+            using var response = await api.SendAsync(request);
+            var answer = await response.Content.ReadAsStringAsync();
+            if (Shown.Append(Marker + " obsah přílohy").FirstOrDefault(shown => answer.Contains(shown, StringComparison.Ordinal)) is { } leaked)
+            {
+                failures.Add($"{label} shows \"{leaked}\" ({(int)response.StatusCode}).");
+            }
+            else if (!response.IsSuccessStatusCode && response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.Forbidden))
+            {
+                failures.Add($"{label} stopped with {(int)response.StatusCode} before the access check: give it arguments that reach it. {answer}");
+            }
+        }
+        Assert.True(failures.Count == 0, string.Join("\n", failures));
+        Assert.Equal(before, await StateAsync(f, marked.Space, marked.Home));
+        if (!outsider)
+        {
+            // Only what may go to a model changes: the administrator's web session still reads the space.
+            Assert.Equal(Marker + " stránka", (await AtlasHttpSite.Json(await f.Admin.GetAsync($"/api/pages/{marked.Page.Id}"), HttpStatusCode.OK))["title"]!.GetValue<string>());
+        }
+    }
+
+    /// <summary>A {kind} route parameter by the segment before it: a type of entities or a list of the personal library, no object of a space.</summary>
+    private static readonly Dictionary<string, string> Kinds = new(StringComparer.Ordinal) { ["entities"] = "contact", ["library"] = "recent" };
+
+    /// <summary>The bodies of the writes whose plain body stops at their own argument check before the access check.</summary>
+    private static Dictionary<string, object> RestReaching(Marked m)
+    {
+        var note = new { kind = "note", x = 0, y = 0, width = 200, height = 120, z = 1, props = new { } };
+        var version = m.Page.Version;
+        const string Requirements = "/api/v1/projector/pages/{pageId:guid}/requirements";
+        return new(StringComparer.Ordinal)
+        {
+            ["POST /api/v1/boards/{boardId:guid}/operations"] = new { operationId = Guid.NewGuid(), changes = new[] { new { type = "create", item = note } } },
+            ["POST /api/v1/contacts/live"] = new { ids = new[] { m.Contact } },
+            ["POST /api/v1/contacts/match"] = new { contact = new { name = Marker } },
+            ["POST /api/v1/contacts/resolve"] = new { contact = new { name = Marker }, contactId = m.Contact },
+            // A contact is never merged into itself: the space's contact into one that does not exist, so only its own access answers.
+            ["POST /api/v1/contacts/merge"] = new { sourceId = m.Contact, targetId = Guid.NewGuid() },
+            ["POST /api/v1/objects"] = new { typeId = "atlas.contact", scope = "space", spaceId = m.Space, data = new { name = "x" } },
+            ["POST /api/v1/objects/{objectId:guid}/changes"] = new { changeId = Guid.NewGuid(), expectedVersion = 1, payload = new { name = "x" } },
+            ["POST /api/v1/spaces/{spaceId:guid}/boards"] = new { title = "x" },
+            ["PUT /api/v1/pages/{id:guid}"] = new { markdown = "x", expectedVersion = version },
+            ["PATCH /api/v1/pages/{id:guid}/embeds/{attachmentId:guid}"] = new { expectedVersion = version, alt = "x" },
+            ["POST " + Requirements] = new { keys = new[] { "x" }, expectedVersion = version },
+            ["PATCH " + Requirements] = new { updates = new[] { new { blockId = "x", change = new { title = "x" } } }, expectedVersion = version },
+            ["POST " + Requirements + "/from-deployment"] = new { sourcePageId = m.Included.Id, expectedVersion = version },
+            ["PATCH " + Requirements + "/{blockId}"] = new { fields = new { title = "x" }, expectedVersion = version },
+            ["POST " + Requirements + "/{blockId}/move"] = new { position = new { afterBlockId = "x" }, expectedVersion = version },
+        };
+    }
+
+    /// <summary>The id an {id} route parameter names, by the segment before it; null for a segment the test knows no id for.</summary>
+    private static string? IdOf(string segment) => segment switch
+    {
+        "pages" => "pageId",
+        "spaces" => "spaceId",
+        "attachments" => "attachmentId",
+        "contacts" => "contactId",
+        "tags" or "topics" => "tagId",
+        "references" => "referenceId",
+        "notifications" => "notificationId",
+        _ => null
+    };
+
+    /// <summary>The plain body of a write: every required constructor parameter of the request type set (an optional one only when it is an
+    /// id of the space), the space's ids by name, the page's version as an expected version, a plain value of its type otherwise.</summary>
+    private static Dictionary<string, object?> Body(Type type, IReadOnlyDictionary<string, string> ids, int version)
+    {
+        var body = new Dictionary<string, object?>();
+        var nullability = new NullabilityInfoContext();
+        foreach (var parameter in type.GetConstructors().OrderByDescending(ctor => ctor.GetParameters().Length).FirstOrDefault()?.GetParameters() ?? [])
+        {
+            var name = char.ToLowerInvariant(parameter.Name![0]) + parameter.Name[1..];
+            var value = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
+            if (!ids.ContainsKey(name) && (parameter.HasDefaultValue || nullability.Create(parameter).WriteState == NullabilityState.Nullable))
+            {
+                continue;
+            }
+            body[name] = ids.TryGetValue(name, out var id) ? id
+                : name == "pageIds" ? new[] { ids["pageId"] }
+                : name.StartsWith("expected", StringComparison.Ordinal) && value == typeof(int) ? version
+                : value == typeof(string) ? "x"
+                : value == typeof(Guid) ? Guid.NewGuid()
+                : value == typeof(bool) ? true
+                : value == typeof(int) || value == typeof(long) ? 1
+                : value.IsArray || value.IsGenericType && value.GetInterfaces().Any(i => i == typeof(System.Collections.IEnumerable)) ? Array.Empty<object>()
+                : null;
+        }
+        return body;
     }
 
     /// <summary>GAP5-4: the in-process assistant hands what it reads to a model as MCP does, so the handlers that decide G5 themselves
@@ -261,6 +490,8 @@ public sealed class McpG5CoverageTests
                 // With a module the target space's catalog would be read: G5 answers before it.
                 new() { ["sourcePageId"] = included.Id, ["spaceId"] = space, ["title"] = "x", ["moduleKeys"] = new[] { "x" } },
             ],
+            // An empty list of keys is refused before the space is read: the outsider's call reaches it with one.
+            ["projector_resolve"] = [new() { ["spaceId"] = space, ["keys"] = new[] { "x" } }],
             ["projector_insert_requirements"] = [new() { ["pageId"] = page.Id, ["keys"] = new[] { "x" }, ["expectedVersion"] = page.Version }],
             ["projector_update_requirements"] = [new() { ["pageId"] = page.Id, ["updates"] = new[] { new { blockId = "x", title = "x" } }, ["expectedVersion"] = page.Version }],
         };

@@ -1,9 +1,9 @@
 /** Keys of the `pages` section of `MarkdownStrings`; the Czech defaults live in plugins/pages/. */
 export interface PagesStrings {
   invalidPageReference: string
-  /** Link title/tooltip when the host's resolver reports the target page is gone. */
+  /** Link label and tooltip when the host's resolver reports the target page is gone or unreadable. */
   pageUnavailable: string
-  /** Link title/tooltip when the host's resolver call itself fails. */
+  /** Link label and tooltip when the host's resolver call itself fails. */
   verificationFailed: string
   /** Slash menu item / toolbar action label, and suggestion group label. */
   label: string

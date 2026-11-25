@@ -10,7 +10,7 @@ using static Atlas.Server.Tests.Mcp.McpSite;
 namespace Atlas.Server.Tests.Comments;
 
 /// <summary>AI parity of discussions (5.2): an agent reads, answers, edits and deletes an object's comments over MCP and /api/v1 with the
-/// token owner's rights and the token's scope; a space out of AI is missing to MCP, not to REST.</summary>
+/// token owner's rights and the token's scope; a space out of AI is missing to MCP and REST, not to the web.</summary>
 public sealed class CommentMcpTests
 {
     [PostgreSqlFact]
@@ -54,10 +54,11 @@ public sealed class CommentMcpTests
         readApi.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", (await IssueAsync(reader, f.Site.Password, ["read"], ["rest"], "Rest read")).Secret);
         Assert.Equal(HttpStatusCode.Forbidden, (await readApi.PostAsJsonAsync($"/api/v1/objects/{page.Id}/comments", new { body = "Ne." })).StatusCode);
 
-        // G5: once the space is out of AI, MCP finds no comments there; REST still does.
+        // G5: once the space is out of AI, neither MCP nor REST (whose tokens AI tools use too) finds comments there; the web still does.
         await f.ExcludeFromAiAsync(space);
         Assert.Equal("not_found", ErrorCode(await CallAsync(reading, "atlas_list_comments", new { objectId = page.Id })));
-        Assert.Equal(HttpStatusCode.OK, (await api.GetAsync($"/api/v1/objects/{page.Id}/comments")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await api.GetAsync($"/api/v1/objects/{page.Id}/comments")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await reader.GetAsync($"/api/objects/{page.Id}/comments")).StatusCode);
     }
 
     /// <summary>The web's rights over MCP and /api/v1: the author edits and deletes its comment, the object's manager deletes anyone's

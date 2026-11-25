@@ -76,34 +76,34 @@ export function memoryRelations(objects: readonly MemoryObject[], edges: readonl
 
 /**
  * „Použito na“ over the same objects and edges (GET /api/usage/{id}): an edge uses the end kindInfo.used names, from the place at its
- * other end; a place the reader may not read is only counted as hidden. An edge's `draft`, `partId` and `excerpt` pass through, the
+ * other end; a place the reader may not read is neither listed nor counted, the count only says there is one. An edge's `draft`, `partId` and `excerpt` pass through, the
  * rows are sorted by space, place and kind as the server sorts them, the cursor is an offset.
  */
 export function memoryUsage(objects: readonly MemoryObject[], edges: readonly RelationEdge[], options: { pageSize?: number } = {}): UsageApi {
   const pageSize = options.pageSize ?? 50;
   const byId = new Map(objects.map(object => [object.id.toLowerCase(), object]));
-  async function usage(objectId: string, cursor?: string | null): Promise<UsagePage | null> {
+  async function read(objectId: string, cursor?: string | null): Promise<{ page: UsagePage; hidden: boolean } | null> {
     const self = objectId.toLowerCase();
     if (!byId.get(self)?.readable) return null;
     const rows: UsageRow[] = [];
-    let hidden = 0;
+    let hidden = false;
     for (const edge of edges) {
       const out = kindInfo[edge.kind].used === "out";
       if ((out ? edge.sourceId : edge.targetId).toLowerCase() !== self) continue;
       const place = byId.get((out ? edge.targetId : edge.sourceId).toLowerCase());
-      if (!place?.readable) { hidden++; continue; }
+      if (!place?.readable) { hidden = true; continue; }
       rows.push({ placeId: place.id, placeTypeId: place.typeId, placeTitle: place.title ?? "", spaceId: place.spaceId, spaceName: place.spaceName, kind: edge.kind, count: edge.count,
         anchor: edge.anchor ?? null, draft: !!edge.draft, partId: edge.partId ?? null, excerpt: edge.excerpt ?? null, card: !!edge.card });
     }
     rows.sort((a, b) => collator.compare(a.spaceName ?? "", b.spaceName ?? "") || collator.compare(a.placeTitle, b.placeTitle) || a.kind.localeCompare(b.kind));
     const start = Number(cursor ?? 0) || 0;
-    return { objectId, items: rows.slice(start, start + pageSize), total: rows.length + hidden, hidden, nextCursor: start + pageSize < rows.length ? String(start + pageSize) : null };
+    return { page: { objectId, items: rows.slice(start, start + pageSize), total: rows.length, nextCursor: start + pageSize < rows.length ? String(start + pageSize) : null }, hidden };
   }
   return {
-    usage,
+    usage: async (objectId, cursor) => (await read(objectId, cursor))?.page ?? null,
     async count(objectId) {
-      const page = await usage(objectId, null);
-      return page && { objectId, total: page.total, visible: page.total - page.hidden, hidden: page.hidden };
+      const found = await read(objectId, null);
+      return found && { objectId, total: found.page.total, hidden: found.hidden };
     },
   };
 }

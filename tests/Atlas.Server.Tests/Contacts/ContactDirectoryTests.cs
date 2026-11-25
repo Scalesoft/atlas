@@ -128,7 +128,7 @@ public sealed class ContactDirectoryTests
         Assert.Equal(5, usage.Total);
         Assert.Equal(new[] { board, byAddress.Id, ofOlder.Id, page.Id }.Order(), usage.Items.Where(row => row.Kind != RelationKinds.Reference).Select(row => row.PlaceId).Order());
         Assert.Equal(page.Id, Assert.Single(usage.Items, row => row.Kind == RelationKinds.Reference).PlaceId);
-        Assert.Equal(new UsageCount(jana, 5, 5, 0), await f.As<UsageCount>(f.Writer, new CountObjectUsage(jana)));
+        Assert.Equal(new UsageCount(jana, 5, false), await f.As<UsageCount>(f.Writer, new CountObjectUsage(jana)));
         Assert.Contains((await f.RelationsAsync(f.Writer, jana, kinds: "mention")).Edges, edge => edge.SourceId == ofOlder.Id && edge.TargetId == jana);
         await BoardsFixture.Refused(404, () => f.As<UsageCount>(f.Writer, new CountObjectUsage(home)));
 

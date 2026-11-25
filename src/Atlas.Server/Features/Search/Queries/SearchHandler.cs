@@ -13,11 +13,13 @@ public sealed class SearchHandler
     private readonly ISearchMissRecorder m_misses;
     private readonly ContentParticipants m_participants;
     private readonly PageVerifications.PageVerificationReader m_verifications;
+    private readonly IRequestChannel m_channel;
 
     public SearchHandler(IContentAccess access, SearchSql sql, ISearchMissRecorder misses, Atlas.Server.Features.Ai.Access.AiPolicyResolver policy,
-        ContentParticipants participants, PageVerifications.PageVerificationReader verifications)
+        ContentParticipants participants, PageVerifications.PageVerificationReader verifications, IRequestChannel channel)
     {
         m_access = access;
+        m_channel = channel;
         m_verifications = verifications;
         m_sql = sql;
         m_policy = policy;
@@ -27,6 +29,8 @@ public sealed class SearchHandler
 
     public async Task<SearchResponse> Handle(Search query, CancellationToken ct)
     {
+        // G5: on a channel whose content may go to a model the AI scope applies whatever the caller asked (RequestChannel.IsAiBound).
+        query = query with { Options = query.Options with { AiScopeOnly = query.Options.AiScopeOnly || m_channel.Current.IsAiBound } };
         // The whole body runs under the 57014 guard: legacy set the GUCs, took the advisory lock and locked the
         // actor row inside its try, so a lock wait past statement_timeout answers 503 rather than a driver error.
         try

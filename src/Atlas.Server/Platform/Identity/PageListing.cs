@@ -12,11 +12,13 @@ public sealed class PageListing
 {
     private readonly ISession m_session;
     private readonly SpaceRoles m_roles;
+    private readonly IRequestChannel m_channel;
 
-    public PageListing(ISession session, SpaceRoles roles)
+    public PageListing(ISession session, SpaceRoles roles, IRequestChannel channel)
     {
         m_session = session;
         m_roles = roles;
+        m_channel = channel;
     }
 
     /// <summary>A space in a list context (tree, space pages, export selection) for an account locked or re-read by the caller:
@@ -28,13 +30,18 @@ public sealed class PageListing
         {
             throw new ApiException(404, "Prostor nebyl nalezen.");
         }
-        var role = await m_roles.IsWikiAdminAsync(actor, ct) ? SpaceRole.Admin : await m_roles.EffectiveAsync(actor, spaceId, ct);
-        if (role is null && !await HasListedPageAsync(actor, spaceId, ct))
+        var hidden = await HiddenFromAiAsync(spaceId, ct);
+        var role = hidden ? null : await m_roles.IsWikiAdminAsync(actor, ct) ? SpaceRole.Admin : await m_roles.EffectiveAsync(actor, spaceId, ct);
+        if (role is null && (hidden || !await HasListedPageAsync(actor, spaceId, ct)))
         {
             throw new ApiException(404, "Prostor nebyl nalezen nebo k němu nemáte přístup.");
         }
         return role;
     }
+
+    /// <summary>G5 (D10), as IContentAccess decides it: on a channel whose content may go to a model, a space excluded from AI and MCP
+    /// is as missing as one the account may not read. The web session never asks.</summary>
+    public async Task<bool> HiddenFromAiAsync(Guid spaceId, CancellationToken ct) => m_channel.Current.IsAiBound && !await m_roles.InAiAsync(spaceId, ct);
 
     /// <summary>The list draft rule over the page's published flag, owner and the account's document role on it.</summary>
     public static ICriterion Listed(IProjection isPublished, IProjection ownerId, IProjection role, UserAccount actor)

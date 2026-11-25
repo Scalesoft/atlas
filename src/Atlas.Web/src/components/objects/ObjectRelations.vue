@@ -15,7 +15,8 @@ import AddToTreeDialog from "./AddToTreeDialog.vue";
 /**
  * Vazby: what an object is connected with, for ANY object (a page, a board, a contact, a deployment board), in the dock of Obsah:
  * the places grouped by kind with a small graph of the neighbourhood
- * above, both from the same answer (GET /api/objects/{id}/relations). A place the reader may not read is a lock without a name.
+ * above, both from the same answer (GET /api/objects/{id}/relations). A place in the trash or gone is a lock without a name; one the
+ * reader may not read the server leaves out.
  * Where the object is used is UsagePanel's („Použito na“, plan 3.1 M5), not a mode of this list.
  */
 const props = defineProps<{ objectId: string; api?: RelationsApi }>();

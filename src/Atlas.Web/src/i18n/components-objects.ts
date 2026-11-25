@@ -94,7 +94,6 @@ const cs = {
     nowhereText: "Žádná stránka, tabule ani strom ho nepoužívá.",
     space: (name: string) => `Prostor ${name}`,
     draft: "koncept",
-    hidden: (more: boolean, count: number) => `${more ? "A ještě na" : "Na"} ${plural(count, { one: "# místě", other: "# místech" })}, ${count === 1 ? "ke kterému" : "ke kterým"} nemáte přístup.`,
     loadMore: "Načíst další místa",
   },
 };

@@ -15,7 +15,7 @@ function editor(canEdit = true, total = 3) {
   const object: LiveObject = { id, typeId: "atlas.contact", version: 1, title: "Denis", data: { name: "Denis", emails: ["denis@example.cz"] }, canEdit, available: true };
   const store = { get: vi.fn(() => object), load: vi.fn(async () => {}), edit: vi.fn(async (_id: string, fields: Record<string, unknown>) => { object.data = { ...object.data, ...fields }; }) };
   const save = vi.fn(), forget = vi.fn();
-  wrapper = mount(PageContactEditor, { attachTo: document.body, props: { snapshot, save, store, forget, usage: { count: async () => ({ objectId: id, total, visible: total, hidden: 0 }) } } });
+  wrapper = mount(PageContactEditor, { attachTo: document.body, props: { snapshot, save, store, forget, usage: { count: async () => ({ objectId: id, total, hidden: false }) } } });
   return { store, save, forget };
 }
 
@@ -112,7 +112,7 @@ it("a refusal answered after a newer panel of the contact stored its snapshot le
   await wrapper!.get("[data-contact-input]").trigger("keydown", { key: "Enter", ctrlKey: true });
   await vi.waitFor(() => expect(store.edit).toHaveBeenCalledOnce());
   wrapper!.unmount();
-  const newer = mount(PageContactEditor, { attachTo: document.body, props: { snapshot, save, store, forget: vi.fn(), usage: { count: async () => ({ objectId: id, total: 1, visible: 1, hidden: 0 }) } } });
+  const newer = mount(PageContactEditor, { attachTo: document.body, props: { snapshot, save, store, forget: vi.fn(), usage: { count: async () => ({ objectId: id, total: 1, hidden: false }) } } });
   await flushPromises();
   await newer.get("[data-page-contact-role]").setValue("Vedoucí");
   newer.unmount(); wrapper = undefined;

@@ -304,7 +304,7 @@ function mountDirectory(uses = 0) {
     restore: vi.fn(), purge: vi.fn(),
   };
   const store = createLiveObjects({ get: vi.fn(async (id: string) => ({ ...contacts.find(item => item.id === id)!, canEdit: true }) as unknown as ObjectDto), change: vi.fn() });
-  mountIt(ContactDirectory, { source, store, usage: { count: vi.fn(async (id: string) => ({ objectId: id, total: uses, visible: uses, hidden: 0 })) } });
+  mountIt(ContactDirectory, { source, store, usage: { count: vi.fn(async (id: string) => ({ objectId: id, total: uses, hidden: false })) } });
   return source;
 }
 async function openDirectory() {

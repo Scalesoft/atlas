@@ -44,22 +44,24 @@ public sealed class RelationHttpTests
         Assert.Equal(["sourceId", "targetId", "kind", "count", "anchor", "draft", "partId", "excerpt", "card"], relations["edges"]![0]!.AsObject().Select(property => property.Key));
         Assert.Equal(2, relations["edges"]!.AsArray().Count);
 
-        // The personal API: the same reads with a read token on the channel rest.
+        // The personal API, whose tokens AI tools use too: the same reads with a read token on the channel rest, the excluded space
+        // missing as on MCP (G5): its page links to Zdroj in the web only, so Zdroj has no incoming link here.
         using var api = f.Site.Client();
         api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", (await IssueAsync(reader, f.Site.Password, ["read"], ["rest"])).Secret);
-        Assert.Equal(contents["summary"]!.ToJsonString(),
-            (await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/spaces/{space}/contents"), HttpStatusCode.OK))["summary"]!.ToJsonString());
-        Assert.Equal(relations.ToJsonString(),
-            (await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/objects/{source}/relations?kinds=link"), HttpStatusCode.OK)).ToJsonString());
+        var restContents = await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/spaces/{space}/contents"), HttpStatusCode.OK);
+        Assert.Equal((2, 1), (restContents["summary"]!["types"]!["atlas.page"]!.GetValue<int>(), restContents["summary"]!["relations"]!["noIncoming"]!.GetValue<int>()));
+        var restRelations = await AtlasHttpSite.Json(await api.GetAsync($"/api/v1/objects/{source}/relations?kinds=link"), HttpStatusCode.OK);
+        Assert.Equal([target], restRelations["edges"]!.AsArray().Select(edge => edge!["targetId"]!.GetValue<string>()));
+        Assert.DoesNotContain(restRelations["nodes"]!.AsArray(), node => node!["id"]!.GetValue<string>() == outside);
 
-        // MCP as the same reader: the excluded space is missing, its page a lock among the relations.
+        // MCP as the same reader: the excluded space is missing, its page not among the relations at all (no lock, no count).
         var mcp = await f.ClientAsync((await IssueAsync(reader, f.Site.Password, ["read"], ["mcp"])).Secret);
         var listed = Structured(await CallAsync(mcp, "atlas_list_space_contents", new { spaceId = space }));
         Assert.Equal(2, listed["items"]!.AsArray().Count);
         Assert.Equal("not_found", ErrorCode(await CallAsync(mcp, "atlas_list_space_contents", new { spaceId = hidden })));
         var around = Structured(await CallAsync(mcp, "atlas_get_relations", new { objectId = source }));
-        Assert.False(around["nodes"]!.AsArray().Single(node => node!["id"]!.GetValue<string>() == outside)!["readable"]!.GetValue<bool>());
-        Assert.Null(around["nodes"]!.AsArray().Single(node => node!["id"]!.GetValue<string>() == outside)!["title"]);
+        Assert.DoesNotContain(around["nodes"]!.AsArray(), node => node!["id"]!.GetValue<string>() == outside);
+        Assert.Null(around["hidden"]);
         Assert.Equal("not_found", ErrorCode(await CallAsync(mcp, "atlas_get_relations", new { objectId = outside })));
         // Depth 2 never continues through the excluded page, and the tree's reference node to it is not listed at all.
         var deep = Structured(await CallAsync(mcp, "atlas_get_relations", new { objectId = source, depth = 2 }));
@@ -68,7 +70,7 @@ public sealed class RelationHttpTests
             item => item!["pageId"]!.GetValue<string>() == reference);
         Assert.DoesNotContain(Structured(await CallAsync(mcp, "atlas_list_pages", new { spaceId = space }))["items"]!.AsArray(),
             item => item!["pageId"]!.GetValue<string>() == reference);
-        // The web still shows the reader the page of the excluded space: G5 narrows MCP only.
+        // The web still shows the reader the page of the excluded space: G5 narrows only what may go to a model.
         Assert.True((await AtlasHttpSite.Json(await reader.GetAsync($"/api/objects/{source}/relations"), HttpStatusCode.OK))["nodes"]!.AsArray()
             .Single(node => node!["id"]!.GetValue<string>() == outside)!["readable"]!.GetValue<bool>());
         Assert.Contains((await AtlasHttpSite.Json(await reader.GetAsync($"/api/spaces/{space}/tree"), HttpStatusCode.OK))["items"]!.AsArray(),

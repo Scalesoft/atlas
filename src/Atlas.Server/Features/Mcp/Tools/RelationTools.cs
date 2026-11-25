@@ -80,7 +80,7 @@ public sealed class McpRelationTools(IMessageBus bus)
         "count karet), attached (tabule patří stránce), mention (stránka zmiňuje kontakt), reference (odkazový uzel ve stromu pod stránkou ukazuje na objekt). " +
         "U míst, kde je objekt použit, hrana nese důvod: partId (karta, odkazový uzel nebo blok stránky) a excerpt (úryvek textu bloku). includeDrafts přidá " +
         "použití jen v pracovní verzi stránky (draft true), ale jen u stránek, které smí vlastník tokenu upravovat. depth 2 přidá vazby čitelných sousedů. " +
-        "Uzel, který vlastník tokenu číst nesmí (nebo je v koši), má readable false a nic dalšího; hidden je počet vazeb objektu, které nevidí. " +
+        "Vazby na objekty, které vlastník tokenu číst nesmí, se nevrací vůbec; uzel v koši nebo smazaný má readable false a nic dalšího. " +
         "atlas_get_backlinks zůstává pro odkazy na stránku. Vazby vznikají z publikovaného obsahu až několik sekund po publikaci (projekce na pozadí): čerstvě publikovaný odkaz se tu může objevit se zpožděním. " + McpText.TrustNotice)]
     public async Task<CallToolResult> GetRelationsAsync(
         [Description("objectId (pageId, id tabule nebo kontaktu).")] string objectId,
@@ -90,9 +90,9 @@ public sealed class McpRelationTools(IMessageBus bus)
         CancellationToken ct = default)
     {
         var id = McpArguments.RequiredId(objectId, "objectId");
-        // G5 is the handler's (RelationNodes on the MCP channel): an object of an excluded space is a lock, and depth 2 stops there.
+        // G5 is the handler's (RelationNodes on the MCP channel): an object of an excluded space is left out, and depth 2 stops there.
         var relations = await bus.InvokeAsync<ObjectRelations>(new GetObjectRelations(id, depth, kinds, includeDrafts, Reasons: true), ct);
-        var titles = relations.Nodes.ToDictionary(node => node.Id, node => node.Readable ? McpText.Line(node.Title, 200) + " (" + node.TypeId + ", id " + node.Id + ")" : "nečitelný objekt (id " + node.Id + ")");
+        var titles = relations.Nodes.ToDictionary(node => node.Id, node => node.Readable ? McpText.Line(node.Title, 200) + " (" + node.TypeId + ", id " + node.Id + ")" : "nedostupný objekt (id " + node.Id + ")");
         var body = new StringBuilder();
         foreach (var edge in relations.Edges)
         {
@@ -106,15 +106,14 @@ public sealed class McpRelationTools(IMessageBus bus)
         }
         var structured = JsonSerializer.SerializeToNode(relations, Json)!.AsObject();
         structured["objectId"] = id;
-        var hidden = relations.Hidden > 0 ? $" Skrytých (nečitelných) vazeb: {relations.Hidden}." : "";
-        return McpText.Result(McpText.Wrap($"Vazby objektu {titles[id]}: {relations.Edges.Count}.{hidden}", relations.Edges.Count == 0 ? "Žádné." : body.ToString()), structured);
+        return McpText.Result(McpText.Wrap($"Vazby objektu {titles[id]}: {relations.Edges.Count}.", relations.Edges.Count == 0 ? "Žádné." : body.ToString()), structured);
     }
 
     [McpServerTool(Name = "atlas_list_usage", Title = "Použití v prostoru", ReadOnly = true, Idempotent = true, OpenWorld = false, Destructive = false)]
     [McpToolScope(ApiScopes.Read)]
-    [AssistantDescription("Inventář prostoru: komponenty podle typu s počtem použití (i skrytých) a příznakem nepoužité; filtr type, unused. spaceId, cursor.")]
+    [AssistantDescription("Inventář prostoru: komponenty podle typu s počtem použití a příznakem nepoužité; filtr type, unused. spaceId, cursor.")]
     [Description("Vypíše komponenty prostoru (stránky, tabule, kontakty a další objekty, i objekty wiki v prostoru použité) podle typu s počtem míst, kde jsou " +
-        "použité (uses, včetně konceptů stránek), počtem míst, která vlastník tokenu nevidí (hidden), a příznakem unused: objekt mimo strom, který nic nepoužívá " +
+        "použité a vlastník tokenu je vidí (uses, včetně konceptů stránek), a příznakem unused: objekt mimo strom, který nic nepoužívá " +
         "ani skrytě; takové objekty může úklid sirotků po nastavené době přesunout do koše. unused true vypíše jen nepoužité. Kde přesně je objekt použitý, " +
         "řekne atlas_get_relations. Po 50 položkách pokračování přes nextCursor. " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListUsageAsync(
@@ -134,7 +133,7 @@ public sealed class McpRelationTools(IMessageBus bus)
         foreach (var row in inventory.Items)
         {
             body.Append("- ").Append(McpText.Line(row.Title, 200)).Append(" (").Append(row.TypeId).Append(", id ").Append(row.Id)
-                .Append(", použito na ").Append(row.Uses + row.Hidden).Append(" místech").Append(row.Hidden > 0 ? $" (z toho skrytých {row.Hidden})" : "").Append(row.Unused ? ", nepoužité" : "").Append(")\n");
+                .Append(", použito na ").Append(row.Uses).Append(" místech").Append(row.Unused ? ", nepoužité" : "").Append(")\n");
         }
         var structured = JsonSerializer.SerializeToNode(inventory, Json)!.AsObject();
         structured["spaceId"] = space;

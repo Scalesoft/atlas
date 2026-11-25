@@ -17,11 +17,15 @@ public sealed class PageObjectType : IObjectType
 {
     private readonly ISession m_session;
     private readonly ResourceGrantSnapshots m_grants;
+    private readonly SpaceRoles m_roles;
+    private readonly IRequestChannel m_channel;
 
-    public PageObjectType(ISession session, ResourceGrantSnapshots grants)
+    public PageObjectType(ISession session, ResourceGrantSnapshots grants, SpaceRoles roles, IRequestChannel channel)
     {
         m_session = session;
         m_grants = grants;
+        m_roles = roles;
+        m_channel = channel;
     }
 
     public string TypeId => PagesAtlasModule.ContentType;
@@ -31,7 +35,8 @@ public sealed class PageObjectType : IObjectType
     public async Task<ObjectAccess> AuthorizeAsync(ObjectActor actor, Guid objectId, CancellationToken ct)
     {
         var page = await m_session.GetAsync<Page>(objectId, ct);
-        if (page is null || page.IsTrashed)
+        // G5 (D10), as ObjectScopeAccess: a page of a space excluded from AI and MCP is missing to a channel whose content may go to a model.
+        if (page is null || page.IsTrashed || m_channel.Current.IsAiBound && !await m_roles.InAiAsync(page.SpaceId, ct))
         {
             return ObjectAccess.None;
         }

@@ -93,7 +93,6 @@ const en: ObjectsMessages = {
     nowhereText: "No page, board or tree uses it.",
     space: (name) => `Space ${name}`,
     draft: "draft",
-    hidden: (more, count) => `${more ? "And also in" : "In"} ${plural(count, { one: "# place", other: "# places" })} you do not have access to.`,
     loadMore: "Load more places",
   },
 };

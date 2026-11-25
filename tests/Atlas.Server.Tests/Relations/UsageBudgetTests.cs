@@ -51,10 +51,10 @@ public sealed class UsageBudgetTests(ITestOutputHelper output)
         await ContentsBudgetTests.SqlAsync(f, "ANALYZE;");
 
         var list = await MeasureAsync("usage list", () => f.As<ObjectUsageList>(f.Reader, new GetObjectUsage(hub)));
-        Assert.Equal((Pages + Boards, 0, GetObjectUsage.PageSize), (list.Result.Total, list.Result.Hidden, list.Result.Items.Count));
+        Assert.Equal((Pages + Boards, GetObjectUsage.PageSize), (list.Result.Total, list.Result.Items.Count));
         Assert.All(list.Result.Items.Where(row => row.Kind == RelationKinds.Mention), row => Assert.Equal("Za provoz odpovídá Jana", row.Excerpt));
         var count = await MeasureAsync("usage count", () => f.As<UsageCount>(f.Reader, new CountObjectUsage(hub)));
-        Assert.Equal(new UsageCount(hub, Pages + Boards, Pages + Boards, 0), count.Result);
+        Assert.Equal(new UsageCount(hub, Pages + Boards, false), count.Result);
         var inventory = await MeasureAsync("space inventory", () => f.As<SpaceUsage>(f.Reader, new ListSpaceUsage(space)));
         Assert.Equal(Pages + Boards + 1, inventory.Result.Types.Values.Sum());
 

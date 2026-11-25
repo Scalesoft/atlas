@@ -43,9 +43,10 @@ export interface UsageRow {
   placeId: string; placeTypeId: string; placeTitle: string; spaceId: string | null; spaceName: string | null; kind: RelationKind; count: number;
   anchor?: string | null; draft: boolean; partId?: string | null; excerpt?: string | null; card?: boolean;
 }
-/** `total` counts every use; `hidden` those in places the reader may not see (told only as a number). */
-export interface UsagePage { objectId: string; items: UsageRow[]; total: number; hidden: number; nextCursor: string | null }
-export interface UsageCount { objectId: string; total: number; visible: number; hidden: number }
+/** `total` counts the uses the reader may see; those in places they may not see are neither listed nor counted. */
+export interface UsagePage { objectId: string; items: UsageRow[]; total: number; nextCursor: string | null }
+/** `hidden`: only whether some use is in a place the reader may not see (never how many), for the last-usage warning. */
+export interface UsageCount { objectId: string; total: number; hidden: boolean }
 export interface UsageApi {
   /** Null when the object is unreadable or gone (404). `part`: the uses of one part of it (a catalog requirement's key on its page). */
   usage(objectId: string, cursor?: string | null, signal?: AbortSignal, part?: string): Promise<UsagePage | null>;
