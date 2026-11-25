@@ -19,6 +19,8 @@ export interface BoardCommand {
   icon: MarkdownIconName;
   keywords: readonly string[];
   section: CommandSection;
+  /** The key that does the same ("Ctrl+G"), when there is one; the actions menu writes it for the platform. */
+  shortcut?: string;
 }
 export interface CommandContext {
   canEdit: boolean;
@@ -32,6 +34,10 @@ export interface CommandContext {
 const command = (section: CommandSection, id: string, title: string, icon: MarkdownIconName, keywords: string[] = [], description?: string): BoardCommand =>
   ({ id, title, icon, keywords, section, ...(description && { description }) });
 
+/** A command with a key: the panel shows it as the description, the actions menu as the row's shortcut. */
+const keyed = (section: CommandSection, id: string, title: string, icon: MarkdownIconName, keywords: string[], chord: string): BoardCommand =>
+  ({ ...command(section, id, title, icon, keywords, chord), shortcut: chord });
+
 const alignHows = ["left", "center", "right", "top", "middle", "bottom"] as const;
 
 function selectionCommands({ selection, can }: CommandContext): BoardCommand[] {
@@ -40,16 +46,16 @@ function selectionCommands({ selection, can }: CommandContext): BoardCommand[] {
   const single = selection.length === 1 ? selection[0] : undefined;
   if (!selection.length) return [];
   return [
-    ...(cards.length > 1 ? [command("selection", "selection:group", c.group.title, "folder-plus", c.group.words, "Ctrl+G")] : []),
-    ...(selection.some(item => item.kind === "group") ? [command("selection", "selection:ungroup", c.ungroup.title, "folder-input", c.ungroup.words, "Ctrl+Shift+G")] : []),
+    ...(cards.length > 1 ? [keyed("selection", "selection:group", c.group.title, "folder-plus", c.group.words, "Ctrl+G")] : []),
+    ...(selection.some(item => item.kind === "group") ? [keyed("selection", "selection:ungroup", c.ungroup.title, "folder-input", c.ungroup.words, "Ctrl+Shift+G")] : []),
     ...(single?.kind === "group" ? [single.props?.collapsed
       ? command("selection", "selection:expand", c.expand.title, "chevrons-up-down", c.expand.words)
       : command("selection", "selection:collapse", c.collapse.title, "chevrons-down-up", c.collapse.words)] : []),
     ...(cards.length > 1 ? alignHows.map(how => command("selection", `selection:align-${how}`, c.align[how], how === "center" ? "align-center" : how === "right" ? "align-right" : "align-left", c.alignWords)) : []),
     ...(can.arrange ? [command("selection", "board:arrange", c.arrange.selection, "layout-dashboard", c.arrange.words, c.arrange.description)] : []),
-    command("selection", "selection:duplicate", c.duplicate.title, "copy", c.duplicate.words, "Ctrl+D"),
+    keyed("selection", "selection:duplicate", c.duplicate.title, "copy", c.duplicate.words, "Ctrl+D"),
     ...(single?.kind === "note" && can.createPage ? [command("selection", "selection:to-page", c.toPage.title, "file-plus", c.toPage.words)] : []),
-    command("selection", "selection:delete", onlyCards(selection) ? c.removeFromBoard : c.delete.title, "trash-2", c.delete.words, "Delete"),
+    keyed("selection", "selection:delete", onlyCards(selection) ? c.removeFromBoard : c.delete.title, "trash-2", c.delete.words, "Delete"),
   ];
 }
 
@@ -70,13 +76,13 @@ export function boardCommands(context: CommandContext): BoardCommand[] {
   if (!canEdit) return [...detail, ...board];
   return [
     ...selectionCommands(context).flatMap(entry => (entry.id === "selection:delete" ? [...detail, entry] : [entry])),
-    command("create", "create:note", c.note.title, "pin", c.note.words, "N"),
-    command("create", "create:text", c.text.title, "type", c.text.words, "T"),
-    command("create", "create:shape", c.shape.title, "box", c.shape.words, "S"),
-    command("create", "create:frame", c.frame.title, "layout-dashboard", c.frame.words, "F"),
+    keyed("create", "create:note", c.note.title, "pin", c.note.words, "N"),
+    keyed("create", "create:text", c.text.title, "type", c.text.words, "T"),
+    keyed("create", "create:shape", c.shape.title, "box", c.shape.words, "S"),
+    keyed("create", "create:frame", c.frame.title, "layout-dashboard", c.frame.words, "F"),
     // The pickers stand in for the plugins' own entries of the same blocks, as in the tool rail (one entry per use case).
-    ...(can.pickIssues ? [command("component", "pick:youtrack", c.youtrack.title, "ticket", c.youtrack.words, "I")] : []),
-    ...(can.pickContacts ? [command("component", "pick:contact", c.contact.title, "user", c.contact.words, "C")] : []),
+    ...(can.pickIssues ? [keyed("component", "pick:youtrack", c.youtrack.title, "ticket", c.youtrack.words, "I")] : []),
+    ...(can.pickContacts ? [keyed("component", "pick:contact", c.contact.title, "user", c.contact.words, "C")] : []),
     ...modules.filter(entry => !(can.pickIssues && entry.id === "youtrack.search") && !(can.pickContacts && entry.id === "contacts.insert"))
       .map(entry => ({ ...command("component", `component:${entry.id}`, entry.label, entry.icon as MarkdownIconName, [...entry.keywords]), ...(entry.description && { description: entry.description }) })),
     // Lists derived from the relations (P15): the board composes them, nobody writes them by hand.
@@ -85,7 +91,7 @@ export function boardCommands(context: CommandContext): BoardCommand[] {
       ...(can.waiting ? [command("component", "links:waiting", c.waiting.title, "hourglass", c.waiting.words, c.waiting.description)] : []),
       command("component", "links:usage", c.usage.title, "link", c.usage.words, c.usage.description),
     ] : []),
-    ...(can.pickPage ? [command("place", "place:page", c.placePage.title, "file-text", c.placePage.words, "P")] : []),
+    ...(can.pickPage ? [keyed("place", "place:page", c.placePage.title, "file-text", c.placePage.words, "P")] : []),
     ...board,
   ];
 }
@@ -109,8 +115,8 @@ export function actionCommands(context: CommandContext, offer: ItemOffer): Board
   const c = t.commands;
   const detail = single?.kind === "page" && single.targetResourceId ? [command("selection", "selection:detail", c.openDetail.title, "panel-right-close", c.openDetail.words)] : [];
   return [
-    ...(offer.edit ? [command("selection", "selection:edit", c.edit.title, "pencil", c.edit.words, "Enter")] : []),
-    ...(offer.open ? [command("selection", "selection:open", offer.open, "external-link", c.open.words, "Ctrl+Enter")] : []),
+    ...(offer.edit ? [keyed("selection", "selection:edit", c.edit.title, "pencil", c.edit.words, "Enter")] : []),
+    ...(offer.open ? [keyed("selection", "selection:open", offer.open, "external-link", c.open.words, "Ctrl+Enter")] : []),
     ...detail,
     ...(offer.link ? [command("selection", "selection:copy-link", c.copyLink.title, "link", c.copyLink.words)] : []),
     ...(context.canEdit ? selectionCommands(context) : []),

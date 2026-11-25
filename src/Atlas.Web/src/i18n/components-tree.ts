@@ -1,3 +1,4 @@
+import { hintLabel } from "../keyboard/shortcuts";
 import { translate } from ".";
 
 /** The page tree and the status badge of a page (components/PageTree, PageStatusBadge), small because the shell shows them at once; the rest of the page-area texts are in components-b. The Czech source. */
@@ -23,7 +24,7 @@ const cs = {
     sortedMark: "podstránky řazené abecedně",
     referenceNoAccess: "Odkaz, k cíli nemáte přístup",
     referenceMark: " — Odkaz",
-    hasBoard: "má tabuli nasazení (Ctrl+Enter)",
+    hasBoard: `má tabuli nasazení (${hintLabel("Mod+Enter")})`,
     openBoardOf: (title: string) => `Otevřít tabuli nasazení stránky ${title}`,
     deploymentBoard: "Tabule nasazení",
     actionsOf: (title: string) => `Akce: ${title}`,

@@ -8,4 +8,4 @@ import "@atlas/markdown/themes/ocean.css";
  * is drawn with, which a board that never edits text has not loaded. Loaded through actionsMenuChunk.ts; the canvas opens it on the
  * selection (BoardCanvas `openActions`).
  */
-export { openMarkdownIntentionsMenu as openActionsMenu } from "@atlas/markdown/core";
+export { openMarkdownIntentionsMenu as openActionsMenu, formatMarkdownShortcut } from "@atlas/markdown/core";

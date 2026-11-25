@@ -1739,10 +1739,12 @@ function ownActions(chosen: readonly BoardViewItem[]) {
   return actionCommands({ canEdit: props.canEdit, selection: chosen, modules: [], can }, offerOf(chosen.length === 1 ? chosen[0] : undefined));
 }
 const intentionContext = (chosen: readonly BoardViewItem[], signal: AbortSignal) => ({ items: chosen, board: items.value, canEdit: props.canEdit, signal });
-function actionRows(signal: AbortSignal): (readonly MarkdownIntention[] | Promise<readonly MarkdownIntention[]>)[] {
+function actionRows(signal: AbortSignal, keysOf: (keys: string[]) => string): (readonly MarkdownIntention[] | Promise<readonly MarkdownIntention[]>)[] {
   const chosen = selectedItems.value;
   const own = (chosen.length ? ownActions(chosen) : []).map((entry): MarkdownIntention => ({
-    id: entry.id, label: entry.title, icon: `svg:${entry.icon}`, keywords: entry.keywords, ...(entry.description && { description: entry.description }), run: () => actions[entry.id]?.(),
+    id: entry.id, label: entry.title, icon: `svg:${entry.icon}`, keywords: entry.keywords, run: () => actions[entry.id]?.(),
+    // A command's key ("Ctrl+G") becomes the row's shortcut, written for the platform; else its description stays.
+    ...(entry.shortcut ? { shortcut: keysOf(entry.shortcut.split("+").map(key => (key === "Ctrl" ? "Mod" : key))) } : entry.description && { description: entry.description }),
   }));
   return [own, ...boardIntentionRows(intentionContext(chosen, signal))];
 }
@@ -1766,7 +1768,7 @@ function openActions(at?: Point, aiFirst = false) {
     menuLoading = false;
     if (!surface.value || (first ? !selected.value.has(first) : selected.value.size)) return;
     const abort = new AbortController();
-    const menu: MarkdownIntentionsMenu = chunk.openActionsMenu({ document, anchor, contextElement: menuTheme.value ?? surface.value, rows: actionRows(abort.signal), aiFirst,
+    const menu: MarkdownIntentionsMenu = chunk.openActionsMenu({ document, anchor, contextElement: menuTheme.value ?? surface.value, rows: actionRows(abort.signal, chunk.formatMarkdownShortcut), aiFirst,
       onClose: () => {
         abort.abort();
         document.removeEventListener("keydown", menuKeys, true);

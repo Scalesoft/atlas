@@ -28,7 +28,7 @@ export const markdownKeyboardShortcuts: readonly MarkdownShortcut[] = Object.fre
   shortcut('Text', 'Mod Shift H', 'Zvýraznit'),
   // No Ctrl+K (Atlas's search), Ctrl+S (save the draft), Ctrl+J (assistant) or Ctrl+Shift+P (commands): the host's everywhere.
   shortcut('Text', 'Mod Z', 'Zpět'),
-  shortcut('Text', 'Mod Shift Z', 'Znovu'),
+  shortcut('Text', 'Mod Shift Z', 'Znovu (také Ctrl Y)'),
   shortcut('Text', 'Mod F', 'Najít a nahradit'),
   // Ctrl+Shift+digit reaches a Czech keyboard (its Ctrl+Alt is AltGr); tiptap's Ctrl+Alt+digit still works elsewhere.
   shortcut('Bloky', 'Mod Shift 0', 'Běžný text'),

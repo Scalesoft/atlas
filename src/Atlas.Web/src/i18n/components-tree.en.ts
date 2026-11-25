@@ -1,3 +1,4 @@
+import { hintLabel } from "../keyboard/shortcuts";
 import type { ComponentsTreeMessages } from "./components-tree";
 
 const en: ComponentsTreeMessages = {
@@ -22,7 +23,7 @@ const en: ComponentsTreeMessages = {
     sortedMark: "subpages sorted alphabetically",
     referenceNoAccess: "Link, you have no access to its target",
     referenceMark: " — Link",
-    hasBoard: "has a deployment board (Ctrl+Enter)",
+    hasBoard: `has a deployment board (${hintLabel("Mod+Enter")})`,
     openBoardOf: (title: string) => `Open the deployment board of page ${title}`,
     deploymentBoard: "Deployment board",
     actionsOf: (title: string) => `Actions: ${title}`,

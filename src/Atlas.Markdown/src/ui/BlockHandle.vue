@@ -153,6 +153,16 @@ function selectGrip(event: MouseEvent | KeyboardEvent) {
   if (props.editor.state.selection instanceof NodeSelection) props.editor.view.focus()
 }
 
+/** The right button, the menu key and Shift+F10 on the grip: the block's menu, as a click on it. */
+function openBlockMenu(event: MouseEvent | KeyboardEvent) {
+  event.preventDefault()
+  if (!props.editor.isEditable || motion.cancelled) return
+  const position = motion.resolveTarget()
+  if (position < 0) return
+  motion.releasePointer()
+  openMarkdownBlockMenu(props.editor, position)
+}
+
 function openMoveMenu(event: MouseEvent | KeyboardEvent) {
   event.preventDefault()
   if (!props.editor.isEditable || motion.cancelled) return
@@ -193,9 +203,10 @@ function onDragGripKeydown(event: KeyboardEvent) {
     if (node && enterMarkdownBlockKeyboardControls(props.editor, { pos: position, node }, { grip: event.currentTarget as HTMLElement, after: () => { if (!selected()) return false; selectionUI?.focus(); return true } })) { event.preventDefault(); return }
     if (selected()) { event.preventDefault(); selectionUI?.focus(); return }
   }
-  if (event.key === 'ArrowDown' && !event.shiftKey || event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey) {
-    openMoveMenu(event); return
-  }
+  // The menu key and Shift+F10 open the block's menu as the right button does; ArrowDown goes on to the move panel.
+  if (event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey) { openBlockMenu(event); return }
+  if (event.key === 'ArrowDown' && !event.shiftKey) { openMoveMenu(event); return }
+  // Ctrl+Shift+Arrow is the editor's key for moving a block (KeyboardFirst): the grip takes it beside Shift+Arrow.
   if (!event.shiftKey) return
   const dir = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
   if (dir === 0) return
@@ -305,7 +316,7 @@ function onAddBlockBelow(ev: MouseEvent) {
           aria-keyshortcuts="Alt+F10"
           :aria-label="dragStrings.gripAriaLabel(rangeLabel)"
           @click="selectGrip"
-          @contextmenu="openMoveMenu"
+          @contextmenu="openBlockMenu"
           @keydown="onDragGripKeydown">
           <GripVerticalIcon/>
         </div>

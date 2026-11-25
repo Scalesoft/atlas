@@ -9,7 +9,7 @@ const en: KeyboardEditorMessages = {
     "Mod E": "Inline code",
     "Mod Shift H": "Highlight",
     "Mod Z": "Undo",
-    "Mod Shift Z": "Redo",
+    "Mod Shift Z": "Redo (also Ctrl Y)",
     "Mod F": "Find and replace",
     "Mod Shift 0": "Plain text",
     "Mod Shift 1": "Heading 1",
