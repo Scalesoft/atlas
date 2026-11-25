@@ -88,6 +88,10 @@ public sealed class PageVerificationTests
         var list = await AtlasHttpSite.Json(await writer.GetAsync(health + "?state=due"), HttpStatusCode.OK);
         Assert.Equal(1, list["summary"]!["expiring"]!.GetValue<int>());
         Assert.Equal(page.Id, Assert.Single(list["items"]!.AsArray())!["pageId"]!.GetValue<string>());
+        // The tiles of Stav obsahu filter by their own state: the page is expiring, so verified and lapsed are empty.
+        Assert.Single((await AtlasHttpSite.Json(await writer.GetAsync(health + "?state=expiring"), HttpStatusCode.OK))["items"]!.AsArray());
+        Assert.Empty((await AtlasHttpSite.Json(await writer.GetAsync(health + "?state=verified"), HttpStatusCode.OK))["items"]!.AsArray());
+        Assert.Empty((await AtlasHttpSite.Json(await writer.GetAsync(health + "?state=lapsed"), HttpStatusCode.OK))["items"]!.AsArray());
         // The link chips read the state from the tree and the batch reference check.
         var tree = await AtlasHttpSite.Json(await reader.GetAsync($"/api/spaces/{space}/tree"), HttpStatusCode.OK);
         Assert.Equal(PageVerificationStates.Expiring, tree["items"]!.AsArray().Single(x => x!["id"]!.GetValue<string>() == page.Id)!["verification"]!.GetValue<string>());
