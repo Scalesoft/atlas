@@ -15,7 +15,7 @@ export const replyTo = (bubble: Pick<DiscussionBubble, "authorId" | "authorName"
 };
 
 /** At most this many bubbles wait for the peek; the older ones are still counted as unread. */
-export const maxBubbles = 5;
+export const maxBubbles = 2;
 
 /**
  * What the page's discussion button and the peek under the avatars show (the dock's Diskuse is the full thread, this is its quiet

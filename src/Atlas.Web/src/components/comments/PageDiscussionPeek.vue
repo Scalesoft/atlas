@@ -114,7 +114,7 @@ async function send(bubble: DiscussionBubble, markdown: string) {
 .discussion-peek { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; display: flex; flex-direction: column; gap: 6px; width: min(340px, 86vw); margin: 0; padding: 0; list-style: none; pointer-events: none; }
 .peek-bubble { position: relative; pointer-events: auto; transform-origin: top right; }
 .peek-open { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 30px 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer;
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--text) 14%, transparent);
+  box-shadow: var(--shadow-menu);
   transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out), scale var(--atlas-motion-fast) var(--atlas-ease-out); }
 @media (hover: hover) and (pointer: fine) { .peek-open:hover { border-color: var(--accent); background: color-mix(in srgb, var(--hover) 45%, var(--surface)); } }
 .peek-open:active { scale: var(--atlas-press); }
@@ -122,14 +122,12 @@ async function send(bubble: DiscussionBubble, markdown: string) {
 .peek-main { display: flex; flex: 1; flex-direction: column; min-width: 0; font-size: 13px; line-height: 1.35; }
 .peek-author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .peek-text { display: -webkit-box; overflow: hidden; color: var(--muted); -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
-/* „Odpovědět“ shows with the bubble (pointed at or focused); its place is reserved at the end of the row, so nothing re-wraps. */
-.peek-reply { position: absolute; right: 30px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border: 0; border-radius: 6px; background: var(--surface); color: var(--accent); font: inherit; font-size: 12px; cursor: pointer; opacity: 0;
-  transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
-.peek-bubble:hover .peek-reply, .peek-bubble:focus-within .peek-reply { opacity: 1; }
+/* „Odpovědět“ is a quiet text row under the bubble's text (in the flow, so the bubble never changes shape and nothing overlays the author line). */
+.peek-reply { display: inline-flex; align-items: center; gap: 4px; margin: 2px 0 0 10px; padding: 2px 6px; border: 0; border-radius: 6px; background: none; color: var(--accent); font: inherit; font-size: 12px; cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 @media (hover: hover) and (pointer: fine) { .peek-reply:hover { background: var(--hover); } }
 .peek-reply:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media not (pointer: fine) { .peek-reply { opacity: 1; } }
-.peek-compose { margin-top: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 8px 24px color-mix(in srgb, var(--text) 14%, transparent); }
+.peek-compose { margin-top: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-menu); }
 .peek-failure { margin: 6px 0 0; color: var(--error); font-size: 12px; }
 .peek-hide { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer;
   opacity: 0; transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out); }

@@ -287,7 +287,7 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
 .health-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0 4px; font-size: 13px; }
 .health-bulk kbd, .health-keys kbd { margin-left: 4px; padding: 0 4px; border-radius: 4px; background: color-mix(in srgb, currentColor 18%, transparent); font: 600 11px var(--font-mono, ui-monospace, monospace); }
 .health-all { display: flex; align-items: center; gap: 10px; padding: 4px 0; color: var(--muted); font-size: 13px; }
-.health-rows > .settings-list { margin: 0 calc(var(--st-pad-x, 18px) * -1) calc(var(--st-body-pad-y, 16px) * -1); --st-row-pad-x: var(--st-pad-x, 18px); }
+.health-rows > .settings-list { margin: 0 calc(var(--st-pad-x, 18px) * -1); --st-row-pad-x: var(--st-pad-x, 18px); }
 .health-rows > .st-empty.is-compact { border-style: none; padding-block: 20px; }
 .health-row { transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 .health-row[data-selected] { background: color-mix(in srgb, var(--accent) 8%, transparent); }
