@@ -53,7 +53,9 @@ public sealed class MarkdownWriteLimitTests
     [PostgreSqlFact]
     public async Task Concurrent_markdown_writes_are_bounded_per_token_and_per_account_with_429_and_retry_after()
     {
-        await using var f = await McpSite.CreateAsync(enabled: false);
+        // Isolated: the blocked creates hold the installation's content lock shared; another test's administration (content lock
+        // exclusive) queues behind them on a shared site, and the creates sent after it queue behind that instead of the space.
+        await using var f = await McpSite.CreateAsync(enabled: false, isolated: true);
         var space = await f.FirstSpaceAsync();
         await f.SetLevelAsync(f.AdminId, "write");
         var tokens = new List<HttpClient>();
