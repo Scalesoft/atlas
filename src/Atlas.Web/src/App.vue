@@ -59,7 +59,7 @@ import { useUnreadNotifications } from "./notifications";
 import { liveAccount } from "./live/accountChannel";
 import { loadPreferredColors, preferredColorChanged } from "./live/collaboratorColors";
 import { liveConnection } from "./live/liveConnection";
-import { pageTopic } from "./live/liveFeed";
+import { followTree, pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
 import { usePageVerification } from "./verification/usePageVerification";
 import { verificationMark, verificationShown } from "./verification/verificationMark";
@@ -1663,7 +1663,6 @@ async function loadTree(spaceId: string) {
   if (treeVersions.value[spaceId] !== undefined && tree.version < treeVersions.value[spaceId]!) return;
   treeVersions.value[spaceId] = tree.version;
   rootByTitle.value[spaceId] = !!tree.rootByTitle;
-  treeLoadedAt.set(spaceId, Date.now());
   const items = tree.items.map(item => ({ ...item, spaceId }));
   // An unchanged answer keeps the rendered rows; replacing them would patch every row of the tree.
   const current = pagesBySpace.value[spaceId];
@@ -1707,10 +1706,13 @@ function prefetchOnIntent(id: string) {
 }
 /** The page whose read recorded its visit (`visit`): the shell does not post it again. */
 let visitedByRead: string | undefined;
-/** When each space's tree was read last: switching pages reads it again only after a while (3.6-G N7). */
-const treeLoadedAt = new Map<string, number>();
-// shortcut: no live signal of tree changes reaches the shell, so a colleague's move shows after this or with the next own change; use one when it exists.
-const TREE_FRESH_MS = 30_000;
+/** Every loaded tree follows its space (tree:{spaceId}): whatever changes what a row shows, this tab or anyone else, reads it again (3.6-G N7: never on a page switch). */
+const treeFollows = new Map<string, () => void>();
+watch(() => Object.keys(pagesBySpace.value), loaded => {
+  for (const [spaceId, close] of treeFollows) if (!loaded.includes(spaceId)) { close(); treeFollows.delete(spaceId); }
+  for (const spaceId of loaded) if (!treeFollows.has(spaceId)) treeFollows.set(spaceId, followTree(spaceId, () => loadTree(spaceId)));
+});
+onUnmounted(() => { treeFollows.forEach(close => close()); treeFollows.clear(); });
 // So is the tree of a space the URL names: its page list needs nothing else, so it does not wait for the session and the spaces.
 const treePrefetches = new Map<string, ReturnType<typeof organizationApi.tree>>();
 function prefetchTree(spaceId: string) {
@@ -2515,11 +2517,9 @@ async function openPage(id: string, startEditing = false, fromHistory = false, h
     if (!fromHistory && location.hash !== route)
       history.pushState(null, "", route);
     closeSearch();
-    // The document is on screen; the tree only has to exist. A loaded one revalidates in the background.
-    if (pagesBySpace.value[next.spaceId]) {
-      revealPageInTree(next.id, next.spaceId);
-      if (Date.now() - (treeLoadedAt.get(next.spaceId) ?? 0) > TREE_FRESH_MS) void ensureTree(next.spaceId).catch(() => {});
-    } else await ensureTree(next.spaceId);
+    // The document is on screen; the tree only has to exist (a loaded one follows its space).
+    if (pagesBySpace.value[next.spaceId]) revealPageInTree(next.id, next.spaceId);
+    else await ensureTree(next.spaceId);
   } catch (failure) {
     const searchStillActive =
       fromSearch && searchIsOpen.value && searchVersion === searchSession;
@@ -2727,9 +2727,8 @@ function openBoard(id: string, fromHistory = false, spaceId?: string) {
 function placeBoard(id: string, spaceId: string) {
   expandSpace(spaceId);
   const reveal = () => { if (boardId.value === id) revealPageInTree(id, spaceId); };
-  // A loaded tree revalidates in the background as a page's does, once it is older than TREE_FRESH_MS: „Tabule nasazení“ read it
-  // twice in a row (the page's board is looked up in it, then opened).
-  if (pagesBySpace.value[spaceId]) { reveal(); if (Date.now() - (treeLoadedAt.get(spaceId) ?? 0) > TREE_FRESH_MS) void ensureTree(spaceId).catch(() => {}); }
+  // A loaded tree follows its space: „Tabule nasazení“ made the page's board, and its mark comes with TreeChanged.
+  if (pagesBySpace.value[spaceId]) reveal();
   else void ensureTree(spaceId).then(reveal, () => {});
 }
 /** The board view has loaded the board (or a colleague renamed it): the frame and the tree follow. */

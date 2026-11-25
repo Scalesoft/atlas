@@ -19,10 +19,11 @@ public sealed class PagesAtlasModule : IAtlasModule
 
     public Assembly MigrationsAssembly => typeof(PagesAtlasModule).Assembly;
 
-    /// <summary>The live page channel: page:{pageId} and the one listener that relays the database's page changes to it.</summary>
+    /// <summary>The live page and tree channels: page:{pageId}, tree:{spaceId} and the one listener that relays the database's changes to them.</summary>
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<ILiveChannel, PageLiveChannel>();
+        services.AddSingleton<ILiveChannel, TreeLiveChannel>();
         services.AddHostedService<PageChangeListener>();
     }
 

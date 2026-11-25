@@ -24,6 +24,11 @@ public sealed class PageChangeListener : BackgroundService
     /// <summary>The notification channel of the page rows (ContentRowEffects).</summary>
     public const string Channel = "atlas_page_changed";
 
+    /// <summary>The tree signal in SQL over a space id expression: on commit the subscribers of <c>tree:{spaceId}</c> (TreeLiveChannel) hear
+    /// TreeChanged, once per space and transaction (NOTIFY folds equal payloads). Every write of what a tree row shows raises it in its own
+    /// statement (ContentRowEffects, and every bare UPDATE of the tree's token "SpaceOrganization" as <c>RETURNING</c>).</summary>
+    public static string TreeChanged(string spaceId) => $"pg_notify('{Channel}',CAST({spaceId} AS text)||':tree')";
+
     /// <summary>The listener's session in pg_stat_activity.</summary>
     public const string ApplicationName = "atlas-page-changes";
 
@@ -130,8 +135,13 @@ public sealed class PageChangeListener : BackgroundService
     {
         await foreach (var payload in m_queue.Reader.ReadAllAsync(ct))
         {
-            // "{pageId}:{kind}", a working revision's with ":{title}" (which may hold colons itself).
+            // "{pageId}:{kind}", a working revision's with ":{title}" (which may hold colons itself); "{spaceId}:tree" for the space's tree.
             var parts = payload.Split(':', 3);
+            if (parts.Length == 2 && parts[1] == "tree" && Guid.TryParse(parts[0], out var spaceId))
+            {
+                await RelayTreeAsync(spaceId);
+                continue;
+            }
             if (parts.Length < 2 || !Guid.TryParse(parts[0], out var pageId) || parts[1] is not ("working" or "published"))
             {
                 continue;
@@ -167,6 +177,18 @@ public sealed class PageChangeListener : BackgroundService
             {
                 m_waiting.TryRemove((pageId, kind), out _);
             }
+        }
+    }
+
+    private async Task RelayTreeAsync(Guid spaceId)
+    {
+        try
+        {
+            await m_relay.PublishAsync(TreeLiveChannel.Name(spaceId), "TreeChanged", new TreeChangedMessage(spaceId));
+        }
+        catch (Exception ex)
+        {
+            m_log.LogWarning(ex, "TreeChanged could not be sent for {SpaceId}", spaceId);
         }
     }
 
