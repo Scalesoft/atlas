@@ -127,7 +127,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             await mcp.LockPageSpaceSharedAsync(command.PageId, ct);
         }
         var opened = (await gate.ReadAsync(command.PageId, AccessOperation.ReadContent, ct)).Require();
-        var note = Rules.OptionalText(command.Request.Note, "Poznámka", MaxNote, null);
+        var note = Rules.OptionalText(command.Request.Note, "Poznámka", MaxNote);
         var steward = (await session.GetAsync<PageVerification>(opened.Page.Id, ct))?.StewardId;
         // Only someone who may read the page: anyone else would never see the item (NotificationReads).
         IReadOnlyList<Guid> recipients = steward is { } id && await MayStewardAsync(id, opened.Page.Id, ct)
@@ -141,7 +141,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                     ORDER BY x."Last" DESC LIMIT 3
                     """).AddScalar("PublisherId", NHibernateUtil.Guid).SetParameter("page", opened.Page.Id).ListAsync<Guid>(ct)).ToList();
         var told = recipients.Where(x => x != opened.Actor.Id).ToList();
-        outbox.Notify(new NotificationRequested(NotificationKinds.ReportedOutdated, opened.Page.Id, opened.Actor.Id, told, string.IsNullOrEmpty(note) ? null : note));
+        outbox.Notify(new NotificationRequested(NotificationKinds.ReportedOutdated, opened.Page.Id, opened.Actor.Id, told, note));
         return new PageOutdatedReport(told.Count);
     }
 

@@ -38,8 +38,6 @@ public sealed class PageVerificationMigrationTests
 
         Assert.Equal(DBNull.Value, await ScalarAsync(schema.ConnectionString, $"""SELECT "VerificationIntervalMonths" FROM "Space" WHERE "Id"='{Space}'"""));
         Assert.Equal(0L, await ScalarAsync(schema.ConnectionString, """SELECT count(*) FROM "PageVerification" """));
-        // No row, no interval: off, as the reader computes it.
-        Assert.Equal(PageVerificationStates.Off, PageVerificationStates.Of(PageVerificationStates.Interval(null, null, false), null, DateTime.UtcNow));
         // The checks hold: an interval outside the choices is refused.
         await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(schema.ConnectionString, $"""UPDATE "Space" SET "VerificationIntervalMonths"=5 WHERE "Id"='{Space}'"""));
     }

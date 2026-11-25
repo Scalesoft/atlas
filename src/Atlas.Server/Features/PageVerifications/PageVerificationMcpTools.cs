@@ -66,7 +66,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus)
         }
         var request = new SetPageVerificationRequest(verify, end, McpArguments.OptionalId(stewardId, "stewardId"), stewardFromLastAuthor, months,
             intervalMonths == "inherit" ? true : null, clearSteward);
-        if (space is not null && (months is not null || intervalMonths is not null || end is not null))
+        if (space is not null && (intervalMonths is not null || end is not null))
         {
             return McpErrors.InvalidArgument("Hromadně lze jen ověřit a nastavit garanta; interval a datum nastavte po stránkách.");
         }
