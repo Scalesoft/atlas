@@ -33,6 +33,9 @@ it("shows an internal person's activity under the card and opens its pages", asy
   expect(activity.props("accountId")).toBe("acc-1");
   activity.vm.$emit("open", "page-1");
   expect(app.emitted("open")?.[0]).toEqual(["page-1", "atlas.page"]);
+  // A person's profile: the card names them once, and an object's facts (Druh: Kontakt) say nothing about a person.
+  expect(app.find(".content-detail-head").exists()).toBe(false);
+  expect(app.find(".content-detail-facts").exists()).toBe(false);
 });
 
 it("reads nothing for a page and offers Otevřít and Ukázat v grafu", async () => {

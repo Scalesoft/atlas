@@ -88,8 +88,10 @@ watch(() => [props.from, props.to], () => nextTick(showCurrent), { flush: "post"
 <style scoped>
 .activity-heatmap { display: grid; gap: 6px; min-width: 0; color: var(--muted); }
 .calendar-scroll { overflow-x: auto; padding: 8px 3px; container: calendar-scroll / inline-size; }
-/* The cells stay square at every width: the cell is the column width left after the 24 px weekday column, the 8 px gap and the gaps between weeks. */
-.calendar-layout { --gap: 3px; --cell: calc((max(100cqi, 640px) - 32px - var(--gap) * (var(--weeks) - 1)) / var(--weeks)); display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; width: 100%; min-width: 640px; }
+/* The cells stay square at every width: the cell is the column width left after the 24 px weekday column, the 8 px gap and the gaps between weeks.
+   Below about 12 px a week it scrolls instead (640 px for a year); fewer weeks (a person's profile) fit a narrow panel. */
+.calendar-layout { --gap: 3px; --least: calc(var(--weeks) * 12.08px); --cell: calc((max(100cqi, var(--least)) - 32px - var(--gap) * (var(--weeks) - 1)) / var(--weeks));
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 8px; width: 100%; min-width: var(--least); }
 .calendar-months { grid-column: 2; display: grid; grid-template-columns: repeat(var(--weeks), minmax(0, 1fr)); column-gap: var(--gap); font-size: 10px; }
 .calendar-weekdays { grid-column: 1; display: grid; grid-template-rows: repeat(7, var(--cell)); row-gap: var(--gap); font-size: 10px; line-height: 10px; }
 .calendar-weekdays span:nth-child(2) { grid-row: 3; } .calendar-weekdays span:nth-child(3) { grid-row: 5; }

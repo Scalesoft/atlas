@@ -41,6 +41,8 @@ describe("person activity", () => {
     expect(wrapper.get("[data-person-activity-summary]").text()).toContain("Vývoj");
     const calendar = wrapper.findComponent({ name: "ActivityHeatmap" });
     expect(calendar.props("days")).toEqual([{ day: shiftDay(today, -1), count: 2 }, { day: today, count: 2 }]);
+    // The dock's width: the last 21 weeks, without scrolling; the summary keeps the year.
+    expect([calendar.props("from"), calendar.props("to")]).toEqual([shiftDay(today, -146), today]);
     expect(wrapper.findComponent({ name: "FilterMenu" }).props("options").map((option: { label: string }) => option.label)).toEqual(["Všechny prostory", "Vývoj · 3", "Provoz · 1"]);
     const rows = wrapper.findAll("[data-change-row]");
     expect(rows.map(row => row.get(".change-title").text())).toEqual(["Stránka new"]);

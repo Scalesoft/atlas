@@ -37,6 +37,8 @@ const type = computed(() => typeInfo(props.row.typeId));
 const title = computed(() => plainTitle(props.row.title) || t.detail.untitled);
 const scope = computed(() => (props.row.scope === "wiki" ? t.detail.scopeWiki : props.row.scope === "private" ? t.detail.scopePrivate : t.detail.scopeSpace));
 const openable = computed(() => props.row.typeId === "atlas.page" || props.row.typeId === "atlas.board");
+// A colleague's profile: their card names them and says what they do; the object's head and facts would only repeat it.
+const person = computed(() => (contact.value?.status === "ready" ? contact.value.data.directoryId : undefined));
 
 const contact = ref<{ status: "loading" } | { status: "ready"; data: ContactData } | { status: "missing" } | { status: "failed"; error: string } | null>(null);
 watch(() => [props.row.id, props.row.typeId], async () => {
@@ -56,7 +58,7 @@ watch(() => [props.row.id, props.row.typeId], async () => {
 <template>
   <div class="content-detail" :data-content-detail="tab">
     <template v-if="tab === 'overview'">
-      <header class="content-detail-head">
+      <header v-if="!person" class="content-detail-head">
         <AtlasIcon :name="type.icon" :size="18" />
         <h3 class="content-detail-title" :title="title">{{ title }}</h3>
       </header>
@@ -64,7 +66,7 @@ watch(() => [props.row.id, props.row.typeId], async () => {
       <EmptyState v-else-if="contact?.status === 'missing'" compact icon="lock" :title="t.detail.missingTitle" :text="t.detail.missingText" />
       <EmptyState v-else-if="contact?.status === 'failed'" compact icon="alert" :title="t.detail.failedTitle" :text="contact.error" />
       <template v-else-if="contact?.status === 'ready'"><ContactCard :contact="contact.data" /><ContactSkillLine :key="row.id" :contact-id="row.id" bars :name="title" /></template>
-      <dl class="content-detail-facts">
+      <dl v-if="!person" class="content-detail-facts">
         <dt>{{ t.detail.kind }}</dt><dd>{{ type.label }}</dd>
         <template v-if="row.path"><dt>{{ t.detail.location }}</dt><dd>{{ row.hostId ? t.detail.belongsTo(row.path) : row.path }}</dd></template>
         <template v-if="row.scope"><dt>{{ t.detail.scope }}</dt><dd>{{ scope }}</dd></template>
@@ -77,7 +79,7 @@ watch(() => [props.row.id, props.row.typeId], async () => {
         <Button v-if="openable" size="sm" type="button" data-content-detail-open @click="emit('open', row.id, row.typeId)"><AtlasIcon name="external" :size="15" />{{ t.detail.open }}</Button>
         <Button v-if="graph" variant="outline" size="sm" type="button" data-content-detail-focus @click="emit('focus', row.id)"><AtlasIcon name="network" :size="15" />{{ t.detail.showInGraph }}</Button>
       </div>
-      <PersonActivity v-if="contact?.status === 'ready' && contact.data.directoryId" :key="contact.data.directoryId" :account-id="contact.data.directoryId"
+      <PersonActivity v-if="person" :key="person" :account-id="person"
         @open="emit('open', $event, 'atlas.page')" />
     </template>
 

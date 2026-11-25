@@ -27,7 +27,8 @@ const props = withDefaults(defineProps<{ accountId: string; source?: { changes: 
   { source: () => ({ changes: homeApi.changes, days: personActivityDays }) });
 const emit = defineEmits<{ open: [pageId: string] }>();
 
-const today = pragueNow().date, from = shiftDay(today, -364);
+// The calendar shows the last 21 weeks, as many as the dock fits without scrolling; the summary counts the whole year.
+const today = pragueNow().date, from = shiftDay(today, -146);
 const space = ref("");
 const year = shallowRef<PersonActivityDay[] | null>(null);
 const items = shallowRef<RecentChange[]>([]);
