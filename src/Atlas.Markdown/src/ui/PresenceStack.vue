@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import type { PresenceUser } from '../collab/useCollab'
 // Local directive: the package must not depend on a host-registered `v-tooltip`.
 import { vTooltip } from './vTooltip'
+import { markdownInitials } from '../core/userColor'
 import { collaborationStrings } from './strings/collaboration'
 
 const props = withDefaults(defineProps<{
@@ -24,12 +25,7 @@ const overflowNames = computed(() => props.peers.slice(props.max).map((p) => p.n
 // full roster; each avatar also gets role="img" so its own aria-label is announced when navigated.
 const groupLabel = computed(() => collaborationStrings.presentCollaboratorsAriaLabel(props.peers.map((p) => p.name).join(', ')))
 
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
+const initials = (name: string) => markdownInitials(name) || '?'
 </script>
 
 <template>

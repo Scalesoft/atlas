@@ -11,6 +11,8 @@ import type { TextBinding } from "../boards/text/textBinding";
 import AtlasIcon from "../AtlasIcon.vue";
 import InlineReveal from "../settings/InlineReveal.vue";
 import { plainTitle } from "../../objects/relationsApi";
+import { markdownInitials } from "@atlas/markdown/core/userColor";
+import { locale } from "../../i18n";
 import { downloadCard } from "../../contacts/contactShare";
 import { useContactQr } from "../../contacts/useContactQr";
 import ContactQr from "./ContactQr.vue";
@@ -55,7 +57,7 @@ const root = ref<HTMLElement>();
 const open = ref(false);
 const showEmpty = computed(() => props.editable && !props.compact && (open.value || editing.value !== null));
 
-const initials = computed(() => props.contact.name.replace(/[*_`~[\]()#>\\]/g, "").trim().split(/\s+/).slice(0, 2).map(word => word[0] ?? "").join("").toUpperCase());
+const initials = computed(() => markdownInitials(props.contact.name, locale));
 const lines = computed(() => inlineFields.filter(field => props.contact[field] || showEmpty.value));
 const hasLinks = computed(() => !!(props.contact.emails?.length || props.contact.phones?.length || props.contact.website || props.contact.aliases?.length));
 const hasEmpty = computed(() => ([...inlineFields, "emails", "phones", "website", "address", "aliases"] as const).some(field => !text(field)));
