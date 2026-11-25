@@ -4,9 +4,9 @@ import { atlasContentPlugins } from "../../../documentWidgets";
 import { createOverviewReading } from "../../../overview/overviewReading";
 import { lazyComponent } from "../../../lazyComponent";
 
-// The page's own plugins in their static policy (as a historical version reads): stored snapshots, password references always
-// hidden, no OpenAPI requests, in a read-only editor (one editor, contract J1.7). One list for every preview on screen.
-const previewPlugins = atlasContentPlugins({ kind: "history" });
+// The page's own plugins in the app's static policy: live contacts as the page shows them, password references always hidden, no
+// OpenAPI requests, in a read-only editor (one editor, contract J1.7). One list for every preview on screen.
+const previewPlugins = atlasContentPlugins({ kind: "read" });
 /** Changes of a page come in bursts (a save, then its projection; an import): one reload after they settle. */
 export const previewRefreshDelayMs = 750;
 /** A card scrolled out of view keeps listening this long, so panning back and forth neither reloads nor misses a change. */

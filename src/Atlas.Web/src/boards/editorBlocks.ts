@@ -165,14 +165,15 @@ export function boardContextBlockHost(boardId: string, spaceId?: () => string | 
 const pluginSets = new WeakMap<BoardBlockHost, MarkdownPlugin[]>();
 /**
  * The page editor's content plugins for a board's blocks, one list per host (a plugin definition serves every editor and renderer):
- * the same plugin ids as a page in its static („history“) policy, which keeps the stored snapshots of contacts and pages and allows
- * no OpenAPI requests, plus the code tools and YouTrack with the host's client. Without password references (reserved, spec §3.6):
+ * the same plugin ids as a page in the app's static („read“) policy, whose contacts are live with the reader's card as in a page
+ * (`contactApi.live` batches the board's contacts into one request and keeps them 30 s) and which allows no OpenAPI requests, plus
+ * the code tools and YouTrack with the host's client. Without password references (reserved, spec §3.6):
  * a block cannot render, keep or take in one, and the server refuses it anyway.
  */
 export function boardBlockPlugins(host: BoardBlockHost): MarkdownPlugin[] {
   let plugins = pluginSets.get(host);
   if (!plugins) {
-    plugins = [createEditorToolsPlugin(), ...createDocumentWidgets({ kind: "history" }).filter(plugin => plugin.id !== "secrets"),
+    plugins = [createEditorToolsPlugin(), ...createDocumentWidgets({ kind: "read" }).filter(plugin => plugin.id !== "secrets"),
       createYouTrackPlugin({ client: host.youTrack })];
     pluginSets.set(host, plugins);
   }
