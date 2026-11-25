@@ -18,7 +18,7 @@
 @media (hover: hover) and (pointer: fine) { .atlas .tags-ui button.tag-chip:hover { border-color: color-mix(in srgb, var(--tag-ink) 48%, transparent); background: color-mix(in srgb, var(--tag-ink) 15%, var(--surface)); } }
 .atlas .tags-ui .tag-chip > svg { flex: 0 0 auto; opacity: .72; }
 .atlas .tag-chip-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
-.atlas .tag-loading, .atlas .tag-lookup-error { font-size: 12px; color: var(--muted); }
+.atlas .tag-loading { font-size: 12px; color: var(--muted); }
 .atlas .tags-ui .tag-remove { display: inline-grid; place-items: center; width: 22px; height: 22px; min-height: 0; padding: 0; margin: -2px -5px -2px 1px; border: 0; border-radius: 4px; color: inherit; background: transparent; }
 @media (hover: hover) and (pointer: fine) { .atlas .tags-ui .tag-remove:hover { background: color-mix(in srgb, var(--tag-ink) 15%, transparent); } }
 .atlas .tag-search-suggestions { display: grid; gap: 8px; padding: 10px 0 16px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
