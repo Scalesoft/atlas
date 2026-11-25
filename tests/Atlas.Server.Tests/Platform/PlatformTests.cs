@@ -9,6 +9,15 @@ using Xunit;
 
 namespace Atlas.Server.Tests.Platform;
 
+/// <summary>The initializer's fixed waits run alone after the parallel tests: among the suite's concurrent session-factory builds one attempt
+/// could outlast them, while alone it picks the database up in under a second.</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class PlatformTimingCollection
+{
+    public const string Name = "Platform timing";
+}
+
+[Collection(PlatformTimingCollection.Name)]
 public sealed class PlatformTests
 {
     [PostgreSqlFact]
