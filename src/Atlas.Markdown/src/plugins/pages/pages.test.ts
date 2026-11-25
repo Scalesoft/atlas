@@ -98,6 +98,11 @@ describe('wiki page references', () => {
     expect(() => normalizePageReference({ id: '', title: 'X', url: '/wiki' })).toThrow()
     expect(() => normalizePageReference({ id: 'x', title: 'X', url: 'javascript:alert(1)' })).toThrow()
   })
+  it('keeps the warning tone of a resolved page link only as a plain true, never in the inserted node', () => {
+    expect(normalizePageReference({ id: 'x', title: 'X', url: '/wiki', icon: 'shield-alert', warn: true })).toMatchObject({ icon: 'shield-alert', warn: true })
+    expect(normalizePageReference({ id: 'x', title: 'X', url: '/wiki', warn: 'yes' })).not.toHaveProperty('warn')
+    expect(pageReferenceNode({ id: 'x', title: 'X', url: '/wiki', warn: true }).attrs).toEqual({ id: 'x', title: 'X', url: '/wiki' })
+  })
   it('keeps unavailable pages readable and prevents their navigation callback in readonly', async () => {
     const navigate = vi.fn()
     const c = mount([createPagesPlugin({ source: { search: async () => [], resolve: async () => null }, navigate })])

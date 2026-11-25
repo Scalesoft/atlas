@@ -91,7 +91,7 @@ const isMac = () => typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(n
 /** The chord as the help and the hints write it: „Ctrl K“, „Ctrl Shift P“, „G, pak K“. */
 export function chordLabel(chord: string): string {
   return chord.split(" ").map(step => step.split("+").map(part =>
-    part === "Mod" ? (isMac() ? "⌘" : "Ctrl") : part.length === 1 ? part.toUpperCase() : part).join(" ")).join(`${t.kb.then} `);
+    part === "Mod" ? (isMac() ? "⌘" : "Ctrl") : part === "Alt" && isMac() ? "⌥" : part.length === 1 ? part.toUpperCase() : part).join(" ")).join(`${t.kb.then} `);
 }
 
 export interface HelpSection { title: string; entries: readonly ShortcutEntry[] }

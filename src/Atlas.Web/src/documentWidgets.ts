@@ -16,6 +16,7 @@ import { createYouTrackPlugin, type YouTrackClient } from "@atlas/markdown/plugi
 import { setMarkdownStrings, type MarkdownPlugin } from "@atlas/markdown/core";
 import { language, waitForTexts } from "./i18n";
 import "@atlas/markdown/concealment/style.css";
+import "./verification/pageLinkMark.css";
 import { contactPluginOptions, type ContactHost } from "./contacts/contactLinking";
 import { drawContactQr } from "./contacts/contactQr";
 import { themedUserColor } from "./live/collaboratorColors";
