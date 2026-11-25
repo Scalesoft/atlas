@@ -212,7 +212,7 @@ for (const combo of combos) {
       await expect(page.locator('[data-ai-activate-impact]')).toContainText('Starý index se smaže po 24 hodinách');
       await shot('34-flow-activate');
       await page.locator('[data-flow-next]').click();
-      await expect(page.locator('[data-ai-index-result]')).toContainText('Nový index je aktivní');
+      await expect(page.locator('[data-result-banner]')).toContainText('Nový index je aktivní');
       expect(mock.state.active?.state).toBe('Active');
       await shot('35-index-active');
 
@@ -231,7 +231,7 @@ for (const combo of combos) {
       await expect(page.getByRole('dialog', { name: 'Zrušit stavbu indexu?' })).toBeVisible();
       await shot('37-flow-cancel-confirm');
       await page.locator('dialog[open] [data-confirm-action]').click();
-      await expect(page.locator('[data-ai-index-result]')).toContainText('Stavba byla zrušena');
+      await expect(page.locator('[data-result-banner]')).toContainText('Stavba byla zrušena');
     });
   });
 }

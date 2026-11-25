@@ -309,7 +309,7 @@ test.describe('AI search, related pages and outages against a fake model server'
       await expect(flow.locator('[data-step="activate"]')).toBeVisible();
       await expect(page.locator('[data-ai-activate-impact]')).toContainText('Starý index se smaže po 24 hodinách');
       await page.locator('[data-flow-next]').click();
-      await expect(page.locator('[data-ai-index-result]')).toContainText('Nový index je aktivní');
+      await expect(page.locator('[data-result-banner]')).toContainText('Nový index je aktivní');
       await expect(page.locator('[data-ai-generation-state="Active"]')).toBeVisible();
 
       // Nothing the admin typed or the server answered leaks: no key field was ever filled, and the capabilities are now true.

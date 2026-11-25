@@ -102,12 +102,16 @@ test('all appearance combinations preserve the live editor, narrow navigation an
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await expect(page.locator(PAGE_TEXT)).toContainText('Obsah za tabulkou.');
-    const scroll = await page.locator(`${PAGE_TEXT} .tableWrapper`).evaluate(element => {
-      element.scrollLeft = element.scrollWidth;
-      return { offset: element.scrollLeft, width: element.clientWidth, contentWidth: element.scrollWidth };
-    });
-    expect(scroll.contentWidth).toBeGreaterThan(scroll.width);
-    expect(scroll.offset).toBeGreaterThan(0);
+    // Measured once the table is laid out: a wrapper read while the editor takes the page over measures 0 × 0.
+    await expect(async () => {
+      const scroll = await page.locator(`${PAGE_TEXT} .tableWrapper`).evaluate(element => {
+        element.scrollLeft = element.scrollWidth;
+        return { offset: element.scrollLeft, width: element.clientWidth, contentWidth: element.scrollWidth };
+      });
+      expect(scroll.width).toBeGreaterThan(0);
+      expect(scroll.contentWidth).toBeGreaterThan(scroll.width);
+      expect(scroll.offset).toBeGreaterThan(0);
+    }).toPass();
     await page.screenshot({ path: `../../artifacts/workspace-wide-table-${width}.png`, fullPage: true });
   }
   await startEditing(page);
