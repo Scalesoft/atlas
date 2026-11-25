@@ -20,7 +20,7 @@ import AtlasIcon from "../../AtlasIcon.vue";
 import CollaboratorAvatars from "../../CollaboratorAvatars.vue";
 import DocumentEditor from "../../DocumentEditor.vue";
 import SaveState, { type SaveStateKind } from "../../SaveState.vue";
-import { Button } from "../../ui/button";
+import ErrorState from "../../settings/ErrorState.vue";
 
 /**
  * A page edited from its card on a board (COL2-9, roadmap 3.0-D „jeden ve wiki a druhý v tabuli“): the expanded card, a panel over
@@ -228,10 +228,7 @@ onBeforeUnmount(() => {
       <CollaboratorAvatars v-if="peers.length" class="board-page-editor-peers" :peers="peers" :label="t.pageEditor.whoEdits" />
     </template>
     <div ref="body" class="board-page-editor-body" data-board-page-editor @keydown.capture="escape">
-      <div v-if="failure" class="notice error" role="alert">
-        <p>{{ t.pageEditor.openFailed(failure) }}</p>
-        <Button variant="outline" size="sm" type="button" @click="load"><AtlasIcon name="refresh" :size="15" />{{ t.pageEditor.retry }}</Button>
-      </div>
+      <ErrorState v-if="failure" :title="t.pageEditor.openFailed(failure)" :retry-label="t.pageEditor.retry" @retry="load" />
       <div v-else-if="!page || !value || !identity" class="board-page-editor-placeholder" aria-busy="true" :aria-label="t.pageEditor.loading"><span /><span /><span /></div>
       <template v-else>
         <p v-if="!canEdit" class="notice" role="status">{{ t.pageEditor.readOnly }}</p>

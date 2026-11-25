@@ -73,6 +73,7 @@ const cs = {
     preview: "Náhled",
     approveNew: "Schválit novou verzi",
     refreshList: "Obnovit seznam",
+    loadFailed: "Koncepty se nepodařilo načíst",
     noDrafts: "Žádné koncepty ke schválení",
     noDraftsText: "Zkuste upravit filtry nebo se sem vraťte později.",
     loadMore: "Načíst další",

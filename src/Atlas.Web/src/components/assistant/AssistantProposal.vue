@@ -16,6 +16,7 @@ import HistoryChanges from "../HistoryChanges.vue";
 import PageIcon from "../PageIcon.vue";
 import PublishFindings from "../publishing/PublishFindings.vue";
 import ImpactPreview from "../settings/ImpactPreview.vue";
+import ErrorState from "../settings/ErrorState.vue";
 import ResultBanner from "../settings/ResultBanner.vue";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -261,9 +262,7 @@ const explanation = computed(() => ({ expired: t.proposal.expired, superseded: t
       </div>
     </ImpactPreview>
   </section>
-  <p v-else-if="loadFailed" class="asp-error" role="alert" data-proposal-error>
-    {{ t.proposal.loadFailed }} <Button type="button" variant="link" size="sm" data-proposal-retry @click="load">{{ t.proposal.retry }}</Button>
-  </p>
+  <ErrorState v-else-if="loadFailed" :title="t.proposal.loadFailed" :retry-label="t.proposal.retry" data-proposal-error @retry="load" />
 </template>
 
 <style scoped>

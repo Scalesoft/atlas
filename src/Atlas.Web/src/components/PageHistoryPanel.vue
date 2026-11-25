@@ -17,6 +17,7 @@ import LoadingSkeleton from "./LoadingSkeleton.vue";
 import { useSegmentedThumb } from "./library/segmentedThumb";
 import InlineReveal from "./settings/InlineReveal.vue";
 import EmptyState from "./settings/EmptyState.vue";
+import ErrorState from "./settings/ErrorState.vue";
 import SearchField from "./settings/SearchField.vue";
 import LoadingNote from "./settings/LoadingNote.vue";
 import t from "../i18n/components-history";
@@ -327,8 +328,8 @@ onBeforeUnmount(() => {
           <label class="history-only-deletions"><input v-model="onlyDeletions" type="checkbox" :disabled="busy" /> {{ t.panel.onlyDeletions }}</label>
         </div>
         <p v-if="filtering" class="help" role="status">{{ t.panel.searching }}</p>
-        <p v-if="filterError" class="notice error" role="alert">{{ filterError }} <button @click="filterHistory">{{ t.panel.retryFilter }}</button></p>
-        <p v-if="listError" class="notice error" role="alert">{{ listError }}</p>
+        <ErrorState v-if="filterError" :title="t.panel.filterFailed" :text="filterError" :retry-label="t.panel.retryFilter" @retry="filterHistory" />
+        <ErrorState v-if="listError" :title="t.panel.listFailed" :text="listError" :retry-label="t.panel.retry" :busy="loading || busy" @retry="load()" />
         <LoadingSkeleton v-if="loading && !items.length" :rows="5" row-height="52px" :label="t.panel.loading" />
         <EmptyState v-if="!loading && !filtering && !listError && !filterError && !filteredItems.length" compact icon="history" :title="items.length ? t.panel.noMatch : t.panel.noVersions" />
         <section v-for="group in groups" :key="group.day" class="history-day">
@@ -358,7 +359,6 @@ onBeforeUnmount(() => {
           </ol>
         </section>
         <Button variant="ghost" v-if="nextBeforeVersion !== null" class="history-load-more" :disabled="loading || busy || filtering" :aria-busy="loading" @click="load(true)">{{ t.panel.older }}</Button>
-        <Button variant="outline" v-if="listError" :disabled="loading || busy" @click="load()">{{ t.panel.retry }}</Button>
       </nav>
       <section class="history-preview" :aria-label="t.panel.selected" :aria-busy="previewLoading || busy">
         <div class="history-context"><AtlasIcon name="updates" :size="14" /><span>{{ t.panel.historic }}</span><span class="history-readonly">{{ t.panel.readOnly }}</span><LoadingNote inline class="history-context-note" :active="previewLoading && !!preview" :label="t.panel.loadingVersion" /></div>
@@ -371,7 +371,7 @@ onBeforeUnmount(() => {
         </div>
         <p v-if="exportError" class="notice error" role="alert">{{ exportError }}</p>
         <div class="history-preview-body">
-          <template v-if="previewError && !previewLoading"><p class="notice error" role="alert">{{ previewError }}</p><Button variant="outline" @click="retryPreview">{{ t.panel.retryPreview }}</Button></template>
+          <ErrorState v-if="previewError && !previewLoading" :title="t.panel.previewFailed" :text="previewError" :retry-label="t.panel.retryPreview" @retry="retryPreview" />
           <LoadingRegion v-else-if="preview || previewLoading" :loading="previewLoading" :ready="!!preview" :rows="6" row-height="44px" :label="t.panel.loadingPreview">
             <template v-if="preview">
               <HistoryChanges v-if="mode === 'changes'" :key="preview.id" ref="changesView" :class="{ 'history-ai-diff': selectedItem?.isAi }" :revision="preview" :previous="previous" :diff="previewDiff" :dark="dark" :accent="accent" />

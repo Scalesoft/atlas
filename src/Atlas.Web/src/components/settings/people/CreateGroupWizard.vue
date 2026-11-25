@@ -2,6 +2,7 @@
 import t from "../../../i18n/settings-people";
 import { computed, ref, watch } from "vue";
 import AtlasIcon from "../../AtlasIcon.vue";
+import LoadingNote from "../LoadingNote.vue";
 import { disclosureHooks } from "../disclosure";
 import { Button } from "../../ui/button";
 import type { Group } from "../../../administration";
@@ -76,7 +77,7 @@ async function onNext(current: FlowStep) {
     </template>
     <template #summary>
       <SummaryList :items="summary" :label="t.createGroup.summaryLabel" />
-      <Transition :css="false" v-bind="disclosureHooks"><p v-if="busy" class="group-status" role="status"><AtlasIcon name="loader-circle" :size="16" class="atlas-spinner" />{{ t.createGroup.creating }}</p></Transition>
+      <Transition :css="false" v-bind="disclosureHooks"><LoadingNote v-if="busy" :label="t.createGroup.creating" /></Transition>
       <Transition :css="false" v-bind="disclosureHooks">
         <p v-if="failure" class="group-failure" role="alert" data-group-error><AtlasIcon name="triangle-alert" :size="15" />{{ failure }}</p>
       </Transition>

@@ -7,7 +7,7 @@ import { readDocument } from "../../document";
 import type { PublicShareState } from "../../sharing";
 import AtlasBrandLogo from "../AtlasBrandLogo.vue";
 import LoadingSkeleton from "../LoadingSkeleton.vue";
-import { Button } from "../ui/button";
+import ErrorState from "../settings/ErrorState.vue";
 import { formatDateTime } from "../../formatDate";
 import { atlasContentPlugins } from "../../documentWidgets";
 import { createOverviewReading } from "../../overview/overviewReading";
@@ -33,8 +33,7 @@ watch(() => props.state.kind === "ready" ? props.state.value.contentJson : null,
     <section v-else-if="state.kind === 'error'" class="public-share-card public-share-error">
       <h1>{{ t.unavailableTitle }}</h1>
       <p v-if="state.missing" role="alert">{{ t.unavailable }}</p>
-      <template v-else><p role="alert">{{ t.loadFailed }}</p>
-        <Button variant="outline" @click="$emit('retry')">{{ t.retry }}</Button></template>
+      <ErrorState v-else :title="t.loadFailed" :retry-label="t.retry" @retry="$emit('retry')" />
     </section>
     <article v-else class="public-share-card">
       <header class="public-share-heading">

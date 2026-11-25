@@ -3,6 +3,7 @@ import { locale } from "../../i18n";
 import t from "../../i18n/settings-flow";
 import { computed, ref, useId } from "vue";
 import AtlasIcon from "../AtlasIcon.vue";
+import LoadingNote from "./LoadingNote.vue";
 import { Button } from "../ui/button";
 import StatusBadge from "./StatusBadge.vue";
 import { useReauth } from "./useReauth";
@@ -115,8 +116,8 @@ async function submit() {
       <p v-if="!blocked && !windowOpen && reauth.notice.value" class="confirm-reauth-notice"><AtlasIcon name="info" :size="14" />{{ reauth.notice.value }}</p>
 
       <p class="confirm-reauth-status" aria-live="polite">
-        <span v-if="verifying" class="confirm-reauth-progress"><AtlasIcon name="loader-circle" :size="15" class="atlas-spinner" />{{ reauth.method.value === 'hub' ? t.reauth.waitingFor(reauth.providerName.value ?? t.reauth.waitingHubDefault) : t.reauth.verifyingPassword }}</span>
-        <span v-else-if="busy" class="confirm-reauth-progress"><AtlasIcon name="loader-circle" :size="15" class="atlas-spinner" />{{ t.reauth.saving }}</span>
+        <LoadingNote v-if="verifying" inline :label="reauth.method.value === 'hub' ? t.reauth.waitingFor(reauth.providerName.value ?? t.reauth.waitingHubDefault) : t.reauth.verifyingPassword" />
+        <LoadingNote v-else-if="busy" inline :label="t.reauth.saving" />
         <span v-else-if="failed" :id="errorId" class="confirm-reauth-error" data-reauth-error><AtlasIcon name="circle-x" :size="15" />{{ reauth.failure.value }}</span>
         <span v-else-if="error" class="confirm-reauth-error" role="alert" data-change-error><AtlasIcon name="triangle-alert" :size="15" />{{ error }}</span>
       </p>
@@ -155,8 +156,7 @@ async function submit() {
 .confirm-reauth-blocked { display: grid; gap: 6px; justify-items: start; }
 .confirm-reauth-blocked p { margin: 0; font-size: 13px; line-height: 1.55; }
 .confirm-reauth-status { margin: 0; min-height: 20px; font-size: 13px; }
-.confirm-reauth-progress, .confirm-reauth-error { display: inline-flex; align-items: center; gap: 6px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
-.confirm-reauth-progress { color: var(--muted); }
+.confirm-reauth-error { display: inline-flex; align-items: center; gap: 6px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .confirm-reauth-error { color: var(--warning); font-weight: 600; }
 .confirm-reauth-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 @keyframes confirm-reauth-shake {

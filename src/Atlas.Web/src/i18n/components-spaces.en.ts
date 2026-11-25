@@ -71,6 +71,7 @@ const en: SpacesMessages = {
     preview: "Preview",
     approveNew: "Approve new version",
     refreshList: "Refresh list",
+    loadFailed: "Couldn't load the drafts",
     noDrafts: "No drafts to approve",
     noDraftsText: "Try changing the filters or come back later.",
     loadMore: "Load more",

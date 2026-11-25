@@ -350,7 +350,7 @@ function finish() {
     </template>
     <template #summary>
       <SummaryList :items="summary" :label="t.wizard.summaryLabel" />
-      <p v-if="busy" class="vault-busy" role="status"><AtlasIcon name="loader-circle" :size="16" class="atlas-spinner" />{{ attach ? t.wizard.verifying : t.wizard.creating }}</p>
+      <LoadingNote v-if="busy" :label="attach ? t.wizard.verifying : t.wizard.creating" />
       <Transition :css="false" v-bind="disclosureHooks">
         <p v-if="failure" class="vault-failure" role="alert" data-vault-wizard-error><AtlasIcon name="triangle-alert" :size="15" />{{ failure }}</p>
       </Transition>
@@ -383,7 +383,6 @@ function finish() {
 .vault-files-note { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 12.5px; }
 .vault-files-error { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--error) 35%, var(--line)); border-radius: var(--st-radius-sm); animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .vault-files-error p { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--error); font-size: 13px; font-weight: 550; }
-.vault-busy { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; }
 .vault-failure { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--error); font-size: 13px; font-weight: 550; }
 .vault-done { display: grid; gap: 12px; }
 .vault-done-ok { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 14.5px; font-weight: 600; }

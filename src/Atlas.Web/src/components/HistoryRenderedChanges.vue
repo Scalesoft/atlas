@@ -9,6 +9,7 @@ import "@atlas/markdown/themes/forest.css";
 import "@atlas/markdown/themes/midnight.css";
 import AtlasIcon from "./AtlasIcon.vue";
 import t from "../i18n/components-history";
+import LoadingNote from "./settings/LoadingNote.vue";
 import { atlasContentPlugins } from "../documentWidgets";
 import { alignChangedBlocks, changedTextRanges, formattingOnly, isBlankBlock as blank, onlyMovedAway, type HistoryBlock, type HistoryBlockDiff } from "../historyBlocks";
 
@@ -217,7 +218,7 @@ const tags = t.rendered.tags;
         </div>
       </section>
     </template>
-    <p v-if="!first && shown < layout.rows.length" class="rendered-note" role="status" data-filling><AtlasIcon name="loader-circle" :size="14" class="atlas-spinner" />{{ t.rendered.loadingMore }}</p>
+    <LoadingNote v-if="!first && shown < layout.rows.length" class="rendered-note" data-filling :label="t.rendered.loadingMore" />
     <p v-else-if="layout.truncated" class="rendered-note" role="status"><AtlasIcon name="list" :size="14" />{{ t.rendered.more }}</p>
   </div>
 </template>
