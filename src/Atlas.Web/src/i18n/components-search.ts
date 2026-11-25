@@ -15,6 +15,8 @@ const cs = {
     verificationExpired: "Ověření stránky vypršelo",
     outdatedReports: "Nahlášené neaktuální stránky",
     reportedOutdated: "nahlásil(a) stránku jako neaktuální",
+    stewardDeactivated: "Deaktivovaný garant stránek",
+    stewardDeactivatedAction: "už není garantem (účet byl deaktivován), jeho stránky jsou bez garanta",
     mentionedInComment: "vás zmínil(a) v komentáři",
     mentionedInPage: "vás zmínil(a) ve stránce",
     sharedWithYou: "s vámi sdílel(a)",

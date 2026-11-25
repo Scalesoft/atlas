@@ -1,6 +1,7 @@
 using Atlas.Server.Features.Administration.Contracts;
 using Atlas.Server.Features.Administration.Queries;
 using Atlas.Server.Features.Contacts.LinkRun;
+using Atlas.Server.Platform.Events;
 using Atlas.Server.Platform.Jobs;
 using ISession = NHibernate.ISession;
 
@@ -14,9 +15,12 @@ public sealed class SaveUserHandler
     private readonly AccessChanges m_accessChanges;
     private readonly ISecurityChangeGuard m_guard;
     private readonly IJobRequests m_jobs;
+    private readonly Outbox m_outbox;
 
-    public SaveUserHandler(ISession session, AdministrationAccess access, IAtlasLocks locks, AccessChanges accessChanges, ISecurityChangeGuard guard, IJobRequests jobs)
+    public SaveUserHandler(ISession session, AdministrationAccess access, IAtlasLocks locks, AccessChanges accessChanges, ISecurityChangeGuard guard, IJobRequests jobs,
+        Outbox outbox)
     {
+        m_outbox = outbox;
         m_session = session;
         m_access = access;
         m_locks = locks;
@@ -61,6 +65,10 @@ public sealed class SaveUserHandler
             {
                 // The sweep gives contacts only to active accounts.
                 await m_jobs.RequestAsync(AccountContactsJob.JobId, "Obnovený účet", ct: ct);
+            }
+            if (user.IsActive && !request.IsActive)
+            {
+                await PageVerifications.Commands.PageVerificationStewards.DeactivatedAsync(m_session, m_outbox, user.Id, ct);
             }
             user.DisplayName = name;
             user.IsActive = request.IsActive;

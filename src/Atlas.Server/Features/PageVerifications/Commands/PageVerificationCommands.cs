@@ -258,6 +258,28 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             .SetParameter("limit", MaxBulk).ListAsync<Guid>(ct)).ToList();
 }
 
+/// <summary>5.2 (plan §2.3): a deactivated account is nobody's steward any more („bez garanta“); the administrators of each space where it
+/// was the steward of a verified page get one summary item, from that account. SaveUserHandler calls it in its transaction.</summary>
+public static class PageVerificationStewards
+{
+    public static async Task DeactivatedAsync(ISession session, Outbox outbox, Guid stewardId, CancellationToken ct)
+    {
+        var admins = await session.ReadRowsAsync($"""
+                SELECT DISTINCT x."SpaceId" AS "SpaceId", u."Id" AS "AdminId" FROM (
+                  SELECT DISTINCT p."SpaceId" AS "SpaceId" FROM "PageVerification" v JOIN "Page" p ON p."Id"=v."PageId" JOIN "Space" s ON s."Id"=p."SpaceId"
+                  WHERE v."StewardId"=:steward AND NOT p."IsTrashed" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL
+                    AND {PageVerificationStates.IntervalSql}>0) x
+                JOIN "EffectiveSpaceGrant" g ON g."SpaceId"=x."SpaceId" AND g."Role"=3
+                LEFT JOIN "EffectiveGroupMember" m ON m."GroupId"=g."GroupId"
+                JOIN "UserAccount" u ON u."Id"=coalesce(g."UserId",m."UserId") AND u."IsActive"
+                """, new Dictionary<string, object> { ["steward"] = stewardId }, row => (Space: row.GetGuid(0), Admin: row.GetGuid(1)), ct);
+        foreach (var space in admins.GroupBy(x => x.Space))
+        {
+            outbox.Notify(new NotificationRequested(NotificationKinds.StewardDeactivated, space.Key, stewardId, space.Select(x => x.Admin).ToList()));
+        }
+    }
+}
+
 /// <summary>5.2 (plan §2.3): a new page of a space that verifies its pages starts with its author as the steward, unverified.</summary>
 public static class PageVerificationStart
 {

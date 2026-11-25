@@ -323,4 +323,40 @@ public sealed class PageVerificationTests
         await f.As<PageVerificationView>(f.Writer, new SetPageVerification(page.Id, new SetPageVerificationRequest(StewardId: f.Reader.Id)));
         Assert.Equal(new[] { NotificationKinds.VerificationExpiring }, await RunAsync(f.Reader));
     }
+
+    [PostgreSqlFact]
+    public async Task A_deactivated_steward_is_told_to_each_spaces_administrators_once()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        var admin = await f.Host.SeedUserAsync("spaceadmin");
+        var spaces = new List<Guid>();
+        foreach (var name in new[] { "První", "Druhý", "Neověřovaný" })
+        {
+            var space = await f.Host.SeedSpaceAsync(name, (admin, SpaceRole.Admin), (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+            if (name != "Neověřovaný")
+            {
+                await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", space);
+                spaces.Add(space);
+            }
+            // Two pages in a space still make one item; the space that verifies nothing makes none.
+            foreach (var title in new[] { "Postup", "Návod" })
+            {
+                var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(space, null, title, Atlas.Server.Tests.Attachments.AttachmentFixture.Rich(title), title)));
+                await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+            }
+        }
+        var user = Assert.Single(await f.As<IReadOnlyList<Atlas.Server.Features.Administration.Contracts.UserSummary>>(f.Admin,
+            new Atlas.Server.Features.Administration.Queries.ListUsers(Id: f.Writer.Id)));
+        await f.As<Atlas.Server.Features.Administration.Contracts.UserSummary>(f.Admin,
+            new Atlas.Server.Features.Administration.Commands.SaveUser(f.Writer.Id, new(user.DisplayName, false, false, user.Version)));
+        await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+
+        async Task<List<Atlas.Server.Features.Notifications.Contracts.NotificationDto>> InboxAsync(Atlas.Server.Platform.Identity.UserAccount account)
+            => (await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(account, new Atlas.Server.Features.Notifications.Queries.ListNotifications(null)))
+                .Items.Where(x => x.Kind == NotificationKinds.StewardDeactivated).ToList();
+        var items = await InboxAsync(admin);
+        Assert.Equal(spaces.Order(), items.Select(x => x.SubjectId).Order());
+        Assert.All(items, x => Assert.Equal(("atlas.space", f.Writer.Id, 1), (x.SubjectType, x.ActorId, x.Count)));
+        Assert.Empty(await InboxAsync(f.Reader));
+    }
 }

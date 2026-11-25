@@ -31,13 +31,22 @@ public sealed class NotificationReads(ISession session, RelationNodes nodes, Obj
 
     /// <summary>An item the recipient may read now; an ended share also without access, but then without the subject's type, title,
     /// space or anchor (the recipient is told that a share ended, never what it was).</summary>
-    private const string Shown = """n."RecipientId"=:recipient AND (v."Id" IS NOT NULL OR n."Kind"=:unshared OR n."Kind"=:jobFailed AND :wikiAdmin)""";
+    private const string Shown = """n."RecipientId"=:recipient AND (v."Id" IS NOT NULL OR sp."Id" IS NOT NULL OR n."Kind"=:unshared OR n."Kind"=:jobFailed AND :wikiAdmin)""";
+
+    /// <summary>The space of a <see cref="NotificationKinds.StewardDeactivated"/> item while the reader administers it (its Admin role, or
+    /// a wiki administrator), live, and on MCP included in AI.</summary>
+    private static readonly string AdministeredSpace = $"""
+        LEFT JOIN "Space" sp ON n."Kind"=:stewardGone AND sp."Id"=n."SubjectId" AND sp."TrashedAt" IS NULL
+          AND (:wikiAdmin OR EXISTS (SELECT 1 FROM "EffectiveSpaceGrant" g WHERE g."SpaceId"=sp."Id" AND g."Role"=3
+            AND (g."UserId"=:recipient OR g."GroupId" IN (SELECT m."GroupId" FROM "EffectiveGroupMember" m WHERE m."UserId"=:recipient))))
+          AND (NOT :ai OR {AccessSql.SpaceInAi("sp.\"Id\"")})
+        """;
 
     private static readonly string PageSql = $"""
         WITH node AS ({RelationNodes.Over(AllSubjects)})
         SELECT n."Id",n."Kind",n."SubjectId",n."Anchor",n."ActorId",a."DisplayName",n."EventCount",n."CreatedAt",n."UpdatedAt",n."ReadAt" IS NOT NULL,
-          v."Id" IS NOT NULL,v."TypeId",v.title,v."SpaceId",v."SpaceName",mc."Id",mc."Body"
-        FROM "Notification" n LEFT JOIN "UserAccount" a ON a."Id"=n."ActorId" {Node}
+          v."Id" IS NOT NULL,v."TypeId",v.title,v."SpaceId",v."SpaceName",mc."Id",mc."Body",sp."Name"
+        FROM "Notification" n LEFT JOIN "UserAccount" a ON a."Id"=n."ActorId" {Node} {AdministeredSpace}
         LEFT JOIN LATERAL (SELECT c."Id",left(c."Body",{ExcerptSource}) AS "Body" FROM "Comment" c JOIN "CommentMention" m ON m."CommentId"=c."Id"
             WHERE n."Kind"=:commentMention AND m."UserId"=n."RecipientId" AND c."ObjectId"=n."SubjectId" AND c."AuthorId"=n."ActorId" AND c."DeletedAt" IS NULL
             ORDER BY c."CreatedAt" DESC,c."Id" DESC LIMIT 1) mc ON TRUE
@@ -48,7 +57,7 @@ public sealed class NotificationReads(ISession session, RelationNodes nodes, Obj
 
     private static readonly string UnreadSql = $"""
         WITH node AS ({RelationNodes.Over(AllSubjects + " AND \"ReadAt\" IS NULL")})
-        SELECT CAST(count(*) AS int) FROM (SELECT 1 FROM "Notification" n {Node} WHERE {Shown} AND n."ReadAt" IS NULL LIMIT :window) x
+        SELECT CAST(count(*) AS int) FROM (SELECT 1 FROM "Notification" n {Node} {AdministeredSpace} WHERE {Shown} AND n."ReadAt" IS NULL LIMIT :window) x
         """;
 
     public async Task<NotificationList> PageAsync(UserAccount recipient, Guid? before, CancellationToken ct)
@@ -63,6 +72,10 @@ public sealed class NotificationReads(ISession session, RelationNodes nodes, Obj
             ? new NotificationDto(row.GetGuid(0), row.GetString(1), row.GetGuid(2), "atlas.job", JobTitle(OptionalText(row, 3)), null, null,
                 OptionalText(row, 3), OptionalId(row, 4), OptionalText(row, 5), row.GetInt32(6), Utc(row.GetDateTime(7)), Utc(row.GetDateTime(8)),
                 row.GetBoolean(9))
+            // A space the reader administers: the link opens its Stav obsahu.
+            : !row.IsDBNull(17)
+            ? new NotificationDto(row.GetGuid(0), row.GetString(1), row.GetGuid(2), "atlas.space", row.GetString(17), row.GetGuid(2), row.GetString(17),
+                null, OptionalId(row, 4), OptionalText(row, 5), row.GetInt32(6), Utc(row.GetDateTime(7)), Utc(row.GetDateTime(8)), row.GetBoolean(9))
             : row.GetBoolean(10)
             ? new NotificationDto(row.GetGuid(0), row.GetString(1), row.GetGuid(2), row.GetString(11), row.GetString(12), OptionalId(row, 13),
                 OptionalText(row, 14), OptionalText(row, 3), OptionalId(row, 4), OptionalText(row, 5), row.GetInt32(6), Utc(row.GetDateTime(7)),
@@ -93,6 +106,7 @@ public sealed class NotificationReads(ISession session, RelationNodes nodes, Obj
         parameters["unshared"] = NotificationKinds.ItemUnshared;
         parameters["jobFailed"] = NotificationKinds.JobFailed;
         parameters["commentMention"] = NotificationKinds.CommentMention;
+        parameters["stewardGone"] = NotificationKinds.StewardDeactivated;
         parameters["wikiAdmin"] = admin;
         return parameters;
     }
