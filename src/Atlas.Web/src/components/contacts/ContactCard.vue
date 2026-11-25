@@ -285,12 +285,13 @@ async function photoPicked(file: File | undefined) {
 .contact-input { flex: 1; min-width: 0; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .contact-address { display: flex; gap: 6px; font-size: 13px; }
 .contact-share { display: inline-flex; flex: none; gap: 2px; margin-left: auto; align-self: center; }
-.contact-share-button { display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer;
+/* Beats the editor popover's button reset (.md-context-popover-body button), which would pad and frame these icon buttons off-centre. */
+.contact-card .contact-share-button { display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer;
   transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out); }
-@media (hover: hover) and (pointer: fine) { .contact-share-button:hover { background: var(--hover); color: var(--text); } }
-.contact-share-button:active { scale: var(--atlas-press); }
-.contact-share-button[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); }
-.contact-share-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .contact-card .contact-share-button:hover { background: var(--hover); color: var(--text); } }
+.contact-card .contact-share-button:active { scale: var(--atlas-press); }
+.contact-card .contact-share-button[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); }
+.contact-card .contact-share-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .contact-qr-inline { margin: 10px 0 2px; }
 /*
  * A board's card (fit): the card's own room decides what it shows (container queries on the card, so the sidebar or the dock being open
