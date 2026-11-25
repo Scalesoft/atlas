@@ -53,7 +53,7 @@ const cs = {
     discard: "Máte rozepsané změny. Chcete je zahodit?",
     stay: "Zůstat",
     discardButton: "Zahodit",
-    saving: "Ukládání…",
+    saving: "Ukládám…",
     save: "Uložit",
   },
   workspacePanel: {

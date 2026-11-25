@@ -275,7 +275,7 @@ const en: ContactsUiMessages = {  card: {
     visibilitySigned: "With my name",
     note: "How (optional)",
     notePlaceholder: "E.g. configuration, integration development",
-    save: "Save",
+    save: "Apply",
     remove: "Remove",
     removeAll: "Remove for everyone",
     removeAllConfirm: (topic: string) => `Remove “${topic}” from the profile for everyone? Every colleague's rating goes, except their private notes.`,

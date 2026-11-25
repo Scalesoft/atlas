@@ -175,7 +175,7 @@ describe("AiProfileFields", () => {
     expect(view.find("[data-ai-key-input]").exists()).toBe(false);
     expect(view.get("[data-ai-key-saved]").text()).toContain("Uložený klíč ✓");
     expect(view.get("[data-ai-key-change]").text()).toBe("Změnit");
-    expect(view.get("[data-ai-key-remove]").text()).toBe("Odstranit");
+    expect(view.get("[data-ai-key-remove]").text()).toBe("Odebrat");
     // Every field is empty of the key, whatever the server holds.
     expect([...view.element.querySelectorAll("input")].every((input) => !String(input.value).includes("sk-"))).toBe(true);
 

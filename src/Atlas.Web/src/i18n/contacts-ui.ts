@@ -275,7 +275,7 @@ const cs = {  card: {
     visibilitySigned: "S mým jménem",
     note: "Jak (nepovinné)",
     notePlaceholder: "Např. konfiguračně, vývoj integrace",
-    save: "Uložit",
+    save: "Použít",
     remove: "Odebrat",
     removeAll: "Odebrat všem",
     removeAllConfirm: (topic: string) => `Odebrat „${topic}“ z profilu pro všechny? Zmizí hodnocení všech kolegů kromě jejich soukromých poznámek.`,

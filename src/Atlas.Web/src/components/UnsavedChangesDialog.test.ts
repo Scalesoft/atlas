@@ -56,7 +56,7 @@ it("disables discard and save while saving, and labels the primary button", asyn
   const view = open({ saving: true });
   expect(view.get("button[data-variant=destructive]").attributes("disabled")).toBeDefined();
   expect(view.get("button[data-variant=default]").attributes("disabled")).toBeDefined();
-  expect(view.get("button[data-variant=default]").text()).toBe("Ukládání…");
+  expect(view.get("button[data-variant=default]").text()).toBe("Ukládám…");
 });
 
 it("says what a component's draft holds and how it is kept", () => {

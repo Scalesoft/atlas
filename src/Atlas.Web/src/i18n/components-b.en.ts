@@ -491,7 +491,7 @@ const en: ComponentsBMessages = {
     openConversations: "Open conversations",
     historyTitle: "Conversation history management",
     historySummary: "Bulk deletion of your conversations with the assistant.",
-    deleteAll: "Delete all conversations",
+    deleteAll: "Delete all conversations permanently",
     deleteAllHelp: "Deletes all your conversations, including feedback on answers. This cannot be undone.",
     allDeleted: "All conversations are deleted.",
     summary: "Summary",

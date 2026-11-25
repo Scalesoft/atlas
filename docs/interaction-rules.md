@@ -232,13 +232,11 @@ Tabule
 - Diskuse tabule je na telefonu v doku, diskuse stránky pod obsahem (P14, přijatá odchylka).
 - Karta kontaktu přejde do úprav už fokusem a má vlastní obsluhu Esc (ContactCard, P1, P3).
 - Obrázky a soubory nejdou přetáhnout na tabuli (P14).
-- Výběr kontaktů na tabuli se nenaučí napsanou zkratku jako ostatní výběry osob (P8).
 - Komponenty a karty kontaktu a stránky nemají pro AI čitelný text, takže AI nad nimi nic nenabízí (P11).
 
 Aplikace
 - Komentář se upravuje tužkou (upravuje se zpráva, ne obsah; Notionův model, P1, přijatá odchylka).
 - Oznámení o přesunu stránky nebo tabule do koše a o přesunu do jiného prostoru nemají „Zpět“ (P6; obnovu z koše smí jen správce).
-- Výběr strany požadavku (PartyInput) má ještě vlastní obsluhu Esc, Enter a Tab místo sdíleného useSearchKeys (P16).
 - Smazání komentáře se potvrzuje dialogem a nemá „Zpět“; chybí obnova komentáře na serveru (P6).
 
 Provázání (P15, z větší části nepostavené)

@@ -51,7 +51,7 @@ const cs = {
     editComment: "Upravit komentář",
     edit: "Upravit",
     deleteComment: "Smazat komentář",
-    delete: "Smazat",
+    delete: "Smazat trvale",
     removed: "Komentář byl odstraněn",
     sending: "Odesílá se…",
     apply: "Použít",

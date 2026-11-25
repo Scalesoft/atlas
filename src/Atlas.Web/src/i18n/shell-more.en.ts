@@ -120,16 +120,6 @@ const en: ShellMoreMessages = {
       description: "A mention of a page in the text gets linked.",
     },
   },
-  code: {
-    code: "Code",
-    copyLanguage: (language) => `Copy ${language} code`,
-    copyCode: "Copy code",
-    copy: "Copy",
-    copied: "Copied",
-    notCopied: "Not copied",
-    copiedStatus: "Code copied",
-    copyFailedStatus: "The code could not be copied; select it and copy it manually.",
-  },
   tb: {
     undo: "Undo",
     bold: "Bold",
