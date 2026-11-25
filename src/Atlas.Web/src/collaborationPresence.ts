@@ -10,7 +10,7 @@ import { createAgentReveal } from "./live/agentReveal";
 import { isAgentUser } from "./live/agentUser";
 import { createPointerGlide } from "./live/pointerGlide";
 import { mountAiGlyph } from "./components/ai/mountAiGlyph";
-import { themedCollaboratorColor } from "./live/collaboratorColors";
+import { preferredColorEvent, themedCollaboratorColor } from "./live/collaboratorColors";
 import "./collaborationPresence.css";
 
 type StatePeer = MarkdownEditorState["peers"][number];
@@ -370,6 +370,14 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     awareness.on("update", onRemotePointers);
   }
 
+  // „Moje barva“ saved: the server restamped this person's colour; re-announcing the state lets everyone see it now, not at the heartbeat.
+  const announceColor = () => {
+    const own = caretAwareness(editor);
+    const user = own?.getLocalState()?.user;
+    if (user) own!.setLocalStateField("user", user);
+  };
+  window.addEventListener(preferredColorEvent, announceColor);
+
   const onTransaction = () => draw();
   const onLayout = () => draw(true);
   editor.on("transaction", onTransaction);
@@ -411,6 +419,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       document.removeEventListener("visibilitychange", onVisibility);
       awareness.off("update", onRemotePointers);
     }
+    window.removeEventListener(preferredColorEvent, announceColor);
     leavingPointers.forEach(timer => clearTimeout(timer));
     glide.stop();
     signal.removeEventListener("abort", destroy);
@@ -482,7 +491,8 @@ function cursorPositions(editor: Editor) {
   const result = new Map<number, number>();
   const decorations = yCursorPluginKey.getState(editor.state) as DecorationSet | undefined;
   decorations?.find().forEach(decoration => {
-    const clientId = Number(decoration.spec.key);
+    // carets.ts gives each widget its client id (its key also carries the colour); y-tiptap's own key is the client id alone.
+    const clientId = Number(decoration.spec.clientId ?? decoration.spec.key);
     if (decoration.from === decoration.to && Number.isInteger(clientId)) result.set(clientId, decoration.from);
   });
   return result;

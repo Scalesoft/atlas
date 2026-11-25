@@ -10,7 +10,7 @@
 //
 // A-M4 — presence: a `y-protocols/awareness` instance rides the same connection
 // via SendAwareness/ReceiveAwareness (relay-only, never stored server-side).
-// CollaborationCaret binds to `provider.awareness` for remote cursors; the
+// CollaborationCarets (carets.ts) binds to `provider.awareness` for remote cursors; the
 // `onPeers` callback drives PresenceStack. Local state is re-announced on a 15 s
 // heartbeat and remote peers idle for >30 s are dropped (matches y-websocket).
 

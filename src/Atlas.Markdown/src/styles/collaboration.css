@@ -1,15 +1,21 @@
-/* ADR-018 A-M4 — remote collaboration carets + selections. CollaborationCaret
-   renders a bare <span class="collaboration-carets__caret"> with only an inline
-   border-color, and y-tiptap tags the selection with .ProseMirror-yjs-selection
-   + an inline translucent background. The width/label chrome is ours. Colours
-   are per-user literals (awareness palette), so they must NOT be overridden. */
+/* ADR-018 A-M4 — remote collaboration carets + selections (collab/carets.ts). The caret
+   <span class="collaboration-carets__caret"> and the selection .ProseMirror-yjs-selection
+   carry both variants of the person's palette colour inline (--caret-light, --caret-dark);
+   the dark surface (html[data-mode=dark]) picks the dark one, and a change cross-fades. */
+.md-editor .editor-body :is(.collaboration-carets__caret, .ProseMirror-yjs-selection) {
+  --caret-color: var(--caret-light);
+  transition: border-color var(--md-motion-base) var(--md-motion-ease), background-color var(--md-motion-base) var(--md-motion-ease);
+}
+html[data-mode="dark"] .md-editor .editor-body :is(.collaboration-carets__caret, .ProseMirror-yjs-selection) {
+  --caret-color: var(--caret-dark);
+}
 .md-editor .editor-body .collaboration-carets__caret {
   position: relative;
   margin-left: -1px;
   margin-right: -1px;
   border-left: 1px solid var(--text, #102f36);
   border-right: 1px solid var(--text, #102f36);
-  border-color: currentColor; /* inline style supplies the real per-user colour */
+  border-color: var(--caret-color);
   word-break: normal;
   pointer-events: none;
 }
@@ -25,12 +31,14 @@
   line-height: 1.4;
   white-space: nowrap;
   color: #fff;
+  background-color: var(--caret-color);
+  transition: inherit;
   user-select: none;
   pointer-events: none;
   /* Labels can stack on the same line; keep the freshest on top when hovered. */
   z-index: 20;
 }
 .md-editor .editor-body .ProseMirror-yjs-selection {
-  /* inline style supplies the per-user translucent background */
+  background-color: color-mix(in srgb, var(--caret-color) 44%, transparent);
   border-radius: 1px;
 }

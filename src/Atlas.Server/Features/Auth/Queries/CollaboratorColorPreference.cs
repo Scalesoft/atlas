@@ -16,4 +16,17 @@ public static class CollaboratorColorPreference
             .SingleOrDefaultAsync<string>(ct);
         return CollaboratorPalette.SlotOf(id) is >= 0 and var slot ? CollaboratorPalette.Entries[slot].Light : null;
     }
+
+    /// <summary>Every account's chosen colour (none for "auto"), user id → stamped colour, in one query: the static surfaces (history,
+    /// discussion, the peek) draw authors in it (Atlas.Web live/collaboratorColors.ts), the others in their automatic one.</summary>
+    public static async Task<Dictionary<Guid, string>> ReadAllAsync(ISession session, CancellationToken ct)
+    {
+        var rows = await session.QueryOver<UserAppearancePreference>()
+            .Where(x => x.ActiveTo == null && x.CollaboratorColor != "auto")
+            .SelectList(list => list.Select(x => x.UserId).Select(x => x.CollaboratorColor))
+            .ListAsync<object[]>(ct);
+        return rows.Select(row => (UserId: (Guid)row[0], Slot: CollaboratorPalette.SlotOf((string)row[1])))
+            .Where(row => row.Slot >= 0).DistinctBy(row => row.UserId)
+            .ToDictionary(row => row.UserId, row => CollaboratorPalette.Entries[row.Slot].Light);
+    }
 }

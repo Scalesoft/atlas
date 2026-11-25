@@ -80,7 +80,7 @@ public class SnapshotHostOwnershipTests
             Result = new StoredDocument([1], [], 1, "invalid replacement", false,
                 new Dictionary<Guid, long> { [Guid.NewGuid()] = 2 }),
         };
-        var registry = new DocumentRegistry(store, new MarkdownSyncOptions(), NullLogger<DocumentRegistry>.Instance);
+        var registry = new DocumentRegistry(store, new MarkdownSyncOptions(), new CollaboratorColors(), NullLogger<DocumentRegistry>.Instance);
         var live = registry.GetOrCreate(Doc);
         live.SeedMarkdown = "original seed";
         await live.Gate.WaitAsync();

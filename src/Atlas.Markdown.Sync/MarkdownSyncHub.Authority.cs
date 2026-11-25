@@ -35,7 +35,8 @@ public sealed partial class MarkdownSyncHub
                     Context.ConnectionAborted).ConfigureAwait(false);
                 access = await accessCoordinator.AuthorizeAsync(user, documentId, Context.ConnectionAborted).ConfigureAwait(false);
                 if (!access.CanRead) throw new HubException("[FORBIDDEN] Document access denied.");
-                doc.Peers[Context.ConnectionId] = new Peer { ConnectionId = Context.ConnectionId, User = user, Color = doc.ColorFor(user),
+                registry.AssignColor(doc, Context.ConnectionId, user);
+                doc.Peers[Context.ConnectionId] = new Peer { ConnectionId = Context.ConnectionId, User = user,
                     CanWrite = access.CanWrite, JoinOrder = doc.NextJoinOrder(), ProtocolVersion = 2 };
                 JoinedDocs().Add(documentId);
                 registry.ClearWarm(doc);

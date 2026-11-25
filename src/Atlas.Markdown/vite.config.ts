@@ -51,6 +51,8 @@ const sourceEditorModule = (id: string) => /[\\/]src[\\/]source[\\/]monaco[\\/]/
 const entries: Record<string, string> = {
   'atlas-markdown': resolve(import.meta.dirname, 'src/index.ts'),
   core: resolve(import.meta.dirname, 'src/core/index.ts'),
+  // The collaborator palette alone (a few hundred bytes), for a host's first screen that must not load the editor.
+  'core/userColor': resolve(import.meta.dirname, 'src/core/userColor.ts'),
   vue: resolve(import.meta.dirname, 'src/vue/index.ts'),
   icons: resolve(import.meta.dirname, 'src/icons/index.ts'),
   match: resolve(import.meta.dirname, 'src/match/index.ts'),

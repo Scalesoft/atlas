@@ -59,4 +59,19 @@ public sealed class CollaboratorPaletteTests
         Assert.Equal(Color(CollaboratorPalette.Auto("verified-id")), CollaboratorPalette.Effective("verified-id", null, []));
         Assert.Equal("#123456", CollaboratorPalette.Effective("host", "#123456", [("other", "#123456")]));
     }
+
+    [Fact]
+    public void One_table_per_scope_keeps_a_holders_colour_frees_it_on_release_and_leaves_other_scopes_alone()
+    {
+        var colors = new CollaboratorColors();
+        Assert.Equal(Color(2), colors.Assign("page:1", "caret", "a", Color(2)));
+        Assert.Equal(Color(3), colors.Assign("page:1", "presence-b", "b", Color(2)));   // another surface of the same scope
+        Assert.Equal(Color(2), colors.Assign("page:1", "presence-a", "a", null));        // the same person looks alike on both
+        Assert.Equal(Color(2), colors.Assign("page:2", "presence-b", "b", Color(2)));   // another page is its own table
+        Assert.Equal(Color(3), colors.Assign("page:1", "presence-b", "b", Color(5)));   // a holder keeps what it got
+        colors.Release("page:1", "caret");
+        colors.Release("page:1", "presence-a");
+        Assert.Null(colors.Find("page:1", "caret"));
+        Assert.Equal(Color(2), colors.Assign("page:1", "presence-c", "c", Color(2)));   // free again
+    }
 }

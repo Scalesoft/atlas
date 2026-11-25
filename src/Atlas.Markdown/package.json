@@ -17,6 +17,10 @@
       "types": "./dist/core/index.d.ts",
       "import": "./dist/core.js"
     },
+    "./core/userColor": {
+      "types": "./dist/core/userColor.d.ts",
+      "import": "./dist/core/userColor.js"
+    },
     "./vue": {
       "types": "./dist/vue/index.d.ts",
       "import": "./dist/vue.js"

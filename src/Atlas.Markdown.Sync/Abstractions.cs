@@ -263,4 +263,8 @@ public sealed class MarkdownSyncOptions
 
     /// <summary>Reject updates that would grow a document's encoded state past this. Default 4 MiB.</summary>
     public long MaxDocumentBytes { get; set; } = 4L * 1024 * 1024;
+
+    /// <summary>The scope a document's collaborator colours share with the host's other live surfaces (<see cref="CollaboratorColors"/>),
+    /// e.g. a page's view session. Default: the document id.</summary>
+    public Func<string, string> ColorScope { get; set; } = documentId => documentId;
 }

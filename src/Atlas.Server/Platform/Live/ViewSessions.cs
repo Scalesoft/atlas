@@ -47,13 +47,15 @@ public sealed class ViewSessions
     private readonly IHubContext<LiveHub> m_hub;
     private readonly IServiceScopeFactory m_scopes;
     private readonly TimeProvider m_clock;
+    private readonly CollaboratorColors m_colors;
     private readonly Lock m_lock = new();
     private readonly Dictionary<string, Session> m_sessions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Participant> m_participants = new(StringComparer.Ordinal);
     private readonly Dictionary<Guid, HashSet<Session>> m_index = [];
 
-    public ViewSessions(LiveSubscriptions subscriptions, IHubContext<LiveHub> hub, IServiceScopeFactory scopes, TimeProvider clock)
+    public ViewSessions(LiveSubscriptions subscriptions, IHubContext<LiveHub> hub, IServiceScopeFactory scopes, TimeProvider clock, CollaboratorColors colors)
     {
+        m_colors = colors;
         m_subscriptions = subscriptions;
         m_hub = hub;
         m_scopes = scopes;
@@ -86,8 +88,8 @@ public sealed class ViewSessions
                 }
             }
             var decided = await ResolveAsync(subscriber, Snapshot(session).Keys, ct);
-            // Read before the lock; used only when this connection is new to the session (the gate keeps Colors from changing meanwhile).
-            var preferred = session.Colors.ContainsKey(connectionId) ? null : await PreferredColorAsync(subscriber.UserId, ct);
+            // Read before the lock; used only when this connection is new to the session (the gate keeps its colour from changing meanwhile).
+            var preferred = m_colors.Find(key, connectionId) is null ? await PreferredColorAsync(subscriber.UserId, ct) : null;
             lock (m_lock)
             {
                 if (!decided.TryGetValue(viewId, out var self) || !self.Readable)
@@ -95,14 +97,14 @@ public sealed class ViewSessions
                     Settle(connectionId, decided.Keys);
                     throw new HubException(self?.Outcome == LiveAccessOutcome.Forbidden ? "forbidden" : "not_found");
                 }
-                var participant = m_participants.TryGetValue(connectionId, out var known) ? known : m_participants[connectionId] = new Participant(subscriber);
+                var participant = m_participants.TryGetValue(connectionId, out var known) ? known : m_participants[connectionId] = new Participant(subscriber) { Preferred = preferred };
                 var readable = session.Members.Values.Where(member => decided.TryGetValue(member.ObjectId, out var access) && access.Readable).ToArray();
                 if (!participant.Views.Contains(key))
                 {
                     participant.Views.Add(key);
                     session.Viewports[connectionId] = null;
-                    var userId = participant.Subscriber.UserId.ToString();
-                    session.Colors[connectionId] = (userId, CollaboratorPalette.Effective(userId, preferred, session.Colors.Values));
+                    // One table with the page's live document (CollaborationModule's ColorScope): the caret and the presence look alike.
+                    m_colors.Assign(key, connectionId, participant.Subscriber.UserId.ToString(), preferred);
                     foreach (var member in readable)
                     {
                         Reference(participant, member.ObjectId);
@@ -181,24 +183,25 @@ public sealed class ViewSessions
         }
         string? via;
         string color;
-        List<(string Connection, bool Detail, bool SeesVia)> recipients;
+        List<(string Connection, bool Detail, bool SeesVia, string Color)> recipients;
         lock (m_lock)
         {
             // The view the sender joined first among those showing the object: where they work on it.
             via = sender.Views.FirstOrDefault(key => m_sessions.TryGetValue(key, out var session) && session.Members.ContainsKey(objectId));
             var viaChannel = via is null ? null : Channel(m_sessions[via].ViewObjectId);
-            // The colour the person has in the view they work from: the same one every screen of that view shows.
-            color = via is not null && m_sessions[via].Colors.TryGetValue(connectionId, out var assigned)
-                ? assigned.Color
-                : CollaboratorPalette.Effective(sender.Subscriber.UserId.ToString(), null, []);
+            // The colour the person has in the view they work from: the same one every screen of that view shows; with no view left
+            // (a lingering subscription), the one they prefer.
+            color = (via is null ? null : m_colors.Find(via, connectionId))
+                ?? CollaboratorPalette.Effective(sender.Subscriber.UserId.ToString(), sender.Preferred, []);
             recipients = Recipients(objectId, connectionId, false)
-                .Select(recipient => (recipient.Connection, recipient.Detail, viaChannel is not null && m_subscriptions.CanWrite(recipient.Connection, viaChannel) is not null))
+                .Select(recipient => (recipient.Connection, recipient.Detail, viaChannel is not null && m_subscriptions.CanWrite(recipient.Connection, viaChannel) is not null,
+                    SharedColor(objectId, recipient.Connection, connectionId) ?? color))
                 .ToList();
         }
         var from = sender.Subscriber;
-        foreach (var group in recipients.GroupBy(recipient => (recipient.Detail, recipient.SeesVia)))
+        foreach (var group in recipients.GroupBy(recipient => (recipient.Detail, recipient.SeesVia, recipient.Color)))
         {
-            var message = new ObjectPresenceMessage(objectId, from.UserId, from.DisplayName, color, group.Key.Detail ? payload.Clone() : null, group.Key.SeesVia ? via : null);
+            var message = new ObjectPresenceMessage(objectId, from.UserId, from.DisplayName, group.Key.Color, group.Key.Detail ? payload.Clone() : null, group.Key.SeesVia ? via : null);
             await m_hub.Clients.Clients(group.Select(recipient => recipient.Connection).ToArray()).SendAsync("ObjectPresence", message);
         }
     }
@@ -529,6 +532,12 @@ public sealed class ViewSessions
         return detail.Select(item => (item.Key, item.Value)).ToList();
     }
 
+    /// <summary>The sender's colour in a view of the object the recipient is in too (under the lock): what the recipient's view hands out,
+    /// so a card on two boards never shows two people there in one colour. Null when they share no such view.</summary>
+    private string? SharedColor(Guid objectId, string recipient, string sender)
+        => (m_index.GetValueOrDefault(objectId) ?? []).Where(session => session.Viewports.ContainsKey(recipient))
+            .Select(session => m_colors.Find(session.Key, sender)).FirstOrDefault(color => color is not null);
+
     private void Reference(Participant participant, Guid objectId)
     {
         participant.References[objectId] = participant.References.GetValueOrDefault(objectId) + 1;
@@ -553,7 +562,7 @@ public sealed class ViewSessions
     /// <summary>Takes the connection out of the session (under the session's gate and the lock); an empty session closes.</summary>
     private void Remove(string connectionId, Session session)
     {
-        session.Colors.Remove(connectionId);
+        m_colors.Release(session.Key, connectionId);
         if (session.Viewports.Remove(connectionId) && m_participants.TryGetValue(connectionId, out var participant))
         {
             participant.Views.Remove(session.Key);
@@ -672,8 +681,6 @@ public sealed class ViewSessions
         public Dictionary<Guid, ViewMember> Members { get; } = [];
         /// <summary>The participants and their viewports (null: everything in detail).</summary>
         public Dictionary<string, HashSet<Guid>?> Viewports { get; } = new(StringComparer.Ordinal);
-        /// <summary>The colour each participant has in this view (user id, colour), handed out at its join and free again when it leaves.</summary>
-        public Dictionary<string, (string UserId, string Color)> Colors { get; } = new(StringComparer.Ordinal);
         public bool Loaded { get; set; }
         public bool Closed { get; set; }
     }
@@ -681,6 +688,8 @@ public sealed class ViewSessions
     private sealed class Participant(LiveSubscriber subscriber)
     {
         public LiveSubscriber Subscriber { get; } = subscriber;
+        /// <summary>„Moje barva“ read at its first join (null: automatic), for presence from no view (<see cref="SendPresenceAsync"/>).</summary>
+        public string? Preferred { get; init; }
         /// <summary>Joined views in join order (the first one showing an object is the presence's <c>via</c>).</summary>
         public List<string> Views { get; } = [];
         /// <summary>Objects it was told of, with the number of its views that show them.</summary>
