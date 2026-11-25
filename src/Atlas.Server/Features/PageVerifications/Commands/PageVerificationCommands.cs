@@ -132,12 +132,11 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         // Only someone who may read the page: anyone else would never see the item (NotificationReads).
         IReadOnlyList<Guid> recipients = steward is { } id && await MayStewardAsync(id, opened.Page.Id, ct)
             ? [id]
-            : (await session.CreateSQLQuery("""
+            : (await session.CreateSQLQuery($"""
                     SELECT x."PublisherId" AS "PublisherId" FROM (
                       SELECT p."PublisherId" AS "PublisherId", max(p."ActiveFrom") AS "Last" FROM "PagePublication" p
-                      JOIN "UserAccount" u ON u."Id"=p."PublisherId" AND u."IsActive"
+                      JOIN "UserAccount" u ON u."Id"=p."PublisherId" AND {PageVerificationStates.StewardInEffectSql("u", "p.\"PageId\"")}
                       WHERE p."PageId"=:page
-                        AND EXISTS (SELECT 1 FROM "EffectivePageAccess" e WHERE e."UserId"=p."PublisherId" AND e."PageId"=p."PageId" AND e."Role">=1)
                       GROUP BY p."PublisherId") x
                     ORDER BY x."Last" DESC LIMIT 3
                     """).AddScalar("PublisherId", NHibernateUtil.Guid).SetParameter("page", opened.Page.Id).ListAsync<Guid>(ct)).ToList();
@@ -227,11 +226,10 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
     private async Task<Guid> RequireStewardAsync(Page page, Guid stewardId, CancellationToken ct)
         => await MayStewardAsync(stewardId, page.Id, ct) ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
 
-    /// <summary>An active account that may read the page: a steward in effect (<see cref="PageVerificationStates.StewardJoinSql"/>).</summary>
+    /// <summary>An active account that may read the page: a steward in effect (<see cref="PageVerificationStates.StewardInEffectSql"/>).</summary>
     private async Task<bool> MayStewardAsync(Guid userId, Guid pageId, CancellationToken ct)
-        => await session.CreateSQLQuery("""
-                SELECT EXISTS (SELECT 1 FROM "EffectivePageAccess" e JOIN "UserAccount" u ON u."Id"=e."UserId"
-                  WHERE e."UserId"=:user AND e."PageId"=:page AND e."Role">=1 AND u."IsActive") AS "Reads"
+        => await session.CreateSQLQuery($"""
+                SELECT EXISTS (SELECT 1 FROM "UserAccount" u WHERE u."Id"=:user AND {PageVerificationStates.StewardInEffectSql("u", ":page")}) AS "Reads"
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", userId).SetParameter("page", pageId).UniqueResultAsync<bool>(ct);
 
     /// <summary>„Ověřit do“: a time with a zone (Z or an offset) as it is; one without a zone in Europe/Prague, whatever the server's own
