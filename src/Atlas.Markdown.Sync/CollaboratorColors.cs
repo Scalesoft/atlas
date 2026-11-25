@@ -10,6 +10,8 @@ public sealed class CollaboratorColors
 {
     private readonly Lock _lock = new();
     private readonly Dictionary<string, Dictionary<string, (string UserId, string Color)>> _scopes = new(StringComparer.Ordinal);
+    // „Moje barva“ changed since a connection read it (CollabUser.Color at the handshake, a view participant's join): user id → preferred.
+    private readonly Dictionary<string, string?> _restamped = new(StringComparer.Ordinal);
 
     /// <summary>The colour of <paramref name="holder"/> in <paramref name="scope"/>: the one it holds, else assigned now from
     /// <paramref name="preferred"/> (a palette colour; null: <see cref="CollaboratorPalette.Auto"/>) among the others present.</summary>
@@ -25,9 +27,19 @@ public sealed class CollaboratorColors
             {
                 return own.Color;
             }
-            var color = CollaboratorPalette.Effective(userId, preferred, held.Values);
+            var color = CollaboratorPalette.Effective(userId, _restamped.TryGetValue(userId, out var restamped) ? restamped : preferred, held.Values);
             held[holder] = (userId, color);
             return color;
+        }
+    }
+
+    /// <summary>The colour <paramref name="userId"/> prefers: the one of their last <see cref="Restamp"/>, else <paramref name="known"/>
+    /// (what the caller read at their join).</summary>
+    public string? Preferred(string userId, string? known)
+    {
+        lock (_lock)
+        {
+            return _restamped.TryGetValue(userId, out var restamped) ? restamped : known;
         }
     }
 
@@ -41,11 +53,13 @@ public sealed class CollaboratorColors
     }
 
     /// <summary>„Moje barva“ of <paramref name="userId"/> changed: each of their holders takes a colour again from <paramref name="preferred"/>
-    /// while everyone else keeps theirs, so live sessions show the new one without reconnecting.</summary>
+    /// while everyone else keeps theirs, so live sessions show the new one without reconnecting; a later join of an open connection takes
+    /// it too (<see cref="Assign"/>, <see cref="Preferred"/>).</summary>
     public void Restamp(string userId, string? preferred)
     {
         lock (_lock)
         {
+            _restamped[userId] = preferred;
             foreach (var held in _scopes.Values)
             {
                 var mine = held.Where(pair => pair.Value.UserId == userId).Select(pair => pair.Key).ToList();

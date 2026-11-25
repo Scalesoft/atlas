@@ -192,7 +192,7 @@ public sealed class ViewSessions
             // The colour the person has in the view they work from: the same one every screen of that view shows; with no view left
             // (a lingering subscription), the one they prefer.
             color = (via is null ? null : m_colors.Find(via, connectionId))
-                ?? CollaboratorPalette.Effective(sender.Subscriber.UserId.ToString(), sender.Preferred, []);
+                ?? CollaboratorPalette.Effective(sender.Subscriber.UserId.ToString(), m_colors.Preferred(sender.Subscriber.UserId.ToString(), sender.Preferred), []);
             recipients = Recipients(objectId, connectionId, false)
                 .Select(recipient => (recipient.Connection, recipient.Detail, viaChannel is not null && m_subscriptions.CanWrite(recipient.Connection, viaChannel) is not null,
                     SharedColor(objectId, recipient.Connection, connectionId) ?? color))
