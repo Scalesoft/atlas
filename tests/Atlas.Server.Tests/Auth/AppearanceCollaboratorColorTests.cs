@@ -33,6 +33,12 @@ public sealed class AppearanceCollaboratorColorTests
             Assert.Equal(new Dictionary<Guid, string> { [user.Id] = CollaboratorPalette.Entries[CollaboratorPalette.SlotOf("violet")].Light },
                 await CollaboratorColorPreference.ReadAllAsync(read, CancellationToken.None));   // the static surfaces' map, "auto" accounts left out
         }
+        // A deactivated account's colour is nobody's business any more.
+        await host.ExecuteAsync("""UPDATE "UserAccount" SET "IsActive"=false WHERE "Id"=:id""", user.Id);
+        using (var read = host.OpenSession())
+        {
+            Assert.Empty(await CollaboratorColorPreference.ReadAllAsync(read, CancellationToken.None));
+        }
         var refused = await Assert.ThrowsAsync<ApiException>(() => host.InvokeAsync<Appearance>(new UpdateAppearance(Appearance.Default with { CollaboratorColor = "#ff0000" })));
         Assert.Equal(400, refused.Status);
     }

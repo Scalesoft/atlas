@@ -496,6 +496,35 @@ public class AccessRevocationTests
         Assert.Contains(publications, item => item.ConnectionIds.Contains(witness.ConnectionId!));
     }
 
+    /// <summary>„Moje barva“ through the real hub: a peer holds its colour while it is in the document, and it is free again however
+    /// the peer goes: leaving, losing access, disconnecting.</summary>
+    [Fact]
+    public async Task A_peers_colour_is_released_on_leave_revocation_and_disconnect()
+    {
+        var auth = new MutableAuthenticator();
+        await using var host = await StartAsync(auth);
+        await using var alice = host.Connection("alice");
+        await using var bob = host.Connection("bob");
+        await using var carol = host.Connection("carol");
+        await alice.StartAsync(); await bob.StartAsync(); await carol.StartAsync(); await SeedAsync(alice);
+        await bob.InvokeAsync<JoinResult>("JoinDocument", Doc); await carol.InvokeAsync<JoinResult>("JoinDocument", Doc);
+        var doc = host.Registry.TryGet(Doc)!;
+        var (aliceId, bobId, carolId) = (alice.ConnectionId!, bob.ConnectionId!, carol.ConnectionId!);
+        Assert.All(new[] { aliceId, bobId, carolId }, id => Assert.NotNull(host.Registry.ColorOf(doc, id)));
+
+        await bob.InvokeAsync("LeaveDocument", Doc).WaitAsync(Timeout);
+        Assert.Null(host.Registry.ColorOf(doc, bobId));
+        auth.Set("carol", Doc, DocAccess.Denied);
+        await host.Access.RefreshAsync(Doc).WaitAsync(Timeout);
+        Assert.Null(host.Registry.ColorOf(doc, carolId));
+        await alice.StopAsync();
+        using var deadline = new CancellationTokenSource(Timeout);
+        while (host.Registry.ColorOf(doc, aliceId) is not null)
+        {
+            await Task.Delay(10, deadline.Token);
+        }
+    }
+
     private sealed class MutableAuthenticator : ICollabAuthenticator
     {
         private readonly ConcurrentDictionary<(string User, string Document), DocAccess> _access = new();

@@ -7,6 +7,9 @@ using Atlas.Server.Features.PageOrganization.Queries;
 using Atlas.Server.Features.Pages.Commands;
 using Atlas.Server.Features.Pages.Contracts;
 using Atlas.Server.Features.Pages.Queries;
+using Atlas.Server.Features.PageVerifications;
+using Atlas.Server.Features.PageVerifications.Commands;
+using Atlas.Server.Features.PageVerifications.Queries;
 using Xunit;
 
 namespace Atlas.Server.Tests.PageOrganization;
@@ -202,6 +205,32 @@ public sealed class CrossSpaceMoveHandlerTests
             .WhereRestrictionOn(x => x.PageId).IsIn(new[] { parent.Id, child.Id }).ListAsync()).ToDictionary(x => x.PageId);
         Assert.Equal(f.Writer.Id, rows[parent.Id].StewardId);
         Assert.Equal(((Guid?)null, (short?)3), (rows[child.Id].StewardId, rows[child.Id].IntervalMonths));
+    }
+
+    /// <summary>5.2: a moved page keeps its own row, but a steward who cannot read it in the target space is no steward there: „bez garanta“
+    /// in the panel and Stav obsahu, no reminder from the job, and „Nahlásit neaktuální“ does not tell them (they would never see the item).</summary>
+    [PostgreSqlFact]
+    public async Task A_steward_who_cannot_read_the_moved_page_is_no_steward_there()
+    {
+        await using var f = await PageOrganizationFixture.CreateAsync();
+        var target = await Target(f);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", target);
+        var page = await f.Pages.CreateAsync(new CreatePageRequest(f.SpaceId, null, "Postup", PageOrganizationFixture.Rich("Postup"), "Postup"), f.Writer, default);
+        await f.Pages.PublishAsync(page.Id, new PublishPageRequest(1), f.Writer, default);
+        // The source space's reader is the steward of an expired verification: the job would remind them.
+        await f.Host.ExecuteAsync($"""
+            INSERT INTO "PageVerification"("PageId","StewardId","VerifiedById","VerifiedAt","VerifiedUntil","VerifiedVersion","NoticeStage")
+            VALUES (:id,'{f.Reader.Id}','{f.Writer.Id}',now()-interval '2 days',now()-interval '1 day',1,0)
+            """, page.Id);
+        await f.As<CrossSpaceChange>(f.Writer, new MovePageToSpace(page.Id, await Command(f, await f.Pages.GetAsync(page.Id, f.Writer, default), target)));
+        await Denied(404, () => f.Pages.GetAsync(page.Id, f.Reader, default));
+
+        Assert.Null((await f.As<PageVerificationView>(f.Writer, new GetPageVerification(page.Id))).StewardId);
+        var health = await f.As<ContentHealthList>(f.Writer, new GetContentHealth(target, State: "no-steward"));
+        Assert.Equal((1, page.Id), (health.Summary.WithoutSteward, Assert.Single(health.Items).PageId));
+        Assert.Equal(0, await f.Host.InvokeAsync<int>(new SendVerificationNotices(DateTime.UtcNow)));
+        // Its only publisher reports it: nobody else may read it, so nobody is told.
+        Assert.Equal(0, (await f.As<PageOutdatedReport>(f.Writer, new ReportPageOutdated(page.Id, new ReportPageOutdatedRequest()))).Notified);
     }
 
     private static async Task<Guid> Target(PageOrganizationFixture f)

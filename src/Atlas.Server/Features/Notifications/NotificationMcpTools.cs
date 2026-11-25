@@ -24,7 +24,7 @@ public sealed class NotificationMcpTools(IMessageBus bus)
     [McpServerTool(Name = "atlas_list_notifications", Title = "Oznámení", Destructive = false, Idempotent = true, OpenWorld = false, ReadOnly = true)]
     [McpToolScope(ApiScopes.Read)]
     [Description("Vypíše oznámení vlastníka tokenu (zmínky v komentářích a stránkách, sdílení), nejnovější událost první, 30 na stránku: notificationId, " +
-        "druh, objectId a typ objektu, název, kdo naposledy, počet událostí a zda je přečtené. Jen ta, jejichž objekt smíte číst. " +
+        "druh, objectId a typ objektu, název, kdo naposledy, počet událostí, zda je přečtené a text komentáře nebo poznámky nahlášení (excerpt). Jen ta, jejichž objekt smíte číst. " +
         "Označí je atlas_mark_notifications_read. " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListAsync(
         [Description("Volitelně next z předchozí stránky výpisu.")] string? before = null,
@@ -42,12 +42,18 @@ public sealed class NotificationMcpTools(IMessageBus bus)
             {
                 body.Append(", naposledy ").Append(McpText.Line(actor, 100));
             }
-            body.Append(", ").Append(item.Count).Append("×, ").Append(item.UpdatedAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm 'UTC'", CultureInfo.InvariantCulture)).Append(")\n");
+            body.Append(", ").Append(item.Count).Append("×, ").Append(item.UpdatedAt.ToUniversalTime().ToString("yyyy-MM-dd HH:mm 'UTC'", CultureInfo.InvariantCulture)).Append(')');
+            // The comment's text or the „Nahlásit neaktuální“ note (NotificationReads moves it out of the anchor).
+            if (item.Excerpt is { } excerpt)
+            {
+                body.Append(": ").Append(McpText.Quote(McpText.Line(excerpt, 500)));
+            }
+            body.Append('\n');
             items.Add(new JsonObject
             {
                 ["notificationId"] = item.Id, ["kind"] = item.Kind, ["objectId"] = item.SubjectId, ["typeId"] = item.SubjectType, ["title"] = item.SubjectTitle,
-                ["spaceId"] = item.SpaceId, ["anchor"] = item.Anchor, ["actorId"] = item.ActorId, ["actorName"] = item.ActorName, ["count"] = item.Count,
-                ["updatedAt"] = at, ["read"] = item.Read
+                ["spaceId"] = item.SpaceId, ["anchor"] = item.Anchor, ["excerpt"] = item.Excerpt,["actorId"] = item.ActorId,
+                ["actorName"] = item.ActorName, ["count"] = item.Count, ["updatedAt"] = at, ["read"] = item.Read
             });
         }
         return McpText.Result(McpText.Wrap($"Oznámení: {list.Items.Count} na stránce, nepřečtených {list.Unread}.",

@@ -662,6 +662,8 @@ public sealed class BackupImportTests
         var stewards = (await session.QueryOver<Atlas.Server.Features.PageVerifications.Domain.PageVerification>().ListAsync())
             .ToDictionary(x => x.PageId, x => x.StewardId);
         Assert.Equal(fixture.AdminId, stewards[fixture.PageId]);
+        // The other page lies in the same verifying space, but stayed there: no row, not for lack of a verifying space.
+        Assert.Equal(original, (await session.GetAsync<Page>(fixture.TrashedPageId)).SpaceId);
         Assert.False(stewards.ContainsKey(fixture.TrashedPageId));
     }
 

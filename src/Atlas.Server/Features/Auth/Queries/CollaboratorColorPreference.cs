@@ -17,12 +17,14 @@ public static class CollaboratorColorPreference
         return CollaboratorPalette.SlotOf(id) is >= 0 and var slot ? CollaboratorPalette.Entries[slot].Light : null;
     }
 
-    /// <summary>Every account's chosen colour (none for "auto"), user id → stamped colour, in one query: the static surfaces (history,
-    /// discussion, the peek) draw authors in it (Atlas.Web live/collaboratorColors.ts), the others in their automatic one.</summary>
+    /// <summary>Every active account's chosen colour (none for "auto"), user id → stamped colour, in one query: the static surfaces (history,
+    /// discussion, the peek) draw authors in it (Atlas.Web live/collaboratorColors.ts), the others in their automatic one. Any signed-in
+    /// user reads it (GET /api/collaborator-colors): a colour is not private, and a deactivated account's is left out.</summary>
     public static async Task<Dictionary<Guid, string>> ReadAllAsync(ISession session, CancellationToken ct)
     {
         var rows = await session.QueryOver<UserAppearancePreference>()
             .Where(x => x.ActiveTo == null && x.CollaboratorColor != "auto")
+            .WithSubquery.WhereProperty(x => x.UserId).In(NHibernate.Criterion.QueryOver.Of<UserAccount>().Where(u => u.IsActive).Select(u => u.Id))
             .SelectList(list => list.Select(x => x.UserId).Select(x => x.CollaboratorColor))
             .ListAsync<object[]>(ct);
         return rows.Select(row => (UserId: (Guid)row[0], Slot: CollaboratorPalette.SlotOf((string)row[1])))

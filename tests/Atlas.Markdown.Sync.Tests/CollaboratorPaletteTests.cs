@@ -74,4 +74,18 @@ public sealed class CollaboratorPaletteTests
         Assert.Null(colors.Find("page:1", "caret"));
         Assert.Equal(Color(2), colors.Assign("page:1", "presence-c", "c", Color(2)));   // free again
     }
+
+    [Fact]
+    public void A_restamped_preference_wins_over_the_one_a_connection_read_at_its_join()
+    {
+        var colors = new CollaboratorColors();
+        Assert.Equal(Color(2), colors.Assign("page:1", "caret", "a", Color(2)));
+        colors.Restamp("a", Color(7));
+        Assert.Equal(Color(7), colors.Find("page:1", "caret"));
+        // The same open connection joins another page with what its handshake read: the new choice, not the stale one.
+        Assert.Equal(Color(7), colors.Assign("page:2", "caret", "a", Color(2)));
+        Assert.Equal((Color(7), Color(4)), (colors.Preferred("a", Color(2)), colors.Preferred("b", Color(4))));
+        colors.Restamp("a", null);   // back to automatic
+        Assert.Null(colors.Preferred("a", Color(2)));
+    }
 }

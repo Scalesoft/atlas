@@ -341,7 +341,7 @@ public sealed class SqlTextConventionTests
         ["Atlas.Server.Features.PageTags.PageTagStore.CandidatesInSpaceAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PageTags.PageTagStore.PreviousBoundariesAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PageVerifications.Commands.PageVerificationHandler.Handle"] = Kind.ReadProjection,
-        ["Atlas.Server.Features.PageVerifications.Commands.PageVerificationHandler.RequireStewardAsync"] = Kind.ReadProjection,
+        ["Atlas.Server.Features.PageVerifications.Commands.PageVerificationHandler.MayStewardAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PageVerifications.Commands.PageVerificationHandler.WithoutStewardAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PageVerifications.Commands.PageVerificationStewards.DeactivatedAsync"] = Kind.ReadRows,
         ["Atlas.Server.Features.PageVerifications.PageVerificationReader.ReadAsync"] = Kind.ReadRows,

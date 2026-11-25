@@ -59,11 +59,11 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         var now = clock.GetUtcNow().UtcDateTime;
         var (start, end) = SpaceReadershipHandler.LastDays(query.Days, now);
         var reads = await SpaceReadershipHandler.SpaceReadsAsync(session, actor.Id, query.SpaceId, start, end, ct);
-        var verifications = (await session.ReadRowsAsync("""
-                SELECT v."PageId" AS "PageId", s."Id" AS "StewardId", s."DisplayName" AS "StewardName", v."IntervalMonths" AS "IntervalMonths",
+        var verifications = (await session.ReadRowsAsync($"""
+                SELECT v."PageId" AS "PageId", st."Id" AS "StewardId", st."DisplayName" AS "StewardName", v."IntervalMonths" AS "IntervalMonths",
                     v."VerifiedUntil" AS "VerifiedUntil", v."VerifiedVersion" AS "VerifiedVersion"
                 FROM "PageVerification" v JOIN "Page" p ON p."Id"=v."PageId"
-                LEFT JOIN "UserAccount" s ON s."Id"=v."StewardId" AND s."IsActive"
+                {PageVerificationStates.StewardJoinSql}
                 WHERE p."SpaceId"=:space
                 """, new Dictionary<string, object> { ["space"] = query.SpaceId },
             row => (PageId: row.GetGuid(0), StewardId: row.IsDBNull(1) ? (Guid?)null : row.GetGuid(1), StewardName: row.IsDBNull(2) ? null : row.GetString(2),

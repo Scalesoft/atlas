@@ -91,6 +91,10 @@ public sealed class NotificationTests
         await DeliverAsync(f, request);
         await f.Host.InvokeAsync(request);
         Assert.Equal(3, Assert.Single((await InboxAsync(f, f.Reader)).Items).Count);
+        // A concurrent delivery that started later stamped a later time: a kind without a quiet period still counts this one.
+        await f.Host.ExecuteAsync("""UPDATE "Notification" SET "UpdatedAt"=now()+interval '1 minute' WHERE "RecipientId"=:id""", f.Reader.Id);
+        await f.Host.InvokeAsync(request);
+        Assert.Equal(4, Assert.Single((await InboxAsync(f, f.Reader)).Items).Count);
     }
 
     /// <summary>SEC1-1: anybody can fill another's inbox with items the recipient may not read (share, then trash). They are filtered
