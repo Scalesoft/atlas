@@ -4,7 +4,7 @@ import AtlasIcon from "../AtlasIcon.vue";
 import FilterMenu from "./FilterMenu.vue";
 import SearchableTags from "./SearchableTags.vue";
 import t from "../../i18n/settings-activity";
-import { locale } from "../../i18n";
+import { formatNumber } from "../../i18n";
 import { outcomeLabels, periodLabels, type ActivityFilterState, type ActivityOutcome, type ActivityPeriod } from "./activity";
 import type { ChoiceOption } from "./types";
 
@@ -45,7 +45,7 @@ const who = computed({
   },
 });
 const actorOptions = computed<ChoiceOption[]>(() =>
-  props.actors.map((actor) => ({ value: actor.id, label: actor.label, icon: actor.id === "system" ? "server" : "account", badge: actor.count?.toLocaleString(locale) })),
+  props.actors.map((actor) => ({ value: actor.id, label: actor.label, icon: actor.id === "system" ? "server" : "account", badge: actor.count === undefined ? undefined : formatNumber(actor.count) })),
 );
 const categoryOptions = computed<ChoiceOption[]>(() => [{ value: "", label: t.filters.all, icon: "scroll-text" }, ...props.categories.map((category) => ({ value: category.id, label: category.label, icon: category.icon }))]);
 const periodIcons: Record<ActivityPeriod, string> = { "24h": "clock", "7d": "calendar", "30d": "calendar", all: "history" };

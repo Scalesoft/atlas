@@ -1,5 +1,5 @@
 import t from "../../i18n/settings-flow";
-import { locale } from "../../i18n";
+import { formatDateTime } from "../../formatDate";
 /**
  * The validity of a grant (owner decision 27. 9.): "Od" and "Do" are both optional
  * (`datetime-local` strings in the browser's zone; an empty Od applies at once, an empty Do never
@@ -76,7 +76,7 @@ export function utcDateTime(value: string, original?: string | null) {
 
 /** One line for a summary: "Bez časového omezení", "Do …", "Od …" or "… – …". */
 export function validitySummary(startAt: string, expiresAt: string) {
-  const format = (value: string) => new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+  const format = formatDateTime;
   if (!startAt && !expiresAt) return t.validity.summaryNone;
   if (!startAt) return t.validity.summaryUntil(format(expiresAt));
   if (!expiresAt) return t.validity.summaryFrom(format(startAt));

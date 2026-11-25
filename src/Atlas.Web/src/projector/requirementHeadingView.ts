@@ -20,6 +20,7 @@ import type { RemoteRequirement } from "./requirementLinks";
 import { blockedReason, historyList, isReasonNote, touchesOutline } from "./requirementOverview";
 import { runtimeOf, storageOf } from "./requirementRuntime";
 import { stateText } from "./requirementSummary";
+import { formatDay } from "../formatDate";
 import { requirementDirections, type RequirementDirection, type RequirementState } from "./requirementTypes";
 import { headingIdPattern, headingRequirements, isDependencyLine, isFactsLine, isRequirementHeading, requirementSections, sectionAt, sectionTarget, sectionUrl, type RequirementSection } from "./requirementHeading";
 import "./requirementHeading.css";
@@ -299,7 +300,7 @@ function openFacts(editor: Editor, id: string, chip: string) {
   const kind = kindWords[facts.direction], rows: Omit<Row, "run">[] = [{ label: stateText(facts), icon: stateIcons[facts.state], detail: t.heading.stateDetail },
     { label: facts.party ? `${kind} · ${facts.party}` : kind, icon: directionIcons[facts.direction], detail: t.heading.kindDetail },
     ...(facts.system ? [{ label: facts.system, icon: "plug", detail: t.heading.serviceDetail }] : []),
-    ...(facts.deadline ? [{ label: historyStampText({ date: facts.deadline }), icon: "calendar", detail: t.heading.deadlineDetail }] : [])];
+    ...(facts.deadline ? [{ label: formatDay(facts.deadline), icon: "calendar", detail: t.heading.deadlineDetail }] : [])];
   openRows(editor, id, chip, t.model.label, rows.map(row => ({ ...row, run: () => undefined })), true);
 }
 

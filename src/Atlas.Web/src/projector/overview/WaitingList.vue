@@ -13,7 +13,8 @@ import { overviewApi } from "./overviewApi";
 import { waitedFor, waitingGroups } from "./overviewModel";
 import { useGuardedLoad } from "./useGuardedLoad";
 import { listKeys } from "../../keyboard/navigation";
-import { pragueNow, historyStampText } from "@atlas/markdown/core";
+import { pragueNow } from "@atlas/markdown/core";
+import { formatDay } from "../../formatDate";
 import "../../components/settings/settings.css";
 
 /**
@@ -84,7 +85,7 @@ defineExpose({ refresh: load });
                 <span v-if="item.state !== 'waiting_for_input'" class="waiting-state">
                   <AtlasIcon :name="stateIcons[item.state]" :size="13" />{{ requirementStateLabel(item.state) }}
                 </span>
-                <span class="waiting-days" :data-undated="item.days === null || undefined" :title="item.date ? `${item.days !== null && item.days < 0 ? t.waiting.until : t.waiting.since} ${historyStampText({ date: item.date })}` : undefined">{{ waitedFor(item.days) }}</span>
+                <span class="waiting-days" :data-undated="item.days === null || undefined" :title="item.date ? `${item.days !== null && item.days < 0 ? t.waiting.until : t.waiting.since} ${formatDay(item.date)}` : undefined">{{ waitedFor(item.days) }}</span>
               </a>
             </li>
           </ul>

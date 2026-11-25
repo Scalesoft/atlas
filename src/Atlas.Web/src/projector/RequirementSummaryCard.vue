@@ -13,7 +13,8 @@ import RequirementViewBar from "./RequirementViewBar.vue";
 import { compareRequirements, partyShown, viewPrefs } from "./requirementViewMode";
 import OverviewActions from "../overview/OverviewActions.vue";
 import type { OverviewCardAction } from "../overview/overviewKinds";
-import { pragueNow, historyStampText } from "@atlas/markdown/core";
+import { pragueNow } from "@atlas/markdown/core";
+import { formatDay } from "../formatDate";
 
 /**
  * The deployment overview of one page (spec §1.2, §2.2): computed from the page's requirement headings and outline, never stored. A dashboard in
@@ -92,7 +93,7 @@ function walkSorted(event: KeyboardEvent) {
 /** What a row of the sorted list is sorted by, beside its name. */
 function sortedBy(item: PageRequirement) {
   const sort = view.value?.sort;
-  if (sort === "date") return item.attrs.date ? historyStampText({ date: item.attrs.date }) : t.waited.undated;
+  if (sort === "date") return item.attrs.date ? formatDay(item.attrs.date) : t.waited.undated;
   if (sort === "party") return item.attrs.party.trim() || partyName(unknownParty);
   if (sort === "key") return item.attrs.key;
   return stateText(item.attrs);
@@ -383,7 +384,7 @@ const share = (value: number) => `${value * 100}%`;
             <div v-for="{ party, items: entries } in waiting" :key="party" class="summary-group" data-summary-party>
               <span class="summary-party">{{ partyName(party) }}</span>
               <span class="summary-chips">
-                <component :is="press" v-for="item in entries" :key="item.id" :type="pressType" data-go :title="item.attrs.date ? t.card.waitingSince(historyStampText({ date: item.attrs.date })) : undefined"
+                <component :is="press" v-for="item in entries" :key="item.id" :type="pressType" data-go :title="item.attrs.date ? t.card.waitingSince(formatDay(item.attrs.date)) : undefined"
                   @click="go(item)">{{ nameOf(item) }}<span v-if="waited(item) !== undefined" class="summary-days" data-summary-days> · {{ t.waited.days(waited(item)!) }}</span></component>
               </span>
             </div>

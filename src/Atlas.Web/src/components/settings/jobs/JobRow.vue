@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { formatAgo } from "../../../formatDate";
+import { formatAgo, formatDateTime } from "../../../formatDate";
 import type { Job, JobFailure } from "../../../jobs/jobApi";
 import t from "../../../i18n/settings-jobs";
 import AtlasIcon from "../../AtlasIcon.vue";
@@ -39,7 +39,7 @@ const chosen = (id: string) => (id === "toggle" ? emit("paused", !props.job.paus
         <AtlasIcon name="circle-x" :size="13" />{{ failure?.error ?? t.errorInDetail }}
         <a class="st-link" :href="router.href(`${detailPath}/runs/${failed.id}`)" :aria-label="t.row.failedDetails(job.title)">{{ t.row.details }}</a>
       </span>
-      <span v-if="job.lastRun" class="job-last">
+      <span v-if="job.lastRun" class="job-last" :title="formatDateTime(job.lastRun.finishedAt ?? job.lastRun.startedAt ?? job.lastRun.queuedAt)">
         {{ t.row.lastRun(formatAgo(job.lastRun.finishedAt ?? job.lastRun.startedAt ?? job.lastRun.queuedAt)) }}<template v-if="summaryText(job.lastRun)"> · {{ summaryText(job.lastRun) }}</template>
         <template v-if="job.recurring && job.lastRun.state !== 'succeeded'"> · {{ job.lastSuccessAt ? t.row.succeededAgo(formatAgo(job.lastSuccessAt)) : t.row.neverSucceeded }}</template>
       </span>

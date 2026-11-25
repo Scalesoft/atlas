@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, h, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { errorMessage, post } from '../api';
-import { formatShortDate } from '../formatDate';
+import { formatDateTime, formatShortDate } from '../formatDate';
 import t from '../i18n/components-spaces';
 import { formatNumber } from '../i18n';
 import { isPickEnter } from '../lib/pickEnter';
@@ -407,7 +407,7 @@ async function publish() {
                     <AtlasIcon name="arrow-left" :size="12" />{{ row.linksIn }}<AtlasIcon name="arrow-right" :size="12" />{{ row.linksOut }}</span>
                   <span role="cell" class="content-comments" :class="{ 'is-zero': !row.comments }" :aria-label="t.content.commentsLabel(row.comments)" :title="t.content.commentsLabel(row.comments)"><AtlasIcon name="quote" :size="12" />{{ row.comments }}</span>
                 </span>
-                <span role="cell" class="content-changed" :title="row.updatedAt">{{ formatShortDate(row.updatedAt) }}</span>
+                <time role="cell" class="content-changed" :datetime="row.updatedAt" :title="formatDateTime(row.updatedAt)">{{ formatShortDate(row.updatedAt) }}</time>
               </div>
               <Transition :css="false" v-bind="disclosureHooks">
                 <div v-if="expandedId === row.id" :key="`usage:${row.id}`" class="content-usage" role="row" data-content-usage-row>

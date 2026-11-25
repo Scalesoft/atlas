@@ -228,7 +228,7 @@ function leaving(element: Element) {
                     <span class="space-directory-text">
                       <a class="space-directory-link" :href="spaceLink(space.id)" :title="space.name" @click="open(space, $event)">{{ space.name }}</a>
                       <small v-if="!narrow" :class="{ 'is-empty': !space.itemAccessOnly && !space.description?.trim() }" :title="descriptionOf(space)">{{ descriptionOf(space) }}</small>
-                      <small v-else>{{ pages(space.pageCount ?? 0) }}<template v-if="space.lastChangedAt"> · {{ formatAgo(space.lastChangedAt) }}</template></small>
+                      <small v-else>{{ pages(space.pageCount ?? 0) }}<template v-if="space.lastChangedAt"> · <time :datetime="space.lastChangedAt" :title="formatDateTime(space.lastChangedAt)">{{ formatAgo(space.lastChangedAt) }}</time></template></small>
                     </span>
                   </span>
                   <span role="cell" class="is-number" data-space-pages>{{ formatNumber(space.pageCount ?? 0) }}</span>
