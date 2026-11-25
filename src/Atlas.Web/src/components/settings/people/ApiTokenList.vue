@@ -44,7 +44,8 @@ const detail = (token: AdminApiToken) => [props.showUser ? token.userName : unde
   <div class="api-token-list">
     <SettingsSection :title="showUser ? t.tokens.validTitle : t.tokens.personalTitle" icon="key-round" :count="active.length" :description="t.tokens.description">
       <SettingsList v-if="active.length" :label="t.tokens.validList">
-        <SettingsListRow v-for="token in active" :key="token.id" :title="token.name" icon="key-round" icon-tone="neutral" :data-api-token="token.id">
+        <SettingsListRow v-for="token in active" :key="token.id" :title="token.name" icon="key-round" icon-tone="neutral" :data-api-token="token.id"
+          :menu="[{ id: 'revoke', label: t.tokens.revoke, icon: 'ban', destructive: true, disabled: busy }]" :menu-label="t.tokens.revokeToken(token.name)" @select="emit('revoke', token)">
           <template #description>
             <template v-if="showUser"><a v-if="userHref?.(token.userId)" class="st-link" :href="userHref(token.userId)">{{ token.userName }}</a><template v-else>{{ token.userName }}</template> · </template>{{ usage(token) }}
           </template>

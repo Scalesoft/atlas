@@ -103,7 +103,7 @@ const groupHref = (id: string) => router.href(`people/groups/${id}`);
     <LoadingSkeleton v-else-if="!loaded" :label="t.access.loading(kind.many)" />
     <SettingsSection v-else :label="t.access.section(kind.many, resources.length)">
       <SettingsList v-if="resources.length" :label="kind.many">
-        <SettingsListRow v-for="item in resources" :key="item.id" :title="item.title" :description="detail(item)" :icon="kind.icon" icon-tone="neutral" :data-kind-resource="item.id">
+        <SettingsListRow v-for="item in resources" :key="item.id" :title="item.title" :description="detail(item)" :icon="kind.icon" icon-tone="neutral" :data-kind-resource="item.id" :menu="[{ id: 'access', label: t.access.whoHasAccess, icon: 'users' }]" @select="router.navigate(`${base}/${item.id}`)">
           <template #actions>
             <Button variant="ghost" size="sm" as-child><a :href="router.href(`${base}/${item.id}`)" :aria-label="t.access.whoHasAccessFor(item.title)"><AtlasIcon name="users" :size="15" />{{ t.access.whoHasAccess }}</a></Button>
           </template>

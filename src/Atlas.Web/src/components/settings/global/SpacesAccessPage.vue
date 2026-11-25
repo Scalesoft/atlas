@@ -43,7 +43,7 @@ const spaceId = computed(() => props.part[0]);
     </div>
     <SettingsSection :label="t.spacesAccess.section(shown.length)">
       <SettingsList v-if="shown.length" :label="t.spacesAccess.title">
-        <SettingsListRow v-for="space in shown" :key="space.id" :title="space.name" :description="[space.description, space.pageCount ? t.counts.pages(space.pageCount) : undefined].filter(Boolean).join(' · ')" :icon="space.icon || 'book-open'" :data-space-row="space.id">
+        <SettingsListRow v-for="space in shown" :key="space.id" :title="space.name" :description="[space.description, space.pageCount ? t.counts.pages(space.pageCount) : undefined].filter(Boolean).join(' · ')" :icon="space.icon || 'book-open'" :data-space-row="space.id" :menu="[{ id: 'access', label: t.spacesAccess.whoHasAccess, icon: 'users' }]" @select="router.navigate(`access/spaces/${space.id}`)">
           <template #actions>
             <Button variant="ghost" size="sm" as-child><a :href="router.href(`access/spaces/${space.id}`)" :aria-label="t.access.whoHasAccessFor(space.name)" :data-open-space="space.id"><AtlasIcon name="users" :size="15" />{{ t.spacesAccess.whoHasAccess }}</a></Button>
           </template>

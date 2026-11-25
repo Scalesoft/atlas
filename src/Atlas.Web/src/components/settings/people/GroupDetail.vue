@@ -22,7 +22,7 @@ import SettingsRow from "../SettingsRow.vue";
 import SettingsSection from "../SettingsSection.vue";
 import StatusBadge from "../StatusBadge.vue";
 import SubjectAvatar from "../SubjectAvatar.vue";
-import { useDirtyGuard } from "../dirtyGuard";
+import { useDraftGuard } from "../dirtyGuard";
 import { useSettingsFlash } from "../flash";
 import type { ChoiceOption } from "../types";
 import { useSettingsRoute } from "../useSettingsRoute";
@@ -40,7 +40,6 @@ const props = defineProps<{ group: Group; reload: () => Promise<void> }>();
 const emit = defineEmits<{ saved: [group: Group]; members: [] }>();
 const router = useSettingsRoute();
 const flash = useSettingsFlash();
-const guard = useDirtyGuard();
 const managed = computed(() => props.group.source === "hub");
 let disposed = false;
 
@@ -57,7 +56,6 @@ const conflict = ref("");
 /** The conflict is about the name draft, which stays until Načíst znovu. */
 const nameConflict = ref(false);
 watch(dirty, (value) => {
-  if (guard) guard.dirty.value = value;
   if (value) saveError.value = "";
 });
 async function save() {
@@ -100,7 +98,7 @@ async function reloadAfterConflict() {
     reloadingConflict.value = false;
   }
 }
-guard?.register({ save, discard });
+useDraftGuard(dirty, { save, discard });
 
 // Members.
 const members = ref<Member[]>([]);
@@ -253,7 +251,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   disposed = true;
   clearTimeout(searchTimer);
-  guard?.release();
 });
 </script>
 

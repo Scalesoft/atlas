@@ -127,7 +127,7 @@ function replace(saved: Group) {
         </div>
         <SettingsSection :label="t.groups.countLabel(shown.length)">
           <SettingsList v-if="shown.length" :label="t.groups.groups">
-            <SettingsListRow v-for="item in shown" :key="item.id" :title="item.name" :description="item.source === 'hub' ? t.common.managedInHub : t.common.localGroup" :highlighted="flash.highlight.value === item.id" :data-group="item.id">
+            <SettingsListRow v-for="item in shown" :key="item.id" :title="item.name" :description="item.source === 'hub' ? t.common.managedInHub : t.common.localGroup" :highlighted="flash.highlight.value === item.id" :data-group="item.id" :menu="[{ id: 'open', label: t.groups.open, icon: 'arrow-right' }]" :menu-label="t.groups.openFor(item.name)" @select="router.navigate(`people/groups/${item.id}`)">
               <template #leading><SubjectAvatar kind="group" :name="item.name" /></template>
               <template #actions>
                 <Button variant="ghost" size="sm" as-child><a :href="router.href(`people/groups/${item.id}`)" :data-open-group="item.id" :aria-label="t.groups.openFor(item.name)"><AtlasIcon name="arrow-right" :size="15" />{{ t.groups.open }}</a></Button>

@@ -200,7 +200,9 @@ onBeforeUnmount(() => { disposed = true; generation++; password.value = ""; wind
       <ErrorState v-if="loadError" :title="t.storage.loadFailed" :text="loadError" @retry="load" />
       <SettingsSection v-if="profiles.length" :title="t.storage.saved" :count="profiles.length">
         <SettingsList :label="t.storage.listLabel">
-          <SettingsListRow v-for="profile in profiles" :key="profile.id" :title="profile.name" icon="folder" :data-profile="profile.id">
+          <SettingsListRow v-for="profile in profiles" :key="profile.id" :title="profile.name" icon="folder" :data-profile="profile.id"
+            :menu="[{ id: 'edit', label: t.storage.edit, icon: 'pencil', shortcut: 'F2' }, { id: 'test', label: t.storage.test, icon: 'refresh', disabled: !!testing }, { id: 'remove', label: t.storage.removeLabel, icon: 'trash', shortcut: 'Delete', destructive: true }]"
+            @select="id => id === 'edit' ? edit(profile) : id === 'test' ? test(profile) : (removing = profile, removeError = '')">
             <template #description><code class="st-mono">{{ profile.destination }}</code><p v-if="testResult?.id === profile.id" :class="{ 'profile-error': !testResult.ok }" role="status">{{ testResult.message }}</p></template>
             <template #meta>
               <StatusBadge :label="profile.enabled ? t.storage.active : t.storage.off" :tone="profile.enabled ? 'success' : 'neutral'" size="sm" />
@@ -220,7 +222,9 @@ onBeforeUnmount(() => { disposed = true; generation++; password.value = ""; wind
         <ErrorState v-if="exportsError" :title="t.storage.exportsFailed" :text="exportsError" @retry="loadExports" />
         <LoadingNote v-else-if="!pdfExports" :label="t.storage.exportsLoading" />
         <SettingsList v-else-if="pdfExports.length" :label="t.storage.exportsLabel">
-          <SettingsListRow v-for="row in pdfExports" :key="row.pageId" :title="row.pageTitle || t.storage.untitled" icon="file-text" :data-pdf-export-row="row.pageId">
+          <SettingsListRow v-for="row in pdfExports" :key="row.pageId" :title="row.pageTitle || t.storage.untitled" icon="file-text" :data-pdf-export-row="row.pageId"
+            :menu="[{ id: 'open', label: t.storage.openSettings, icon: 'arrow-right' }, { id: 'retry', label: t.storage.retryExport, icon: 'refresh', disabled: !row.enabled || !!retrying }]"
+            @select="id => id === 'open' ? context.openPage(row.pageId, true) : retry(row)">
             <template #description>
               <code class="st-mono">{{ row.path }}</code>
               <p>{{ t.storage.exportDetail(row.spaceName, row.publishedOnly, row.keepVersions, row.lastExportedAt ? formatDateTime(row.lastExportedAt) : null) }}</p>

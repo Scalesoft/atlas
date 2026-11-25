@@ -87,7 +87,8 @@ async function cancel(request: AccessRequest) {
       <p v-if="error" class="st-note" role="alert"><AtlasIcon name="triangle-alert" :size="15" />{{ error }}</p>
       <SettingsSection :title="t.mine.pending" icon="hourglass" :count="pending.length">
         <SettingsList v-if="pending.length" :label="t.mine.pendingLabel">
-          <SettingsListRow v-for="request in pending" :key="request.id" :title="title(request)" :description="outcome(request)" :icon="request.secretId ? 'key-round' : 'lock'" :data-my-request="request.id">
+          <SettingsListRow v-for="request in pending" :key="request.id" :title="title(request)" :description="outcome(request)" :icon="request.secretId ? 'key-round' : 'lock'" :data-my-request="request.id"
+            :menu="[{ id: 'cancel', label: t.mine.cancel, icon: 'close', destructive: true, disabled: busy === request.id }]" @select="cancel(request)">
             <template #meta><StatusBadge v-bind="states[request.state]" size="sm" /></template>
             <template #actions>
               <Button variant="ghost" size="sm" type="button" :disabled="busy === request.id" data-my-request-cancel @click="cancel(request)"><AtlasIcon :name="busy === request.id ? 'loader-circle' : 'close'" :size="15" :class="{ 'atlas-spinner': busy === request.id }" />{{ t.mine.cancel }}</Button>

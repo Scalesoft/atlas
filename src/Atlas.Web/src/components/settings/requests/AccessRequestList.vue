@@ -72,6 +72,8 @@ watch(
       :title="request.requesterName"
       :description="compact ? t.list.describe(title(request), formatDateTime(request.createdAt)) : t.list.describeWithVault(title(request), request.vaultName, formatDateTime(request.createdAt))"
       :data-request="request.id"
+      :menu="[{ id: 'approve', label: t.list.approve, icon: 'circle-check', disabled: busy }, { id: 'reject', label: t.list.reject, icon: 'circle-x', destructive: true, disabled: busy }]"
+      @select="id => toggle(request, id === 'approve' ? 'approve' : 'reject')"
     >
       <template #leading><SubjectAvatar kind="user" :name="request.requesterName" /></template>
       <template #meta>
