@@ -61,7 +61,7 @@ import { liveConnection } from "./live/liveConnection";
 import { pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
 import { usePageVerification } from "./verification/usePageVerification";
-import { verificationMark } from "./verification/verificationMark";
+import { verificationMark, verificationShown } from "./verification/verificationMark";
 import { isSpacePinned, pinnedFirst, setSpacePinned, SPACE_PIN_REQUIRED } from "./spacePins";
 import { downloadContentExport, rememberCoverDetails, rememberedCoverDetails, type PdfCoverDetail } from "./contentExport";
 import { plainTitle } from "./objects/relationsApi";
@@ -614,6 +614,7 @@ const shownVersion = computed(() => !page.value ? 0 : pageCanWrite.value || page
 const publication = shallowRef<PagePublication>();
 /** Ověření stránky (5.2): the chip's and the dock's state, the chip's popover and the panel's Čtenost. */
 const { verification, open: verificationOpen, readers: pageReaders } = usePageVerification(() => page.value);
+const verificationChip = ref<InstanceType<typeof PageVerification>>();
 /** A writer's page published live (Publikace Živě, `PagePublication.effective`): readers already read its saved state. */
 const publishedLive = computed(() => publication.value?.effective === "Live");
 /** Neither a reader nor a live page's writer has anything waiting for Publikovat (a reader never sees unpublished state). */
@@ -771,11 +772,13 @@ const settingsSpaceName = computed(() => {
   const target = settingsLocation.value;
   return target?.scope === "space" ? spaces.value.find(item => item.id === target.spaceId)?.name : undefined;
 });
-function spaceMetadataChanged(updated: { id: string; name: string; icon: string; color: string; description: string; pinPolicy?: SpacePinPolicy; cover?: Space["cover"] }) {
+function spaceMetadataChanged(updated: { id: string; name: string; icon: string; color: string; description: string; pinPolicy?: SpacePinPolicy; cover?: Space["cover"]; verificationIntervalMonths?: number | null }) {
   const previous = spaces.value.find(item => item.id === updated.id);
   const { id, name, icon, color, description } = updated;
   // The card image (refresh 2.5) is saved on its own; Knihovna shows it as soon as settings report it.
-  spaces.value = spaces.value.map(item => item.id === id ? { ...item, name, icon, color, description, pinPolicy: updated.pinPolicy ?? item.pinPolicy, ...(updated.cover !== undefined ? { cover: updated.cover } : {}) } : item);
+  spaces.value = spaces.value.map(item => item.id === id ? { ...item, name, icon, color, description, pinPolicy: updated.pinPolicy ?? item.pinPolicy, ...(updated.cover !== undefined ? { cover: updated.cover } : {}),
+    // Switching verification on in Obecné brings Stav obsahu into the space's menus at once.
+    ...(updated.verificationIntervalMonths !== undefined ? { verificationOn: !!updated.verificationIntervalMonths } : {}) } : item);
   // The effective pin combines the new rule with the account's own choice, which only the server knows.
   if (previous && updated.pinPolicy && updated.pinPolicy !== previous.pinPolicy) void refreshAccess();
 }
@@ -981,7 +984,7 @@ const commands = computed<WikiCommand[]>(() => {
   if (user.value.isWikiAdmin) items.push({ id: 'settings', label: t.common.wikiAdmin, detail: t.common.settings, icon: 'settings', keywords: ['nastavení'], run: openAdministration });
   if (currentSpace.value && spaceCanManage(currentSpace.value)) items.push({ id: 'space-settings', label: t.common.spaceSettings, detail: currentSpace.value.name, icon: 'settings', run: () => openSettings(spaceSettingsHash(currentSpace.value!.id)) });
   // Stav obsahu is every editor's of the space (5.2 §6), its one section of the space settings.
-  if (currentSpace.value && spaceCanWrite(currentSpace.value)) { const space = currentSpace.value; items.push({ id: 'content-health', label: t.cmd.contentHealth, detail: space.name, icon: 'shield-check', keywords: ['overeni', 'verification'], run: () => spaceMenu(space, 'content-health') }); }
+  if (currentSpace.value?.verificationOn && spaceCanWrite(currentSpace.value)) { const space = currentSpace.value; items.push({ id: 'content-health', label: t.cmd.contentHealth, detail: space.name, icon: 'shield-check', keywords: ['overeni', 'verification'], run: () => spaceMenu(space, 'content-health') }); }
   if (currentSpace.value && projectorEnabled.value) {
     const space = currentSpace.value;
     items.push(
@@ -1067,7 +1070,7 @@ const searchGroups = computed(() => {
     const headingId = passage ? passage.headingId : heading ? result.headingId : null;
     return { board: false,
     key: `page-${result.id}-${result.isDraft}-${result.headingId ?? ''}`, result: { ...result, headingId }, widget: undefined as SearchWidget | undefined, live: false,
-    passage, semantic: isSemanticRow(result, semanticOn.value) || undefined,
+    passage, semantic: isSemanticRow(result, semanticOn.value) || undefined, mark: verificationMark(result.verification),
     title: heading ? result.headingTitle || result.title : result.title,
     detail: heading ? `${result.title} · ${result.spaceName}` : result.spaceName,
     href: pageLink(result.id, headingId ?? undefined), icon: heading ? 'hash' : 'page', color: heading ? 'green' : 'blue',
@@ -1075,7 +1078,7 @@ const searchGroups = computed(() => {
   const widgetItems = (kind: SearchWidget['kind']) => results.value.flatMap(result => (result.widgets ?? [])
     .map((widget, index) => ({ widget, index })).filter(item => item.widget.kind === kind)
     .map(({ widget, index }) => ({ board: false, passage: undefined, semantic: undefined, key: kind === 'youtrack' && widget.url ? `issue-${widget.url}` : `widget-${result.id}-${kind}-${index}`, widget, live: false,
-      result: { ...result, headingId: widget.headingId }, title: widget.title,
+      result: { ...result, headingId: widget.headingId }, mark: verificationMark(result.verification), title: widget.title,
       detail: widget.detail, href: kind === 'youtrack' && widget.url ? widget.url : pageLink(result.id, widget.headingId ?? undefined),
       icon: kind === 'contact' ? 'users' : 'check', color: kind === 'contact' ? 'green' : 'blue',
     })));
@@ -4758,7 +4761,7 @@ onUnmounted(() => {
                       :disabled="pending"
                       ><template #trigger><AtlasIcon name="down" :size="14" /></template>
                       <!-- The same list as the sidebar's „Další akce prostoru“ (SpaceMenuItems). -->
-                      <SpaceMenuItems :can-write="spaceCanWrite(currentSpace)" can-manage :boards="boardsEnabled" :empty="!(spacePages[currentSpace.id]?.length)"
+                      <SpaceMenuItems :can-write="spaceCanWrite(currentSpace)" can-manage :boards="boardsEnabled" :empty="!(spacePages[currentSpace.id]?.length)" :content-health="currentSpace.verificationOn"
                         @create-page="createPageInSpace(currentSpace)" @create-board="createBoardInSpace(currentSpace)" @settings="spaceMenu(currentSpace, 'settings')" @pin-policy="spaceMenu(currentSpace, 'settings')"
                         @templates="spaceMenu(currentSpace, 'templates')" @access="spaceMenu(currentSpace, 'access')" @trash="spaceMenu(currentSpace, 'trash')" @export-space="spaceMenu(currentSpace, 'export')" @content-health="spaceMenu(currentSpace, 'content-health')" />
                     </ActionDisclosure>
@@ -4985,7 +4988,7 @@ onUnmounted(() => {
             <div class="document-meta" :data-writable="(pageCanWrite && browserOnline) || undefined">
               <AssistantLauncher variant="page" :page-reading="assistantPageReading" :can-ask="canAsk" @launch="launchAssistant(true)" />
               <StatusBadge v-if="catalogPage" tone="info" icon="book-open" size="sm" :label="t.nav.catalogBadge" data-page-catalog />
-              <PageVerification v-if="verification && verification.state !== 'off' && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
+              <PageVerification v-if="verificationShown(verification)" ref="verificationChip" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite" :online="browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
               <Button v-if="page.isTemplate && canManageTemplates" variant="ghost" size="sm" @click="openSpaceTemplates(currentSpace!.id)">{{ t.nav.templateManage }}</Button>
               <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" :data-transient="documentStatusTransient || undefined" role="status" aria-live="polite" aria-atomic="true">
                 <StatusBadge v-if="documentStatusTransient" :key="documentStatusText" tone="success" :label="documentStatusText" confirmed />
@@ -5140,7 +5143,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" :host="pageCommentHost" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="pageReaders" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" :host="pageCommentHost" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="verification" :readers="pageReaders" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationChip?.openSteward()" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>
@@ -5348,7 +5351,7 @@ onUnmounted(() => {
               <span class="space-icon" :data-color="item.color"><AtlasIcon :name="item.icon" :size="18" /></span>
               <span class="search-result-main"><span class="search-result-head"><strong class="search-result-title"><span v-if="item.widget?.key" class="search-issue-key">{{ item.widget.key }}</span><SearchHighlight :text="item.title" :query="query" /></strong>
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
-                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="verificationMark(item.result.verification)" :name="verificationMark(item.result.verification)!.icon" :size="13" class="search-verification" :data-warn="verificationMark(item.result.verification)!.warn || undefined" role="img" :aria-label="verificationMark(item.result.verification)!.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="verificationMark(item.result.verification)!.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
+                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="'mark' in item && item.mark" :name="item.mark.icon" :size="13" class="search-verification" :data-warn="item.mark.warn || undefined" role="img" :aria-label="item.mark.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="item.mark.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
                   <span v-if="item.board" class="search-live-label" data-search-type>{{ t.common.board }}</span>
                   <span v-else-if="item.widget">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
                 </small>
