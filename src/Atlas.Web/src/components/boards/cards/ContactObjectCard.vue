@@ -29,6 +29,7 @@ const props = defineProps<{ object: LiveObject; editing: boolean; compact: boole
 /** `edited`: what a change wrote, for the board's undo (P6): the fields before and after. */
 const emit = defineEmits<{ done: []; edited: [edit: { objectId: string; before: Record<string, unknown>; after: Record<string, unknown> }] }>();
 const failure = ref("");
+const root = ref<HTMLElement>();
 const canvas = inject(boardCanvasKey, undefined);
 const qr = computed(() => !!props.itemId && !props.editing && contactCardShare.isOpen(props.itemId) && showsQrInPlace(props.height ?? 0));
 // The code belongs to the selected card: it ends with the selection (also by Esc, which clears it) and while the card is edited.
@@ -42,21 +43,26 @@ async function change(patch: ContactPatch) {
   try { await liveObjects.edit(props.object.id, patch); }
   catch (error) { failure.value = errorMessage(error); }
 }
+/** Ends the code in the card's place. Its „Zpět“ turns inert, so the focus inside the card moves to the card's node: the board keys keep working. */
+function closeQr() {
+  if (root.value?.contains(document.activeElement)) root.value.closest<HTMLElement>(".vue-flow__node")?.focus({ preventScroll: true });
+  contactCardShare.set(props.itemId!, false);
+}
 function key(event: KeyboardEvent) {
   if (event.key !== "Escape" || event.defaultPrevented) return;
   event.stopPropagation();
   // The first Esc takes the code away (from its „Zpět“ or the card), the next ends the editing as ever.
-  if (qr.value) { contactCardShare.set(props.itemId!, false); return; }
+  if (qr.value) { closeQr(); return; }
   emit("done");
 }
 </script>
 
 <template>
-  <div class="bcard bcard-contact" :class="{ 'nodrag nopan nowheel': editing }" data-board-card="contact" @keydown="key">
+  <div ref="root" class="bcard bcard-contact" :class="{ 'nodrag nopan nowheel': editing }" data-board-card="contact" @keydown="key">
     <!-- A mouse affordance beside the board's own move: a page's keyboard path to a contact is /Kontakt. -->
     <span v-if="!editing" class="bcard-contact-drag nodrag" draggable="true" aria-hidden="true" :title="t.contactCard.drag" data-board-contact-drag
       @dragstart="startObjectDrag($event, { id: object.id, typeId: object.typeId, title: object.title }, { effect: 'copy' })"><AtlasIcon name="grip-vertical" :size="14" /></span>
-    <ContactCard :contact="object.data as unknown as ContactData" :editable="editing && object.canEdit" :compact="compact" :host="host" fit :qr="qr" @close-qr="contactCardShare.set(itemId!, false)" :upload="file => uploadContactPhoto(object.id, file)" @change="change" />
+    <ContactCard :contact="object.data as unknown as ContactData" :editable="editing && object.canEdit" :compact="compact" :host="host" fit :qr="qr" @close-qr="closeQr" :upload="file => uploadContactPhoto(object.id, file)" @change="change" />
     <p v-if="failure" class="bcard-error" role="alert">{{ failure }}</p>
   </div>
 </template>

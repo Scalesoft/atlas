@@ -37,6 +37,18 @@ describe("ContactObjectCard", () => {
     expect(contactCardShare.isOpen("item")).toBe(false);
   });
 
+  it("hands the focus from „Zpět“ to the card's node, not to the body, as the code turns inert", async () => {
+    const node = Object.assign(document.createElement("div"), { className: "vue-flow__node", tabIndex: 0 });
+    document.body.append(node);
+    wrapper = mount(ContactObjectCard, { attachTo: node, props: { object: object(), editing: false, compact: false, host: inertBlockHost, itemId: "item", height: 200 } });
+    contactCardShare.set("item", true);
+    await wrapper.vm.$nextTick();
+    const back = wrapper.get<HTMLElement>("[data-contact-qr-back]");
+    back.element.focus();
+    await back.trigger("click");
+    expect(document.activeElement).toBe(node);
+  });
+
   it("leaves a card too low to scan its code to the toolbar's dialog", async () => {
     wrapper = mountCard({ height: 90 });
     contactCardShare.set("item", true);

@@ -14,6 +14,7 @@ import { plainTitle } from "../../objects/relationsApi";
 import { downloadCard } from "../../contacts/contactShare";
 import { useContactQr } from "../../contacts/useContactQr";
 import ContactQr from "./ContactQr.vue";
+import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 
@@ -236,7 +237,7 @@ async function photoPicked(file: File | undefined) {
       <div class="contact-qrview-side">
         <strong class="contact-qrview-name">{{ qrName }}</strong>
         <span class="contact-qrview-hint">{{ place.failed.value ? t.card.qrFailed : t.card.qrHint }}<template v-if="place.omitted.value.length"> {{ t.card.qrOmitted(place.omitted.value.join(", ")) }}</template></span>
-        <button type="button" class="contact-qrview-back" :title="t.card.qrBackTitle" data-contact-qr-back @click="emit('closeQr')"><AtlasIcon name="arrow-left" :size="14" />{{ t.card.qrBack }}</button>
+        <Button variant="outline" size="xs" type="button" class="contact-qrview-back" :title="t.card.qrBackTitle" data-contact-qr-back @click="emit('closeQr')"><AtlasIcon name="arrow-left" :size="14" />{{ t.card.qrBack }}</Button>
       </div>
     </div>
   </article>
@@ -338,11 +339,6 @@ async function photoPicked(file: File | undefined) {
 .contact-qrview-name { max-width: 100%; font-size: 15px; font-weight: 650; line-height: 1.25; overflow-wrap: break-word; }
 .contact-qrview-hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
 @container contact (max-height: 219px) { .contact-qrview-hint { display: none; } }
-.contact-qrview-back { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--text); font: inherit; font-size: 12px; cursor: pointer;
-  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), scale var(--atlas-motion-fast) var(--atlas-ease-out); }
-@media (hover: hover) and (pointer: fine) { .contact-qrview-back:hover { background: var(--hover); } }
-.contact-qrview-back:active { scale: var(--atlas-press); }
-.contact-qrview-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* A card nearer a square than a wide one: the code over its caption. */
 @container contact (max-aspect-ratio: 5/4) {
   .contact-qrview { flex-direction: column; justify-content: center; gap: 8px; }
