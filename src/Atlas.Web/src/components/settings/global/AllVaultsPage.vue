@@ -53,6 +53,7 @@ const shown = computed(() => {
     .filter((vault) => (!space.value || vault.spaceId === space.value) && (!text || foldText(`${vault.name} ${spaceName(vault)} ${vault.fileName}`).includes(text)));
 });
 const vaultHref = (vault: Vault) => spaceSettingsHash(vault.spaceId, `vaults/${vault.id}/status`);
+const openVault = (vault: Vault) => { location.hash = vaultHref(vault); };
 </script>
 
 <template>
@@ -79,6 +80,8 @@ const vaultHref = (vault: Vault) => spaceSettingsHash(vault.spaceId, `vaults/${v
             :highlighted="flash.highlight.value === vault.id"
             :data-vault="vault.id"
             :data-space-vaults="vault.spaceId"
+            :menu="[{ id: 'open', label: t.vaults.open, icon: 'arrow-right' }]"
+            @select="openVault(vault)"
           >
             <template #meta>
               <VaultStatusBadge :status="vault.status" />

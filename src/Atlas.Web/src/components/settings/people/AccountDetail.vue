@@ -22,7 +22,7 @@ import InlineReveal from "../InlineReveal.vue";
 import OptionPills from "../OptionPills.vue";
 import SettingsSection from "../SettingsSection.vue";
 import StatusBadge from "../StatusBadge.vue";
-import { useDirtyGuard } from "../dirtyGuard";
+import { useDraftGuard } from "../dirtyGuard";
 import { useSettingsFlash } from "../flash";
 import AiQuotaStatus from "../../ai/AiQuotaStatus.vue";
 import AiQuotaFields from "../general/ai/AiQuotaFields.vue";
@@ -43,7 +43,6 @@ const aiModeOptions = (inheritLabel: string) => [{ value: "inherit", label: inhe
 const props = defineProps<{ account: DirectoryUser; currentUserId: string; reload: () => Promise<void> }>();
 const emit = defineEmits<{ saved: [account: DirectoryUser] }>();
 const flash = useSettingsFlash();
-const guard = useDirtyGuard();
 let disposed = false;
 
 const isSelf = computed(() => props.account.id === props.currentUserId);
@@ -118,7 +117,6 @@ const confirmAdmin = ref(false);
 const adminAttempt = ref(0);
 const adminChanging = computed(() => accountDirty.value && draft.value.isWikiAdmin !== props.account.isWikiAdmin);
 watch(dirty, (value) => {
-  if (guard) guard.dirty.value = value;
   if (value) saveError.value = "";
 });
 
@@ -210,7 +208,7 @@ function discard() {
   if (aiState.value) aiDraft.value = policyDraft(aiState.value);
   saveError.value = "";
 }
-guard?.register({ save: () => save(), discard });
+useDraftGuard(dirty, { save: () => save(), discard });
 
 // Password reset: a fresh sign-in confirmation, then the new one-time code shown once.
 const resetOpen = ref(false);
@@ -254,7 +252,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   disposed = true;
   resetCode.value = undefined;
-  guard?.release();
 });
 </script>
 
