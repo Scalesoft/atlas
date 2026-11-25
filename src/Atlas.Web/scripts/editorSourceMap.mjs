@@ -23,6 +23,8 @@ const themes = ["ocean", "forest", "midnight"];
 export const editorSourceExports = Object.freeze({
   "@atlas/markdown": "src/index.ts",
   "@atlas/markdown/core": "src/core/index.ts",
+  // The collaborator palette without the editor, for the shell's first screen (live/collaboratorColors.ts, eager).
+  "@atlas/markdown/core/userColor": "src/core/userColor.ts",
   "@atlas/markdown/vue": "src/vue/index.ts",
   "@atlas/markdown/icons": "src/icons/index.ts",
   // The slash menu's matching without the editor, for the shell's command palette (eager).

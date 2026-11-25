@@ -17,7 +17,7 @@ import t from "../../i18n/profile";
 const props = withDefaults(defineProps<{ accents: readonly AccentChoice<Id>[]; mode: "light" | "dark"; label: string; disabled?: boolean }>(), { disabled: false });
 const model = defineModel<Id>({ required: true });
 const swatchStyle = (accent: AccentChoice<Id>) => accent.swatch
-  ? { "--swatch": props.mode === "dark" ? accent.swatch.dark : accent.swatch.light, "--swatch-ring": props.mode === "dark" ? accent.swatch.dark : accent.swatch.light, "--swatch-ink": "#ffffff", "--swatch-h": 0 }
+  ? { "--swatch": props.mode === "dark" ? accent.swatch.dark : accent.swatch.light, "--swatch-ring": props.mode === "dark" ? accent.swatch.dark : accent.swatch.light, "--swatch-ink": "#ffffff" }
   : { "--swatch-h": accent.hue };
 const uid = useId();
 const current = computed(() => props.accents.find((accent) => accent.id === model.value));

@@ -127,6 +127,25 @@ describe('remote changes apply only the changed range', () => {
     expect(matchesYjs(alice) && matchesYjs(bob)).toBe(true)
   })
 
+  it('draws a collaborator in both variants of their palette colour, for the stylesheet to pick by the surface', () => {
+    const { alice, bob } = pair()
+    const awareness = new Awareness(bob.doc)
+    bob.editor.registerPlugin(collaborationCaretsPlugin(bob.editor, awareness))
+    const remote = new Awareness(alice.doc)
+    const sync = ySyncPluginKey.getState(alice.editor.state)!
+    const at = (position: number) => absolutePositionToRelativePosition(position, sync.type, sync.binding.mapping)
+    remote.setLocalState({ user: { name: 'Jana', color: '#1863b6' }, cursor: { anchor: at(2), head: at(5) } })
+    awareness.states.set(remote.clientID, remote.getLocalState()!)
+    awareness.meta.set(remote.clientID, { clock: remote.meta.get(remote.clientID)!.clock, lastUpdated: Date.now() })
+    bob.editor.view.dispatch(bob.editor.state.tr.setMeta(yCursorPluginKey, { awarenessUpdated: true }))
+    const variants = (selector: string) => {
+      const element = bob.editor.view.dom.querySelector<HTMLElement>(selector)!
+      return [element.style.getPropertyValue('--caret-light'), element.style.getPropertyValue('--caret-dark')]
+    }
+    expect(variants('.collaboration-carets__caret')).toEqual(['#1863b6', '#2e76cb'])
+    expect(variants('.ProseMirror-yjs-selection')).toEqual(['#1863b6', '#2e76cb'])
+  })
+
   it('keeps a collaborator cursor that arrives before the edit it points into', () => {
     const { alice, bob } = pair()
     const awareness = new Awareness(bob.doc)

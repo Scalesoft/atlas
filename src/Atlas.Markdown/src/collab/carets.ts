@@ -5,21 +5,24 @@ import { absolutePositionToRelativePosition, isStructuralTransaction, relativePo
 import * as Y from 'yjs'
 import type { Awareness } from 'y-protocols/awareness'
 import { flushDomSelection } from '../core/internal'
+import { collaboratorColor } from '../core/userColor'
 
-export interface CaretUser { name: string; color: string; [field: string]: unknown }
+/** `color`: the server stamps it on everyone else's state (a client's own claim never leaves it), so the local user needs none. */
+export interface CaretUser { name: string; color?: string; [field: string]: unknown }
 interface CaretState { user?: Partial<CaretUser>; cursor?: { anchor: unknown; head: unknown } | null }
 interface Changes { added: number[]; updated: number[]; removed: number[] }
 
 const validColor = /^#[0-9a-fA-F]{6}$/
 const colorOf = (user: Partial<CaretUser>) => typeof user.color === 'string' && validColor.test(user.color) ? user.color : 'transparent'
+/** Both variants of the person's colour; collaboration.css picks the dark one under `html[data-mode="dark"]` and cross-fades a change. */
+const colorVariables = (color: string) => `--caret-light: ${collaboratorColor(color, false)}; --caret-dark: ${collaboratorColor(color, true)}`
 
-function caretElement(user: CaretUser): HTMLElement {
+function caretElement(user: CaretUser & { color: string }): HTMLElement {
   const caret = document.createElement('span')
   caret.classList.add('collaboration-carets__caret')
-  caret.style.borderColor = colorOf(user)
+  caret.style.cssText = colorVariables(user.color)
   const label = document.createElement('div')
   label.classList.add('collaboration-carets__label')
-  label.style.backgroundColor = colorOf(user)
   label.textContent = user.name
   caret.append(label)
   return caret
@@ -58,11 +61,12 @@ function decorations(state: EditorState, awareness: Awareness, shown: Map<number
       if (anchor === null || head === null) return
     }
     shown.set(clientId, cursor)
-    const person: CaretUser = { ...user, name: typeof user.name === 'string' ? user.name : `User: ${clientId}`, color: colorOf(user) }
+    const person = { ...user, name: typeof user.name === 'string' ? user.name : `User: ${clientId}`, color: colorOf(user) }
     const at = Math.min(head, max), from = Math.min(anchor, at, max), to = Math.min(Math.max(anchor, head), max)
-    found.push(Decoration.widget(at, () => caretElement(person), { key: String(clientId), side: 10, clientId }))
+    // The colour is part of the key: ProseMirror keeps a widget's DOM while its key stays (a restamped colour would never show).
+    found.push(Decoration.widget(at, () => caretElement(person), { key: `${clientId} ${person.color}`, side: 10, clientId }))
     if (person.color !== 'transparent') {
-      found.push(Decoration.inline(from, to, { style: `background-color: ${person.color}70`, class: 'ProseMirror-yjs-selection' },
+      found.push(Decoration.inline(from, to, { style: colorVariables(person.color), class: 'ProseMirror-yjs-selection' },
         { inclusiveEnd: true, inclusiveStart: false, clientId }))
     }
   })
