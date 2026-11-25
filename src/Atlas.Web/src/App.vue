@@ -123,6 +123,7 @@ import AtlasIcon from "./components/AtlasIcon.vue";
 import SidebarSpace from "./components/SidebarSpace.vue";
 import PageStatusBadge from "./components/PageStatusBadge.vue";
 import EmptyState from "./components/settings/EmptyState.vue";
+import ErrorState from "./components/settings/ErrorState.vue";
 // Draft approval previews revisions with the editor's renderer; keep that out of the shell's eager set.
 const SpaceDraftApproval = lazyComponent(() => import("./components/SpaceDraftApproval.vue"), { loading: LoadingSkeleton });
 // K2: the one „poslední použití kontaktu“ question of every board and page (contactLinking.ts).
@@ -2770,6 +2771,18 @@ function boardMeta(meta: { spaceId: string; title: string; canEdit: boolean }) {
   const node = pagesBySpace.value[meta.spaceId]?.find(item => item.id === id);
   if (node && node.title !== meta.title) node.title = meta.title;
 }
+/** „Zpět“ of a page or board just moved to the trash, only for who may restore it (space Admin, wiki admin); the others are told an admin can. Back at its old place. */
+function trashUndo(space: Space, id: string, type: "page" | "board", subtree = false) {
+  if (!user.value?.isWikiAdmin && space.role !== "Admin") return {};
+  return { undo: () => void runUndo(async () => {
+    const trash = await organizationApi.trashList(space.id), item = trash.items.find(candidate => candidate.id === id);
+    if (!item) throw new Error(t.toast.trashedGone);
+    const parentId = item.parentId && pagesBySpace.value[space.id]?.some(node => node.id === item.parentId) ? item.parentId : null;
+    await organizationApi.untrash(id, parentId, subtree, trash.version, type);
+    await loadTree(space.id);
+    toaster.success(type === "board" ? t.toast.boardBack : t.toast.pageBack);
+  }) };
+}
 async function trashBoard() {
   const id = boardId.value, space = currentSpace.value;
   if (!id || !space || boardTrashBusy.value) return;
@@ -2782,7 +2795,7 @@ async function trashBoard() {
     libraryRefresh.value++;
     await selectSpace(space);
     try { await loadTree(space.id); } catch { /* The space overview reports a tree it cannot load. */ }
-    toaster.success(t.toast.boardInTrash);
+    toaster.success(t.toast.boardInTrash, trashUndo(space, id, "board"));
   } catch (failure) {
     boardTrashError.value = errorMessage(failure);
   } finally { boardTrashBusy.value = false; }
@@ -2962,9 +2975,10 @@ async function organizationChanged(change: OrganizationChanged) {
   if (change.kind === "move") announceMove(space.id, organizationOpen.value === "board" ? boardId.value : page.value?.id, change.titleOrderCancelled);
   if (page.value && change.affectedIds.includes(page.value.id)) {
     if (change.kind === "trash") {
+      const trashed = page.value.id;
       dirty.value = false;
       await selectSpace(space);
-      toaster.success(t.toast.pageInTrash);
+      toaster.success(t.toast.pageInTrash, trashUndo(space, trashed, "page", change.affectedIds.length > 1));
     } else if (change.kind === "untrash" && pageGone.value === page.value.id) {
       await reopenPage(page.value.id);
     } else {
@@ -5027,7 +5041,7 @@ onUnmounted(() => {
                  aside while the dock is open, whatever its tab, so switching tabs never moves the article. -->
             <PageOutline :key="`outline:${page.id}`" class="document-outline" :root="documentBody" variant="disclosure" :minimum="3" :collapsed="pageDockOpen" :page-id="page.id" />
           </div>
-          <p v-if="personalError" class="personal-error notice error" role="alert">{{ t.nav.favoritesError(personalError) }} <button v-if="!personalState" @click="loadPersonalState(page.id)">{{ t.common.retry }}</button></p>
+          <p v-if="personalError" class="personal-error notice error" role="alert">{{ t.nav.favoritesError(personalError) }} <Button v-if="!personalState" variant="link" size="sm" @click="loadPersonalState(page.id)">{{ t.common.retry }}</Button></p>
           <p v-if="pageGone === page.id" class="notice" role="status" data-page-gone>{{ t.nav.pageGone }}
             <button v-if="currentSpace && spaceCanManage(currentSpace)" type="button" @click="organizationOpen = 'trash'">{{ t.nav.restoreFromTrash }}</button></p>
           <p v-else-if="writeRevoked?.pageId === page.id" class="notice" role="status" data-page-write-revoked>{{ t.nav.writeRevoked }}
@@ -5334,12 +5348,7 @@ onUnmounted(() => {
           {{ searchTag ? t.search.tagPages : searchScopeHint }}
         </p>
         <div v-if="!searchResultCount && !searchAttempted && searching" class="search-skeleton" aria-hidden="true"><div v-for="row in 6" :key="row"><i /><span><b /><b /></span></div></div>
-        <div v-if="searchError" role="alert" class="notice error">
-          {{ searchError }}
-          <button class="search-retry" type="button" @click="scheduleSearch">
-            {{ t.search.retry }}
-          </button>
-        </div>
+        <ErrorState v-if="searchError" :title="t.search.failedTitle" :text="searchError" :retry-label="t.search.retry" @retry="scheduleSearch" />
         <EmptyState v-else-if="searchAttempted && !searchResultCount && !showSuggestions" compact icon="search" :title="t.search.noPages" :text="searchFiltered ? t.search.tryClear : t.search.tryOtherWords" :data-stale="searchStale || undefined" />
         <SearchSuggestions v-else-if="showSuggestions" :active-index="searchResultChosen ? searchIndex : -1" :user-id="user?.id" @loaded="suggestedPages = $event" @select="searchIndex = $event; searchResultChosen = true" @keydown="searchKeys" @open="id => openPage(id)" />
         <EmptyState v-else-if="!searchTag && query.trim().length < 2" compact icon="search" :title="t.search.twoChars" :text="t.search.inTitlesAndContent" />

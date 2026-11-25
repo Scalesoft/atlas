@@ -243,6 +243,17 @@ describe("App: module Boards", () => {
     expect(app.text()).toContain("Tabule byla přesunuta do koše.");
   });
 
+  it("offers Zpět on the trashed board to who may restore it, and restores it where it stood", async () => {
+    const trash = { spaceId: "space-1", version: 9, hasMore: false, items: [{ id: "b1", parentId: "p1", title: "Plán", version: 1, trashedAt: "2026-10-26T12:00:00Z", trashedById: "user-2", trashedByName: null, trashBatchId: "x", type: "board" }] };
+    const app = await start("#/boards/b1", ["pages", "boards"], path => path === "/api/spaces/space-1/trash?offset=0&limit=50" ? response(trash) : undefined);
+    await app.get('[aria-label="Další akce tabule"]').trigger("click"); await settleMenu();
+    menuItem("[data-board-trash]")!.click(); await settle();
+    document.querySelector<HTMLElement>("[data-confirm-action]")!.click(); await settle();
+    const undo = [...document.querySelectorAll<HTMLElement>("[data-sonner-toast] button")].find(button => button.textContent === "Zpět")!;
+    undo.click(); await settle();
+    expect(sent("/api/boards/b1/untrash")).toEqual([{ path: "/api/boards/b1/untrash", method: "POST", body: { parentId: "p1", includeSubtree: false, expectedTreeVersion: 9 } }]);
+  });
+
   it("keeps the space's boards address as its list filtered to boards", async () => {
     const app = await start("#/spaces/space-1/boards", ["pages", "boards"]);
     expect(app.findAll("[data-content-row]").map(row => row.text())).toEqual(["Plán"]);

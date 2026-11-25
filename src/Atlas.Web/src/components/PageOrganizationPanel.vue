@@ -2,7 +2,6 @@
 import t from "../i18n/components-b";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from "vue";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { ApiError, errorMessage, type Page, type Space } from "../api";
 import { organizationApi, type OrganizationChanged, type OrganizationTree, type TrashItem } from "../organization";
 import { isPageNode } from "../treeMove";
@@ -18,8 +17,6 @@ import LoadingNote from "./settings/LoadingNote.vue";
 import TrashList from "./settings/TrashList.vue";
 import InlineReveal from "./settings/InlineReveal.vue";
 import SearchableChoiceList from "./settings/SearchableChoiceList.vue";
-import OptionPills from "./settings/OptionPills.vue";
-import type { ChoiceOption } from "./settings/types";
 
 const props = defineProps<{
   spaceId: string;
@@ -33,30 +30,30 @@ const props = defineProps<{
   /** „Přesunout do koše“ of the page menu: only the confirmation, as narrow as every other one (ConfirmDialog), and its Zrušit closes. */
   startWithTrash?: boolean;
 }>();
-const emit = defineEmits<{ close: []; changed: [change: OrganizationChanged]; renamed: [page: Page] }>();
+const emit = defineEmits<{ close: []; changed: [change: OrganizationChanged] }>();
 const dialogOpen = ref(true);
 const tree = shallowRef<OrganizationTree>();
 const trashItems = shallowRef<TrashItem[]>([]);
 const trashVersion = ref(0), hasMore = ref(false), headVersion = ref(props.page?.version ?? 0);
-const title = ref(props.page?.title ?? ""), parentId = ref(props.page?.parentId ?? ""), beforeId = ref("");
+const parentId = ref(props.page?.parentId ?? ""), beforeId = ref("");
 const includeSubtree = ref(false), restoreSubtree = ref(false), restoreParent = ref("");
 const positionOpen = ref(false), transferOpen = ref(false), spaceQuery = ref("");
 const spaceOptions = computed(() => writableSpaces.value.map(space => ({ value: space.id, label: space.name })));
 const targetSpaceId = ref(""), targetParentId = ref(""), targetSubtree = ref(false), acknowledgeAccess = ref(false);
 const targetTree = shallowRef<OrganizationTree>();
-const section = ref<'general' | 'location'>(props.board ? 'location' : 'general'), confirmTrash = ref(!!props.startWithTrash && !!props.page);
-const sectionOptions = (): ChoiceOption[] => [{ value: 'general', label: t.org.general, icon: 'page' }, { value: 'location', label: t.org.location, icon: 'organize' }];
+const confirmTrash = ref(!!props.startWithTrash && !!props.page);
 const body = ref<HTMLElement>();
+// Back from the confirmation, the caret returns to the button that opened it (the ConfirmDialog places its own focus).
 watch(confirmTrash, async value => {
+  if (value) return;
   await nextTick();
-  body.value?.querySelector<HTMLElement>(value ? '.organization-confirm-actions button' : '.organization-trash-trigger')?.focus();
+  body.value?.querySelector<HTMLElement>('.organization-trash-trigger')?.focus();
 });
 // Opening {{ t.org.location }} is choosing where: the caret waits in the search, so typing finds the place and Enter takes it.
 async function focusLocationSearch() {
   await nextTick();
   body.value?.querySelector<HTMLElement>('#organization-parent .location-search input')?.focus();
 }
-watch(section, value => { if (value === 'location') void focusLocationSearch(); });
 const mutationsDisabled = computed(() => busy.value || loading.value || conflict.value || !tree.value);
 const sourceName = computed(() => props.spaces?.find(space => space.id === props.spaceId)?.name ?? t.org.rootLevel);
 const targetLoading = ref(false);
@@ -162,16 +159,6 @@ async function mutate(action: (isCurrent: () => boolean) => Promise<void>) {
       : errorMessage(reason);
   } finally { if (!disposed && current === context) busy.value = false; }
 }
-async function rename() {
-  const page = props.page;
-  if (!page || !title.value.trim()) return;
-  await mutate(async isCurrent => {
-    const result = await organizationApi.rename(page.id, title.value.trim(), headVersion.value);
-    if (!isCurrent()) return;
-    headVersion.value = result.version;
-    emit("renamed", result);
-  });
-}
 async function move() {
   const id = props.page?.id ?? props.board?.id;
   if (!id) return;
@@ -252,11 +239,11 @@ function close() {
   dialogOpen.value = false;
 }
 function reset() {
-  section.value = props.board ? 'location' : 'general'; confirmTrash.value = !!props.startWithTrash && !!props.page;
+  confirmTrash.value = !!props.startWithTrash && !!props.page;
   context++; generation++; targetRequest++; abort?.abort();
   targetSpaceId.value = ""; targetTree.value = undefined; targetLoading.value = false;
   tree.value = undefined; trashItems.value = []; selectedTrash.value = undefined;
-  title.value = props.page?.title ?? ""; parentId.value = props.page?.parentId ?? "";
+  parentId.value = props.page?.parentId ?? "";
   headVersion.value = props.page?.version ?? 0; beforeId.value = ""; includeSubtree.value = false;
   busy.value = false; loading.value = false; conflict.value = false; error.value = ""; notice.value = "";
   void load();
@@ -269,10 +256,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- The page menu's „Přesunout do koše“ (T7): the shared confirmation, as a board's, with the subpages' choice inside it. -->
-  <ConfirmDialog v-if="startWithTrash && page" :open="dialogOpen" :title="t.org.trashPageTitle" :confirm-label="t.org.moveToTrash" confirm-icon="trash"
+  <!-- „Přesunout do koše“ (the page menu or this dialog's own button): the one shared confirmation (over this dialog when opened from its button), as a board's, with the subpages' choice inside it. -->
+  <ConfirmDialog v-if="page && (startWithTrash || confirmTrash)" :open="dialogOpen && confirmTrash" :title="t.org.trashPageTitle" :confirm-label="t.org.moveToTrash" confirm-icon="trash"
     :busy="busy" :error="error || (!allowed ? t.org.orgAvailable : undefined)"
-    :confirm-disabled="!allowed || loading || conflict || !tree || (hasChildren && !includeSubtree)" @confirm="trash" @cancel="close" @closed="emit('close')">
+    :confirm-disabled="!allowed || loading || conflict || !tree || (hasChildren && !includeSubtree)" @confirm="trash" @cancel="close" @closed="startWithTrash && emit('close')">
     <p><strong>{{ page.title }}</strong> {{ t.org.trashNoteTitled }}<template v-if="boardsBelow">{{ " " + t.org.trashBoards(boardsBelow) }}</template></p>
     <template v-if="hasChildren">
       <Label class="organization-check"><input v-model="includeSubtree" type="checkbox" />{{ t.org.includeSubtree(excluded.size - 1, excluded.size) }}</Label>
@@ -284,9 +271,9 @@ onBeforeUnmount(() => {
     <ObjectRelations :object-id="page.id" mode="usage" still />
   </ConfirmDialog>
   <AppDialog
-    v-else
+    v-if="!(startWithTrash && page)"
     class="organization-dialog"
-    :title="confirmTrash ? t.org.trashPageTitle : page ? t.org.organizePage : board ? t.org.moveBoard : t.org.pageTrash"
+    :title="page ? t.org.organizePage : board ? t.org.moveBoard : t.org.pageTrash"
     :close-label="page || board ? t.org.close : t.org.closeTrash"
     :open="dialogOpen"
     @close="close" @closed="emit('close')"
@@ -303,16 +290,9 @@ onBeforeUnmount(() => {
             <Button v-if="conflict || error" variant="outline" class="organization-refresh" :disabled="loading || busy" @click="load()">{{ conflict ? t.org.reloadList : t.org.retry }}</Button>
           </InlineReveal>
         </div>
-        <div v-if="(page || board) && !confirmTrash" class="organization-context"><span class="organization-page-icon"><AtlasIcon :name="board ? 'layout-dashboard' : 'page'" :size="22" /></span><div><strong>{{ (page ?? board)!.title }}</strong><small>{{ sourceName }}</small></div></div>
-        <OptionPills v-if="page && !confirmTrash" segmented :model-value="section" @update:model-value="section = $event as typeof section" class="organization-tabs" :options="sectionOptions()" :label="t.org.pageSettings" hide-label />
+        <div v-if="page || board" class="organization-context"><span class="organization-page-icon"><AtlasIcon :name="board ? 'layout-dashboard' : 'page'" :size="22" /></span><div><strong>{{ (page ?? board)!.title }}</strong><small>{{ sourceName }}</small></div></div>
         <fieldset v-if="page || board" :disabled="mutationsDisabled" class="organization-fields">
-          <form v-if="page" v-show="section === 'general' && !confirmTrash" class="organization-section" :aria-label="t.org.renamePage" @submit.prevent="rename">
-            <h3>{{ t.org.pageName }}</h3>
-            <Label for="organization-name">{{ t.org.draftName }}</Label>
-            <div class="organization-inline"><Input id="organization-name" v-model="title" maxlength="200" required /><Button variant="default" type="submit" :disabled="!title.trim()">{{ t.org.apply }}</Button></div>
-            <p class="help">{{ t.org.renameHelp }}</p>
-          </form>
-          <form v-show="section === 'location' && !confirmTrash" class="organization-section" :aria-label="board ? t.org.moveBoard : t.org.movePage" @submit.prevent="move">
+          <form class="organization-section" :aria-label="board ? t.org.moveBoard : t.org.movePage" @submit.prevent="move">
             <h3>{{ t.org.locationInSpace }}</h3>
             <PageLocationPicker id="organization-parent" v-model="parentId" :items="pageItems" :excluded="excluded" :root-label="sourceName" :disabled="mutationsDisabled" :label="t.org.underPage" />
             <div class="organization-position">
@@ -324,17 +304,7 @@ onBeforeUnmount(() => {
             <p class="help">{{ board ? t.org.boardMoveHelp : t.org.pageMoveHelp }}</p>
             <Button variant="default" type="submit">{{ board ? t.org.moveBoard : t.org.movePage }}</Button>
           </form>
-          <section v-if="confirmTrash && page" class="organization-trash-confirm organization-trash">
-            <span class="organization-trash-icon"><AtlasIcon name="trash" :size="28" /></span>
-            <h3>{{ page.title }}</h3>
-            <p>{{ t.org.trashNotePage }} {{ canRestore ? t.org.trashRestoreOwn : t.org.trashRestoreAdmin }}<template v-if="boardsBelow">{{ " " + t.org.trashBoards(boardsBelow) }}</template></p>
-            <form @submit.prevent="trash">
-              <Label v-if="hasChildren" class="organization-check"><input v-model="includeSubtree" type="checkbox" />{{ t.org.includeSubtree(excluded.size - 1, excluded.size) }}</Label>
-              <p v-if="hasChildren" class="help">{{ t.org.hasSubpages }}</p>
-              <div class="organization-confirm-actions"><Button variant="outline" type="button" @click="startWithTrash ? close() : confirmTrash = false">{{ t.org.cancel }}</Button><Button variant="destructive" type="submit" :disabled="hasChildren && !includeSubtree">{{ busy ? t.org.moving : t.org.moveToTrash }}</Button></div>
-            </form>
-          </section>
-          <div v-if="page && writableSpaces.length" v-show="section === 'location' && !confirmTrash" class="organization-transfer">
+          <div v-if="page && writableSpaces.length" class="organization-transfer">
           <button type="button" class="organization-disclosure" aria-controls="organization-transfer-reveal" :aria-expanded="transferOpen" @click="transferOpen = !transferOpen">{{ t.org.transferTitle }}</button>
           <InlineReveal id="organization-transfer-reveal" v-model:open="transferOpen">
           <form class="organization-section" :aria-label="t.org.transferTitle" @submit.prevent="moveSpace">
@@ -351,7 +321,7 @@ onBeforeUnmount(() => {
           </form>
           </InlineReveal>
           </div>
-          <div v-if="!confirmTrash" class="organization-bottom"><Button v-if="page" variant="ghost" type="button" class="organization-trash-trigger" :aria-label="t.org.moveToTrash" @click="confirmTrash = true; includeSubtree = false"><AtlasIcon name="trash" />{{ t.org.moveToTrash }}</Button><Button variant="outline" type="button" @click="close">{{ t.org.done }}</Button></div>
+          <div class="organization-bottom"><Button v-if="page" variant="ghost" type="button" class="organization-trash-trigger" :aria-label="t.org.moveToTrash" @click="confirmTrash = true; includeSubtree = false"><AtlasIcon name="trash" />{{ t.org.moveToTrash }}</Button><Button variant="outline" type="button" @click="close">{{ t.org.done }}</Button></div>
         </fieldset>
         <template v-else>
           <p v-if="trashItems.length || !tree" class="help">{{ t.org.trashHelp }}</p>
@@ -365,7 +335,7 @@ onBeforeUnmount(() => {
             </template>
           </TrashList>
           <form v-if="selectedTrash" class="organization-section organization-restore" @submit.prevent="untrash">
-            <h3>Obnovit „{{ selectedTrash.title }}“</h3>
+            <h3>{{ t.org.restoreTitle(selectedTrash.title) }}</h3>
             <fieldset class="organization-fields" :disabled="busy || loading || conflict || !tree">
               <PageLocationPicker id="organization-restore-parent" v-model="restoreParent" :items="pageItems" :disabled="mutationsDisabled" :label="t.org.restoreLocation" />
               <Label v-if="selectedTrash.type !== 'board'" class="organization-check"><input v-model="restoreSubtree" type="checkbox" />{{ t.org.restoreSubpages }}</Label>
@@ -386,13 +356,11 @@ onBeforeUnmount(() => {
 .organization-body { padding: 0; }
 .organization-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
 /* A section that becomes visible (the other tab, the opened details, the target of a move) fades in; a v-show restarts it. */
-.organization-section, .organization-trash-confirm, .organization-target { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.organization-section, .organization-target { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
 .organization-section { padding: 22px 0; border-bottom: 1px solid var(--line); }
 .organization-section:last-child { border-bottom: 0; padding-bottom: 0; }
 .organization-section h3 { margin: 0 0 12px; font-size: 15px; }
 .organization-section label { display: block; margin: 10px 0 7px; }
-.organization-inline { display: flex; gap: 10px; }
-.organization-inline button { flex-shrink: 0; }
 .organization-section .help { font-size: 12px; line-height: 1.6; }
 .organization-section .organization-check { display: flex; align-items: flex-start; gap: 9px; font-weight: 400; line-height: 1.5; margin: 14px 0; }
 .organization-check input { flex: 0 0 16px; width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--accent); }
@@ -400,8 +368,6 @@ onBeforeUnmount(() => {
 .organization-context strong { font-size: 17px; overflow-wrap: anywhere; }
 .organization-context small { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
 .organization-page-icon { display: grid; place-items: center; width: 46px; height: 46px; flex-shrink: 0; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
-.organization-tabs :deep(.option-pills-group) { display: flex; }
-.organization-tabs :deep(.option-pill) { flex: 1; justify-content: center; }
 .organization-position { margin-top: 14px; font-size: 13px; }
 .organization-disclosure { display: block; width: 100%; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; color: var(--muted); padding: 10px 0; }
 .organization-disclosure[aria-expanded="true"] { color: var(--accent); }
@@ -409,12 +375,5 @@ onBeforeUnmount(() => {
 .organization-transfer .organization-section { padding-top: 0; }
 .organization-bottom { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 20px; }
 .organization-trash-trigger { color: var(--error); }
-.organization-trash-confirm { padding: 12px 0; }
-.organization-trash-icon { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 16px; color: var(--error); background: color-mix(in srgb, var(--error) 10%, transparent); margin-bottom: 20px; }
-.organization-trash-confirm h3 { font-size: 20px; overflow-wrap: anywhere; }
-.organization-trash-confirm p { color: var(--muted); font-size: 14px; line-height: 1.65; }
-.organization-trash-confirm .organization-check { display: flex; align-items: flex-start; gap: 10px; padding: 14px; background: var(--canvas); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; line-height: 1.5; }
-.organization-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
 .organization-trash-list { margin: 18px 0; }
-@media (max-width: 520px) { .organization-inline { flex-direction: column; } }
 </style>
