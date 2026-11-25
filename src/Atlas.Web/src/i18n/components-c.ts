@@ -16,6 +16,7 @@ const cs = {
     region: "Nedávné a oblíbené stránky",
     loading: "Načítání nedávných a oblíbených stránek…",
     retry: "Zkusit znovu",
+    loadFailed: "Nedávné a oblíbené stránky se nepodařilo načíst",
     minTitle: "Zadejte alespoň dva znaky",
     minText: "Hledáme v názvech i obsahu. Zde se objeví vaše nedávné a oblíbené stránky.",
     draft: "Koncept",

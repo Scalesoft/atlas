@@ -25,8 +25,12 @@
 .md-history-track:focus-within { outline:2px solid var(--history-blue); outline-offset:var(--focus-offset, 2px); border-radius:5px; }
 .md-history-context { display:flex; flex-wrap:wrap; align-items:center; gap:5px 12px; padding:5px 19px 10px; border-bottom:1px solid var(--history-line); font-size:11px; color:var(--history-muted); }
 .md-history-context label { display:flex; align-items:center; gap:6px; margin-left:auto; cursor:pointer; }.md-history-context input { accent-color:var(--history-orange); }
-.md-history-preview { padding:20px 27px 18px; }.md-history-preview .ProseMirror { padding:0; }
+.md-history-preview { padding:20px 27px 18px; min-height:240px; }.md-history-preview .ProseMirror { padding:0; }
 .md-history-caption,.md-history-loading { font-size:11px; color:var(--history-muted); margin:0 0 16px; }
+/* The version area keeps a floor height while a version loads, and the note fades in after a short delay: no blank flash, no jump. */
+.md-history-loading { animation:md-history-fade .2s ease-out .15s both; }
+@keyframes md-history-fade { from { opacity:0; } }
+@media (prefers-reduced-motion:reduce) { .md-history-loading { animation:none; } }
 .md-history-error { padding:12px 20px; color:var(--error, #a4523a); font-size:12px; }
 .md-history-error button,.md-history-older button { border:0; background:transparent; color:inherit; font:inherit; text-decoration:underline; cursor:pointer; }
 .md-history-older { padding:4px 19px; font-size:11px; color:var(--history-muted); }

@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { api, ApiError, errorMessage, type Appearance, type Page } from '../api';
 import { historyApi, type PageRevision } from '../history';
 import EmptyState from './settings/EmptyState.vue';
+import ErrorState from './settings/ErrorState.vue';
 import FilterMenu from './settings/FilterMenu.vue';
 import SearchField from './settings/SearchField.vue';
 import type { ChoiceOption } from './settings/types';
@@ -282,7 +283,7 @@ void load();
       <FilterMenu v-model="authorId" :options="authorOptions" :label="t.approval.author" icon="users" data-draft-author />
       <FilterMenu v-model="kindChoice" :options="kindOptions()" :label="t.approval.type" icon="drafts" data-draft-kind />
     </form>
-    <p v-if="listError" role="alert" class="notice error">{{ listError }} <Button variant="outline" :disabled="busy" @click="load()">{{ t.approval.retry }}</Button></p>
+    <ErrorState v-if="listError" :title="t.approval.loadFailed" :text="listError" :retry-label="t.approval.retry" :busy="busy" @retry="load()" />
     <template v-if="!listError || loaded">
       <div class="approval-summary">
         <span class="approval-count">{{ loaded ? t.approval.count(items.length, total) : '' }}<LoadingNote inline :active="loaded && loading" :label="t.approval.searching" /></span>

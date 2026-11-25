@@ -14,6 +14,7 @@ const en: ComponentsMessages = {
     region: "Recent and favorite pages",
     loading: "Loading recent and favorite pages…",
     retry: "Retry",
+    loadFailed: "Couldn't load recent and favorite pages",
     minTitle: "Enter at least two characters",
     minText: "We search titles and content. Your recent and favorite pages show up here.",
     draft: "Draft",

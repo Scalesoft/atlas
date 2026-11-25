@@ -2,6 +2,7 @@
 import t from "../../../i18n/settings-people";
 import { computed, ref, watch } from "vue";
 import AtlasIcon from "../../AtlasIcon.vue";
+import LoadingNote from "../LoadingNote.vue";
 import { disclosureHooks } from "../disclosure";
 import type { Invitation } from "../../../administration";
 import { codeValidity } from "./accountStatus";
@@ -129,7 +130,7 @@ function finish() {
     </template>
     <template #summary>
       <SummaryList :items="summary" :label="t.invite.summaryLabel" />
-      <Transition :css="false" v-bind="disclosureHooks"><p v-if="busy" class="invite-status" role="status"><AtlasIcon name="loader-circle" :size="16" class="atlas-spinner" />{{ t.invite.creating }}</p></Transition>
+      <Transition :css="false" v-bind="disclosureHooks"><LoadingNote v-if="busy" :label="t.invite.creating" /></Transition>
       <ConfirmWithReauth v-if="draft.isWikiAdmin" :key="attempt" :confirm-label="t.invite.createAndShow" :cancel-label="t.invite.cancel" :busy="busy" :error="failure || undefined" @confirm="create" @cancel="emit('cancel')" />
       <Transition v-else :css="false" v-bind="disclosureHooks"><p v-if="failure" class="invite-failure" role="alert" data-invite-error><AtlasIcon name="triangle-alert" :size="15" />{{ failure }}</p></Transition>
     </template>
@@ -151,6 +152,5 @@ function finish() {
 <style scoped>
 .invite-warning { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--text); font-size: 13px; line-height: 1.5; }
 .invite-warning > svg { flex-shrink: 0; margin-top: 2px; color: var(--warning); }
-.invite-status { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; }
 .invite-failure { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--error); font-size: 13px; font-weight: 550; }
 </style>

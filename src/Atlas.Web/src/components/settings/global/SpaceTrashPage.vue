@@ -13,7 +13,7 @@ import { useSettingsFlash } from "../flash";
 import { useSettingsDocument } from "../useSettingsDocument";
 import { formatDateTimeSeconds } from "../../../formatDate";
 import { tellTwins } from "../../../spaceTwins";
-import ResultBanner from "../ResultBanner.vue";
+import { Button } from "../../ui/button";
 import SettingsPage from "../SettingsPage.vue";
 import TrashList from "../TrashList.vue";
 import t from "../../../i18n/settings-global";
@@ -26,19 +26,18 @@ type Row = TrashedSpace & { title: string };
 const props = withDefaults(defineProps<{ cleanupApi?: WikiTrashCleanupApi }>(), { cleanupApi: () => wikiTrashCleanupApi });
 const context = useSettingsContext();
 const flash = useSettingsFlash();
-const result = ref("");
-// After the last space goes, the focus lands on the outcome (UX3-4): the banner's close button.
-const banner = ref<{ $el?: Element }>();
+// After the last space goes, the focus lands on the cleanup rule (the outcome shows in the settings frame via flash).
+const focusFallback = () => document.querySelector<HTMLElement>("[data-trash-cleanup-scope] button");
 const { items, loading, loaded, error: loadError, load } = useTrashLoad<Row>(async signal =>
   (await spaceTrashApi.list(signal)).map(space => ({ ...space, title: space.name })));
 async function restore(space: Row) {
   await spaceTrashApi.restore(space.id);
-  result.value = t.trash.restored(space.name);
+  flash.notify(t.trash.restored(space.name), { icon: "trash" });
   context.spacesChanged();
 }
 async function purge(space: Row) {
   await spaceTrashApi.purge(space.id, space.name);
-  result.value = t.trash.purged(space.name);
+  flash.notify(t.trash.purged(space.name), { icon: "trash" });
 }
 const twins = computed(() => tellTwins(items.value, space => space.name, () => undefined));
 const pages = t.counts.pages;
@@ -70,7 +69,7 @@ void rule.load();
   <SettingsPage :title="t.trash.title" icon="trash" :description="t.trash.description">
     <SettingsSection :title="t.trash.cleanupTitle" icon="trash">
       <ConflictNote v-if="rule.conflict.value" :text="t.trash.conflict" :reload-label="t.trash.reload" :busy="rule.loading.value || rule.saving.value" data-trash-cleanup-conflict @reload="rule.reloadAfterConflict" @dismiss="rule.conflict.value = false" />
-      <p v-if="rule.loadError.value" class="space-trash-rule-error" role="alert">{{ rule.loadError.value }} <button type="button" class="space-trash-retry" @click="rule.load">{{ t.trash.retry }}</button></p>
+      <p v-if="rule.loadError.value" class="notice error" role="alert">{{ rule.loadError.value }} <Button variant="link" size="sm" type="button" @click="rule.load">{{ t.trash.retry }}</Button></p>
       <template v-else-if="rule.saved.value">
         <SettingsRow :label="t.trash.whoDecides" :label-for="false" :help="t.trash.whoDecidesHelp">
           <OptionPills v-model="scope" :options="scopes" :label="t.trash.whoDecides" hide-label :disabled="rule.saving.value" data-trash-cleanup-scope />
@@ -86,10 +85,9 @@ void rule.load();
         <SaveBar :dirty="rule.dirty.value" :saving="rule.saving.value" :error="rule.saveError.value || undefined" :save-label="t.trash.saveRule" @save="saveRule" @cancel="resetRule" />
       </template>
     </SettingsSection>
-    <ResultBanner v-if="result" ref="banner" :message="result" @dismiss="result = ''" />
     <TrashList v-model:items="items" :label="t.trash.listLabel" :icon="space => space.icon" :detail="detail" :restore="restore" :purge="purge"
       :purge-title="t.trash.purgeTitle" :confirm-name="space => space.name" :loaded="loaded" :loading="loading" :error="loadError"
-      :fallback="() => banner?.$el?.querySelector<HTMLElement>('button')"
+      :fallback="focusFallback"
       :empty-title="t.trash.emptyTitle" :empty-text="t.trash.emptyText" @retry="load">
       <template #purge="{ item }">
         <p>{{ t.trash.purgeBefore }} <strong>{{ item.name }}</strong> {{ t.trash.purgeAfter(pages(item.pageCount)) }}</p>
@@ -103,7 +101,5 @@ void rule.load();
 </template>
 
 <style scoped>
-.space-trash-rule-error { margin: 0; color: var(--error); font-size: 13.5px; }
-.space-trash-retry { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); text-decoration: underline; cursor: pointer; }
 .space-trash-vaults { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
 </style>

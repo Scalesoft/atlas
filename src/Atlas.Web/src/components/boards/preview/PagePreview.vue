@@ -40,6 +40,7 @@ import { animateAtlas } from "../../../motion/aiMotion";
 import AtlasIcon from "../../AtlasIcon.vue";
 import CardSwap from "../cards/CardSwap.vue";
 import { Button } from "../../ui/button";
+import ErrorState from "../../settings/ErrorState.vue";
 import "../text/boardTextSurface.css";
 import { hostViewKey } from "./hostView";
 
@@ -255,9 +256,8 @@ function fadeOut(el: Element, done: () => void) {
       <strong>{{ missing ?? t.preview.sectionGone }}</strong>
       <Button v-if="!select" variant="outline" size="sm" class="nodrag" type="button" @click="emit('wholePage')"><AtlasIcon name="file-text" :size="15" />{{ t.preview.wholePage }}</Button>
     </div>
-    <div v-else-if="state === 'failed'" class="page-preview-note" role="alert">
-      <strong>{{ t.preview.failed }}</strong>
-      <Button variant="outline" size="sm" class="nodrag" type="button" @click="fetchPage(true)"><AtlasIcon name="refresh" :size="15" />{{ t.preview.retry }}</Button>
+    <div v-else-if="state === 'failed'" class="page-preview-note nodrag">
+      <ErrorState :title="t.preview.failed" :retry-label="t.preview.retry" @retry="fetchPage(true)" />
     </div>
     <!-- A card of its own (`select`) has no text to select or scroll through by dragging: a drag over it moves the card, as any other. -->
     <div v-else ref="scroller" class="page-preview-scroll nowheel" :class="{ nodrag: !select }" :data-at-end="atEnd || undefined" tabindex="0"

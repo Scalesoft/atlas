@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import AtlasIcon from "../../AtlasIcon.vue";
 import { errorMessage } from "../../../api";
+import ErrorState from "../ErrorState.vue";
 import InlineReveal from "../InlineReveal.vue";
 import SettingsSection from "../SettingsSection.vue";
 import StatTile from "../StatTile.vue";
@@ -25,7 +26,7 @@ const summary = ref<ActivitySummary>();
 const error = ref("");
 const open = ref(false);
 let controller: AbortController | undefined;
-watch(period, async (value) => {
+async function load(value: ActivityPeriod) {
   controller?.abort();
   const current = (controller = new AbortController());
   error.value = "";
@@ -34,7 +35,8 @@ watch(period, async (value) => {
   } catch (failure) {
     if (!current.signal.aborted) error.value = errorMessage(failure);
   }
-}, { immediate: true });
+}
+watch(period, load, { immediate: true });
 onBeforeUnmount(() => controller?.abort());
 
 const number = (value: number | undefined) => (value === undefined ? "…" : formatNumber(value));
@@ -80,7 +82,7 @@ const charts = computed(() => {
         {{ open ? t.activity.hide : t.activity.show }}<AtlasIcon name="down" :size="16" class="summary-chevron" />
       </button>
     </div>
-    <p v-if="error" class="st-note" role="alert"><AtlasIcon name="triangle-alert" :size="15" />{{ t.activity.loadFailed(error) }}</p>
+    <ErrorState v-if="error" :title="t.activity.loadFailed(error)" @retry="load(period)" />
     <template v-else>
       <div class="summary-tiles">
         <StatTile :label="t.activity.edits" icon="pencil" :value="number(summary?.revisions)" data-stat="revisions">

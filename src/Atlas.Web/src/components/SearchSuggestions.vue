@@ -26,6 +26,7 @@ import { errorMessage } from "../api";
 import AtlasIcon from "./AtlasIcon.vue";
 import LoadingSkeleton from "./LoadingSkeleton.vue";
 import EmptyState from "./settings/EmptyState.vue";
+import ErrorState from "./settings/ErrorState.vue";
 import { isPlainNavigationClick, pageLink } from "../pageLinks";
 /**
  * The recent and favourite pages under the empty search. The first row is preselected and Enter opens it (F13); `activeIndex` -1 says
@@ -83,7 +84,7 @@ void load();
 <template>
   <section class="search-suggestions" :aria-label="t.suggestions.region" :aria-busy="loading">
     <LoadingSkeleton v-if="loading" :rows="3" row-height="52px" :label="t.suggestions.loading" />
-    <div v-else-if="error" role="alert" class="notice error">{{ error }}<button type="button" @click="load">{{ t.suggestions.retry }}</button></div>
+    <ErrorState v-else-if="error" :title="t.suggestions.loadFailed" :text="error" :retry-label="t.suggestions.retry" @retry="load" />
     <EmptyState v-else-if="!groups.length" compact icon="search" :title="t.suggestions.minTitle" :text="t.suggestions.minText" />
     <div v-else id="search-suggestions-results" role="listbox" :aria-label="t.suggestions.region">
       <section v-for="group in indexedGroups" :key="group.title" class="search-group" :class="{ 'atlas-stagger': !earlier }" role="group" :aria-label="group.title">
