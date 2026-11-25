@@ -265,4 +265,28 @@ public sealed class PageVerificationTests
         }
         Assert.Equal(cases.Length, checkedCases);
     }
+
+    [PostgreSqlFact]
+    public async Task A_new_steward_gets_the_reminder_the_previous_one_already_had()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", f.SpaceId);
+        var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(f.SpaceId, null, "Postup", Atlas.Server.Tests.Attachments.AttachmentFixture.Rich("Postup"), "Postup")));
+        await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+        var now = DateTime.UtcNow;
+        await f.As<PageVerificationView>(f.Writer, new SetPageVerification(page.Id, new SetPageVerificationRequest(Verify: true, Until: now.AddDays(10))));
+        async Task<IReadOnlyList<string>> RunAsync(Atlas.Server.Platform.Identity.UserAccount steward)
+        {
+            while (await f.Host.InvokeAsync<int>(new SendVerificationNotices(now)) == SendVerificationNoticesHandler.Batch)
+            {
+            }
+            await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+            return (await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(steward,
+                new Atlas.Server.Features.Notifications.Queries.ListNotifications(null))).Items.Where(x => x.SubjectId == page.Id).Select(x => x.Kind).ToList();
+        }
+
+        Assert.Equal(new[] { NotificationKinds.VerificationExpiring }, await RunAsync(f.Writer));
+        await f.As<PageVerificationView>(f.Writer, new SetPageVerification(page.Id, new SetPageVerificationRequest(StewardId: f.Reader.Id)));
+        Assert.Equal(new[] { NotificationKinds.VerificationExpiring }, await RunAsync(f.Reader));
+    }
 }

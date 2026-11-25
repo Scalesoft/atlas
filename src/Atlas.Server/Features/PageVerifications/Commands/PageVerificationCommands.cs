@@ -150,6 +150,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         var row = await session.GetAsync<PageVerification>(page.Id, ct);
         var isNew = row is null;
         row ??= new PageVerification { PageId = page.Id };
+        var steward = row.StewardId;
         if (request.InheritInterval == true)
         {
             row.IntervalMonths = null;
@@ -170,6 +171,11 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         if (request.StewardId is { } stewardId)
         {
             row.StewardId = await RequireStewardAsync(page, stewardId, ct);
+        }
+        if (row.StewardId != steward)
+        {
+            // A new steward has had no reminder yet: the job tells them the stage the previous one got.
+            row.NoticeStage = PageVerificationStates.NoticeNone;
         }
         if (request.Verify == true)
         {
