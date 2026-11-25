@@ -121,6 +121,9 @@ internal sealed class AtlasTestHost : IAsyncDisposable
         var buildStarted = System.Diagnostics.Stopwatch.GetTimestamp();
         var host = Host.CreateDefaultBuilder()
             .UseContentRoot(contentRoot.FullName)
+            // First, as in AtlasServices: hosted services start in order, so the migrations end before Wolverine's durable inbox hands a
+            // due envelope to a handler. After it, a slow migration (a loaded machine) left the handler without a session factory: a dead letter.
+            .ConfigureServices(services => services.AddHostedService<Atlas.Server.Platform.Persistence.AtlasDatabaseInitializer>())
             .UseWolverine(options =>
             {
                 options.ConfigureAtlasWolverine(modules);
