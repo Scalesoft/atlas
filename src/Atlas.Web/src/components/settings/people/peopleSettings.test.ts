@@ -13,6 +13,7 @@ import AccessHistoryPage from "../global/AccessHistoryPage.vue";
 import AccountsPage from "./AccountsPage.vue";
 import { showContactDetail } from "../../../contacts/contactDock";
 import { useWorkspacePanel } from "../../../composables/useWorkspacePanel";
+import { objectDetailShown, showObjectDetail } from "../../../objects/objectDetail";
 
 vi.mock("../../../contacts/contactDock", () => ({ showContactDetail: vi.fn() }));
 import { createDirectorySummary, directorySummaryKey } from "./directorySummary";
@@ -299,8 +300,15 @@ describe("people", () => {
     expect(location.hash).toBe("#/settings/people/accounts");
     wrapper!.unmount();
     vi.mocked(showContactDetail).mockClear();
+    vi.mocked(showContactDetail).mockImplementation(async (id) => showObjectDetail({ id, typeId: "atlas.contact", title: "Jana", spaceId: "" }, { onOpen: () => {} }));
     await open("#/settings/people/accounts?osoba=u-jana");
     expect(showContactDetail).toHaveBeenCalledWith("c-jana");
+    // The profile's account part opens the full card: the dock goes with ?osoba= (in overlay mode it would cover the card).
+    expect(objectDetailShown()).toBe(true);
+    location.hash = "#/settings/people/accounts/u-jana";
+    await settle();
+    expect(objectDetailShown()).toBe(false);
+    vi.mocked(showContactDetail).mockReset();
     wrapper!.unmount();
     // An account without its contact yet: the name is the link to its full card.
     vi.mocked(showContactDetail).mockClear();

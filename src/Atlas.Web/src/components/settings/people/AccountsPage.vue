@@ -24,6 +24,7 @@ import type { ChoiceOption } from "../types";
 import { useSettingsRoute } from "../useSettingsRoute";
 import PersonCard from "./PersonCard.vue";
 import { showContactDetail } from "../../../contacts/contactDock";
+import { hideObjectDetail, openDetailId } from "../../../objects/objectDetail";
 import { useWorkspacePanel } from "../../../composables/useWorkspacePanel";
 import { Table, TableCaption, TableHead, TableHeader, TableRow, TableCell } from "../../ui/table";
 import { outOfReach } from "../../../lib/outOfReach";
@@ -258,8 +259,13 @@ const pendingCount = computed(() => (narrowed.value ? listed.value.filter((user)
 const panel = useWorkspacePanel();
 const peekId = computed(() => router.route.value.query.osoba ?? "");
 const peeked = computed(() => (peekId.value ? users.value.find((user) => user.id === peekId.value) : undefined));
-watch(() => peeked.value?.contactId, (contact) => { if (contact) void showContactDetail(contact); }, { immediate: true });
+// The dock goes with the address: the profile's account part opens the full card (?osoba= gone), and leaving Lidé closes it too.
+watch(() => peeked.value?.contactId, (contact, previous) => {
+  if (contact) void showContactDetail(contact);
+  else if (previous && openDetailId() === previous) hideObjectDetail();
+}, { immediate: true });
 watch(() => panel.open.value, (open) => { if (!open && peekId.value) closePeek(); });
+onBeforeUnmount(() => { if (peeked.value?.contactId && openDetailId() === peeked.value.contactId) hideObjectDetail(); });
 function peek(user: DirectoryUser, event: MouseEvent) {
   if (!isPlainNavigationClick(event) || !user.contactId) return;
   event.preventDefault();
