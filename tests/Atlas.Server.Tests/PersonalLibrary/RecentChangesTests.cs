@@ -119,6 +119,32 @@ public sealed class RecentChangesTests
         Assert.Equal(400, (await Assert.ThrowsAsync<ApiException>(() => f.As<RecentChangeList>(f.Reader, new ListRecentChanges("some", null, 2)))).Status);
     }
 
+    [PostgreSqlFact]
+    public async Task A_persons_activity_is_only_their_changes_the_viewer_may_read_narrowed_by_space_and_on_mcp_none_out_of_ai()
+    {
+        await using var f = await PersonalLibraryFixture.CreateAsync();
+        await Published(f, "Writer plan");
+        await Published(f, "Colleague plan", owner: f.OtherWriter);
+        var hiddenSpace = await f.Host.SeedSpaceAsync("Hidden", (f.Writer, SpaceRole.Writer));
+        await Published(f, "Hidden plan", hiddenSpace);
+        var outOfAi = await f.Host.SeedSpaceAsync("Out of AI", (f.Writer, SpaceRole.Writer), (f.Reader, SpaceRole.Reader));
+        await Published(f, "Not for AI", outOfAi);
+        await f.As<SpaceAiSettingsView>(f.Admin, new SaveSpaceAiSettings(outOfAi, new SaveSpaceAiSettingsRequest(false, null)));
+
+        // The writer's work in a space the reader has no grant on stays the writer's own: no row, no count.
+        Assert.Equal(["Not for AI", "Writer plan"], (await Of(f, f.Reader, f.Writer.Id)).Select(x => x.Title).Order());
+        Assert.Equal(["Hidden plan", "Not for AI", "Writer plan"], (await Of(f, f.Writer, f.Writer.Id)).Select(x => x.Title).Order());
+        Assert.Equal(["Colleague plan"], (await Of(f, f.Reader, f.OtherWriter.Id)).Select(x => x.Title));
+        Assert.Equal(["Writer plan"], (await Of(f, f.Reader, f.Writer.Id, f.SpaceId)).Select(x => x.Title));
+        Assert.Empty(await Of(f, f.Reader, f.Writer.Id, hiddenSpace));
+
+        var token = await TestApiTokens.SeedAsync(f.Host, f.Reader, "agent");
+        f.Host.Channel.Current = new RequestChannel(ContentChannel.Mcp, token);
+        Assert.Equal(["Writer plan"], (await Of(f, f.Reader, f.Writer.Id)).Select(x => x.Title));
+        Assert.Empty(await Of(f, f.Reader, f.Writer.Id, outOfAi));
+        f.Host.Channel.Current = RequestChannel.Web;
+    }
+
     private static async Task<PageDto> Published(PersonalLibraryFixture f, string title, Guid? spaceId = null, UserAccount? owner = null)
     {
         var author = owner ?? f.Writer;
@@ -128,6 +154,9 @@ public sealed class RecentChangesTests
 
     private static async Task<IReadOnlyList<RecentChange>> List(PersonalLibraryFixture f, UserAccount actor, string filter = "all")
         => (await f.As<RecentChangeList>(actor, new ListRecentChanges(filter, null, 50))).Items;
+
+    private static async Task<IReadOnlyList<RecentChange>> Of(PersonalLibraryFixture f, UserAccount viewer, Guid author, Guid? space = null)
+        => (await f.As<RecentChangeList>(viewer, new ListRecentChanges("all", null, 50, author, space))).Items;
 
     private static async Task<T> Scalar<T>(PersonalLibraryFixture f, string sql, Guid id)
     {

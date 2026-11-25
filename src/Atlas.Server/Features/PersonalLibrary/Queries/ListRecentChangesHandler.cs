@@ -13,14 +13,14 @@ namespace Atlas.Server.Features.PersonalLibrary.Queries;
 /// row per page. One statement: the pages are decided by <see cref="RelationNodes"/> (EffectivePageAccess and the list rule of
 /// PageListing, live page and space, and on MCP or for the assistant no space out of AI, G5), as the inbox decides them; a change is a
 /// version of the page history (its group's newest revision), and one of unpublished work only for a writer of the page, as in the
-/// library lists. Keyset paging by (newest change, page).
+/// library lists. Keyset paging by (newest change, page). An author or a space only narrows that list (a person's activity), never widens it.
 /// </summary>
 public sealed class ListRecentChangesHandler(ISession session, IContentAccess access, RelationNodes nodes)
 {
     /// <summary>How far back the dashboard looks: the query reads only revisions of this window (IX_PageRevision_Activity).</summary>
     public static readonly TimeSpan Window = TimeSpan.FromDays(30);
 
-    private const string Candidates = """SELECT DISTINCT r."PageId" FROM "PageRevision" r WHERE r."ActiveFrom">=:since""";
+    private const string Candidates = """SELECT DISTINCT r."PageId" FROM "PageRevision" r WHERE r."ActiveFrom">=:since AND (NOT :byAuthor OR r."AuthorId"=:author)""";
 
     private static readonly string Sql = $$"""
         WITH node AS ({{RelationNodes.Over(Candidates)}}),
@@ -30,7 +30,8 @@ public sealed class ListRecentChangesHandler(ISession session, IContentAccess ac
           JOIN node v ON v."Id"=r."PageId" AND v.live AND v.readable
           JOIN "Page" p ON p."Id"=r."PageId" AND NOT p."IsTemplate"
           LEFT JOIN "PageRevision" pub ON pub."Id"=p."PublishedRevisionId"
-          WHERE r."ActiveFrom">=:since AND r."SameAsRevisionId" IS NULL
+          WHERE r."ActiveFrom">=:since AND r."SameAsRevisionId" IS NULL AND (NOT :inSpace OR v."SpaceId"=:space)
+            AND (NOT :byAuthor OR r."AuthorId"=:author)
             AND NOT EXISTS (SELECT 1 FROM "PageRevision" n WHERE n."PageId"=r."PageId" AND n."GroupId"=r."GroupId" AND n."Version">r."Version")
             AND (v.can_edit OR r."Version"<=pub."Version")
             AND (NOT :aiOnly OR r."Channel"=ANY(CAST(string_to_array(:aiChannels, ',') AS text[])) OR r."AiAssisted")
@@ -67,6 +68,10 @@ public sealed class ListRecentChangesHandler(ISession session, IContentAccess ac
         parameters["aiOnly"] = query.Filter == "ai";
         parameters["aiChannels"] = string.Join(',', Pages.Domain.RevisionVersions.AiChannels);
         parameters["mineOnly"] = query.Filter == "mine";
+        parameters["byAuthor"] = query.Author is not null;
+        parameters["author"] = query.Author ?? Guid.Empty;
+        parameters["inSpace"] = query.Space is not null;
+        parameters["space"] = query.Space ?? Guid.Empty;
         parameters["first"] = before is null;
         parameters["beforeAt"] = before?.At ?? DateTime.UnixEpoch;
         parameters["beforePage"] = before?.PageId ?? Guid.Empty;
