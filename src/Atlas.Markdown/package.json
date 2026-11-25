@@ -152,7 +152,6 @@
     "@tiptap/extension-character-count": "^3.35.0",
     "@tiptap/extension-code-block-lowlight": "^3.35.0",
     "@tiptap/extension-collaboration": "^3.35.0",
-    "@tiptap/extension-collaboration-caret": "^3.35.0",
     "@tiptap/extension-drag-handle-vue-3": "^3.35.0",
     "@tiptap/extension-emoji": "^3.35.0",
     "@tiptap/extension-find-and-replace": "^3.35.0",
@@ -176,7 +175,7 @@
     "@tiptap/starter-kit": "^3.35.0",
     "@tiptap/suggestion": "^3.35.0",
     "@tiptap/vue-3": "^3.35.0",
-    "@tiptap/y-tiptap": "^3.0.9",
+    "@tiptap/y-tiptap": "^3.3.1",
     "echarts": "^6.1.0",
     "highlight.js": "^11.12.0",
     "katex": "^0.18.5 || ^0.19.1",
@@ -231,9 +230,6 @@
     "@tiptap/extension-collaboration": {
       "optional": true
     },
-    "@tiptap/extension-collaboration-caret": {
-      "optional": true
-    },
     "y-protocols": {
       "optional": true
     },
@@ -246,12 +242,11 @@
     "@scalar/api-reference": "1.78.1",
     "@tiptap/extension-code-block-lowlight": "3.35.0",
     "@tiptap/extension-collaboration": "^3.35.0",
-    "@tiptap/extension-collaboration-caret": "^3.35.0",
     "@tiptap/extension-emoji": "3.35.0",
     "@tiptap/extension-find-and-replace": "3.35.0",
     "@tiptap/extension-invisible-characters": "3.35.0",
     "@tiptap/extension-unique-id": "3.35.0",
-    "@tiptap/y-tiptap": "^3.0.9",
+    "@tiptap/y-tiptap": "^3.3.1",
     "@types/katex": "^0.16.8",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.11",

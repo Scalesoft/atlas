@@ -1,8 +1,8 @@
 # Atlas 5.2 — analýza aktualizace JS knihoven (Tiptap, ProseMirror, Yjs a ostatní)
 
-Stav: **analýza (2026-11-24) a krok 1 provedený 2026-11-25** (§ 0). Analýza vznikla pokusnými instalacemi ve vedlejším worktree
-(vráceno na `--frozen-lockfile`); typecheck a vitest `@atlas/markdown` s prioritou BelowNormal. Krok 2 (`y-tiptap` 3.3.1) a ostatní
-body jsou dál jen doporučení.
+Stav: **analýza (2026-11-24), krok 1 a krok 2 provedené 2026-11-25** (§ 0, § 0.1). Analýza vznikla pokusnými instalacemi ve vedlejším worktree
+(vráceno na `--frozen-lockfile`); typecheck a vitest `@atlas/markdown` s prioritou BelowNormal. Ostatní body (TypeScript 7, Monaco, Yjs 14,
+`reka-ui`) jsou dál jen doporučení.
 
 ## 0. Krok 1 provedený: Tiptap 3.35.0 a ProseMirror
 
@@ -37,6 +37,33 @@ Playwright e2e, reálný prohlížeč (myš ve view 1.43, tabulky, kurzory, výk
 Zůstává k rozhodnutí: `TypedTextInput` (kit) i `boardTextInput` (tabule, komentář uvádí chybu jádra 3.31): obě mají testy nebo
 jinou sémantiku, jádro 3.35 samo `**x**` napsané najednou převede, ale „každý znak přes pravidla“ a „všechno kromě posledního“ se liší.
 
+
+## 0.1 Krok 2 provedený: `y-tiptap` 3.3.1 bez patche
+
+`@tiptap/y-tiptap` 3.0.9 → 3.3.1, pnpm patch `@tiptap__y-tiptap@3.0.9.patch` smazaný, `@tiptap/extension-collaboration-caret` odstraněný.
+Co z osmi zásahů patche a z našich obcházek zůstalo a kde:
+
+| Zásah | Stav v 3.3.1 | Kde je teď |
+|---|---|---|
+| vzdálená změna nahrazuje jen změněné (2) | upstream, po celých blocích | nic; test `remoteApply` hlídá, že ostatní bloky zůstanou |
+| plugin registrovaný později nepřestaví dokument (1) | upstream ne (test to potvrdil) | `collab/collaboration.ts` (`KeepingCollaboration`, obal pohledu sync pluginu jako Tiptap obaluje undo) |
+| zapomenout bloky po opravě tabulky (3) | nepotřeba | testy `tableRepair`, `block-concurrency` prošly |
+| přečíst nenahlášený výběr před překreslením kurzorů (4), překreslení jednou za snímek (5), kurzor před editací (6), jen cizí změny (7), vlastní kurzor až po interakci (8) | upstream ne | `collab/carets.ts` (`CollaborationCarets`, vlastní plugin místo `yCursorPlugin` a Tiptap `CollaborationCaret`) |
+| `CollaborationRemoteSelection` (pád „Position N out of range“) | **opraveno upstream** | smazáno, nahrané stavy jsou regresní test |
+
+Co se při tom našlo a opravilo:
+- **Kurzor kolegy mizel při psaní uprostřed odstavce** (ověřeno v prohlížeči, dvě propojené instance se zpožděním 150 ms). Mapovaná
+  dekorace zanikne, protože vzdálená změna nahradí celý blok. `carets.ts` proto při nevyhodnotitelné pozici použije poslední relativní
+  pozici kurzoru, kterou šlo vyhodnotit. Test `remoteApply` bez opravy padá. Po opravě v prohlížeči 0 výpadků v 6 bězích.
+- **Živý zápis agenta** (`Atlas.Web/src/live/agentReveal.ts`) bral jako nový text celý nahrazený blok, takže by „přepisoval“
+  i text, který v odstavci už byl. Teď bere jen skutečný rozdíl dokumentu před a po kroku. Opravu potvrdil test `collaborationPresence`.
+- Materializer corpus: y-tiptap 3.3 přeskočí hook, Y.Map a holou hodnotu mezi potomky odstavce (dřív spadl). Editor je nikdy
+  nezapíše, server je dál odmítá (`refused` v corpusu). Fixtures writeru: 0 rozdílů z 857 i s 3.3.1.
+
+Ověřeno v prohlížeči (Chromium v aplikaci, scratch stránka, mimo repozitář): kurzor kolegy, výběr kolegy, vlastní kurzor až po
+interakci, pozdní `registerPlugin` nechá dokument (stejný objekt), změna v jednom bloku nechá ostatní bloky; ProseMirror 1.43:
+klik, tažení přes odstavce, výběr buněk tabulky tažením, dvojklik na slovo. Postřeh: klik do mezery mezi odstavci dá kurzor na
+začátek dalšího odstavce (ProseMirror 1.43 řeší myš sám), k posouzení v Atlasu.
 
 ## 1. Shrnutí
 

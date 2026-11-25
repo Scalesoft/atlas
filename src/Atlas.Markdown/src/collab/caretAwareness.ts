@@ -4,7 +4,7 @@ type Changes = { added: number[]; updated: number[]; removed: number[] }
 type Listener = (changes: Changes, origin: unknown) => void
 
 /**
- * The awareness the caret plugin (y-tiptap's yCursorPlugin) listens to: its 'change' only when a peer comes, goes, or moves its caret or
+ * The awareness the caret plugin (carets.ts) listens to: its 'change' only when a peer comes, goes, or moves its caret or
  * changes its name. A host's other fields ride the same state (Atlas.Web's mouse pointers, 20 a second per co-editor), and every 'change'
  * the plugin sees is a transaction of the whole editor that rebuilds every caret. Everything else, 'update' included, is the awareness itself.
  */

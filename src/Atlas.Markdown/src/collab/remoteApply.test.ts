@@ -2,15 +2,16 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
-import type { Transaction } from '@tiptap/pm/state'
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state'
 import { ReplaceStep } from '@tiptap/pm/transform'
 import * as Y from 'yjs'
-import { absolutePositionToRelativePosition, yCursorPlugin, yCursorPluginKey, yXmlFragmentToProsemirrorJSON, ySyncPluginKey } from '@tiptap/y-tiptap'
+import { absolutePositionToRelativePosition, yCursorPluginKey, yXmlFragmentToProsemirrorJSON, ySyncPluginKey } from '@tiptap/y-tiptap'
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness'
 import { Extension } from '@tiptap/core'
 import { useCollab } from './useCollab'
+import { collaborationCaretsPlugin } from './carets'
 
-// patches/@tiptap__y-tiptap@3.0.9.patch: a remote change replaces only what changed, not the whole document.
+// A remote change replaces only the blocks it changed (y-tiptap 3.3), not the whole document; collaborators' carets are carets.ts.
 const editors: Editor[] = []
 const docs: Y.Doc[] = []
 afterEach(() => {
@@ -50,7 +51,7 @@ const posOfBlock = (editor: Editor, index: number) => { let pos = 0; for (let i 
 const matchesYjs = (r: ReturnType<typeof replica>) => r.editor.state.schema.nodeFromJSON(yXmlFragmentToProsemirrorJSON(r.doc.getXmlFragment('default'))).eq(r.editor.state.doc)
 
 describe('remote changes apply only the changed range', () => {
-  it('replaces only the typed text and keeps every other block', () => {
+  it('replaces only the changed block and keeps every other block', () => {
     const { alice, bob } = pair()
     const before = bob.editor.state.doc
     alice.editor.commands.insertContentAt(posOfBlock(alice.editor, 10) + 3, 'X')
@@ -58,8 +59,20 @@ describe('remote changes apply only the changed range', () => {
     expect(bob.editor.getJSON()).toEqual(alice.editor.getJSON())
     const step = bob.remote.at(-1)!.steps[0] as ReplaceStep
     expect(bob.remote.at(-1)!.steps).toHaveLength(1)
-    expect(step.to - step.from).toBeLessThan(before.child(10).nodeSize)
+    expect(step.to - step.from).toBeLessThanOrEqual(before.child(10).nodeSize)
     for (let i = 0; i < 20; i++) if (i !== 10) expect(bob.editor.state.doc.child(i)).toBe(before.child(i))
+  })
+
+  it('keeps the shown document when a plugin is registered later (a bubble menu, a drag handle, an agent write)', () => {
+    const { alice, bob } = pair()
+    const before = bob.editor.state.doc
+    bob.editor.registerPlugin(new Plugin({ key: new PluginKey('late'), view: () => ({}) }))
+    expect(bob.editor.state.doc).toBe(before)
+    // The binding still knows every block: the next remote change replaces only the block it changed.
+    alice.editor.commands.insertContentAt(posOfBlock(alice.editor, 4) + 2, 'Q')
+    exchange(alice, bob)
+    for (let i = 0; i < 20; i++) if (i !== 4) expect(bob.editor.state.doc.child(i)).toBe(before.child(i))
+    expect(matchesYjs(bob)).toBe(true)
   })
 
   it('keeps the untouched blocks across successive remote changes', () => {
@@ -117,11 +130,11 @@ describe('remote changes apply only the changed range', () => {
   it('keeps a collaborator cursor that arrives before the edit it points into', () => {
     const { alice, bob } = pair()
     const awareness = new Awareness(bob.doc)
-    const cursors = Extension.create({ name: 'testCursors', addProseMirrorPlugins: () => [yCursorPlugin(awareness)] })
+    const cursors = Extension.create({ name: 'testCursors', addProseMirrorPlugins: () => [collaborationCaretsPlugin(bob.editor, awareness)] })
     bob.editor.registerPlugin(cursors.config.addProseMirrorPlugins!.call({} as never)[0]!)
     const remote = new Awareness(alice.doc)
     const place = (at: number) => {
-      const sync = ySyncPluginKey.getState(alice.editor.state) as { type: never; binding: { mapping: never } }
+      const sync = ySyncPluginKey.getState(alice.editor.state)!
       const position = absolutePositionToRelativePosition(at, sync.type, sync.binding.mapping)
       remote.setLocalState({ user: { name: 'Alice', color: '#123456' }, cursor: { anchor: position, head: position } })
       const states = new Map([[remote.clientID, remote.getLocalState()]])
@@ -139,6 +152,21 @@ describe('remote changes apply only the changed range', () => {
     expect(cursorsAt()).toContain(end)
     exchange(alice, bob)
     expect(cursorsAt()).toContain(end + 2)
+    // Typing in the middle of a block: the caret is ahead of every edit, and each remote change (the block replaced whole) comes in
+    // while it does not resolve yet. It stays at the last place it resolved to, in the changed block too, never gone.
+    let at = posOfBlock(alice.editor, 8) + 5
+    place(at)
+    for (let step = 0; step < 3; step++) {
+      const known = Y.encodeStateVector(bob.doc)
+      alice.editor.commands.insertContentAt(at++, 'a')
+      const first = Y.encodeStateAsUpdate(alice.doc, known)
+      alice.editor.commands.insertContentAt(at++, 'b')
+      place(at)
+      Y.applyUpdate(bob.doc, first)
+      expect(cursorsAt()).toHaveLength(1)
+      exchange(alice, bob)
+      expect(cursorsAt()).toEqual([at])
+    }
     remote.destroy()
     awareness.destroy()
   })
@@ -148,7 +176,7 @@ describe('remote changes apply only the changed range', () => {
     // event, the cursor update wrote C's old selection (the document start) back to the DOM, and C typed before "Sekce A".
     const { alice, bob } = pair()
     const awareness = new Awareness(bob.doc)
-    const cursors = Extension.create({ name: 'testPendingSelection', addProseMirrorPlugins: () => [yCursorPlugin(awareness)] })
+    const cursors = Extension.create({ name: 'testPendingSelection', addProseMirrorPlugins: () => [collaborationCaretsPlugin(bob.editor, awareness)] })
     bob.editor.registerPlugin(cursors.config.addProseMirrorPlugins!.call({} as never)[0]!)
     document.body.append(bob.editor.view.dom)
     ;(bob.editor.view.dom as HTMLElement).focus()
@@ -160,7 +188,7 @@ describe('remote changes apply only the changed range', () => {
     const { node, offset } = bob.editor.view.domAtPos(caret)
     document.getSelection()!.collapse(node, offset)
     const remote = new Awareness(alice.doc)
-    const sync = ySyncPluginKey.getState(alice.editor.state) as { type: never; binding: { mapping: never } }
+    const sync = ySyncPluginKey.getState(alice.editor.state)!
     const elsewhere = absolutePositionToRelativePosition(posOfBlock(alice.editor, 3) + 2, sync.type, sync.binding.mapping)
     remote.setLocalState({ user: { name: 'Alice', color: '#123456' }, cursor: { anchor: elsewhere, head: elsewhere } })
     applyAwarenessUpdate(awareness, encodeAwarenessUpdate(remote, [remote.clientID]), 'remote')
@@ -176,7 +204,7 @@ describe('remote changes apply only the changed range', () => {
   it('publishes the own cursor only after the first key or pointer press, not on a programmatic focus', async () => {
     const { bob } = pair()
     const awareness = new Awareness(bob.doc)
-    const cursors = Extension.create({ name: 'testOwnCursor', addProseMirrorPlugins: () => [yCursorPlugin(awareness)] })
+    const cursors = Extension.create({ name: 'testOwnCursor', addProseMirrorPlugins: () => [collaborationCaretsPlugin(bob.editor, awareness)] })
     bob.editor.registerPlugin(cursors.config.addProseMirrorPlugins!.call({} as never)[0]!)
     document.body.append(bob.editor.view.dom)
     ;(bob.editor.view.dom as HTMLElement).focus()
@@ -186,7 +214,21 @@ describe('remote changes apply only the changed range', () => {
     bob.editor.view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
     await new Promise(resolve => setTimeout(resolve, 0))
     expect(awareness.getLocalState()?.cursor).toBeTruthy()
-    bob.editor.view.dom.remove()
+    // A plugin registered later recreates the plugin views: the published caret stays (no retraction, no wait for another key).
+    const published = awareness.getLocalState()?.cursor
+    const changes: unknown[] = []
+    awareness.on('change', (change: unknown) => changes.push(change))
+    bob.editor.registerPlugin(new Plugin({ key: new PluginKey('lateOwnCursor'), view: () => ({}) }))
+    await Promise.resolve()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(awareness.getLocalState()?.cursor).toBe(published)
+    expect(changes).toEqual([])
+    // The editor going retracts it.
+    const dom = bob.editor.view.dom
+    bob.editor.destroy()
+    await Promise.resolve()
+    expect(awareness.getLocalState()?.cursor ?? null).toBeNull()
+    dom.remove()
     awareness.destroy()
   })
 })

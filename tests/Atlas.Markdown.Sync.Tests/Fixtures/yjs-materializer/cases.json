@@ -1,7 +1,7 @@
 {
  "versions": {
   "yjs": "13.6.33",
-  "@tiptap/y-tiptap": "3.0.9",
+  "@tiptap/y-tiptap": "3.3.1",
   "prosemirror-model": "1.25.11"
  },
  "cases": [
@@ -579,7 +579,7 @@
     {
      "payload": "unsupported-text-at-root/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: el.toArray is not a function"
+     "why": "y-tiptap fails: Error: Method unimplemented"
     }
    ]
   },
@@ -590,7 +590,8 @@
     {
      "payload": "unsupported-hook/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: text.toDelta is not a function"
+     "why": "a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)",
+     "refused": true
     }
    ]
   },
@@ -601,7 +602,8 @@
     {
      "payload": "unsupported-map-child/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: text.toDelta is not a function"
+     "why": "a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)",
+     "refused": true
     }
    ]
   },
@@ -612,7 +614,8 @@
     {
      "payload": "unsupported-any-child/000.state.bin",
      "expect": "error",
-     "why": "y-tiptap fails: TypeError: Cannot read properties of undefined (reading 'right')"
+     "why": "a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)",
+     "refused": true
     }
    ]
   },

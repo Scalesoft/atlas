@@ -12,6 +12,7 @@ export {
   type CollabUser,
   type UseCollabOptions,
 } from '../collab/useCollab'
+export { CollaborationCarets, type CaretUser } from '../collab/carets'
 export { createSignalRMarkdownAdapter, type SignalRMarkdownAdapterOptions } from '../collab/createSignalRMarkdownAdapter'
 export { createMarkdownRecovery, type MarkdownRecovery, type MarkdownRecoveryOptions, type MarkdownRecoveryState } from '../collab/recovery/session'
 export { createIndexedDbRecoveryStore, type IndexedDbRecoveryStoreOptions } from '../collab/recovery/indexedDbRecoveryStore'

@@ -5,6 +5,19 @@ while it is below 1.0.0, a minor release may contain breaking changes, which are
 
 ## Unreleased
 
+### y-tiptap 3.3 bez patche (Atlas 5.2)
+
+- **Breaking:** `@tiptap/y-tiptap` 3.3.1 a bez pnpm patche. Kurzory spolupracovníků kreslí a vlastní kurzor publikuje
+  `CollaborationCarets` (`@atlas/markdown/collaboration/signalr`, jméno rozšíření `collaborationCaret` a volba `provider` zůstaly):
+  kurzor, který předběhne svou editaci, zůstane na posledním místě, kam šel vyhodnotit; překreslují jen cizí změny, nejvýš jednou za
+  snímek, a nejdřív se přečte výběr, který prohlížeč ještě nenahlásil; vlastní kurzor se zveřejní až po první klávese nebo kliknutí.
+  Peer `@tiptap/extension-collaboration-caret` odpadl.
+- Vzdálená změna nahrazuje jen bloky, které změnila (upstream). `KeepingCollaboration` (místo `Collaboration` v `useCollab`) zajistí,
+  že plugin registrovaný později (bublinové menu, úchyt, živý zápis agenta) dokument znovu nepostaví z Yjs.
+- `CollaborationRemoteSelection` odstraněno: pád „Position N out of range“ opravil y-tiptap 3.3; nahrané stavy zůstaly jako regresní test.
+- Materializer corpus: hook, Y.Map a holá hodnota mezi potomky odstavce y-tiptap 3.3 přeskočí; editor je nikdy nezapíše a server je dál
+  odmítá (`refused`).
+
 ### Tiptap 3.35 a ProseMirror (Atlas 5.2)
 
 - Tiptap 3.35.0 (peer `^3.35.0`), `prosemirror-model` 1.25.13 a `prosemirror-view` 1.43.1 přes `@tiptap/pm`.

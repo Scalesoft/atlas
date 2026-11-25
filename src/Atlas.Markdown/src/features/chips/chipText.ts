@@ -36,8 +36,8 @@ interface Reverted extends Range { text: string }
 const revertedKey = new PluginKey<readonly Reverted[]>('markdownRevertedText')
 
 /**
- * The ranges across a collaborative change (someone else's edit, a collaborative undo): y-tiptap applies it as a replace of the
- * whole document, which collapses every mapped range, so a range keeps its place outside the part that really changed.
+ * The ranges across a collaborative change (someone else's edit, a collaborative undo): y-tiptap applies it as one replace of the
+ * blocks it changed, which collapses every mapped range in them, so a range keeps its place outside the part that really changed.
  * shortcut: one changed span per change, so a batch that edits both before and after a range forgets it (the text may become a
  * chip again); upgrade to Yjs relative positions or a mark in the document (E2a) if that shows.
  */
