@@ -16,6 +16,8 @@ export interface MarkdownPageReference {
   detail?: string
   /** An icon of the editor's set drawn before a resolved link's title (a board link among page links). Display only, as `detail`. */
   icon?: string
+  /** A warning (a page whose verification expired): the chip gets `data-warn` for the host to tone it. Display only, as `icon`. */
+  warn?: boolean
 }
 export interface MarkdownPageSource {
   search(query: string, context: { signal: AbortSignal }): Promise<readonly MarkdownPageReference[]>
@@ -50,7 +52,7 @@ export function normalizePageReference(value: unknown): MarkdownPageReference {
   const v = value as Record<string, unknown>
   const detail = optionalDetail(v.detail)
   const icon = typeof v.icon === 'string' && Object.hasOwn(iconMarkup, v.icon) ? v.icon : undefined
-  return { id: required(v.id), title: required(v.title), url: markdownModuleUrl(required(v.url)), ...(detail ? { detail } : {}), ...(icon ? { icon } : {}) }
+  return { id: required(v.id), title: required(v.title), url: markdownModuleUrl(required(v.url)), ...(detail ? { detail } : {}), ...(icon ? { icon } : {}), ...(v.warn === true ? { warn: true } : {}) }
 }
 export function pageReferenceNode(page: MarkdownPageReference): JSONContent {
   const { id, title, url } = normalizePageReference(page)
@@ -110,6 +112,7 @@ function decorateLink(link: HTMLAnchorElement, page: MarkdownPageReference, opti
       const current = normalizePageReference(result)
       if (current.id !== page.id) throw new TypeError('Resolver změnil identitu stránky.')
       resolved = current; shown = ''
+      link.toggleAttribute('data-warn', !!current.warn)
       show()
     }).catch(() => { if (!abort.signal.aborted) unavailable(pagesStrings.verificationFailed) })
   }

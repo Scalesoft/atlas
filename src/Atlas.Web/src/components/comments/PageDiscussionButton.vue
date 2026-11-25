@@ -41,3 +41,15 @@ const badge = () => feed.unread.value || feed.count.value;
   </Tooltip>
   <PageDiscussionPeek :bubbles="docked || open ? [] : feed.bubbles.value" :docked="docked || open" :host="host" :reply="feed.canPost.value ? reply : undefined" :draft-scope="pageId" @open="emit('open')" @dismiss="feed.dismiss" @replying="feed.pin" />
 </template>
+
+<style>
+/* Comes with this lazy part, not with the eager refresh-article.css. The count sits over the button's corner, so a new number or a first comment never resizes the bar. */
+.atlas .document-actions .page-discussion-button[aria-pressed="true"]:not(.md-editor *) { background: var(--accent-soft); color: var(--accent); }
+.atlas .document-actions .page-discussion-button:not(.md-editor *) { position: relative; }
+.atlas .document-actions .page-discussion-count:not(.md-editor *) { position: absolute; top: -3px; right: -3px; min-width: 16px; padding: 0 4px; border-radius: 999px; background: var(--hover); color: var(--muted);
+  font-size: 10.5px; font-weight: 650; line-height: 16px; text-align: center; transition: background-color var(--atlas-motion-base) var(--atlas-ease-out), color var(--atlas-motion-base) var(--atlas-ease-out); }
+/* A colleague's new comment, not seen yet: the count takes the accent until the discussion is opened. */
+.atlas .document-actions .page-discussion-button[data-fresh] .page-discussion-count:not(.md-editor *) { background: var(--accent); color: var(--on-accent, #fff); }
+.atlas .page-discussion-count-enter-active { animation: st-rise-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.atlas .page-discussion-count-leave-active { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-out) both; }
+</style>

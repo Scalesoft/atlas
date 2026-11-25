@@ -179,13 +179,13 @@ describe("CommentThread quote", () => {
   });
 });
 
-describe("CommentThread quick reply", () => {
+describe("CommentThread send", () => {
   const editor = () => document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor;
   const enter = (init: KeyboardEventInit = {}) => document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, ...init }));
 
   it("has the paper plane (Odeslat (Enter)), dim while empty and accent with text, and Enter sends while Shift+Enter writes a line", async () => {
     const api = fakeApi(page([]));
-    await mounted(api, { quick: true });
+    await mounted(api);
     await vi.waitFor(() => expect(editor()).toBeDefined());
     const send = wrapper!.get(".send-button");
     expect(send.attributes("aria-label")).toBe("Odeslat (Enter)");
@@ -202,10 +202,17 @@ describe("CommentThread quick reply", () => {
     expect(api.post).toHaveBeenCalledWith("obj-1", "Hotovo", null);
   });
 
-  it("keeps the text button and Ctrl+Enter in a thread that is not quick (a board's)", async () => {
-    await mounted(fakeApi(page([])));
-    expect(wrapper!.find(".send-button").exists()).toBe(false);
-    expect(wrapper!.get("[data-comment-submit]").text()).toBe("Odeslat");
+  it("behaves the same in a board's thread (an anchored one): Enter sends, Ctrl+Enter is no longer needed", async () => {
+    const api = fakeApi(page([]));
+    await mounted(api, { anchor: "item-1" });
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    expect(wrapper!.find(".send-button").exists()).toBe(true);
+    expect(wrapper!.text()).toContain("Enter odešle, Shift+Enter nový řádek");
+    editor()!.commands.insertContent("Na tabuli");
+    await flushPromises();
+    enter();
+    await flushPromises();
+    expect(api.post).toHaveBeenCalledWith("obj-1", "Na tabuli", "item-1");
   });
 });
 

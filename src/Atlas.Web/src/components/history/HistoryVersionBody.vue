@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import type { PageRevisionSummary } from "../../history";
 import { formatTime } from "../../formatDate";
-import { userColor } from "../../live/objectPresence";
+import { themedUserColor } from "../../live/collaboratorColors";
 import ChannelBadge from "../ChannelBadge.vue";
 import SubjectAvatar from "../settings/SubjectAvatar.vue";
 import { describeChanges, shares, sizeBar } from "./versionSummary";
@@ -30,7 +30,7 @@ const people = computed(() => shares(changes.value));
   <span class="hv-detail">v{{ item.version }}<span v-if="changes && !step"> · {{ changes.blocks }} {{ t.version.blocks }}</span><span v-if="!step && item.checkpoints && item.checkpoints > 1"> · {{ t.version.saves(item.checkpoints) }}</span><span v-if="item.isCurrent"> · {{ t.version.current }}</span><span v-if="item.isPublished"> · {{ t.version.published }}</span><span v-else-if="item.lastPublishedAt"> · {{ t.version.wasPublished }}</span></span>
   <span v-if="item.changeSummary" class="hv-note history-version-summary" :title="item.changeSummary">{{ item.changeSummary }}</span>
   <span v-for="line in lines" :key="line" class="hv-line" data-history-change>{{ line }}</span>
-  <span v-if="people.length > 1 && !step" class="hv-people"><span v-for="person in people" :key="person.id" class="hv-person" :title="t.version.share(person.name, person.share)"><SubjectAvatar kind="user" :name="person.name" size="sm" :color="userColor(person.id)" />{{ t.version.percent(person.share) }}</span></span>
+  <span v-if="people.length > 1 && !step" class="hv-people"><span v-for="person in people" :key="person.id" class="hv-person" :title="t.version.share(person.name, person.share)"><SubjectAvatar kind="user" :name="person.name" size="sm" :color="themedUserColor(person.id)" />{{ t.version.percent(person.share) }}</span></span>
 </template>
 
 <style scoped>

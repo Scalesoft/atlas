@@ -113,7 +113,7 @@ function quoteSelection() {
 <template>
   <SettingsPage title="Komentáře" description="Diskuse k objektu (komentáře spec): jedna sdílená časová osa pro stránku, tabuli i dok, s ukázkovými daty.">
     <SettingsSection title="CommentThread"
-      description="Plochá časová osa jako ve Wiki.js: nejnovější nahoře, avatar, jméno a relativní čas, „upraveno“, řádek „Komentář byl odstraněn“, „Starší komentáře“ po dvaceti a pole „Napsat komentář…“ s Markdownem editoru stránky v kompaktní variantě, bez úchytu bloků, takže nic nepřesahuje do docku ani do sekce stránky (Ctrl+Enter odešle). Vlastní komentář upravíte a smažete (tužka a koš na konci řádku, ukážou se při najetí nebo fokusu, na dotykové obrazovce stále), správce objektu smaže každý. Klik kamkoli do pole píše. Použijte ji všude, kde se diskutuje k objektu: sekce pod obsahem stránky na telefonu (title „Komentáře“, odesílá Enter jako dok; širší okno má jen záložku doku), panel „Diskuse“ tabule a záložka „Diskuse“ v detailu objektu. Komentáře se načtou až u výřezu a nové přicházejí relací pohledu objektu; pohyb: nový komentář se zjeví, smazaný se prolne na řádek odstranění. Proti ActivityTimeline (záznam změn, jen ke čtení) se do ní píše a upravuje na místě.">
+      description="Plochá časová osa jako ve Wiki.js: nejnovější nahoře, avatar, jméno a relativní čas, „upraveno“, řádek „Komentář byl odstraněn“, „Starší komentáře“ po dvaceti a pole „Napsat komentář…“ s Markdownem editoru stránky v kompaktní variantě, bez úchytu bloků, takže nic nepřesahuje do docku ani do sekce stránky. Odesílá všude stejně, na stránce i na tabuli: Enter odešle, Shift+Enter píše nový řádek a papírové letadélko (SendButton) v rohu pole to říká. Vlastní komentář upravíte a smažete (tužka a koš na konci řádku, ukážou se při najetí nebo fokusu, na dotykové obrazovce stále), správce objektu smaže každý. Klik kamkoli do pole píše. Použijte ji všude, kde se diskutuje k objektu: sekce pod obsahem stránky na telefonu (title „Komentáře“; širší okno má jen záložku doku), panel „Diskuse“ tabule a záložka „Diskuse“ v detailu objektu. Komentáře se načtou až u výřezu a nové přicházejí relací pohledu objektu; pohyb: nový komentář se zjeví, smazaný se prolne na řádek odstranění. Proti ActivityTimeline (záznam změn, jen ke čtení) se do ní píše a upravuje na místě.">
       <div class="comments-example-tools">
         <label class="comments-example-switch"><Switch v-model="enabled" @update:model-value="thread++" />Komentáře v prostoru zapnuté</label>
         <Button variant="outline" size="sm" type="button" @click="colleagueWrites">Kolega napíše komentář</Button>
@@ -175,6 +175,11 @@ function quoteSelection() {
 /* The panel slides in from its edge (st-slide-in); reduced motion: the distance is 0, only the fade stays. */
 .comments-example-dock-enter-active { animation: st-slide-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 .comments-example-dock-leave-active { animation: st-slide-in var(--atlas-motion-base) var(--atlas-ease-in) reverse both; }
+/* The gallery's stand-in for the dock (the dock itself is WorkspaceSidePanel's own motion), so its frames stay out of the eager motion.css. */
+@keyframes st-slide-in {
+  from { opacity: 0; transform: translateX(calc(var(--atlas-rise) * 6)); }
+  to { opacity: 1; transform: none; }
+}
 .comments-example-send { display: flex; align-items: center; gap: 8px; max-width: 420px; }
 .comments-example-send-input { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--input-line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 14px; }
 .comments-example-send-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

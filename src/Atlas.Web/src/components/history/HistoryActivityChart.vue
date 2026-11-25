@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import type { ChartData, ChartLook } from "@atlas/markdown/plugins/charts";
 import type { PageRevisionSummary } from "../../history";
-import { userColor } from "../../live/objectPresence";
+import { themedUserColor } from "../../live/collaboratorColors";
 import { activityBuckets, activityPeople, bucketKey, isHourly } from "./versionSummary";
 import LoadingSkeleton from "../LoadingSkeleton.vue";
 import t from "../../i18n/components-history";
@@ -36,7 +36,7 @@ function chart(): [ChartData, ChartLook] {
   const focusKey = props.focus && bucketKey(props.focus, hourly.value);
   return [{ version: 1, title: label.value, kind: "bar", grid, source: null, sourceStatus: null }, {
     stacked: true, compact: true, marks: true, focus: list.findIndex(b => b.key === focusKey),
-    colors: [...shown.map(p => userColor(p.id)), ...(rest ? [css("--muted", "#667085")] : []), css("--ai-ink", "#7a6ad8"), css("--success", "#23794b")],
+    colors: [...shown.map(p => themedUserColor(p.id)), ...(rest ? [css("--muted", "#667085")] : []), css("--ai-ink", "#7a6ad8"), css("--success", "#23794b")],
     tooltip: index => {
       const b = list[index]!;
       return [caption(b.key), ...shown.filter(p => b.byPerson[p.id]).map(p => t.chart.lines(p.name, b.byPerson[p.id]!)),

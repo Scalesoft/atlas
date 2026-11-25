@@ -36,8 +36,10 @@ describe("PageDiscussionPeek quick reply", () => {
     expect(send.attributes("data-ready")).toBeDefined();
   });
 
-  it("sends with Enter (not Shift+Enter, not an empty field), then the bubble goes", async () => {
+  it("sends with Enter (not Shift+Enter, not an empty field), then the bubble goes and the keyboard is on the discussion button", async () => {
     const reply = vi.fn(async () => undefined);
+    const button = document.body.appendChild(Object.assign(document.createElement("button"), { type: "button" }));
+    button.setAttribute("data-page-discussion", "");
     const view = await startReply(reply);
     enter();
     await flushPromises();
@@ -52,6 +54,7 @@ describe("PageDiscussionPeek quick reply", () => {
     expect(reply).toHaveBeenCalledWith("Souhlasím", bubble);
     expect(view.emitted("dismiss")?.[0]).toEqual(["a"]);
     expect(view.get("[data-peek-bubble]").attributes("data-sent")).toBeDefined();
+    expect(document.activeElement).toBe(button);
   });
 
   it("sends with the paper-plane button too, and keeps the bubble and the text when the send fails", async () => {

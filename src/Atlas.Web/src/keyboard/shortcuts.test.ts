@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { appShortcuts, chordLabel, createShortcutMatcher, helpSections, type AppShortcut } from "./shortcuts";
 
 afterEach(() => document.body.replaceChildren());
@@ -40,6 +40,14 @@ describe("one shortcut registry", () => {
     expect(chordLabel("Mod+Shift+p")).toBe("Ctrl Shift P");
     expect(chordLabel("g k")).toBe("G, pak K");
     expect(chordLabel("?")).toBe("?");
+  });
+
+  it("names chords the Mac way on a Mac", () => {
+    vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+    try {
+      expect(chordLabel("Mod+k")).toBe("⌘ K");
+      expect(chordLabel("Alt+c")).toBe("⌥ C");
+    } finally { vi.restoreAllMocks(); }
   });
 
   it("groups the help by context, with the editor's own keymap as its section", () => {

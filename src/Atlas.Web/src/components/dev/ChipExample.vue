@@ -98,7 +98,7 @@ function avatar(initials: string, color: string, ink = "#fff") {
   element.className = "chip-example-avatar"; element.textContent = initials; element.style.background = color; element.style.color = ink;
   return element;
 }
-const samples = (): { caption: string; chip: MarkdownChipOptions; selected?: boolean }[] => [
+const samples = (): { caption: string; chip: MarkdownChipOptions; selected?: boolean; warn?: boolean }[] => [
   { caption: "Úkol (tag)", chip: youTrackIssueChip({ id: "2-1235", key: "PX2-1235", title: "Přístup VPN", url: "https://youtrack.example/issue/PX2-1235", state: "Open" }, true) },
   { caption: "Osoba (zmínka)", chip: { variant: "mention", label: "Jana Nováková", media: avatar("JN", "#2f7d8c"), editable: true } },
   { caption: "Osoba bez účtu (externí)", chip: { variant: "mention", label: "Petr Dvořák", media: avatar("PD", "var(--accent-soft, #e3f4f7)", "var(--accent-strong, #26758a)"), editable: true } },
@@ -106,16 +106,18 @@ const samples = (): { caption: string; chip: MarkdownChipOptions; selected?: boo
     detail: [{ text: "nejspíš Modelsoft", className: "chip-example-likely" }, { text: " · nebo Example" }], ariaLabel: "Jana Nováková, nerozhodnutý kontakt" } },
   { caption: "Vybraný", chip: { label: "Provozní příručka", icon: "file-text", editable: true }, selected: true },
   { caption: "Odkaz na ověřenou stránku (5.2)", chip: { tag: "a", href: "#/gallery/chips", label: "Provozní příručka", icon: "shield-check", className: "md-page-reference" } },
-  { caption: "Odkaz na stránku s vypršeným ověřením", chip: { tag: "a", href: "#/gallery/chips", label: "Starý postup", icon: "shield-alert", className: "md-page-reference" } },
+  { caption: "Odkaz na stránku s vypršeným ověřením", chip: { tag: "a", href: "#/gallery/chips", label: "Starý postup", icon: "shield-alert", className: "md-page-reference" }, warn: true },
   { caption: "Ztlumený (hotovo, nedostupná stránka)", chip: { label: "do 4. 11.", state: "muted" } },
   { caption: "Fokus (Tab sem)", chip: { tag: "button", label: "Provozní příručka", icon: "file-text", editable: true } },
 ];
 function draw(into: HTMLElement | undefined) {
   if (!into) return;
-  into.replaceChildren(...samples().map(({ caption, chip, selected }) => {
+  into.replaceChildren(...samples().map(({ caption, chip, selected, warn }) => {
     const figure = document.createElement("figure"), label = document.createElement("figcaption");
     const element = createMarkdownChip(document, chip).element;
     if (selected) element.dataset.chipSelected = "";
+    // What the page link gets from a resolved reference with `warn` (editorDirectories.ts markOf).
+    if (warn) element.dataset.warn = "";
     label.textContent = caption;
     figure.append(element, label);
     return figure;

@@ -248,7 +248,8 @@ describe("navigation responses belong to the authenticated account", () => {
     const editor = app.getComponent(DocumentEditor);
     expect(editor.props('readonlySelectionEnabled')).toBe(true);
     editor.vm.$emit('readonlySelection', { text: 'VPN client', anchorRect: new DOMRect(200, 200, 160, 20) });
-    await flushPromises();
+    // The bar loads with the first selection.
+    await vi.waitFor(() => expect(document.querySelector('[data-readonly-find]')).not.toBeNull());
     expect(document.querySelector('[data-readonly-explain]')).toBeNull();
     (document.querySelector('[data-readonly-find]') as HTMLElement).click();
     await flushPromises();
@@ -264,9 +265,8 @@ describe("navigation responses belong to the authenticated account", () => {
     await app.get('.tree-page').trigger('click'); await flushPromises();
     const editor = app.getComponent(DocumentEditor);
     editor.vm.$emit('readonlySelection', { text: 'VPN client', anchorRect: new DOMRect(200, 200, 160, 20) });
-    await flushPromises();
+    await vi.waitFor(() => expect(document.querySelector('[data-readonly-find]')).not.toBeNull());
     expect(document.querySelector('[data-readonly-explain]')).toBeNull();
-    expect(document.querySelector('[data-readonly-find]')).not.toBeNull();
     assistant = true;
     const { useAiCapabilities } = await import('./composables/useAiCapabilities');
     await useAiCapabilities().refresh();

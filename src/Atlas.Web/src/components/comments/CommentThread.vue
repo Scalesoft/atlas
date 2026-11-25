@@ -24,7 +24,8 @@ import t from "../../i18n/components-search";
  * The discussion of one object (comments spec §5), the one thread of a page (a section under its content), of a board (its
  * „Diskuse“ in the dock) and of a card's object (the dock's „Diskuse“ tab): a flat timeline as in Wiki.js, newest first, with the
  * author's avatar and name, the relative time („upraveno“ after an edit), a placeholder for a deleted comment, „Starší komentáře“
- * for the next twenty and the field „Napsat komentář…“ with the page editor's Markdown (Ctrl+Enter sends). The reader edits and
+ * for the next twenty and the field „Napsat komentář…“ with the page editor's Markdown: one behaviour everywhere (pages, boards, objects), Enter sends,
+ * Shift+Enter writes a new line, and the paper-plane SendButton says so. The reader edits and
  * deletes what the server allows (own comments; any as a manager of the object). A deleted comment has no „Zpět“: the comments API has no restore
  * (a gap of the rules, docs/interaction-rules.md P6).
  *
@@ -51,13 +52,11 @@ const props = withDefaults(defineProps<{
   host?: BoardBlockHost;
   /** This thread takes the text the reader selected in the page (Alt C, `requestedQuote`) as the quote its new comment starts with: the dock's Diskuse of a page. */
   quotes?: boolean;
-  /** A quick reply (the page's discussion): Enter sends, Shift+Enter writes a new line, and a paper-plane button says so. */
-  quick?: boolean;
   /** Read only once near the viewport. */
   lazy?: boolean;
   api?: CommentApi;
   views?: Pick<ViewSessions, "open">;
-}>(), { viewKey: undefined, anchor: null, title: undefined, host: () => inertBlockHost, quotes: false, quick: false, lazy: true, api: () => commentApi, views: undefined });
+}>(), { viewKey: undefined, anchor: null, title: undefined, host: () => inertBlockHost, quotes: false, lazy: true, api: () => commentApi, views: undefined });
 const emit = defineEmits<{ count: [count: number]; anchor: [anchor: string] }>();
 
 const thread = createCommentThread(props.objectId, props.api);
@@ -89,11 +88,11 @@ function start() {
   });
 }
 // A comment asked for by address (a notification of a mention): the thread reads at once, older pages until it holds the comment,
-// scrolls to it, highlights it for a moment and puts the keyboard on it. Only the page's own thread (titled) answers.
+// scrolls to it, highlights it for a moment and puts the keyboard on it. Only the page's own thread (the phone's titled section, the dock's quoting one) answers.
 const highlighted = ref("");
 async function revealRequested() {
   const id = requestedComment.value;
-  if (!id || !props.title || status.value !== "ready") return;
+  if (!id || !(props.title || props.quotes) || status.value !== "ready") return;
   requestedComment.value = undefined;
   try { for (let pages = 0; pages < 10 && hasMore.value && !items.value.some(comment => comment.id === id); pages++) await thread.older(); } catch { /* the thread shows what it has */ }
   await nextTick();
@@ -187,7 +186,7 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
         <AtlasIcon name="quote" :size="15" />{{ t.comments.write }}</Button>
     </header>
     <template v-if="status === 'ready'">
-      <CommentComposer v-if="canPost && !folded" ref="composer" :host="host" :busy="posting" :cancelable="!!title && !items.length" :draft-key="draftKey" :enter-submits="quick" :send-icon="quick" :hint="quick ? t.comments.hintEnter : t.comments.hint" @submit="post"
+      <CommentComposer v-if="canPost && !folded" ref="composer" :host="host" :busy="posting" :cancelable="!!title && !items.length" :draft-key="draftKey" enter-submits send-icon :hint="t.comments.hintEnter" @submit="post"
         @cancel="stopWriting" />
       <p v-else-if="!canPost" class="comment-thread-note" data-comments-off>{{ t.comments.off }}</p>
     </template>
@@ -219,7 +218,7 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
           </div>
           <Transition name="comment-swap" mode="out-in">
             <p v-if="comment.deleted" key="deleted" class="comment-deleted" data-comment-placeholder>{{ t.comments.removed }}</p>
-            <CommentComposer v-else-if="editing === comment.id" key="editing" :initial="comment.body" :submit-label="t.comments.apply" cancelable :busy="saving" :host="host"
+            <CommentComposer v-else-if="editing === comment.id" key="editing" :initial="comment.body" :submit-label="t.comments.apply" cancelable enter-submits :hint="t.comments.hintEnter" :busy="saving" :host="host"
               :aria-label="t.comments.editing" @submit="save(comment, $event)" @cancel="stopEditing(comment.id)" />
             <BoardMarkdown v-else :key="`body-${comment.editedAt}`" class="comment-body" :text="comment.body" :aria-label="t.comments.text" />
           </Transition>

@@ -289,7 +289,7 @@ const PageOutline = lazyComponent(pageChrome.outline);
 const PageMobileBar = lazyComponent(() => import("./components/PageMobileBar.vue"));
 const PageUndoWedge = lazyComponent(() => import("./components/PageUndoWedge.vue"));
 import type { PageSideTab } from "./components/PageSidePanel.vue";
-import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearch";
+import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearchState";
 import { quoteMarkdown, requestedComment, requestedQuote } from "./comments/commentFocus";
 import { articleArrives } from "./editor/articleMotion";
 import { useStageHeight } from "./components/library/stageHeight";
@@ -315,7 +315,9 @@ import type DocumentEditorComponent from "./components/DocumentEditor.vue";
 import { editorAssistEnabled, loadEditorAssist } from "./assist/loadAssist";
 import type { AtlasAssistFactory } from "./assist/types";
 import { detectSecrets } from "./assist/rules/secretDetector";
-import ReadonlySelectionActions, {type ReadonlySelection} from "./components/ai/ReadonlySelectionActions.vue";
+// The bar under a reader's selection comes with the first selection, not with the first screen.
+import type { ReadonlySelection } from "./components/ai/ReadonlySelectionActions.vue";
+const ReadonlySelectionActions = lazyComponent(() => import("./components/ai/ReadonlySelectionActions.vue"));
 const PageSummaryAnswer = lazyComponent(() => import("./components/ai/PageSummary.vue"));
 import { usePublishAssistant } from "./publishing/usePublishAssistant";
 import { createPublishControlLoader } from "./publishing/publishControlLoader";
@@ -3063,10 +3065,16 @@ function showPageDock(tab: PageSideTab, focus = true) {
  * selected in the page becomes the quote of a new comment, and the caret goes into the field (Escape closes the dock and returns to the text).
  * The peek under the avatars hands over to it: its bubbles fly out while the dock slides in. The button and Alt C toggle it.
  */
+function selectedInPage() {
+  const selection = window.getSelection();
+  return selection && !selection.isCollapsed && documentBody.value?.contains(selection.anchorNode) ? selection.toString() : "";
+}
 async function openDiscussion() {
   if (!documentOpen.value || !pageDockTabs.value) return false;
-  const selection = window.getSelection();
-  const picked = selection && !selection.isCollapsed && documentBody.value?.contains(selection.anchorNode) ? quoteMarkdown(selection.toString()) : "";
+  // A phone has no second thread in the dock: its Diskuse is the section under the content.
+  if (phoneLayout.value) { workspacePanel.hide(); revealPageComments(); return true; }
+  const selected = selectedInPage();
+  const picked = selected ? quoteMarkdown(selected) : "";
   // The thread's editor services (people, pages) come first, so the first Alt C already has `@`.
   await pageChrome.comments().catch(() => undefined);
   if (picked) requestedQuote.value = picked;
@@ -3084,7 +3092,8 @@ function revealPageComments() {
 }
 function toggleDiscussion() {
   if (phoneLayout.value) return revealPageComments();
-  if (!discussionOpen.value) return void openDiscussion();
+  // Text selected in the page is quoted into the open Diskuse instead of closing it.
+  if (!discussionOpen.value || selectedInPage()) return void openDiscussion();
   workspacePanel.hide();
   rememberPageDock(false);
 }
@@ -4318,7 +4327,8 @@ function globalKeys(event: KeyboardEvent) {
   // A reader's read-only text (Tab lands on it) types nothing: the letters stay shortcuts there.
   const inPage = event.target instanceof Node && !!documentBody.value?.contains(event.target)
     && !(event.target instanceof Element && event.target.closest('[contenteditable="false"]'));
-  if ((editorActive.value || inPage) && !event.ctrlKey && !event.metaKey) return;
+  // Alt C (`anywhere`) passes: it takes the selection from the page being edited too.
+  if ((editorActive.value || inPage) && !event.ctrlKey && !event.metaKey && shortcut.where !== "anywhere") return;
   // E unlocks only as a deliberate first key; while typing it pulses the lock like the other letters.
   if (shortcut.id === "edit" && typing && pageLocked.value && documentOpen.value && pageCanWrite.value) { lockPulse.value++; event.preventDefault(); return; }
   if (!runShortcut(shortcut.id, event)) return;
@@ -4365,7 +4375,12 @@ async function historyNavigation() {
     await openProfile(route.tab, true);
   }
   else if (route.view === "pageAccess") await openPageAccess(route.pageId, route.tab, true);
-  else if (route.view === "page") { requestedComment.value = route.comment; await openPage(route.pageId, false, true, route.heading, undefined, route.block); }
+  else if (route.view === "page") {
+    requestedComment.value = route.comment;
+    await openPage(route.pageId, false, true, route.heading, undefined, route.block);
+    // A comment link (a mention's notification) opens the dock's Diskuse, which reveals it; a phone's thread is the section under the content.
+    if (route.comment && !phoneLayout.value && pageDockTabs.value) showPageDock("comments", false);
+  }
   else if (route.view === "space") {
     const space = spaces.value.find(item => item.id === route.spaceId);
     if (space) await selectSpace(space, true, route.tab ?? "pages"); else { home(true); unavailableSpace.value = route.spaceId; }
@@ -4970,7 +4985,7 @@ onUnmounted(() => {
             <div class="document-meta" :data-writable="(pageCanWrite && browserOnline) || undefined">
               <AssistantLauncher variant="page" :page-reading="assistantPageReading" :can-ask="canAsk" @launch="launchAssistant(true)" />
               <StatusBadge v-if="catalogPage" tone="info" icon="book-open" size="sm" :label="t.nav.catalogBadge" data-page-catalog />
-              <PageVerification v-if="verification && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
+              <PageVerification v-if="verification && verification.state !== 'off' && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
               <Button v-if="page.isTemplate && canManageTemplates" variant="ghost" size="sm" @click="openSpaceTemplates(currentSpace!.id)">{{ t.nav.templateManage }}</Button>
               <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" :data-transient="documentStatusTransient || undefined" role="status" aria-live="polite" aria-atomic="true">
                 <StatusBadge v-if="documentStatusTransient" :key="documentStatusText" tone="success" :label="documentStatusText" confirmed />
@@ -5047,9 +5062,9 @@ onUnmounted(() => {
               @can-undo="pageCanUndo = $event"
             /></section>
           <PageConnections v-if="editorReady" layout="graph" :page-title="page.title" :document="documentValue" :page-id="page.id" :space-id="page.spaceId" :refresh-key="libraryRefresh" :related-enabled="aiCapabilities.related" />
-          <!-- A phone's discussion (no dock there): the same thread as the dock's Diskuse, sending with Enter like it. -->
+          <!-- A phone's discussion (no dock there): the same thread as the dock's Diskuse. -->
           <CommentThread v-if="editorReady && afterContent && phoneLayout" :key="`comments:${page.id}`" class="page-comments" :object-id="page.id" :view-key="`page:${page.id}`" :title="t.common.comments"
-            quick :host="pageCommentHost" @count="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" />
+            :host="pageCommentHost" @count="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" />
           <PageMobileBar v-if="editorReady" :can-ask="canAsk" :lockable="pageCanWrite" :locked="pageLocked" :favorite="personalState?.isFavorite ?? false" :favorite-busy="favoritePending || !personalState"
             :discussion="pageDockTabs ? discussionButton?.count ?? 0 : null" @read="readFromTop" @ask="launchAssistant(true)" @favorite="toggleFavorite" @lock="toggleLock" @discussion="revealPageComments" />
         </template>
@@ -5384,7 +5399,7 @@ onUnmounted(() => {
         </span>
       </footer>
     </AppDialog>
-    <ReadonlySelectionActions :selection="readonlySelection" :enabled="!editorActive" :explain-enabled="assistant.canAnswer.value" @ask="selectionAction('ask', $event)" @explain="selectionAction('explain', $event)" @summarize="selectionAction('summarize', $event)" @find="findSelection" @close="readonlySelection = null" />
+    <ReadonlySelectionActions v-if="readonlySelection" :selection="readonlySelection" :enabled="!editorActive" :explain-enabled="assistant.canAnswer.value" @ask="selectionAction('ask', $event)" @explain="selectionAction('explain', $event)" @summarize="selectionAction('summarize', $event)" @find="findSelection" @close="readonlySelection = null" />
     <Toaster dir="ltr" position="bottom-right" :theme="dark ? 'dark' : 'light'" :duration="4000" close-button :toast-options="{ closeButtonAriaLabel: t.common.close }"
       :offset="{ bottom: 'var(--atlas-toast-bottom, 24px)' }" :mobile-offset="{ top: 68, bottom: 'var(--atlas-toast-bottom, 16px)' }" /><!-- A toast at the top (Co je nového) stays under the phone's top bar, not over its menu and search. -->
     <ContactLastUsageDialog />

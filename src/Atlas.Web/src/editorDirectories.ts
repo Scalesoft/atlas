@@ -17,7 +17,7 @@ interface Titled { readonly id: string; readonly title: string; readonly type?: 
 interface Found extends Titled { readonly spaceId?: string; readonly spaceName?: string; readonly isDraft?: boolean; readonly matchedAlias?: string | null }
 
 /** Ověřený obsah (5.2): the link chip draws the verification's shield before the title (display only, as every `icon`). */
-const markOf = (state: string | undefined) => { const mark = verificationMark(state); return mark ? { icon: mark.icon } : {}; };
+const markOf = (state: string | undefined) => { const mark = verificationMark(state); return mark ? { icon: mark.icon, ...(mark.warn ? { warn: true } : {}) } : {}; };
 const pageUrl = (id: string) => buildShellHashEncoded({ view: "page", pageId: id });
 const reference = (page: Titled): MarkdownPageReference => page.type === "board"
   ? { id: page.id, title: page.title, url: buildShellHashEncoded({ view: "board", boardId: page.id }), icon: "layout-dashboard" }

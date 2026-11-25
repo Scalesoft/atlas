@@ -45,5 +45,21 @@ export const collaboratorChoices: readonly CollaboratorChoice[] = COLLABORATOR_C
 /** What "Automaticky" gives a person alone in a page: the palette id their account hashes to. */
 export const automaticCollaboratorColorId = (userId: string) => COLLABORATOR_COLORS[markdownUserColorSlot(userId)]!.id;
 
-/** The stamped colour as the current surface should draw it (the dark variant under `html[data-mode="dark"]`, as the editor's carets). */
-export const themedCollaboratorColor = (color: string) => collaboratorColor(color, typeof document !== "undefined" && document.documentElement.dataset.mode === "dark");
+/** Whether the surface is dark, read from the page each time; the tick makes a view drawing a themed colour redraw when the theme switches. */
+const themeSwitches = shallowRef(0);
+let followingTheme = false;
+function dark() {
+  if (typeof document === "undefined") return false;
+  if (!followingTheme) {
+    followingTheme = true;
+    new MutationObserver(() => { themeSwitches.value++; }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-mode"] });
+  }
+  void themeSwitches.value;
+  return document.documentElement.dataset.mode === "dark";
+}
+
+/** The stamped colour as the current surface should draw it (the dark variant under `html[data-mode="dark"]`, as the editor's carets). Reactive. */
+export const themedCollaboratorColor = (color: string) => collaboratorColor(color, dark());
+
+/** A person's colour as the current surface draws it (history, discussion, contact chips): `userColor` in its themed variant. Reactive. */
+export const themedUserColor = (userId: string) => themedCollaboratorColor(userColor(userId));

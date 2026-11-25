@@ -6,7 +6,7 @@ import { focusWhenPresent } from "../../keyboard/navigation";
 import { lazyComponent } from "../../lazyComponent";
 import { drafts } from "../../lib/unsavedWork";
 import type { DiscussionBubble } from "../../comments/pageDiscussionFeed";
-import { themedCollaboratorColor, userColor } from "../../live/collaboratorColors";
+import { themedUserColor } from "../../live/collaboratorColors";
 import AtlasIcon from "../AtlasIcon.vue";
 import SubjectAvatar from "../settings/SubjectAvatar.vue";
 import t from "../../i18n/components-search";
@@ -87,6 +87,8 @@ async function send(bubble: DiscussionBubble, markdown: string) {
     await nextTick();
     drafts.delete(draftKey(bubble)); // the field kept its text as it went; a sent reply is no draft
     emit("dismiss", bubble.id);
+    // The field went with the bubble: the keyboard lands on the discussion button the peek hangs under.
+    document.querySelector<HTMLElement>("[data-page-discussion]")?.focus();
   } catch (error) {
     failure.value = errorMessage(error);
   } finally {
@@ -100,7 +102,7 @@ async function send(bubble: DiscussionBubble, markdown: string) {
     @pointerenter="hold" @pointerleave="release" @focusin="hold" @focusout="release">
     <li v-for="(bubble, index) in bubbles" :key="bubble.id" class="peek-bubble" :style="{ '--peek-index': index }" :data-bubble-id="bubble.id" :data-sent="sent === bubble.id || undefined" data-peek-bubble>
       <button type="button" class="peek-open" :aria-label="t.comments.peek.from(bubble.authorName, bubble.text)" @click="emit('open')">
-        <SubjectAvatar kind="user" :name="bubble.authorName" :color="themedCollaboratorColor(userColor(bubble.authorId))" size="sm" />
+        <SubjectAvatar kind="user" :name="bubble.authorName" :color="themedUserColor(bubble.authorId)" size="sm" />
         <span class="peek-main">
           <strong class="peek-author">{{ bubble.authorName }}</strong>
           <span class="peek-text">{{ bubble.text }}</span>
@@ -120,22 +122,23 @@ async function send(bubble: DiscussionBubble, markdown: string) {
 <style scoped>
 /* Under the avatars, over the page, out of the text column: the host's anchor is its positioning box. */
 .discussion-peek { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; display: flex; flex-direction: column; gap: 6px; width: min(340px, 86vw); margin: 0; padding: 0; list-style: none; pointer-events: none; }
-.peek-bubble { position: relative; pointer-events: auto; transform-origin: top right; }
-.peek-open { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 30px 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer;
-  box-shadow: var(--shadow-menu);
-  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out), scale var(--atlas-motion-fast) var(--atlas-ease-out); }
-@media (hover: hover) and (pointer: fine) { .peek-open:hover { border-color: var(--accent); background: color-mix(in srgb, var(--hover) 45%, var(--surface)); } }
+/* One bubble holds the comment, „Odpovědět“ and the quick reply: the frame is the row's, so nothing hangs outside its border. */
+.peek-bubble { position: relative; pointer-events: auto; transform-origin: top right; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-menu);
+  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out); }
+@media (hover: hover) and (pointer: fine) { .peek-bubble:has(> .peek-open:hover) { border-color: var(--accent); } .peek-open:hover { background: color-mix(in srgb, var(--hover) 45%, var(--surface)); } }
+.peek-open { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 30px 8px 10px; border: 0; border-radius: 11px; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), scale var(--atlas-motion-fast) var(--atlas-ease-out); }
 .peek-open:active { scale: var(--atlas-press); }
 .peek-open:focus-visible, .peek-hide:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .peek-main { display: flex; flex: 1; flex-direction: column; min-width: 0; font-size: 13px; line-height: 1.35; }
 .peek-author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .peek-text { display: -webkit-box; overflow: hidden; color: var(--muted); -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
 /* „Odpovědět“ is a quiet text row under the bubble's text (in the flow, so the bubble never changes shape and nothing overlays the author line). */
-.peek-reply { display: inline-flex; align-items: center; gap: 4px; margin: 2px 0 0 10px; padding: 2px 6px; border: 0; border-radius: 6px; background: none; color: var(--accent); font: inherit; font-size: 12px; cursor: pointer;
+.peek-reply { display: inline-flex; align-items: center; gap: 4px; margin: -4px 0 6px 10px; padding: 2px 6px; border: 0; border-radius: 6px; background: none; color: var(--accent); font: inherit; font-size: 12px; cursor: pointer;
   transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 @media (hover: hover) and (pointer: fine) { .peek-reply:hover { background: var(--hover); } }
 .peek-reply:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.peek-compose { margin-top: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-menu); }
+.peek-compose { padding: 0 8px 8px; }
 .peek-failure { margin: 6px 0 0; color: var(--error); font-size: 12px; }
 .peek-hide { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer;
   opacity: 0; transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
@@ -143,5 +146,20 @@ async function send(bubble: DiscussionBubble, markdown: string) {
 @media (hover: hover) and (pointer: fine) { .peek-hide:hover { background: var(--hover); } }
 @media not (pointer: fine) { .peek-hide { opacity: 1; } }
 
-/* The bubble's entrance, exit and flight to the dock are motion.css's (.peek-enter-active, .peek-leave-active, [data-docked], .peek-move). */
+/* A colleague's comment drops in as a bubble from the corner of the avatars, one after another (the stagger of the list); it leaves up when
+   its time runs out, and flies right toward the dock while the discussion opens (`data-docked`). Here, not in the eager motion.css: the peek
+   is a lazy part. The distances are tokens and --st-pop-from is 1 under reduced motion: only the fades stay. */
+.peek-enter-active { animation: atlas-peek-in var(--atlas-motion-pop) var(--atlas-ease-out) both; animation-delay: calc(var(--peek-index, 0) * var(--atlas-motion-base) / 5); }
+.peek-leave-active { position: absolute; inset-inline: 0; animation: st-rise-out var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.peek-leave-active[data-sent], .discussion-peek[data-docked] .peek-leave-active { animation: atlas-peek-dock var(--atlas-motion-slow) var(--atlas-ease-in) both; animation-delay: calc(var(--peek-index, 0) * var(--atlas-motion-base) / 5); }
+.peek-move { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout); }
+@keyframes atlas-peek-in {
+  from { opacity: 0; transform: translate(calc(var(--atlas-rise) * 1.5), calc(var(--atlas-rise) * -2)) scale(var(--st-pop-from, .8)); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: none; }
+}
+@keyframes atlas-peek-dock {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate(calc(var(--atlas-rise) * 10), 0) scale(var(--st-pop-from, .8)); }
+}
 </style>

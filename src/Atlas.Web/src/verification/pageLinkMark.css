@@ -1,0 +1,3 @@
+/* A page link whose verification expired (editorDirectories.ts resolves it with `warn`, the editor marks the chip `data-warn`):
+   its shield in the warning tone. Here, with the editors' widgets, not in the editor's global stylesheet (its budget). */
+.md-page-reference[data-warn] > .md-chip-media { color: var(--warning); }
