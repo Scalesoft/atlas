@@ -102,6 +102,7 @@ export default defineConfig({
       // Reassembling raw CSS here silently dropped compact, block-handle and slash-menu styles.
       this.emitFile({ type: 'asset', fileName: 'styles/base.css', source: "@import '../atlas-markdown.css';\n" })
       this.emitFile({ type: 'asset', fileName: 'styles/states.css', source: read('states.css') })
+      this.emitFile({ type: 'asset', fileName: 'styles/menu.css', source: read('menu.css') })
       this.emitFile({ type: 'asset', fileName: 'themes/ocean.css', source: read('ocean.css') })
       this.emitFile({ type: 'asset', fileName: 'themes/sand.css', source: read('sand.css') })
       this.emitFile({ type: 'asset', fileName: 'themes/forest.css', source: read('forest.css') })

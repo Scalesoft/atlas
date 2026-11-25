@@ -451,9 +451,6 @@ const cs = {
     chosen: (count: number, limit: number) => `Vybráno ${count} z ${limit}`,
     removeOption: (label: string) => `Odebrat ${label}`,
   },
-  pickerPanel: {
-    close: "Zavřít",
-  },
   issuePicker: {
     title: "Přidat úkoly z YouTrack",
     unavailable: "YouTrack není dostupný",

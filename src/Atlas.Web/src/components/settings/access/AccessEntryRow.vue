@@ -61,8 +61,8 @@ const hubLease = computed(() => props.row.sources.some(source => source.verifica
 const hasActions = computed(() => !props.readonly && (!!grant.value || !!viaGroupHref.value));
 /** „Co s tím jde dělat“ of the row (P2): what Změnit and Odebrat do; a locked row or a right through a group has none here. */
 const rowActions = computed<ActionMenuItem[]>(() => (hasActions.value && grant.value ? [
-  { id: "change", label: t.row.change, icon: "pencil", disabled: props.busy },
-  { id: "revoke", label: t.row.remove, icon: "trash", destructive: true, group: "revoke", disabled: props.busy },
+  { id: "change", label: t.row.change, icon: "pencil", shortcut: "F2", disabled: props.busy },
+  { id: "revoke", label: t.row.remove, icon: "trash", shortcut: "Delete", destructive: true, group: "revoke", disabled: props.busy },
 ] : []));
 // The editor closed (Zrušit, Esc, saved) and took the focus with it: it goes back to Změnit (AD5-9).
 const entry = ref<{ $el: HTMLElement }>();

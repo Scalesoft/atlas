@@ -302,7 +302,6 @@
 .atlas .discussion-count:not(.md-editor *) { min-width: 16px; padding: 0 4px; border-radius: 999px; background: var(--hover); color: var(--muted); font-size: 10.5px; font-weight: 650; line-height: 16px; text-align: center;
   transition: background-color var(--atlas-motion-base) var(--atlas-ease-out), color var(--atlas-motion-base) var(--atlas-ease-out); }
 .atlas .discussion-count[data-fresh]:not(.md-editor *) { background: var(--accent); color: var(--on-accent, #fff); }
-.atlas .action-disclosure-panel button > .discussion-count:not(.md-editor *) { margin-left: auto; }
 
 /* ---------- G. Narrow and phone (board 13) ---------- */
 @media (max-width: 760px) {

@@ -131,6 +131,7 @@
     "./style.css": "./dist/atlas-markdown.css",
     "./styles/base.css": "./dist/styles/base.css",
     "./styles/states.css": "./dist/styles/states.css",
+    "./styles/menu.css": "./dist/styles/menu.css",
     "./themes/ocean.css": "./dist/themes/ocean.css",
     "./themes/sand.css": "./dist/themes/sand.css",
     "./themes/forest.css": "./dist/themes/forest.css",

@@ -1,0 +1,33 @@
+/*
+ * The editor's menu look (`.md-context-popover.md-context-menu`) for a host that shows menus before the editor's lazy stylesheet arrives:
+ * Atlas's ActionMenu and ActionDisclosure on settings and profile screens. Published alone as `styles/menu.css` and kept small, since a
+ * host loads it up front: the surface and the rows, copied from controls.css and contextToolbar.css (menu.test.ts keeps them in step).
+ * Their fallbacks are the default theme's values; a host's own tokens (or the editor's theme, once loaded) take over.
+ */
+.md-context-popover {
+  box-sizing: border-box;
+  z-index: var(--md-layer-popover, 1101);
+  overflow: auto;
+  color: var(--text, #102f36);
+  background: var(--paper, #fffefe);
+  border: 1px solid var(--line, #d4e4e7);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: var(--shadow-menu, 0 8px 28px rgb(16 32 57 / .14));
+  font-family: var(--font-sans, Inter, ui-sans-serif, sans-serif);
+  font-size: 13px;
+}
+.md-context-menu > .md-context-popover-body { padding: 4px; display: grid; gap: 1px; }
+.md-context-menu-compact { width: max-content; min-width: 200px; max-width: calc(100vw - 24px); }
+.md-context-menu [role^="menuitem"] {
+  display: flex; align-items: center; gap: 10px;
+  min-height: var(--control-h, 36px);
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--text, #102f36);
+  font: inherit; font-size: 13px;
+  text-align: left;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+}
+.md-context-menu [role^="menuitem"] svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); flex: 0 0 auto; }

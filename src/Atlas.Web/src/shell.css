@@ -1656,7 +1656,8 @@ body {
   }
 }
 
-.action-disclosure-panel .mobile-page-action {
+/* Beats the editor menu row's display (controls.css, menu.css). */
+.action-disclosure-panel [role^="menuitem"].mobile-page-action {
   display: none;
 }
 @media (min-width: 900px) {
@@ -1716,7 +1717,7 @@ body {
     display: none;
   }
 
-  .action-disclosure-panel .mobile-page-action {
+  .action-disclosure-panel [role^="menuitem"].mobile-page-action {
     display: flex;
   }
 

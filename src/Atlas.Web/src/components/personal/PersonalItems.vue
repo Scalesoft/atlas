@@ -247,7 +247,7 @@ async function focusRow(id: string | undefined) {
 }
 
 /** „Co s tím jde dělat“ of a note of Můj prostor (P2): what its two buttons do. */
-const rowActions: ActionMenuItem[] = [{ id: "share", label: t.items.share, icon: "users" }, { id: "trash", label: t.items.delete, icon: "trash", destructive: true, group: "trash" }];
+const rowActions: ActionMenuItem[] = [{ id: "share", label: t.items.share, icon: "users" }, { id: "trash", label: t.items.delete, icon: "trash", shortcut: "Delete", destructive: true, group: "trash" }];
 const rowAction = (item: PersonalItem, id: string) => { if (id === "trash") void trash(item); else sharing.value = item; };
 
 /** The note Enter opens once something is typed: the first one shown, marked `data-first`. */

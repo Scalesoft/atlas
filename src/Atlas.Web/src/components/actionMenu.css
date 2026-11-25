@@ -1,0 +1,18 @@
+/*
+ * The rows of ActionMenu and ActionDisclosure, both drawn in the editor's menu look (@atlas/markdown/styles/menu.css, loaded in main.ts)
+ * and both wearing `board-menu`. reka-ui lights a row with `data-highlighted` for the pointer and the keyboard alike: one highlight, the
+ * ring belongs to the keyboard. Not scoped: reka-ui portals the menu out of both components.
+ */
+.board-menu [role^="menuitem"] { box-sizing: border-box; width: 100%; outline: none; }
+/* The editor theme's --bg-3 arrives with the editor; until then the shell's hover tint. */
+.board-menu [role^="menuitem"][data-highlighted] { background: var(--bg-3, var(--state-hover-bg)); }
+.board-menu [role^="menuitem"]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.board-menu [role^="menuitem"]:is([data-disabled], :disabled) { opacity: .5; cursor: not-allowed; }
+/* Destructive rows are red in every menu. */
+.board-menu [role^="menuitem"]:is(.board-menu-destructive, [data-destructive]),
+.board-menu [role^="menuitem"]:is(.board-menu-destructive, [data-destructive]) :is(.board-menu-icon, svg) { color: var(--error, var(--destructive)); }
+@media (max-width: 680px) {
+  .board-menu [role^="menuitem"] { min-height: 44px; }
+}
+/* They wear `.md-editor` for its theme; once the editor's stylesheet is in, its form-field focus frame (surface.css) must not ring the menu. */
+.md-context-popover.board-menu:not(.paper):focus-within:not(.readonly) { border-color: var(--line); box-shadow: var(--shadow-menu); }

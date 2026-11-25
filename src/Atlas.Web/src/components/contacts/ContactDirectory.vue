@@ -172,7 +172,7 @@ async function change(id: string, patch: ContactPatch) {
 }
 
 /** „Co s tím jde dělat“ of a contact's row (P2): what its name and its trash button do. */
-const rowActions: ActionMenuItem[] = [{ id: "edit", label: t.directory.edit, icon: "pencil" }, { id: "trash", label: t.directory.delete, icon: "trash", destructive: true, group: "trash" }];
+const rowActions: ActionMenuItem[] = [{ id: "edit", label: t.directory.edit, icon: "pencil", shortcut: "F2" }, { id: "trash", label: t.directory.delete, icon: "trash", shortcut: "Delete", destructive: true, group: "trash" }];
 function rowAction(id: string, action: string) {
   if (action === "trash") void askTrash(id);
   else root.value?.querySelector<HTMLElement>(`[data-contact-row="${CSS.escape(id)}"] [data-contact-field="name"]`)?.click();

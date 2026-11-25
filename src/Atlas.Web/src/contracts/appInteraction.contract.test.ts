@@ -586,7 +586,8 @@ async function rowMenu(row: HTMLElement, expected: string[]): Promise<ProbeResul
     await flush(50);
     const menu = find("[role=menu]");
     if (!menu) return `${name} opens no menu on the row`;
-    const labels = [...menu.querySelectorAll("[role=menuitem]")].map(item => words(item));
+    // A row's label without its shortcut hint (Delete, F2: RowActionsMenu runs those keys on the row).
+    const labels = [...menu.querySelectorAll("[role=menuitem]")].map(item => words(item).replace(words(item.querySelector(".board-menu-key")), "").trim());
     if (labels.join("|") !== expected.join("|")) return `${name} offers ${shown(labels)}, not ${shown(expected)}`;
     press(menu, "Escape");
     await flush(50);

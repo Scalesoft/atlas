@@ -7,6 +7,7 @@ import { hostElement } from "../lib/templateRef";
 import AtlasIcon from "./AtlasIcon.vue";
 import { dialogLayersKey } from "./ui/dialogLayers";
 import "./boards/canvas/boardPopover.css";
+import "./actionMenu.css";
 
 /**
  * The app's one action menu (board toolbars, the page tree, list rows) in the page editor's context-menu look (`md-context-popover md-context-menu`, the rows of
@@ -18,7 +19,8 @@ import "./boards/canvas/boardPopover.css";
  * board open (icon tiles, titles, mono shortcuts, accent ink on the lit row), without a title (the owner's rule for action and choice menus);
  * a destructive row is red here as in every menu. The first row is lit when the menu opens; like ActionDisclosure it is not modal (a click
  * outside closes it and acts) and closes with the route and when its trigger scrolls away (lib/menuFocus.ts). Inside an AppDialog it stays
- * in the dialog's top layer and Esc closes only the menu (as ui/dropdown-menu does). ActionDisclosure wears the same classes and highlight.
+ * in the dialog's top layer and Esc closes only the menu (as ui/dropdown-menu does). ActionDisclosure wears the same classes and highlight
+ * (actionMenu.css); the look itself loads with the app (@atlas/markdown/styles/menu.css), so a menu shown before any editor is styled.
  */
 export interface ActionMenuItem { id: string; label: string; icon?: string; iconSize?: number; shortcut?: string; disabled?: boolean; destructive?: boolean;
   /** A switch among actions („Řadit abecedně“): a menuitemcheckbox with the check while on; selecting it is still `select`. */
@@ -66,19 +68,12 @@ watch(open, (isOpen, _, onCleanup) => {
 </template>
 
 <style scoped>
-/* The editor's rows are buttons (border-box); reka's are divs. */
-.board-menu .md-context-menu-item { box-sizing: border-box; outline: none; }
-.board-menu .md-context-menu-item[data-highlighted] { background: var(--bg-3); }
-.board-menu .md-context-menu-item:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
-.board-menu .md-context-menu-item[data-disabled] { opacity: .5; cursor: not-allowed; }
-/* Icons of different sizes keep the labels on one line. */
+/* The rows, their highlight and the destructive red: actionMenu.css, shared with ActionDisclosure. Icons of different sizes keep the labels on one line. */
 .board-menu-icon { display: inline-grid; place-items: center; flex-shrink: 0; width: 18px; }
 .board-menu-key { margin-left: auto; padding-left: 16px; color: var(--text-dim, var(--muted)); font-size: 12px; }
 .board-menu-check { margin-left: auto; padding-left: 12px; box-sizing: content-box; color: var(--accent); }
 .board-menu-key + .board-menu-check { margin-left: 0; }
 .board-menu-separator { height: 1px; margin: 4px 6px; background: var(--line, var(--bg-3)); }
-/* Destructive rows are red in every menu (the page's and the space's too, ActionDisclosure). */
-.board-menu .board-menu-destructive, .board-menu .board-menu-destructive .board-menu-icon { color: var(--error, var(--destructive)); }
 /* „Co s tím jde dělat“: the editor's suggestion list (suggestions.css). */
 .board-menu-actions { width: 300px; max-width: calc(100vw - 16px); }
 .board-menu-actions .md-context-menu-item { font-weight: 500; }

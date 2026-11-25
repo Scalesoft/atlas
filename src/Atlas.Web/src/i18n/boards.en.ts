@@ -451,9 +451,6 @@ const en: BoardsMessages = {
     chosen: (count: number, limit: number) => `Selected ${count} of ${limit}`,
     removeOption: (label: string) => `Remove ${label}`,
   },
-  pickerPanel: {
-    close: "Close",
-  },
   issuePicker: {
     title: "Add issues from YouTrack",
     unavailable: "YouTrack is unavailable",

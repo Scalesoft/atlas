@@ -2,7 +2,6 @@ import { plural } from ".";
 import type { ComponentsAMessages } from "./components-a";
 
 const en: ComponentsAMessages = {
-  actionMenu: { actions: "What can I do with this" },
   close: "Close",
   loading: "Loading…",
   versionInfo: { whatsNew: "What's new", info: "Version information", unknown: "unknown version" },
