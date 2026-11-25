@@ -12,6 +12,7 @@ using Xunit;
 
 namespace Atlas.Server.Tests.ContentExport;
 
+[Collection(ChromiumPrintCollection.Name)]
 public sealed class ContentPdfRendererTests
 {
     [Fact]

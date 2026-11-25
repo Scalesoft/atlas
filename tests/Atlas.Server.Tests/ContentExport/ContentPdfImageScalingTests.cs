@@ -11,6 +11,15 @@ using Xunit;
 
 namespace Atlas.Server.Tests.ContentExport;
 
+/// <summary>Real prints run alone after the parallel tests, as the timed tests do: the renderer's wall-clock waits (15 s for the
+/// layout, the 100 s deadline) are the product's, and a browser starved by the parallel tests and their database ran out of them.</summary>
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class ChromiumPrintCollection
+{
+    public const string Name = "Chromium print";
+}
+
+[Collection(ChromiumPrintCollection.Name)]
 public sealed class ContentPdfImageScalingTests
 {
     // print.css prints 166 mm wide: 1307 px is 200 DPI, the resolution this manual still fits at (150 DPI is the floor for longer ones).
