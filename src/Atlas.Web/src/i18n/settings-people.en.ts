@@ -202,7 +202,6 @@ const en: SettingsPeopleMessages = {
   },
   peek: {
     aria: (name) => `Person: ${name}`,
-    close: "Close person preview",
     you: "You",
     openCard: "Open card",
     accountAndPassword: "Account and password",
