@@ -2506,6 +2506,28 @@ describe('embedded widgets in wiki search', () => {
   });
 });
 
+describe('a colleague from the directory in wiki search', () => {
+  it('is found by name though no page holds them, once beside a page that does, and only a colleague', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const fetchMock = requestMock(path => path.startsWith('/api/search?') ? Promise.resolve(response({ items: [
+      { ...page, id: 'page-a', title: 'Tým', spaceName: space.name, snippet: '', widgets: [
+        { kind: 'contact', title: 'Eva Dvořáková', detail: 'Vývoj', headingId: null, contact: { objectId: 'c-eva', directoryId: 'acc-eva' } }] },
+    ], hasMore: false }))
+      : path.startsWith('/api/objects?type=atlas.contact&scope=wiki&q=') ? Promise.resolve(response({ items: [
+        { id: 'c-eva', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Eva Dvořáková', version: 1, updatedAt: '', data: { name: 'Eva Dvořáková', title: 'Vývojářka', directoryId: 'acc-eva' } },
+        { id: 'c-ema', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Ema Dvorská', version: 1, updatedAt: '', data: { name: 'Ema Dvorská', directoryId: 'acc-ema' } },
+        { id: 'c-ext', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Erik Dodavatel', version: 1, updatedAt: '', data: { name: 'Erik Dodavatel' } },
+      ], total: 3, page: 1, pageSize: 50, canCreate: false })) : undefined);
+    const app = await mountApp(fetchMock);
+    await app.get('.search-launch').trigger('click');
+    const input = app.get('.omnisearch-input input');
+    await input.setValue('Dvo'); await vi.advanceTimersByTimeAsync(180); await flushPromises();
+    const people = app.get('[role=group][aria-label="Kontakty"]').findAll('a');
+    expect(people.map(person => person.attributes('href'))).toEqual(['#/library/contacts?contact=c-eva', '#/library/contacts?contact=c-ema']);
+    expect(people[0]!.text()).toContain('Vývojářka');
+  });
+});
+
 describe('a colleague in wiki search', () => {
   it('is one hit however many pages hold them, preselected by name, and Enter opens their card and activity', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });

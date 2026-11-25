@@ -54,6 +54,7 @@ import {
   type SpacePinPolicy,
   type User,
 } from "./api";
+import type { ObjectList } from "./objects/objectApi";
 import { personalLibraryApi, type PersonalPageState } from "./personalLibrary";
 import { useUnreadNotifications } from "./notifications";
 import { liveAccount } from "./live/accountChannel";
@@ -1014,6 +1015,8 @@ const results = ref<SearchResult[]>([]);
 const searchResources = ref<{ type: string; id: string; spaceId: string; spaceName: string; title: string; snippet: string;
   /** A comment's object and place (its own group „Komentáře“, comments spec §4). */
   target?: { objectId: string; typeId: string; anchor: string | null } }[]>([]);
+/** The colleagues the query names in the contact directory (their account's contact, directoryId), whether a page holds them or not. */
+const searchPeople = ref<SearchWidget[]>([]);
 const { capabilities: aiCapabilities } = useAiCapabilities();
 /** The assistant panel opens with answers from the wiki or with the agent alone (the agent needs no index). */
 const assistantReachable = computed(() => aiCapabilities.value.assistant || aiCapabilities.value.agent);
@@ -1083,6 +1086,10 @@ const searchGroups = computed(() => {
     };
   });
   // Only issues placed on pages the reader can read (the server's widget index), never a free search of YouTrack; always after the content.
+  // Directory people first: a page's hit of the same person is then the same row.
+  const people = searchPeople.value.map(widget => ({ board: false, passage: undefined, semantic: undefined, key: `person-${searchPerson(widget)}`, widget, live: false,
+    result: { id: searchPerson(widget)!, spaceId: '', spaceName: '', title: widget.title, snippet: '' } as SearchResult, mark: undefined, title: widget.title,
+    detail: widget.detail, href: buildShellHash({ view: 'library', tab: 'contacts', contact: searchPerson(widget) }), icon: 'users', color: 'green' }));
   const known = new Set<string>();
   const once = (item: { key: string }) => { if (known.has(item.key)) return false; known.add(item.key); return true; };
   const issues = widgetItems('youtrack').filter(once);
@@ -1096,7 +1103,7 @@ const searchGroups = computed(() => {
     { title: t.common.headings, kind: 'headings', rankFloor: 1, items: pageItems(true) },
     { title: t.search.boards, kind: 'boards', items: boards },
     { title: t.common.comments, kind: 'comments', items: comments },
-    { title: t.cmd.contacts, kind: 'contacts', items: widgetItems('contact').filter(once) },
+    { title: t.cmd.contacts, kind: 'contacts', items: [...people, ...widgetItems('contact')].filter(once) },
     { title: 'YouTrack', kind: 'youtrack', rankFloor: 3, items: issues },
     { title: t.common.spaces, kind: 'spaces', items: spaceItems },
   ].filter(group => group.items.length), searchQuestion.value).map((group, groupIndex, groups) => ({ ...group,
@@ -1593,7 +1600,7 @@ function resetSessionState() {
   searchUrl(false);
   query.value = "";
   resetSearchFilters();
-  results.value = []; searchSpaces.value = []; searchResources.value = []; suggestedPages.value = [];
+  results.value = []; searchSpaces.value = []; searchResources.value = []; searchPeople.value = []; suggestedPages.value = [];
   searchNextOffset.value = null; hasMore.value = false; searchIndex.value = 0;
   searchError.value = ""; searchAttempted.value = false;
   searchViewToRestore = undefined;
@@ -3889,6 +3896,17 @@ function openSearchResult(event: MouseEvent, result: SearchResult) {
   event.preventDefault();
   if (!searchOpening.value) void openPage(result.id, false, false, result.headingId ?? undefined);
 }
+/** The colleagues a query names in the contact directory, as contact hits; only the whole wiki's search (no tag or other content). */
+async function findSearchPeople(text: string, version: number, signal: AbortSignal) {
+  if (searchTag.value || searchContent.value !== 'all' || text.trim().length < 2) { searchPeople.value = []; return; }
+  try {
+    const list = await api<ObjectList>(`/objects?type=atlas.contact&scope=wiki&q=${encodeURIComponent(text.trim())}`, { signal });
+    if (version !== searchVersion) return;
+    searchPeople.value = list.items.filter(item => typeof item.data?.directoryId === 'string').slice(0, 5).map(item => ({ kind: 'contact', title: item.title,
+      detail: [item.data!.title, item.data!.department, item.data!.organization].filter(part => typeof part === 'string' && part).join(' · '),
+      contact: { objectId: item.id, directoryId: item.data!.directoryId as string } }));
+  } catch { if (version === searchVersion && !signal.aborted) searchPeople.value = []; /* The people are a courtesy beside the pages. */ }
+}
 /** The directory contact of a colleague's contact hit, or undefined for anyone else. */
 function searchPerson(widget: SearchWidget | undefined) {
   return widget?.kind === 'contact' && widget.contact?.directoryId ? widget.contact.objectId : undefined;
@@ -3970,6 +3988,7 @@ function scheduleSearch() {
     results.value = [];
     searchSpaces.value = [];
     searchResources.value = [];
+    searchPeople.value = [];
     hasMore.value = false;
     searchAttempted.value = false;
     searchSemantic.value = false;
@@ -3994,6 +4013,7 @@ function scheduleSearch() {
   searchAbort = abort;
   searching.value = true;
   let previewShown = false;
+  void findSearchPeople(text, version, abort.signal);
   async function searchPass(prefixOnly: boolean) {
     try {
       const found = await api<{ items: SearchResult[]; hasMore: boolean; spaces?: typeof searchSpaces.value; resources?: typeof searchResources.value; nextOffset?: number | null; semantic?: boolean; didYouMean?: string; relaxed?: boolean }>(
