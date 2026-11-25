@@ -70,6 +70,8 @@ public sealed class McpG5CoverageTests
             HttpStatusCode.Created))["id"]!.GetValue<string>();
         var reference = (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Post, $"/api/spaces/{space}/tree/references",
             new { targetId = contact }), HttpStatusCode.Created))["id"]!.GetValue<string>();
+        var comment = (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(f.Admin, HttpMethod.Post, $"/api/objects/{page.Id}/comments",
+            new { body = "Komentář." }), HttpStatusCode.Created))["id"]!.GetValue<string>();
         var agent = await f.ClientAsync(await f.AdminTokenAsync("read", "write"));
         // Labels and an attachment, so a write of them and a read by their own ids reach the space.
         var file = Encoding.UTF8.GetBytes("Kvasarlex.");
@@ -89,10 +91,10 @@ public sealed class McpG5CoverageTests
         {
             ["spaceId"] = space, ["targetSpaceId"] = space, ["pageId"] = page.Id, ["sourcePageId"] = page.Id, ["parentId"] = page.Id,
             ["boardId"] = board, ["referenceId"] = reference, ["contactId"] = contact, ["objectId"] = contact, ["sourceId"] = contact,
-            ["targetId"] = contact, ["attachmentId"] = attachment, ["tagId"] = tag,
+            ["targetId"] = contact, ["attachmentId"] = attachment, ["tagId"] = tag, ["commentId"] = comment,
         };
         var note = new { kind = "note", x = 0, y = 0, width = 200, height = 120, z = 1, props = new { } };
-        var reaching = Reaching(page, included, space, board, contact, home, attachment, note, tag);
+        var reaching = Reaching(page, included, space, board, contact, home, attachment, note, tag, comment);
         var tools = f.Site.Services.GetServices<McpServerTool>().Select(tool => tool.ProtocolTool).OrderBy(tool => tool.Name, StringComparer.Ordinal).ToArray();
         Assert.Empty(reaching.Keys.Except(tools.Select(tool => tool.Name)));
         var failures = new List<string>();
@@ -194,7 +196,7 @@ public sealed class McpG5CoverageTests
     /// <summary>The tools whose plain call stops at their own argument check, with arguments that pass it; and the tools that take
     /// two places, called with each of them out of AI.</summary>
     private static Dictionary<string, Dictionary<string, object?>[]> Reaching((string Id, int Version) page, (string Id, int Version) included, string space,
-        string board, string contact, string home, string attachment, object note, string tag)
+        string board, string contact, string home, string attachment, object note, string tag, string comment)
     {
         var bytes = Encoding.UTF8.GetBytes("x");
         return new(StringComparer.Ordinal)
@@ -213,6 +215,9 @@ public sealed class McpG5CoverageTests
             ["atlas_list_readership"] = [new() { ["spaceId"] = space, ["from"] = "2026-01-01", ["to"] = "2026-01-31" }],
             // A comment on the page and on the contact of the space.
             ["atlas_post_comment"] = [new() { ["objectId"] = page.Id, ["body"] = "x" }, new() { ["objectId"] = contact, ["body"] = "x" }],
+            // The administrator's own comment on the page: the author and the manager, so only G5 stops the edit and the deletion.
+            ["atlas_edit_comment"] = [new() { ["objectId"] = page.Id, ["commentId"] = comment, ["body"] = "x" }],
+            ["atlas_delete_comment"] = [new() { ["objectId"] = page.Id, ["commentId"] = comment }],
             // A kind is required; the page's and the board's overview each.
             ["atlas_get_overview"] = [new() { ["kind"] = "contacts", ["pageId"] = page.Id }, new() { ["kind"] = "requirements", ["boardId"] = board }],
             ["atlas_update_embed"] = [new() { ["pageId"] = page.Id, ["expectedVersion"] = page.Version, ["attachmentId"] = attachment, ["alt"] = "x" }],
@@ -331,6 +336,6 @@ public sealed class McpG5CoverageTests
               (SELECT string_agg(g."Id" || ':' || g."TagId" || ':' || coalesce(CAST(g."ActiveTo" AS text),'-'), ',' ORDER BY g."Id") FROM "PageTag" g JOIN "Page" p ON p."Id"=g."PageId" WHERE p."SpaceId"=@space),
               (SELECT string_agg(d."PageId" || ':' || d."RevisionId" || ':' || coalesce(d."Icon",'-') || ':' || coalesce(d."Color",'-'), ',' ORDER BY d."PageId") FROM "PageDecoration" d JOIN "Page" p ON p."Id"=d."PageId" WHERE p."SpaceId"=@space),
               (SELECT string_agg(a."Id" || ':' || coalesce(CAST(a."ActiveTo" AS text),'-'), ',' ORDER BY a."Id") FROM "Attachment" a JOIN "Page" p ON p."Id"=a."PageId" WHERE p."SpaceId"=@space),
-              (SELECT count(*) FROM "Comment" m JOIN "ContentResource" c ON c."Id"=m."ObjectId" WHERE c."SpaceId"=@space))
+              (SELECT string_agg(m."Id" || ':' || m."Body" || ':' || coalesce(CAST(m."EditedAt" AS text),'-') || ':' || coalesce(CAST(m."DeletedAt" AS text),'-'), ',' ORDER BY m."Id") FROM "Comment" m JOIN "ContentResource" c ON c."Id"=m."ObjectId" WHERE c."SpaceId"=@space))
             """, ("space", Guid.Parse(space)), ("home", Guid.Parse(home))))!;
 }

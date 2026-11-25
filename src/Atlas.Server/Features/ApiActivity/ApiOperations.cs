@@ -24,6 +24,8 @@ public static class ApiOperations
     public const string PageReportOutdated = "page.report_outdated";
     public const string SpaceVerificationBatch = "space.verification_batch";
     public const string CommentPost = "comment.post";
+    public const string CommentEdit = "comment.edit";
+    public const string CommentDelete = "comment.delete";
     public const string PageTagsSet = "page.tags_set";
     public const string PageTagsChange = "page.tags_change";
     public const string SkillRate = "skill.rate";

@@ -8,7 +8,7 @@ using Wolverine;
 namespace Atlas.Server.Features.Comments;
 
 /// <summary>The comments of an object (comments spec). Cookie API: CSRF and Problem Details come from the pipeline, the rules from
-/// the handlers. For AI parity, reading and posting also under /api/v1 (read, and write scope for a post).</summary>
+/// the handlers. For AI parity, reading, posting, editing and deleting also under /api/v1 (read, and the write scope for the writes).</summary>
 public static class CommentEndpoints
 {
     public static void MapComments(this IEndpointRouteBuilder app)
@@ -41,20 +41,14 @@ public static class CommentEndpoints
             .ProducesProblem(400)
             .ProducesProblem(403)
             .ProducesProblem(404);
-        app.MapPut("/api/objects/{objectId:guid}/comments/{commentId:guid}",
-                async (Guid objectId, Guid commentId, EditCommentRequest request, IMessageBus bus, CancellationToken ct)
-                    => Results.Ok(await bus.InvokeAsync<CommentDto>(new EditComment(objectId, commentId, request.Body), ct)))
+        app.MapPut("/api/objects/{objectId:guid}/comments/{commentId:guid}", EditAsync)
             .RequireAuthorization()
             .Produces<CommentDto>()
             .ProducesProblem(400)
             .ProducesProblem(403)
             .ProducesProblem(404)
             .ProducesProblem(409);
-        app.MapDelete("/api/objects/{objectId:guid}/comments/{commentId:guid}", async (Guid objectId, Guid commentId, IMessageBus bus, CancellationToken ct) =>
-            {
-                await bus.InvokeAsync(new DeleteComment(objectId, commentId), ct);
-                return Results.NoContent();
-            })
+        app.MapDelete("/api/objects/{objectId:guid}/comments/{commentId:guid}", DeleteAsync)
             .RequireAuthorization()
             .Produces(204)
             .ProducesProblem(403)
@@ -79,10 +73,40 @@ public static class CommentEndpoints
             .WithSummary("Post a comment (Markdown, at most 10 000 characters) on an object you may read, in a space with comments on. The timeline " +
                 "is flat: a reply is the next comment; a mention is a contact link [Name](a-contact:?internalUser.id=<userId>) and notifies that user. " +
                 "anchor: optionally a heading or item id of the object.");
+        v1.MapPut("/objects/{objectId:guid}/comments/{commentId:guid}", EditAsync)
+            .WithName("EditComment")
+            .RequireAuthorization(PersonalApiEndpoints.WritePolicy)
+            .AuditApiWrite(ApiOperations.CommentEdit)
+            .Produces<CommentDto>()
+            .ProducesProblem(400)
+            .ProducesProblem(403)
+            .ProducesProblem(404)
+            .ProducesProblem(409)
+            .WithSummary("Replace the text of your own live comment (marked edited, no history kept) while the space's comments are on; " +
+                "newly mentioned users are notified. Only the author may edit a comment.");
+        v1.MapDelete("/objects/{objectId:guid}/comments/{commentId:guid}", DeleteAsync)
+            .WithName("DeleteComment")
+            .RequireAuthorization(PersonalApiEndpoints.WritePolicy)
+            .AuditApiWrite(ApiOperations.CommentDelete)
+            .Produces(204)
+            .ProducesProblem(403)
+            .ProducesProblem(404)
+            .ProducesProblem(409)
+            .WithSummary("Delete a comment as its author or as a manager of the object (a wiki admin, the space's Admin, a private object's " +
+                "owner), also with the space's comments off. The timeline keeps a placeholder; the text, place and mentions go.");
     }
 
     private static async Task<IResult> ReadAsync(Guid objectId, Guid? before, IMessageBus bus, CancellationToken ct)
         => Results.Ok(await bus.InvokeAsync<CommentPage>(new GetComments(objectId, before), ct));
+
+    private static async Task<IResult> EditAsync(Guid objectId, Guid commentId, EditCommentRequest request, IMessageBus bus, CancellationToken ct)
+        => Results.Ok(await bus.InvokeAsync<CommentDto>(new EditComment(objectId, commentId, request.Body), ct));
+
+    private static async Task<IResult> DeleteAsync(Guid objectId, Guid commentId, IMessageBus bus, CancellationToken ct)
+    {
+        await bus.InvokeAsync(new DeleteComment(objectId, commentId), ct);
+        return Results.NoContent();
+    }
 
     private static async Task<IResult> PostAsync(Guid objectId, PostCommentRequest request, HttpContext context, IMessageBus bus, CancellationToken ct)
     {

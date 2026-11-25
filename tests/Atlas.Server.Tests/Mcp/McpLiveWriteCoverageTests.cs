@@ -33,6 +33,8 @@ public sealed class McpLiveWriteCoverageTests
         ["atlas_set_verification"] = "a setting of the page (its steward and verification), not its content",
         ["atlas_report_outdated"] = "a notification to the steward; the page does not change",
         ["atlas_post_comment"] = "a comment is beside the object, not in its document",
+        ["atlas_edit_comment"] = "a comment is beside the object, not in its document",
+        ["atlas_delete_comment"] = "a comment is beside the object, not in its document",
         ["atlas_move_page"] = "the tree, not the document",
         ["atlas_arrange_pages"] = "the tree, not the document",
         ["atlas_sort_pages"] = "the tree, not the document",

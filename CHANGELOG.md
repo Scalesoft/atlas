@@ -20,7 +20,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 ### AI a API
 - MCP `atlas_set_verification`, `atlas_list_content_health`, `atlas_list_readership` a `atlas_report_outdated`; `atlas_get_page` a `atlas_search` nesou stav ověření a vypršelé ověření AI v odpovědi zmíní. Ověření přes MCP nebo API je označené „přes AI“.
 - `/api/v1`: `GET|PUT /pages/{id}/verification`, `POST /pages/{id}/verification/report`, `GET /spaces/{id}/content-health`, `POST /spaces/{id}/content-health/bulk`, `GET /spaces/{id}/readership`; `GET /pages/{id}` nese blok `verification`.
-- Diskuse pro AI: MCP `atlas_list_comments` a `atlas_post_comment` (odpověď a zmínka jako na webu), `/api/v1`: `GET|POST /objects/{id}/comments`.
+- Diskuse pro AI: MCP `atlas_list_comments`, `atlas_post_comment`, `atlas_edit_comment` a `atlas_delete_comment` (odpověď, zmínka, úprava vlastního a smazání jako na webu: autor, nebo správce objektu), `/api/v1`: `GET|POST /objects/{id}/comments`, `PUT|DELETE /objects/{id}/comments/{commentId}`.
 
 ### Provoz
 - Migrace 2026112400: tabulka `PageVerification` a sloupec `Space.VerificationIntervalMonths`; žádná konverze dat. Instalační záloha (Git, ZIP) ověření nese, wiki archiv ne.

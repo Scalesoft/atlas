@@ -14,9 +14,9 @@ using Wolverine;
 namespace Atlas.Server.Features.Comments;
 
 /// <summary>
-/// Discussions over MCP (AI parity, 5.2: the page chat is the object's comments): the web's and /api/v1's read and post as the token
-/// owner. Rights and G5 are decided in <see cref="CommentGate"/>; its ApiExceptions become tool errors in the call filter, which also
-/// audits the post. Not a Wolverine handler: the class name does not end with "Handler".
+/// Discussions over MCP (AI parity, 5.2: the page chat is the object's comments): the web's and /api/v1's read, post, edit and delete
+/// as the token owner. Rights and G5 are decided in <see cref="CommentGate"/> and the handlers (the author edits; the author or the
+/// object's manager deletes); their ApiExceptions become tool errors in the call filter, which also audits the writes. Not a Wolverine handler: the class name does not end with "Handler".
 /// </summary>
 [McpServerToolType]
 public sealed class CommentMcpTools(IMessageBus bus)
@@ -85,5 +85,41 @@ public sealed class CommentMcpTools(IMessageBus bus)
         var comment = await bus.InvokeAsync<CommentDto>(new PostComment(id, body, anchor), ct);
         return McpText.Result($"Komentář napsán.\n- objectId: {id}\n- commentId: {comment.Id}",
             new JsonObject { ["objectId"] = id, ["commentId"] = comment.Id, ["createdAt"] = comment.CreatedAt });
+    }
+
+    [McpServerTool(Name = "atlas_edit_comment", Title = "Upravit komentář", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false)]
+    [McpToolScope(ApiScopes.Write)]
+    [AssistantDescription("Přepíše text vlastního komentáře objektu (označí se „upraveno“). objectId, commentId, body.")]
+    [Description("Přepíše text komentáře, jehož jste autorem, v prostoru se zapnutými komentáři; komentář se označí „upraveno“, starý text se " +
+        "nezachová. Text je Markdown, nejvýše 10 000 znaků; nově zmínění lidé dostanou oznámení. Cizí komentář upravit nelze. " +
+        "Přes MCP vyžaduje rozsah Zápis.")]
+    public async Task<CallToolResult> EditAsync(
+        [Description("objectId stránky, tabule nebo jiného objektu.")] string objectId,
+        [Description("commentId komentáře (z atlas_list_comments).")] string commentId,
+        [Description("Nový text komentáře v Markdownu.")] string body,
+        CancellationToken ct = default)
+    {
+        var id = McpArguments.RequiredId(objectId, "objectId");
+        var comment = await bus.InvokeAsync<CommentDto>(new EditComment(id, McpArguments.RequiredId(commentId, "commentId"), body), ct);
+        return McpText.Result($"Komentář upraven.\n- objectId: {id}\n- commentId: {comment.Id}",
+            new JsonObject { ["objectId"] = id, ["commentId"] = comment.Id, ["editedAt"] = comment.EditedAt });
+    }
+
+    [McpServerTool(Name = "atlas_delete_comment", Title = "Smazat komentář", Destructive = true, Idempotent = false, OpenWorld = false, ReadOnly = false)]
+    [McpToolScope(ApiScopes.Write)]
+    [AssistantDescription("Smaže komentář objektu (vlastní, nebo jako správce objektu jakýkoli). objectId, commentId.")]
+    [Description("Smaže komentář: vlastní, nebo jako správce objektu (správce wiki, správce prostoru, vlastník soukromého objektu) jakýkoli, " +
+        "i při vypnutých komentářích. V diskusi zůstane místo něj „komentář byl odstraněn“; text, zmínky a místo zmizí a vrátit to nejde. " +
+        "Přes MCP vyžaduje rozsah Zápis.")]
+    public async Task<CallToolResult> DeleteAsync(
+        [Description("objectId stránky, tabule nebo jiného objektu.")] string objectId,
+        [Description("commentId komentáře (z atlas_list_comments).")] string commentId,
+        CancellationToken ct = default)
+    {
+        var id = McpArguments.RequiredId(objectId, "objectId");
+        var comment = McpArguments.RequiredId(commentId, "commentId");
+        await bus.InvokeAsync(new DeleteComment(id, comment), ct);
+        return McpText.Result($"Komentář smazán.\n- objectId: {id}\n- commentId: {comment}",
+            new JsonObject { ["objectId"] = id, ["commentId"] = comment });
     }
 }
