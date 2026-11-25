@@ -5,7 +5,9 @@ import { formatDateTime, formatShortDate } from '../formatDate';
 import t from '../i18n/components-spaces';
 import { formatNumber } from '../i18n';
 import { isPickEnter } from '../lib/pickEnter';
-import { startObjectDrag } from '../boards/boardDrop';
+import { startObjectDrag, type DraggedObject } from '../boards/boardDrop';
+import objects from '../i18n/components-objects';
+import AddToTreeDialog from './objects/AddToTreeDialog.vue';
 import { detail, hideObjectDetail, openDetailId, showObjectDetail } from '../objects/objectDetail';
 import { plainTitle, relationsApi, typeInfo, type ContentRelation, type ContentRow, type ContentSummary, type DetailRow, type RelationsApi, type UsageApi } from '../objects/relationsApi';
 import UsagePanel from './objects/UsagePanel.vue';
@@ -267,16 +269,19 @@ function roveTo(event: FocusEvent) {
   for (const other of table.value?.querySelectorAll<HTMLElement>(TITLES) ?? []) other.tabIndex = other === title ? 0 : -1;
 }
 /** „Co s tím jde dělat“ of a row (P2, RowActionsMenu): what the row's title, its detail and usage buttons and its box do. */
+const adding = ref<DraggedObject | null>(null);
 const rowMenu = (row: ContentRow): ActionMenuItem[] => [
   ...(openable(row) ? [{ id: 'open', label: t.content.menuOpen, icon: 'file-text' }] : []),
   { id: 'detail', label: t.content.menuDetail, icon: 'info' },
   { id: 'usage', label: t.content.menuUsage, icon: 'layers', checked: expandedId.value === row.id },
+  { id: 'addToTree', label: objects.addToTree.menu, icon: 'folder-input' },
   ...(props.canWrite && isDraftRow(row) ? [{ id: 'pick', label: t.content.menuPick, icon: 'check', checked: selection.has(row.id), disabled: busy.value }] : []),
 ];
 function rowAction(row: ContentRow, id: string) {
   if (id === 'open') openRow(undefined, row);
   else if (id === 'detail') showDetail(row);
   else if (id === 'usage') toggleUsage(row);
+  else if (id === 'addToTree') adding.value = draggedRow(row);
   else if (id === 'pick') selection.toggle(row.id);
 }
 async function publish() {
@@ -410,6 +415,7 @@ async function publish() {
           </div>
         </Transition>
       </LoadingRegion>
+    <AddToTreeDialog :open="!!adding" :object="adding" @close="adding = null" />
   </div>
 </template>
 

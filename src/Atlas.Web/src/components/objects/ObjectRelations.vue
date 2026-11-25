@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { startObjectDrag } from "../../boards/boardDrop";
+import { computed, shallowRef } from "vue";
+import { startObjectDrag, type DraggedObject } from "../../boards/boardDrop";
 import t from "../../i18n/components-objects";
 import { kindInfo, neighboursOf, plainTitle, relationKinds, typeInfo, type Neighbour, type RelationKind, type RelationsApi } from "../../objects/relationsApi";
 import { useRelations } from "../../objects/useRelations";
@@ -9,6 +9,8 @@ import LoadingRegion from "../LoadingRegion.vue";
 import EmptyState from "../settings/EmptyState.vue";
 import ErrorState from "../settings/ErrorState.vue";
 import RelationsGraph from "./RelationsGraph.vue";
+import RowActionsMenu from "../RowActionsMenu.vue";
+import AddToTreeDialog from "./AddToTreeDialog.vue";
 
 /**
  * Vazby: what an object is connected with, for ANY object (a page, a board, a contact, a deployment board), in the dock of Obsah:
@@ -36,6 +38,9 @@ const live = (place: Place) => place.readable;
 function open(place: Place) {
   if (live(place) && place.node) emit("open", place.node.id, place.node.typeId);
 }
+/** „Přidat do stromu…“: the neighbour whose reference node is being added (the menu path of dragging it onto the tree). */
+const adding = shallowRef<DraggedObject | null>(null);
+const rowMenu = [{ id: "addToTree", label: t.addToTree.menu, icon: "folder-input" }];
 function drag(event: DragEvent, place: Place) {
   if (live(place) && place.node) startObjectDrag(event, { id: place.node.id.toLowerCase(), typeId: place.node.typeId, title: titleOf(place) });
   else event.preventDefault();
@@ -62,11 +67,14 @@ function drag(event: DragEvent, place: Place) {
               </span>
               <AtlasIcon :name="place.direction === 'out' ? 'arrow-right' : 'arrow-left'" :size="14" class="object-relations-arrow" />
             </div>
+            <RowActionsMenu v-if="live(place) && place.node" :items="rowMenu" :label="t.addToTree.rowActions(titleOf(place))"
+              @select="adding = { id: place.node!.id.toLowerCase(), typeId: place.node!.typeId, title: titleOf(place) }" />
           </li>
         </ul>
       </section>
       <EmptyState v-if="graph && !groups.length" compact icon="network" :title="t.relations.noneTitle" :text="t.relations.noneText" />
     </template>
+    <AddToTreeDialog :open="!!adding" :object="adding" @close="adding = null" />
   </LoadingRegion>
 </template>
 
