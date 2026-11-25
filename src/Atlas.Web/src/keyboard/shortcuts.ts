@@ -12,7 +12,7 @@ export type ShortcutEntry = EditorKeymapEntry;
 
 export type AppShortcutId =
   | "search" | "commands" | "searchView" | "assistant" | "help" | "helpAlt"
-  | "newPage" | "edit" | "save" | "findInPage" | "treeFilter"
+  | "newPage" | "edit" | "save" | "findInPage" | "discussion" | "treeFilter"
   | "goLibrary" | "goRecent" | "goFavorites" | "goDrafts" | "goContacts" | "goPersonal" | "goShared" | "goNotifications" | "goSettings" | "goProfile";
 
 export interface AppShortcut {
@@ -55,6 +55,8 @@ export const appShortcuts: readonly AppShortcut[] = [
   { id: "edit", chord: "e", get label() { return t.kb.app.edit; }, group: "Stránka" },
   { id: "save", chord: "Mod+s", get label() { return t.common.saveVersion; }, group: "Stránka", where: "anywhere" },
   // On an open page also in its editor, like Ctrl+K and Ctrl+S (the editor's Najít a nahradit is a button of the panel).
+  // Alt C: the page's Diskuse in the dock (the selected text becomes the quote of a new comment); in the editor too, to take the selection.
+  { id: "discussion", chord: "Alt+c", get label() { return t.kb.app.discussion; }, group: "Stránka", where: "anywhere" },
   { id: "findInPage", chord: "Mod+f", get label() { return t.kb.app.findInPage; }, group: "Stránka", where: "anywhere" },
 ];
 
@@ -118,14 +120,16 @@ export function ownsLetters(target: EventTarget | null): boolean {
 }
 const inEditor = (target: EventTarget | null) => target instanceof Element && !!target.closest('[contenteditable="true"], [contenteditable=""]');
 
-interface Step { key: string; mod: boolean; shift: boolean }
+interface Step { key: string; mod: boolean; shift: boolean; alt: boolean }
 function parseStep(step: string): Step {
   const parts = step.split("+");
   const key = parts.at(-1)!;
-  return { key: key.toLowerCase(), mod: parts.includes("Mod"), shift: parts.includes("Shift") };
+  return { key: key.toLowerCase(), mod: parts.includes("Mod"), shift: parts.includes("Shift"), alt: parts.includes("Alt") };
 }
 function stepMatches(step: Step, event: KeyboardEvent): boolean {
-  if (event.altKey) return false; // AltGr is Ctrl+Alt on Windows and writes characters.
+  // An Alt chord is Alt alone, by the physical key (Alt+C types „ç“ on a Mac); AltGr is Ctrl+Alt on Windows and writes characters.
+  if (step.alt) return event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && event.code === `Key${step.key.toUpperCase()}`;
+  if (event.altKey) return false;
   const mod = event.ctrlKey || event.metaKey;
   if (mod !== step.mod) return false;
   const key = event.key.toLowerCase();
