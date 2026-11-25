@@ -49,7 +49,7 @@ it("opens a page card's detail in the dock with the object's tabs, and lists its
   // The selection's toolbar floats in the body, beside the board.
   document.querySelector<HTMLButtonElement>("[data-board-detail]")!.click();
   await flushPromises();
-  expect(wrapper.findAll(".workspace-panel [role=tab]").map(tab => tab.text())).toEqual(["Přehled", "Popis", "Vazby", "Použito na", "Diskuse", "Historie"]);
+  expect(wrapper.findAll(".workspace-panel [role=tab]").map(tab => tab.text())).toEqual(["Přehled", "Popis", "Vazby", "Použito na", "Historie", "Diskuse"]);
   expect(wrapper.get("[data-board-object-detail]").text()).toContain("Provozní příručka");
   await wrapper.findAll(".workspace-panel [role=tab]")[2]!.trigger("click");
   expect(wrapper.findAll("[data-board-detail-relation]").map(row => row.text())).toEqual([expect.stringContaining("před vydáním")]);
