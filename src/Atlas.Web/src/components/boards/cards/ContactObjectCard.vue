@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import t from "../../../i18n/boards";
-import { ref } from "vue";
+import { computed, inject, onBeforeUnmount, ref, watch } from "vue";
 import { errorMessage } from "../../../api";
 import { startObjectDrag } from "../../../boards/boardDrop";
+import { contactCardShare, showsQrInPlace } from "../../../boards/contactCardShare";
+import { boardCanvasKey } from "../canvas/boardCanvasContext";
 import type { BoardBlockHost } from "../../../boards/editorBlocks";
 import type { ContactData, ContactPatch } from "../../../contacts/contactData";
 import { liveObjects, type LiveObject } from "../../../objects/liveObjects";
@@ -15,14 +17,23 @@ import "./boardCard.css";
  * A directory contact on a board (objectViews.ts): the contact card, its fields edited in place while the card is edited (Enter, F2,
  * double click; Esc ends it) by whom may change the contact. A change goes to the contact (liveObjects → the object path), so every
  * board, page and the directory show it, and is a step of the board's undo (`edited`, P6); a refusal of the server is said under the
- * card and the contact is read again. Its grip (on hover)
+ * card and the contact is read again. The card shows what its room allows (ContactCard `fit`); its business card (.vcf) and QR code are
+ * actions of the board's context toolbar, the code drawn in the card's place while it is on (contactCardShare.ts; a card too low for a
+ * code that can be scanned leaves it to the toolbar's dialog) and ended by leaving the selection, by editing or by „Zpět“. Its grip (on hover)
  * drags the contact out, onto a page as a contact block by its `objectId` or onto another board (spec 2026-10-30 §8); the card itself
  * still moves on the board.
  */
-const props = defineProps<{ object: LiveObject; editing: boolean; compact: boolean; host: BoardBlockHost }>();
+const props = defineProps<{ object: LiveObject; editing: boolean; compact: boolean; host: BoardBlockHost;
+  /** The board item this card is (ObjectCard) and its height: the toolbar's QR action is about this item. */
+  itemId?: string; height?: number }>();
 /** `edited`: what a change wrote, for the board's undo (P6): the fields before and after. */
 const emit = defineEmits<{ done: []; edited: [edit: { objectId: string; before: Record<string, unknown>; after: Record<string, unknown> }] }>();
 const failure = ref("");
+const canvas = inject(boardCanvasKey, undefined);
+const qr = computed(() => !!props.itemId && !props.editing && contactCardShare.isOpen(props.itemId) && showsQrInPlace(props.height ?? 0));
+// The code belongs to the selected card: it ends with the selection (also by Esc, which clears it) and while the card is edited.
+watch(() => !!props.itemId && (props.editing || canvas?.per.single(props.itemId) === false), ended => { if (ended) contactCardShare.set(props.itemId!, false); });
+onBeforeUnmount(() => { if (props.itemId) contactCardShare.set(props.itemId, false); });
 
 async function change(patch: ContactPatch) {
   failure.value = "";
@@ -43,13 +54,16 @@ function key(event: KeyboardEvent) {
     <!-- A mouse affordance beside the board's own move: a page's keyboard path to a contact is /Kontakt. -->
     <span v-if="!editing" class="bcard-contact-drag nodrag" draggable="true" aria-hidden="true" :title="t.contactCard.drag" data-board-contact-drag
       @dragstart="startObjectDrag($event, { id: object.id, typeId: object.typeId, title: object.title }, { effect: 'copy' })"><AtlasIcon name="grip-vertical" :size="14" /></span>
-    <ContactCard :contact="object.data as unknown as ContactData" :editable="editing && object.canEdit" :compact="compact" :host="host" :upload="file => uploadContactPhoto(object.id, file)" @change="change" />
+    <ContactCard :contact="object.data as unknown as ContactData" :editable="editing && object.canEdit" :compact="compact" :host="host" fit :qr="qr" @close-qr="contactCardShare.set(itemId!, false)" :upload="file => uploadContactPhoto(object.id, file)" @change="change" />
     <p v-if="failure" class="bcard-error" role="alert">{{ failure }}</p>
   </div>
 </template>
 
 <style scoped>
-.bcard-contact { position: relative; overflow: auto; scrollbar-width: thin; }
+/* At rest the card shows what its room allows and clips the rest; edited, it shows every field and scrolls. */
+.bcard-contact { position: relative; padding: 0; overflow: hidden; scrollbar-width: thin; }
+.bcard-contact.nodrag { overflow: auto; }
+.bcard-contact .bcard-error { position: absolute; right: 14px; bottom: 6px; left: 14px; }
 .bcard-contact-drag { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--atlas-radius-sm); color: var(--muted); cursor: grab; opacity: 0; transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out); }
 .bcard-contact:hover .bcard-contact-drag, .bcard-contact:focus-within .bcard-contact-drag, :global(.board-node.is-selected) .bcard-contact-drag { opacity: 1; }
 /* No hover on touch: the grip is always there. */

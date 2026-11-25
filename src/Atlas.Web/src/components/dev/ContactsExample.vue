@@ -35,6 +35,8 @@ import { Switch } from "../ui/switch";
 
 // Local sample data only: the directory gets an in-memory object path and its own live objects, nothing leaves the gallery.
 const now = "2026-10-26T10:00:00Z";
+/** The QR code of the board-card examples (the board's toolbar turns it on per card). */
+const boardQr = ref(false);
 let next = 3;
 const contacts = ref<ObjectSummary[]>([
   { id: "c1", typeId: "atlas.contact", scope: "wiki", spaceId: null, title: "Jana Nováková", version: 3, updatedAt: now,
@@ -265,6 +267,12 @@ const kinds = overviewKinds().map(kind => `${kind.label} (${kind.kind})`).join("
       </div>
       <p class="st-muted" data-example-change>Poslední změna: {{ lastChange }}</p>
     </SettingsSection>
+    <SettingsSection title="ContactCard na tabuli (fit)" description="Karta kontaktu na tabuli (ContactObjectCard) je tatáž ContactCard s fit: přizpůsobí se místu, které má, a velikost jí mění člověk (každý rámeček tady lze táhnout za pravý dolní roh). Malá ukáže jméno a příjmení (vždy největší) a řádek o tom, co osoba dělá; střední přidá první e-mail a telefon; velká všechno. Jméno má vlastní roh vpravo pro táhlo karty. Vizitka (.vcf) a QR kód nejsou ikony na kartě, ale tlačítka kontextového panelu tabule; QR se nakreslí na místě karty (pole se prolnou, kód naskočí vlnou od středu, Zpět nebo výběr jiné karty ho zavře), a když je karta nižší než 120 px, otevře se v dialogu (contactCardShare.ts). Při úpravě karty jsou všechna pole vidět a karta se posouvá. Použijte pro kartu objektu na tabuli; v panelu a v detailu zůstává ContactCard s ikonami.">
+      <label class="contacts-example-switch"><Switch v-model="boardQr" />QR kód na místě karty</label>
+      <div class="contacts-example-frames" data-example-board-cards>
+        <div v-for="size in [[180, 90], [270, 160], [420, 280]]" :key="size[0]" class="contacts-example-frame" :style="{ width: `${size[0]}px`, height: `${size[1]}px` }"><ContactCard :contact="fullCard" fit :qr="boardQr && size[1] >= 120" @close-qr="boardQr = false" /></div>
+      </div>
+    </SettingsSection>
     <SettingsSection title="Karta osoby a vizitka do telefonu" description="Najetí myší na osobu v textu (čip kontaktu) po chvilce otevře její kartu: fotka, jméno, funkce, organizace a oddělení, role na stránce, Napsat e-mail a Zavolat, telefony, e-maily, web a adresa s kopírováním, kde je použita, odkaz do adresáře. Fokus zůstává v textu; karta zůstane, dokud je ukazatel na čipu nebo na ní, a zmizí chvilku po odjetí. Stisk v kartě nebo klik čtenáře ji podrží jako otevřenou klikem (Esc nebo klik mimo zavře); klik pisatele ji zavře a otevře úpravu. Na telefonu hover není: klepnutí otevře tutéž kartu. Dole je vizitka dvojím způsobem vedle sebe: Stáhnout vizitku (.vcf) nebo QR kód, který se rozbalí přímo v kartě (žádný popup přes popup). Kód nese celou vizitku (vCard 3.0, bez fotky), žádný odkaz na wiki, takže ji telefon uloží i mimo firemní síť; je černý na bílém i v tmavém motivu, se zaoblenými moduly a rohovými značkami (contactQr.ts, korekce M, tichá zóna 4 moduly), a když by vyšel příliš hustý, vynechá adresu, pak web. Při prvním rozbalení naskočí vlnou od středu, rohové značky naposled (asi 0,4 s z motion tokenů); znovu se stejný kód do 10 minut ukáže hned, s omezenými animacemi jen krátce prolne a pod [data-still] stojí. Karta adresáře (ContactCard) nabízí totéž dvěma ikonami vpravo u jména; kód se rozbalí pod kartou (InlineReveal). Klávesnice: Tab na čip ukáže krátký náhled, Enter otevře kartu (čtenář); Esc zavře i kartu otevřenou myší a karta nechytá Tab (fokus zůstává v textu). Dvě vykreslení téže karty se mají měnit společně: Markdown (fillContactReader a businessCard v plugins/contacts/runtime.ts, karta osoby v textu) a Vue ContactCard (karta adresáře, qrOpen/qr/downloadCard); nesjednocujeme je (jiný hostitel, jiné ovládání), ale změna jednoho znamená kontrolu druhého. Karta při najetí je jen pro kontakty; čipy odkazu na stránku a štítky používají bindMarkdownChipPreview: třetí implementaci hoveru nepřidávejte.">
       <div data-example-person><!-- @vue-generic {'rich'} --><MarkdownRenderer :value="personPage" profile="rich" ariaLabel="Ukázka karty osoby" :plugins="personPlugins" :class="[theme, 'atlas-document-editor']" /></div>
       <div class="contacts-example-cards">
@@ -324,5 +332,7 @@ const kinds = overviewKinds().map(kind => `${kind.label} (${kind.kind})`).join("
 .contacts-example-overview { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); }
 .contacts-example-switch { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; }
 .contacts-example-cards { display: flex; flex-wrap: wrap; gap: 16px; }
+.contacts-example-frames { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 20px; }
+.contacts-example-frame { position: relative; box-sizing: border-box; min-width: 150px; min-height: 64px; max-width: 100%; overflow: hidden; resize: both; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); background: var(--surface); box-shadow: var(--refresh-card-shadow); }
 .contacts-example-card { flex: 1 1 280px; min-width: 0; max-width: min(420px, 100%); padding: 14px; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); background: var(--surface); box-shadow: var(--refresh-card-shadow); }
 </style>

@@ -2,6 +2,12 @@
 import t from "../../../i18n/boards";
 import { computed, ref } from "vue";
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "reka-ui";
+import { contactCardShare, showsQrInPlace } from "../../../boards/contactCardShare";
+import { downloadCard } from "../../../contacts/contactShare";
+import type { ContactData } from "../../../contacts/contactData";
+import { liveObjects } from "../../../objects/liveObjects";
+import ContactQr from "../../contacts/ContactQr.vue";
+import AppDialog from "../../AppDialog.vue";
 import { boardColors, type BoardColor, type BoardEdgeState, type BoardPropsPatch, type BoardThickness } from "../../../boards/boardApi";
 import { blockLayoutOf, propsOf, type Alignment } from "../../../boards/boardFlow";
 import { directionOf, directionPatch, type ConnectorDirection } from "../../../boards/boardConnectorStyle";
@@ -41,6 +47,17 @@ const kind = computed(() => (connectors.value ? "connector" : single.value?.kind
 const removal = computed(() => (onlyCards(props.items) ? t.toolbar.removeFromBoard : t.toolbar.delete));
 const first = computed(() => single.value ?? (connectors.value ? props.items[0] : undefined));
 const options = computed(() => (first.value ? propsOf(first.value) : {}));
+/** A directory contact's card (one selected): its business card and QR code are the toolbar's actions, not icons on the card (ContactObjectCard). */
+const contact = computed(() => {
+  const item = single.value;
+  if (item?.kind !== "object" || (item.props as { typeId?: unknown } | undefined)?.typeId !== "atlas.contact") return undefined;
+  const object = liveObjects.get(item.targetResourceId ?? (item.props as { objectId?: string } | undefined)?.objectId ?? "");
+  return object?.available && object.data ? { id: item.id, data: object.data as unknown as ContactData, room: showsQrInPlace(item.height) } : undefined;
+});
+const qrOn = computed(() => !!contact.value && contactCardShare.isOpen(contact.value.id));
+/** A card with room shows its code in its own place (the button toggles it); a low one, where it could not be scanned, gets it in a dialog. */
+const dialogHost = document.querySelector<HTMLElement>(".atlas") ?? document.body;
+const qrDialog = computed(() => qrOn.value && !contact.value?.room);
 // Every kind takes a colour (owner, 27. 10.): a card shows it as a stripe and tint, a frame as its area and name.
 const current = computed(() => props.items.find(item => item.color)?.color);
 /** Editor components only (owner, 28. 10.): their colour is a background, from the appearance palette of spaces, tone by tone. */
@@ -213,6 +230,17 @@ function walk(event: KeyboardEvent) {
     </template>
     <button v-if="kind === 'frame' || kind === 'group'" type="button" class="bb" :aria-label="t.toolbar.selectContents" :title="t.toolbar.selectContentsTitle" data-board-select-members
       @click="emit('selectMembers')"><AtlasIcon name="box" :size="16" /></button>
+    <template v-if="contact">
+      <button type="button" class="bb" :aria-label="t.toolbar.contactVcf" :title="t.toolbar.contactVcf" data-board-contact-vcf @click="downloadCard(contact.data)"><AtlasIcon name="download" :size="16" /></button>
+      <button type="button" class="bb" :aria-pressed="qrOn" :aria-label="t.toolbar.contactQr" :title="t.toolbar.contactQrTitle" data-board-contact-qr aria-haspopup="dialog"
+        @click="contactCardShare.toggle(contact.id)"><AtlasIcon name="qr-code" :size="16" /></button>
+      <!-- Out of the toolbar, which the canvas places by a transform and which carries the editor's styles (the app's dialog is styled by the app root, not inside an editor). -->
+      <Teleport :to="dialogHost">
+        <AppDialog :title="t.toolbar.contactQr" :open="qrDialog" @close="contactCardShare.set(contact.id, false)">
+          <ContactQr :contact="contact.data" :active="qrDialog" replay />
+        </AppDialog>
+      </Teleport>
+    </template>
     <button v-if="kind === 'page'" type="button" class="bb" :aria-label="t.toolbar.openDetail" :title="t.toolbar.openDetail" data-board-detail @click="emit('detail')"><AtlasIcon name="panel-right-close" :size="16" /></button>
     <button v-if="kind === 'page' || (kind === 'block' && canEdit)" type="button" class="bb" :aria-label="kind === 'page' ? t.toolbar.openPage : t.toolbar.editComponent" :title="kind === 'page' ? t.toolbar.openPageTitle : t.toolbar.editComponentTitle" data-board-open @click="emit('open')"><AtlasIcon :name="kind === 'page' ? 'external' : 'pencil'" :size="16" /></button>
     <button v-else-if="single && isBoardCard(single)" type="button" class="bb" :aria-label="t.toolbar.openBoard" :title="t.toolbar.openBoardTitle" data-board-open @click="emit('open')"><AtlasIcon name="external" :size="16" /></button>

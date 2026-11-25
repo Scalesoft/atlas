@@ -24,6 +24,8 @@ const en: ContactsUiMessages = {  card: {
     qrHint: "Scan it with a phone camera to save the contact. The whole card is inside the code; the phone needs no connection to the wiki.",
     qrOmitted: (fields: string) => `Left out so the code stays readable: ${fields}.`,
     qrFailed: "The QR code could not be made. Download the card instead.",
+    qrBack: "Back",
+    qrBackTitle: "Close the QR code (Esc)",
   },
   directory: {
     duplicateEmail: "A contact with this e-mail address is already in the directory, showing it.",

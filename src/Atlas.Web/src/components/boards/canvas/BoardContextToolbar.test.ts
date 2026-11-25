@@ -1,7 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { mount, type VueWrapper } from "@vue/test-utils";
 import type { BoardViewItem } from "../../../boards/boardSession";
 import BoardContextToolbar from "./BoardContextToolbar.vue";
+import { contactCardShare } from "../../../boards/contactCardShare";
+import { liveObjects } from "../../../objects/liveObjects";
 
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.innerHTML = ""; });
@@ -9,6 +11,27 @@ afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.innerHT
 const item = (kind: BoardViewItem["kind"], extra: Partial<BoardViewItem> = {}): BoardViewItem => ({ id: kind, kind, x: 0, y: 0, width: 200, height: 100, z: 1, ...extra });
 
 describe("BoardContextToolbar", () => {
+  // A contact card's business card and QR code are the toolbar's actions (no icons on the card, nothing to collide with its grip).
+  it("offers a contact card its vCard and QR code: in the card's place when it has room, in a dialog when it is low", async () => {
+    liveObjects.seed({ id: "c1", typeId: "atlas.contact", version: 1, title: "Jana", canEdit: true, available: true, data: { name: "Jana Nováková", emails: ["jana@example.test"] } });
+    const card = (height: number) => item("object", { id: "card", targetResourceId: "c1", props: { typeId: "atlas.contact" }, height });
+    wrapper = mount(BoardContextToolbar, { props: { items: [card(200)], canEdit: false }, attachTo: document.body });
+    expect(wrapper.find("[data-board-contact-vcf]").exists()).toBe(true);
+    await wrapper.get("[data-board-contact-qr]").trigger("click");
+    expect(contactCardShare.isOpen("card")).toBe(true);
+    expect(wrapper.get("[data-board-contact-qr]").attributes("aria-pressed")).toBe("true");
+    expect(document.body.querySelector("dialog[open]")).toBeNull();
+    await wrapper.get("[data-board-contact-qr]").trigger("click");
+    expect(contactCardShare.isOpen("card")).toBe(false);
+    wrapper.unmount();
+
+    wrapper = mount(BoardContextToolbar, { props: { items: [card(80)], canEdit: false }, attachTo: document.body });
+    await wrapper.get("[data-board-contact-qr]").trigger("click");
+    expect(contactCardShare.isOpen("card")).toBe(true);
+    await vi.waitFor(() => expect(document.body.querySelector("dialog [data-contact-qr-panel] .contact-qr-code svg")).not.toBeNull());
+    contactCardShare.set("card", false);
+  });
+
   // T5: the board's toolbar had worded buttons („Čárkovaně“, „Seskupit“, „Detail“) where a page block's toolbar has icons.
   it("is a row of icon buttons as a page block's toolbar, each named by its label and its current value", () => {
     const kinds: BoardViewItem[][] = [[item("connector")], [item("group")], [item("page", { targetResourceId: "p" })], [item("block")], [item("shape")], [item("note"), item("text", { id: "t" })]];

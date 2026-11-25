@@ -44,7 +44,7 @@ const state = computed(() => (!object.value ? "pending" : object.value.available
       </article>
     </template>
     <template v-if="object?.available">
-      <component :is="view.card" v-if="view" :object="object" :editing="editing" :compact="item.props?.view === 'compact'" :host="host" @done="emit('done')" @edited="emit('edited', $event)" />
+      <component :is="view.card" v-if="view" :object="object" :editing="editing" :compact="item.props?.view === 'compact'" :host="host" :item-id="item.id" :height="item.height" @done="emit('done')" @edited="emit('edited', $event)" />
       <article v-else class="bcard" data-board-card="object">
         <span class="bcard-heading"><strong class="bcard-title" :title="object.title">{{ object.title }}</strong></span>
       </article>
