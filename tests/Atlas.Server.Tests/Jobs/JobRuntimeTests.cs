@@ -311,9 +311,17 @@ public sealed class JobRuntimeTests
             durable: true);
 
         var runId = (await host.InvokeAsync<long?>(new RequestProbeJob(QuietJob.JobId)))!.Value;
-        await Task.Delay(TimeSpan.FromSeconds(1.5));
-        Assert.Equal("queued|0|true", await ScalarAsync(host.ConnectionString,
-            $"""SELECT "State" || '|' || "Attempt" || '|' || ("NotBefore" IS NOT NULL) FROM "JobRun" WHERE "Id" = {runId}"""));
+        // The runner postpones it (NotBefore, kept until it starts) when it gets to the run: wait for that, not for a fixed time a loaded
+        // host may overrun before the runner looked at all.
+        var clock = Stopwatch.StartNew();
+        string? seen;
+        while ((seen = (string?)await ScalarAsync(host.ConnectionString,
+                   $"""SELECT "State" || '|' || "Attempt" || '|' || ("NotBefore" IS NOT NULL) FROM "JobRun" WHERE "Id" = {runId}""")) == "queued|0|false")
+        {
+            Assert.True(clock.Elapsed < TimeSpan.FromSeconds(20), $"The run {runId} was never postponed.");
+            await Task.Delay(50);
+        }
+        Assert.Equal("queued|0|true", seen);
         await WaitForAsync(host, runId, JobStates.Succeeded);
         Assert.True((bool)(await ScalarAsync(host.ConnectionString,
             $"""SELECT "StartedAt" >= "QueuedAt" + interval '3 seconds' FROM "JobRun" WHERE "Id" = {runId}"""))!);
