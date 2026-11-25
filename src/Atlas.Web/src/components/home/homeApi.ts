@@ -27,6 +27,8 @@ export interface RecentChange {
   canOpenHistory: boolean;
 }
 export interface RecentChangeList { items: RecentChange[]; next: string | null }
+/** A person's versions on one Prague day in one space (PersonActivityDay on the server); only days with any. */
+export interface PersonActivityDay { day: string; spaceId: string | null; spaceName: string | null; changes: number }
 
 /** The reads of the home dashboard's cards: one object, so a card's data comes from the server or (gallery, tests) from sample data. */
 export const homeApi = {
@@ -39,3 +41,7 @@ export const homeApi = {
 };
 export type HomeApi = typeof homeApi;
 export const homeApiKey: InjectionKey<HomeApi> = Symbol("homeApi");
+
+/** A person's last 365 days by day and space (PersonActivity: their calendar and spaces), read as Co se změnilo decides them. */
+export const personActivityDays = (author: string, signal?: AbortSignal) =>
+  api<{ days: PersonActivityDay[] }>(`/me/changes/days?author=${encodeURIComponent(author)}`, { signal });

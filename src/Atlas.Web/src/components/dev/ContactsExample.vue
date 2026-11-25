@@ -269,7 +269,10 @@ const activitySource = {
     const rows = activityRows.filter(row => !scope.space || row.spaceId === scope.space);
     return cursor ? { items: rows.slice(2), next: null } : { items: rows.slice(0, 2), next: rows.length > 2 ? "next" : null };
   },
-  spaces: async () => [{ id: "s-dev", name: "Vývoj", icon: "book" }, { id: "s-ops", name: "Provoz", icon: "book" }],
+  // Her year: a few changes a week in Vývoj, now and then in Provoz.
+  days: async () => ({ days: Array.from({ length: 120 }, (_, index) => index).filter(index => index % 3 === 0 || index % 7 === 0).map(index => ({
+    day: new Date(Date.now() - index * 86_400_000).toISOString().slice(0, 10), spaceId: index % 7 === 0 ? "s-ops" : "s-dev",
+    spaceName: index % 7 === 0 ? "Provoz" : "Vývoj", changes: 1 + (index % 4) })) }),
 };
 const activityOpened = ref("");
 </script>
@@ -301,7 +304,7 @@ const activityOpened = ref("");
       <div v-if="pageEditorOpen" class="contacts-example-card" data-example-page-contact><PageContactEditor :snapshot="pageSnapshot" :save="pageSave" :store="store" :usage="pageUsage" :forget="() => {}" /></div>
       <p class="st-muted" data-example-page-stored>Zapsáno do stránky: {{ pageStored }}</p>
     </SettingsSection>
-    <SettingsSection title="PersonActivity" description="Aktivita kolegy: interní osoba (kontakt propojený s účtem, directoryId) je tentýž člověk jako účet, takže v detailu kontaktu (ContentDetail: Obsah, uzel stromu, karta na tabuli, Knihovna → Kontakty → ikona Aktivita u kolegy, odkaz Otevřít v adresáři z karty osoby ve stránce) je pod kartou, co naposledy změnil. Je to Co se změnilo zúžené na jeden účet (GET /api/me/changes?author=, MCP atlas_list_recent_changes s authorId) se stejnými řádky (ChangeRow), nejnovější první (bez omezení na 30 dní), filtrem prostoru (FilterMenu s hledáním) a Načíst další. Ukáže jen stránky, které divák smí číst, nic nepočítá ze skrytých a nikdy neříká, kdo co četl. Řádek otevře stránku; historie se otevírá ze stránky. Proč ne RecentChangesCard: ta je karta domovské stránky s filtry Vše / AI / Moje; tady je jeden člověk v detailu.">
+    <SettingsSection title="PersonActivity" description="Aktivita kolegy: interní osoba (kontakt propojený s účtem, directoryId) je tentýž člověk jako účet, takže v detailu kontaktu (ContentDetail: Obsah, uzel stromu, karta na tabuli, Knihovna → Kontakty → ikona Aktivita u kolegy, odkaz Otevřít v adresáři z karty osoby ve stránce) je pod kartou (a pod jeho kompetencemi, ContactSkillLine) jeho rok v kostce: kolik změn, kdy naposledy, kde nejvíc, kalendář změn (ActivityHeatmap jako v Profilu, GET /api/me/changes/days) a co naposledy změnil. Je to Co se změnilo zúžené na jeden účet (GET /api/me/changes?author=, MCP atlas_list_recent_changes s authorId) se stejnými řádky (ChangeRow), nejnovější první (bez omezení na 30 dní), filtrem prostoru (FilterMenu s hledáním) a Načíst další. Ukáže jen stránky, které divák smí číst, nic nepočítá ze skrytých a nikdy neříká, kdo co četl. Řádek otevře stránku; historie se otevírá ze stránky. Proč ne RecentChangesCard: ta je karta domovské stránky s filtry Vše / AI / Moje; tady je jeden člověk v detailu.">
       <div class="contacts-example-card" data-example-person-activity><PersonActivity account-id="acc-eva" :source="activitySource" @open="activityOpened = $event" /></div>
       <p class="st-muted">Otevřeno: {{ activityOpened || "nic" }}</p>
     </SettingsSection>
