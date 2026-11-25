@@ -638,6 +638,33 @@ public sealed class BackupImportTests
         }
     }
 
+    /// <summary>5.2: a page the restore moves back into a space that verifies its pages starts as a created one, the restorer as steward;
+    /// a page that stays where it was gets no row.</summary>
+    [PostgreSqlFact]
+    public async Task A_page_restored_into_a_verifying_space_gets_the_restorer_as_its_steward()
+    {
+        await using var fixture = await BackupFixture.CreateAsync();
+        using var archive = await fixture.Archive.CreateAsync("full", default);
+        var later = await fixture.Host.SeedSpaceAsync("Moved later");
+        var original = Guid.Empty;
+        await fixture.Host.SeedAsync(async session =>
+        {
+            var page = await session.GetAsync<Page>(fixture.PageId);
+            original = page.SpaceId;
+            page.SpaceId = later;
+        });
+        await fixture.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", original);
+        await using (var input = File.OpenRead(archive.Path))
+        {
+            await fixture.Import.ImportAsync(input, "restore", fixture.AdminId, default);
+        }
+        using var session = fixture.Host.OpenSession();
+        var stewards = (await session.QueryOver<Atlas.Server.Features.PageVerifications.Domain.PageVerification>().ListAsync())
+            .ToDictionary(x => x.PageId, x => x.StewardId);
+        Assert.Equal(fixture.AdminId, stewards[fixture.PageId]);
+        Assert.False(stewards.ContainsKey(fixture.TrashedPageId));
+    }
+
     [PostgreSqlFact]
     public async Task Restore_keeps_identity_and_existing_history_and_rejects_tampered_bytes()
     {

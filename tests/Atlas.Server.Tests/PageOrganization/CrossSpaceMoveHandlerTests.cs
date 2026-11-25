@@ -186,6 +186,24 @@ public sealed class CrossSpaceMoveHandlerTests
         Assert.Equal(await LiveStatements(3), await LiveStatements(30));
     }
 
+    /// <summary>5.2: pages moved into a space that verifies its pages start as created ones, the mover as steward; a page's own row stays.</summary>
+    [PostgreSqlFact]
+    public async Task Pages_moved_into_a_verifying_space_get_the_mover_as_steward_and_keep_their_own_rows()
+    {
+        await using var f = await PageOrganizationFixture.CreateAsync();
+        var target = await Target(f);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", target);
+        var parent = await f.Pages.CreateAsync(new CreatePageRequest(f.SpaceId, null, "Root", PageOrganizationFixture.Rich("Root"), "Root"), f.Writer, default);
+        var child = await f.Pages.CreateAsync(new CreatePageRequest(f.SpaceId, parent.Id, "Child", PageOrganizationFixture.Rich("Child"), "Child"), f.Writer, default);
+        await f.Host.ExecuteAsync("""INSERT INTO "PageVerification"("PageId","IntervalMonths","NoticeStage") VALUES (:id,3,0)""", child.Id);
+        await f.As<CrossSpaceChange>(f.Writer, new MovePageToSpace(parent.Id, await Command(f, parent, target)));
+        using var session = f.Host.OpenSession();
+        var rows = (await session.QueryOver<Atlas.Server.Features.PageVerifications.Domain.PageVerification>()
+            .WhereRestrictionOn(x => x.PageId).IsIn(new[] { parent.Id, child.Id }).ListAsync()).ToDictionary(x => x.PageId);
+        Assert.Equal(f.Writer.Id, rows[parent.Id].StewardId);
+        Assert.Equal(((Guid?)null, (short?)3), (rows[child.Id].StewardId, rows[child.Id].IntervalMonths));
+    }
+
     private static async Task<Guid> Target(PageOrganizationFixture f)
     {
         var id = Guid.NewGuid();

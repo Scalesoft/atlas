@@ -193,6 +193,10 @@ public sealed class WikiBackupImport(AtlasDatabase database, AttachmentFiles att
         {
             pages[source.Page.Id].Page.IsTemplate = true;
         }
+        // After the template status: a new page, or an existing one the restore moves to another space, starts as a created one does;
+        // other rows stay (the archive carries none).
+        await PageVerifications.Commands.PageVerificationArrival.StartAsync(session, pages.Values.Where(x => !x.Existing || moved.Contains(x.Page))
+            .Select(x => x.Page), actorId, ct);
         await session.FlushAsync(ct);
         await ImportAttachmentsAsync(session, archive, ids, actorId, add, createdFiles, ct);
         // The archive's revisions and publications are no news of the restorer's: each page is announced as a rebuild, which records its

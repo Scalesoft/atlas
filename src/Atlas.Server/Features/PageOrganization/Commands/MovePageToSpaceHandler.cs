@@ -133,6 +133,7 @@ public sealed class MovePageToSpaceHandler
         await ShareRevocation.PagesAsync(m_session, [.. pages.Select(x => x.Id)], actor.Id, ct);
         // D7: the moved subtree takes the target space's default access; its own-access mode and item grants end here.
         await PageItemAccess.ResetAsync(m_session, pages, actor.Id, ct);
+        await PageVerifications.Commands.PageVerificationArrival.StartAsync(m_session, pages, actor.Id, ct);
         await m_checkpoints.ResetAllAsync(ids, ct);
         await SearchDocuments.RefreshPublishedAsync(m_session, ids, ct);
         // The moved pages' mentions were read with the old space's names, and both spaces' names changed (ContentReferenceJob).
