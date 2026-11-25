@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import type { ActionMenuItem } from "../ActionMenu.vue";
+import AtlasIcon from "../AtlasIcon.vue";
 import CommandIcon from "../CommandIcon.vue";
+import RowActionsMenu from "../RowActionsMenu.vue";
+import { Button } from "../ui/button";
 import type { StatusTone } from "./types";
 
 /**
@@ -7,13 +11,23 @@ import type { StatusTone } from "./types";
  * line of detail, then `#meta` (badges) and `#actions`. The default slot renders below the row,
  * for an InlineReveal with details or an inline confirmation. `highlighted` marks a row a flow has
  * just created; it rises in and glows once.
+ * `menu` is the row's „Co s tím jde dělat“ (RowActionsMenu: right button, Ctrl+mezerník, Shift+F10, Delete/F2 by an item's `shortcut`); `select` carries the
+ * item's id. `more` adds a visible „⋯“ that opens it, for a row where an action has no button of its own (touch has no right button). A row
+ * whose actions all have buttons leaves it off. `menuLabel` names the menu (the row's title in the list's language).
  */
-withDefaults(defineProps<{ title: string; description?: string; icon?: string; iconTone?: StatusTone; highlighted?: boolean }>(), {
+const props = withDefaults(defineProps<{ title: string; description?: string; icon?: string; iconTone?: StatusTone; highlighted?: boolean; menu?: readonly ActionMenuItem[]; menuLabel?: string; more?: boolean }>(), {
   description: undefined,
   icon: undefined,
   iconTone: undefined,
   highlighted: false,
+  menu: undefined,
+  menuLabel: undefined,
+  more: false,
 });
+const emit = defineEmits<{ select: [id: string] }>();
+const showMore = () => props.more && !!props.menu?.length;
+// The menu listens to the row's contextmenu; the button asks for it from itself, so the menu opens under the button and the focus returns to it.
+const openMenu = (event: MouseEvent) => (event.currentTarget as HTMLElement).dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true }));
 </script>
 
 <template>
@@ -31,11 +45,13 @@ withDefaults(defineProps<{ title: string; description?: string; icon?: string; i
       <div v-if="$slots.meta" class="settings-list-row-meta">
         <slot name="meta" />
       </div>
-      <div v-if="$slots.actions" class="settings-list-row-actions">
+      <div v-if="$slots.actions || showMore()" class="settings-list-row-actions">
         <slot name="actions" />
+        <Button v-if="showMore()" variant="ghost" size="icon-sm" type="button" class="text-muted-foreground" :aria-label="menuLabel ?? title" :title="menuLabel ?? title" data-row-more @click="openMenu"><AtlasIcon name="more" :size="18" /></Button>
       </div>
     </div>
     <slot />
+    <RowActionsMenu v-if="menu?.length" :items="menu" :label="menuLabel ?? title" @select="emit('select', $event)" />
   </li>
 </template>
 

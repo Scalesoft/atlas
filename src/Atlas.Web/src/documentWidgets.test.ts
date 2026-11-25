@@ -6,10 +6,13 @@ import { atlasContentPlugins, createDocumentWidgets, gateWrites, openApiPolicy, 
 import { useModules } from "./composables/useModules";
 import type { ProjectorHost } from "./projector/requirementsPlugin";
 import { emptyDocument, readDocument } from "./document";
+import { MarkdownRenderer } from "@atlas/markdown/vue";
+import { contactApi } from "./contacts/contactApi";
+import { boardTextDocument } from "./boards/editorBlocks";
 import DocumentEditor from "./components/DocumentEditor.vue";
 import HistoryRevisionPreview from "./components/HistoryRevisionPreview.vue";
 
-const contexts: DocumentWidgetContext[] = [{ kind: "edit", uploaderName: "Jana Nováková" }, { kind: "history" }, { kind: "public" }];
+const contexts: DocumentWidgetContext[] = [{ kind: "edit", uploaderName: "Jana Nováková" }, { kind: "history" }, { kind: "public" }, { kind: "read" }];
 const byId = (plugins: readonly { id: string; version: number }[]) => [...plugins].sort((a, b) => a.id.localeCompare(b.id));
 
 /** The collaboration schema plugins a controller built from `plugins` binds and saves. */
@@ -95,6 +98,7 @@ describe("document widget registration", () => {
     expect(ids[0]).toContain("atlas-requirements");
     expect(ids[1]).toEqual(ids[0]);
     expect(ids[2]).toEqual(ids[0]);
+    expect(ids[3]).toEqual(ids[0]);
     expect(new Set(contexts.map(context => JSON.stringify(schemaPlugins(createDocumentWidgets(context)))))).toHaveProperty("size", 1);
   });
   it("gives every surface the same content plugins, the public view only without YouTrack", () => {
@@ -102,6 +106,7 @@ describe("document widget registration", () => {
     expect(ids[0]).toEqual(expect.arrayContaining(["editor-tools", "attachments", "heading-anchors", "youtrack"]));
     expect(ids[1]).toEqual(ids[0]);
     expect(ids[2]).toEqual(ids[0]!.filter(id => id !== "youtrack"));
+    expect(ids[3]).toEqual(ids[0]);
     expect(schemaPlugins(atlasContentPlugins(contexts[0]!))).toEqual(byId(hostSchema.plugins));
   });
   it("binds exactly the newest collaboration schema the server knows (tests/fixtures/host-document-schema.json)", async () => {
@@ -121,5 +126,22 @@ describe("document widget registration", () => {
     wrapper = mount(HistoryRevisionPreview, { props: { contentJson: JSON.stringify(emptyDocument()), dark: false, accent: "blue" } });
     const plugins = wrapper.findComponent({ name: "MarkdownRenderer" }).props("plugins") as MarkdownPlugin[];
     expect(schemaPlugins(plugins)).toEqual(byId(hostSchema.plugins));
+  });
+});
+
+describe("2B: the app's static render of something live („read“)", () => {
+  it("shows a contact live, as a page does, where history keeps its snapshot", async () => {
+    const live = vi.spyOn(contactApi, "live").mockResolvedValue({ state: "ok", contact: { name: "Jana Nováková", title: "Vedoucí", objectId: "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b" } });
+    try {
+      const value = boardTextDocument("Ptejte se [Jana](a-contact:?name=Jana&objectId=0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b).");
+      const render = (kind: "history" | "read") => mount(MarkdownRenderer, { props: { value, profile: "rich", ariaLabel: kind, plugins: atlasContentPlugins({ kind }) }, attachTo: document.body });
+      wrapper = render("history");
+      await vi.waitFor(() => expect(document.querySelector(".md-contact-name")).not.toBeNull());
+      await new Promise(resolve => setTimeout(resolve, 20));
+      expect(live).not.toHaveBeenCalled();
+      wrapper.unmount();
+      wrapper = render("read");
+      await vi.waitFor(() => expect(live).toHaveBeenCalledWith("0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b", expect.anything()));
+    } finally { live.mockRestore(); }
   });
 });

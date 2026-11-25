@@ -19,6 +19,7 @@ import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import ContactCard from "./ContactCard.vue";
 import ContactSkillLine from "./ContactSkillLine.vue";
 import { uploadContactPhoto } from "../../contacts/contactPhoto";
+import { useToast } from "../../composables/useToast";
 
 /**
  * A directory contact edited where a page shows it (the contacts plugin's `editLinked`): the live contact as ContactCard, each field
@@ -26,7 +27,8 @@ import { uploadContactPhoto } from "../../contacts/contactPhoto";
  * it shows the change; under it what is the page's own, its role, the person's login and how it reads in the text. The page's
  * snapshot is stored when the editor closes (storing repaints the card it is anchored to), at once, from the contact as shown; a
  * refusal the directory answers later stores it again, unless a newer panel of the contact stored it since. Without the right to
- * change the contact its fields only read and the page's own still edit.
+ * change the contact its fields only read and the page's own still edit. The page's undo cannot carry a change of the directory, so a
+ * saved change says „Kontakt upraven“ with „Zpět“ (P6), which writes the fields as they were back to the contact.
  */
 const props = withDefaults(defineProps<{
   snapshot: MarkdownContact; save: (contact: MarkdownContact) => void;
@@ -56,14 +58,21 @@ onMounted(async () => {
   root.value?.querySelector<HTMLElement>(object.value?.canEdit ? "[data-contact-field='name']" : "[data-page-contact-role]")?.focus();
 });
 
+const toaster = useToast();
 async function change(patch: ContactPatch) {
   failure.value = "";
   // Shown at once (liveObjects): a panel closing meanwhile stores it too.
   changed = true;
+  const data = (object.value?.data ?? {}) as Record<string, unknown>;
+  const before = Object.fromEntries(Object.keys(patch).map(key => [key, data[key] ?? null])) as ContactPatch;
   const edit = props.store.edit(id, patch);
   edits.push(edit.catch(() => {}));
   try { await edit; props.forget(id); }
-  catch (error) { refused = true; failure.value = errorMessage(error); }
+  catch (error) { refused = true; failure.value = errorMessage(error); return; }
+  // One toast per contact: a run of edits is one, its „Zpět“ returns the last one.
+  toaster.success(t.pageEditor.edited, { id: `contact-edit:${id}`, undo: () => {
+    void props.store.edit(id, before).then(() => props.forget(id), error => toaster.error(errorMessage(error)));
+  } });
 }
 
 // A click outside closes the panel (the popover's document listener, after this window one): the open field is left first, so its

@@ -59,6 +59,11 @@ function selectionCommands({ selection, can }: CommandContext): BoardCommand[] {
   ];
 }
 
+/** The item opens a detail in the dock: a page card (the board's object detail), an object card but a board's (ContentDetail, a contact's card, Umí, Použito na, Diskuse). */
+export const opensDetail = (item: BoardItem | undefined) =>
+  !!item?.targetResourceId && (item.kind === "page" || (item.kind === "object" && (item.props as { typeId?: unknown } | undefined)?.typeId !== "atlas.board"));
+const isContactCard = (item: BoardItem | undefined) => item?.kind === "object" && (item.props as { typeId?: unknown } | undefined)?.typeId === "atlas.contact";
+
 /** P12: cards (a page, board, requirement or contact placed here) are removed from the board, their objects stay („Odebrat“); the board's own items are deleted („Smazat“). */
 export const onlyCards = (selection: readonly BoardItem[]) => selection.length > 0 && selection.every(item => item.kind === "page" || item.kind === "object");
 
@@ -67,7 +72,7 @@ export function boardCommands(context: CommandContext): BoardCommand[] {
   const { canEdit, selection, modules, can } = context;
   const c = t.commands;
   const single = selection.length === 1 ? selection[0] : undefined;
-  const detail = single?.kind === "page" && single.targetResourceId ? [command("selection", "selection:detail", c.openDetail.title, "panel-right-close", c.openDetail.words)] : [];
+  const detail = opensDetail(single) ? [command("selection", "selection:detail", c.openDetail.title, "panel-right-close", c.openDetail.words)] : [];
   const board = [
     ...(canEdit && can.arrange && !selection.length ? [command("board", "board:arrange", c.arrange.title, "layout-dashboard", c.arrange.words, c.arrange.description)] : []),
     command("board", "board:settings", c.settings.title, "settings-2", c.settings.words),
@@ -113,11 +118,15 @@ export interface ItemOffer {
 export function actionCommands(context: CommandContext, offer: ItemOffer): BoardCommand[] {
   const single = context.selection.length === 1 ? context.selection[0] : undefined;
   const c = t.commands;
-  const detail = single?.kind === "page" && single.targetResourceId ? [command("selection", "selection:detail", c.openDetail.title, "panel-right-close", c.openDetail.words)] : [];
+  const detail = opensDetail(single) ? [command("selection", "selection:detail", c.openDetail.title, "panel-right-close", c.openDetail.words, offer.open ? undefined : "Ctrl+Enter")] : [];
+  // A contact card's business card and QR code: the toolbar's actions as rows (P2), for a reader too (they change nothing).
+  const contact = isContactCard(single) ? [command("selection", "selection:vcard", t.toolbar.contactVcf, "download"),
+    command("selection", "selection:qr", t.toolbar.contactQr, "qr-code")] : [];
   return [
     ...(offer.edit ? [keyed("selection", "selection:edit", c.edit.title, "pencil", c.edit.words, "Enter")] : []),
     ...(offer.open ? [keyed("selection", "selection:open", offer.open, "external-link", c.open.words, "Ctrl+Enter")] : []),
     ...detail,
+    ...contact,
     ...(offer.link ? [command("selection", "selection:copy-link", c.copyLink.title, "link", c.copyLink.words)] : []),
     ...(context.canEdit ? selectionCommands(context) : []),
   ];

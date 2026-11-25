@@ -673,13 +673,12 @@ const steps: FlowStep[] = [
           <p class="gallery-caption">Čtenost stránky (PageReadership): unit pojmenuje počet, dny s <code>marked</code> mají rámeček v barvě upozornění a vysvětlí je legenda.</p>
         </SettingsSection>
         <ResponsiveSettingsExample />
-        <SettingsSection title="Seznam: SettingsList + SettingsListRow" description="Název a popis vlevo, klidný stav a akce vpravo. Úprava zůstává viditelná, méně časté akce patří do nabídky. Přidání položky patří k nadpisu stránky. Při přidání a odebrání řádků (filtr, hledání) se seznam i karta kolem něj plynule zvětší nebo zmenší; nový řádek se jen vyjede, rozsvítí se až řádek, který právě vytvořil průvodce (highlighted).">
+        <SettingsSection title="Seznam: SettingsList + SettingsListRow" description="Název a popis vlevo, klidný stav a akce vpravo. Úprava zůstává viditelná, méně časté akce patří do nabídky. Přidání položky patří k nadpisu stránky. Při přidání a odebrání řádků (filtr, hledání) se seznam i karta kolem něj plynule zvětší nebo zmenší; nový řádek se jen vyjede, rozsvítí se až řádek, který právě vytvořil průvodce (highlighted). Méně časté akce řádku jsou jeho `menu` (RowActionsMenu uvnitř SettingsListRow: pravé tlačítko, Ctrl+mezerník, Shift+F10, Delete/F2 podle `shortcut` položky; událost select nese id); `more` přidá viditelné „⋯“ pro řádek, kde nějaká akce nemá vlastní tlačítko (na dotyku není pravé tlačítko). Šipky ↑ ↓ Home End chodí po řádcích v každém SettingsList, žádný seznam je neváže znovu.">
           <SettingsList label="Ukázkové sítě">
-            <SettingsListRow title="Firemní VPN" description="10.0.0.0/16" icon="network">
+            <SettingsListRow title="Firemní VPN" description="10.0.0.0/16" icon="network" :menu="[{ id: 'remove', label: 'Odebrat síť', icon: 'trash', shortcut: 'Delete', destructive: true }]" menu-label="Další akce: Firemní VPN" more @select="dialogOpen = true">
               <template #meta><StatusBadge tone="success" label="Aktivní" /></template>
               <template #actions>
                 <Button variant="ghost" size="sm" @click="dialogOpen = true">Upravit</Button>
-                <ActionDisclosure label="Další akce: Firemní VPN"><ActionDisclosureItem @click="dialogOpen = true"><AtlasIcon name="trash" :size="16" />Odebrat síť</ActionDisclosureItem></ActionDisclosure>
               </template>
             </SettingsListRow>
             <SettingsListRow title="Externisté" description="10.4.0.0/22" icon="network">

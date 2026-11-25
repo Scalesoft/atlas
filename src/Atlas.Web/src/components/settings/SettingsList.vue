@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
+import { rowKeys } from "../../keyboard/navigation";
 import { outOfReach } from "../../lib/outOfReach";
 import { animateAtlas, motionMs } from "../../motion/aiMotion";
 
-// A list of SettingsListRow items. Rows added later rise in, removed ones fade where they stand, the rest glide
+// A list of SettingsListRow items; ↑ ↓ Home End walk the rows (rowKeys), so no list binds them again. Rows added later rise in, removed ones fade where they stand, the rest glide
 // to their new place (motion tokens; only fades with reduced motion). A row that leaves is taken out of the flow at once
 // (settings.css) so the rows after it can glide up, and it stays exactly where it was and out of reach of the keyboard
 // and of assistive technology while it fades; the list itself eases from its old height to the new one, so the card
@@ -55,7 +56,7 @@ onBeforeUnmount(() => easing?.cancel());
 </script>
 
 <template>
-  <TransitionGroup ref="group" tag="ul" name="st-list" class="settings-list" :aria-label="label" @before-leave="leaving" @vue:before-update="beforeUpdate" @vue:updated="updated">
+  <TransitionGroup ref="group" tag="ul" name="st-list" class="settings-list" :aria-label="label" @before-leave="leaving" @keydown="rowKeys($event, ':scope > li:not(.st-list-leave-active)')" @vue:before-update="beforeUpdate" @vue:updated="updated">
     <slot />
   </TransitionGroup>
 </template>

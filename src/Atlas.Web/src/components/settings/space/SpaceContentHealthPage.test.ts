@@ -92,6 +92,19 @@ describe("Stav obsahu", () => {
     expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: ["p3"] });
   });
 
+  it("offers a row the actions of the bulk buttons in its menu, opened from the visible ⋯", async () => {
+    const { api, view } = open();
+    await flushPromises();
+    await view.get("[data-health-row] [data-row-more]").trigger("click");
+    await flushPromises();
+    const labels = [...document.querySelectorAll("[data-row-action]")].map((entry) => entry.textContent);
+    expect(labels[0]).toContain("Ověřit");
+    expect(labels[1]).toContain("garanta");
+    (document.querySelector("[data-row-action]") as HTMLElement).click();
+    await flushPromises();
+    expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: [rows[0]!.pageId] });
+  });
+
   it("asks before verifying many pages at once", async () => {
     const many = Array.from({ length: 12 }, (_, n) => item(n + 1));
     const { api, view } = open();
