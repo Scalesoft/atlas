@@ -16,9 +16,11 @@ public sealed class BoardObjectType : IObjectType
     private readonly ISession m_session;
     private readonly SpaceRoles m_roles;
     private readonly ResourceGrantSnapshots m_grants;
+    private readonly IRequestChannel m_channel;
 
-    public BoardObjectType(ISession session, SpaceRoles roles, ResourceGrantSnapshots grants)
+    public BoardObjectType(ISession session, SpaceRoles roles, ResourceGrantSnapshots grants, IRequestChannel channel)
     {
+        m_channel = channel;
         m_session = session;
         m_roles = roles;
         m_grants = grants;
@@ -31,7 +33,8 @@ public sealed class BoardObjectType : IObjectType
     public async Task<ObjectAccess> AuthorizeAsync(ObjectActor actor, Guid objectId, CancellationToken ct)
     {
         var board = await m_session.GetAsync<Board>(objectId, ct);
-        if (board is null || board.IsTrashed)
+        // G5 (D10), as ObjectScopeAccess: a board of a space excluded from AI and MCP is missing to a channel whose content may go to a model.
+        if (board is null || board.IsTrashed || m_channel.Current.IsAiBound && !await m_roles.InAiAsync(board.SpaceId, ct))
         {
             return ObjectAccess.None;
         }
