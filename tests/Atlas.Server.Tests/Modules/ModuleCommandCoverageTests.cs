@@ -29,7 +29,8 @@ public sealed class ModuleCommandCoverageTests
     /// <summary>The command namespaces of V3 modules; add one when a module gets user commands.</summary>
     private static readonly string[] CommandNamespaces = [typeof(SetCatalogPage).Namespace!, typeof(AddTreeReference).Namespace!, typeof(ApplyBoardBatch).Namespace!,
         typeof(CreateObject).Namespace!, typeof(SetItemGrant).Namespace!, typeof(MarkNotificationsRead).Namespace!, typeof(MergeContacts).Namespace!, typeof(RunJobNow).Namespace!, typeof(NameVersion).Namespace!,
-        typeof(Atlas.Server.Features.Skills.Commands.RateSkill).Namespace!, typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification).Namespace!];
+        typeof(Atlas.Server.Features.Skills.Commands.RateSkill).Namespace!, typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification).Namespace!,
+        typeof(Atlas.Server.Features.Comments.Commands.PostComment).Namespace!];
 
     /// <summary>3.6 commands of a page from namespaces that also hold the platform's own records (the collaboration relay, the page save).</summary>
     private static readonly Type[] PageCommands = [typeof(UndoRevisionChange), typeof(SetPagePublication), typeof(SortTreeLevel)];
@@ -83,6 +84,8 @@ public sealed class ModuleCommandCoverageTests
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetPageVerification)] = ("atlas_set_verification", "PUT /api/v1/pages/{id:guid}/verification"),
         [typeof(Atlas.Server.Features.PageVerifications.Commands.SetSpaceVerification)] = ("atlas_set_verification", "POST /api/v1/spaces/{spaceId:guid}/content-health/bulk"),
         [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportPageOutdated)] = ("atlas_report_outdated", "POST /api/v1/pages/{id:guid}/verification/report"),
+        // 5.2: discussions are the collaboration channel (the page chat): an agent reads them (atlas_list_comments) and answers.
+        [typeof(Atlas.Server.Features.Comments.Commands.PostComment)] = ("atlas_post_comment", "POST /api/v1/objects/{objectId:guid}/comments"),
         // „Řadit abecedně“ of a tree level (3.6).
         [typeof(SortTreeLevel)] = ("atlas_sort_pages", "POST /api/v1/spaces/{spaceId:guid}/tree/sort"),
     };
@@ -95,6 +98,8 @@ public sealed class ModuleCommandCoverageTests
         [typeof(SetJobPaused)] = "Pausing every trigger of a job is an operational setting, like the module settings: the web's and the API's (3.3 plan §4.7, decision O5).",
         [typeof(SetNotificationPreference)] = "An account's own setting, not an object: the web's only (inbox spec §9, decision 7).",
         [typeof(NamedVersion)] = "The answer of NameVersion, not a command.",
+        [typeof(Atlas.Server.Features.Comments.Commands.EditComment)] = "An agent corrects itself with a new comment; editing a posted one stays the web's (5.2 scope: read and answer).",
+        [typeof(Atlas.Server.Features.Comments.Commands.DeleteComment)] = "Deleting a comment stays the web's, where its author or the object's manager sees what goes (5.2 scope: read and answer).",
     };
 
     [PostgreSqlFact]

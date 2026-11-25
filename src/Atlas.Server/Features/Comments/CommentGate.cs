@@ -1,5 +1,6 @@
 using Atlas.Server.Features.Comments.Contracts;
 using Atlas.Server.Features.Comments.Domain;
+using Atlas.Server.Features.Mcp;
 using Atlas.Server.Platform.Objects;
 using Atlas.Server.Platform.Resources;
 using NHibernate;
@@ -11,7 +12,8 @@ namespace Atlas.Server.Features.Comments;
 /// The object a comment message is about, decided once per message (comments spec §2): whoever may read the object reads and
 /// writes its comments, through the object's type in the registry (a missing, trashed or unreadable object, or one of a type no
 /// enabled module registers, is the same 404: fail closed). Writing also needs the space's „Komentáře“ switch on; who manages the
-/// object (a WikiAdmin, the space's Admin, a private object's owner) may delete anyone's comment.
+/// object (a WikiAdmin, the space's Admin, a private object's owner) may delete anyone's comment. Over MCP and for the assistant an
+/// object of a space switched out of AI is the same 404 (G5).
 /// </summary>
 public sealed class CommentGate
 {
@@ -19,13 +21,17 @@ public sealed class CommentGate
     private readonly IContentAccess m_access;
     private readonly ObjectTypes m_types;
     private readonly SpaceRoles m_roles;
+    private readonly McpVisibility m_visibility;
+    private readonly IRequestChannel m_channel;
 
-    public CommentGate(ISession session, IContentAccess access, ObjectTypes types, SpaceRoles roles)
+    public CommentGate(ISession session, IContentAccess access, ObjectTypes types, SpaceRoles roles, McpVisibility visibility, IRequestChannel channel)
     {
         m_session = session;
         m_access = access;
         m_types = types;
         m_roles = roles;
+        m_visibility = visibility;
+        m_channel = channel;
     }
 
     public async Task<CommentTarget> OpenAsync(Guid objectId, CancellationToken ct)
@@ -33,6 +39,11 @@ public sealed class CommentGate
         var spaceId = await m_session.QueryOver<ContentResource>().Where(x => x.Id == objectId).Select(x => x.SpaceId).SingleOrDefaultAsync<Guid?>(ct);
         var actor = await m_access.LockActorAsync(spaceId, ct);
         if (await m_session.GetAsync<ContentResource>(objectId, ct) is not { TrashedAt: null } envelope || !await MayReadAsync(actor, envelope.Id, envelope.TypeId, ct))
+        {
+            throw CommentErrors.ObjectNotFound();
+        }
+        // The actor's lock holds the space FOR SHARE, so a switch of "Zahrnout do AI" waits until commit.
+        if (m_channel.Current.IsAiBound && envelope.SpaceId is { } inSpace && (await m_visibility.ExcludedSpacesAsync([inSpace], ct)).Count > 0)
         {
             throw CommentErrors.ObjectNotFound();
         }

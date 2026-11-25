@@ -6,6 +6,9 @@ namespace Atlas.Server.Features.PageVerifications.Queries;
 /// admins. Filter all or unread (no view in the period); cursor: NextCursor of the previous page.</summary>
 public sealed record GetSpaceReadership(Guid SpaceId, DateOnly From, DateOnly To, string? Filter = null, string? Cursor = null);
 
+/// <summary>atlas_list_readership: G5 on the space, then the shared read.</summary>
+public sealed record GetMcpSpaceReadership(GetSpaceReadership Query);
+
 /// <summary>The space's readership and the reads it shares with Stav obsahu (<see cref="PageVerificationQueryHandler"/>).</summary>
 public sealed class SpaceReadershipHandler(ISession session, IContentAccess access)
 {

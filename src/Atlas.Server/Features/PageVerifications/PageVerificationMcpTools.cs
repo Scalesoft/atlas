@@ -13,7 +13,8 @@ using Wolverine;
 
 namespace Atlas.Server.Features.PageVerifications;
 
-public sealed class PageVerificationMcpHandler(McpOrganizationGuard guard, PageVerificationHandler handler, PageVerificationQueryHandler queries)
+public sealed class PageVerificationMcpHandler(McpOrganizationGuard guard, PageVerificationHandler handler, PageVerificationQueryHandler queries,
+    SpaceReadershipHandler readership)
 {
     public async Task<PageVerificationView> Handle(SetMcpVerification command, CancellationToken ct)
     {
@@ -31,6 +32,12 @@ public sealed class PageVerificationMcpHandler(McpOrganizationGuard guard, PageV
     {
         await guard.LockSpaceForReadAsync(query.Query.SpaceId, ct);
         return await queries.Handle(query.Query, ct);
+    }
+
+    public async Task<SpaceReadership> Handle(GetMcpSpaceReadership query, CancellationToken ct)
+    {
+        await guard.LockSpaceForReadAsync(query.Query.SpaceId, ct);
+        return await readership.Handle(query.Query, ct);
     }
 
     public async Task<PageOutdatedReport> Handle(ReportMcpOutdated command, CancellationToken ct)
@@ -185,6 +192,50 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
                 ["enabled"] = list.Enabled, ["total"] = list.Total, ["items"] = items, ["nextCursor"] = list.NextCursor
             };
             return McpText.Result(text.ToString(), structured);
+        }, ct);
+
+    [McpServerTool(Name = "atlas_list_readership", Title = "Čtenost prostoru", ReadOnly = true, Idempotent = true, OpenWorld = false, Destructive = false)]
+    [McpToolScope(ApiScopes.Read)]
+    [AssistantDescription("Čtenost publikovaných stránek prostoru za období (zobrazení, různí čtenáři, bez jmen). spaceId, from, to, volitelně filter, cursor.")]
+    [Description("Čtenost publikovaných stránek prostoru za období nejvýše 366 dní (pro správce a editory prostoru): u každé stránky zobrazení, " +
+        "počet různých čtenářů, poslední zobrazení a poslední publikace, nejčtenější první, po 50. Jen počty, nikdy kdo četl. from a to jsou dny " +
+        "(ISO 8601, např. 2026-11-01) v pražském čase včetně; filter: all (výchozí) nebo unread (bez zobrazení v období). " + McpText.TrustNotice)]
+    public Task<CallToolResult> ListReadershipAsync(
+        [Description("spaceId prostoru.")] string spaceId,
+        [Description("První den období (ISO 8601).")] string from,
+        [Description("Poslední den období (ISO 8601).")] string to,
+        [Description("all nebo unread.")] string? filter = null,
+        [Description("nextCursor z předchozího výsledku.")] string? cursor = null,
+        CancellationToken ct = default)
+        => RunAsync("atlas_list_readership", async () =>
+        {
+            var space = McpArguments.RequiredId(spaceId, "spaceId");
+            if (!DateOnly.TryParseExact(from, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start)
+                || !DateOnly.TryParseExact(to, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var end))
+            {
+                return McpErrors.InvalidArgument("from a to musí být datum ve tvaru RRRR-MM-DD.");
+            }
+            var list = await bus.InvokeAsync<SpaceReadership>(new GetMcpSpaceReadership(new GetSpaceReadership(space, start, end, filter, cursor)), ct);
+            var text = new StringBuilder();
+            var items = new JsonArray();
+            foreach (var item in list.Items)
+            {
+                text.Append("- ").Append(McpText.Line(item.Title, 200)).Append(" (pageId ").Append(item.PageId).Append("): ").Append(item.Readers)
+                    .Append(" čtenářů, ").Append(item.Views).Append(" zobrazení")
+                    .Append(item.LastViewedAt is { } viewed ? ", naposledy " + viewed.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : ", v období nečteno")
+                    .Append('\n');
+                items.Add(new JsonObject
+                {
+                    ["pageId"] = item.PageId, ["title"] = item.Title, ["views"] = item.Views, ["readers"] = item.Readers,
+                    ["lastViewedAt"] = item.LastViewedAt, ["lastPublishedAt"] = item.LastPublishedAt
+                });
+            }
+            if (list.NextCursor is { } next)
+            {
+                text.Append("Další stránky: zavolejte atlas_list_readership se stejnými parametry a cursor: \"").Append(next).Append("\".\n");
+            }
+            return McpText.Result(McpText.Wrap($"Čtenost prostoru {space} od {from} do {to}: {list.Items.Count} stránek.", text.ToString()),
+                new JsonObject { ["spaceId"] = space, ["items"] = items, ["nextCursor"] = list.NextCursor });
         }, ct);
 
     [McpServerTool(Name = "atlas_report_outdated", Title = "Nahlásit neaktuální stránku", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false)]

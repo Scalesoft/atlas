@@ -203,6 +203,10 @@ public sealed class McpG5CoverageTests
             // runId is a number: the plain call would send a Guid; a job that does not exist is the call that reaches the handler.
             ["atlas_cancel_job_run"] = [new() { ["jobId"] = "none", ["runId"] = 1 }],
             ["atlas_set_tags"] = [new() { ["pageId"] = page.Id, ["add"] = new[] { "x" } }],
+            // from and to are dates: the plain "x" is refused before G5.
+            ["atlas_list_readership"] = [new() { ["spaceId"] = space, ["from"] = "2026-01-01", ["to"] = "2026-01-31" }],
+            // A comment on the page and on the contact of the space.
+            ["atlas_post_comment"] = [new() { ["objectId"] = page.Id, ["body"] = "x" }, new() { ["objectId"] = contact, ["body"] = "x" }],
             // A kind is required; the page's and the board's overview each.
             ["atlas_get_overview"] = [new() { ["kind"] = "contacts", ["pageId"] = page.Id }, new() { ["kind"] = "requirements", ["boardId"] = board }],
             ["atlas_update_embed"] = [new() { ["pageId"] = page.Id, ["expectedVersion"] = page.Version, ["attachmentId"] = attachment, ["alt"] = "x" }],
@@ -309,7 +313,7 @@ public sealed class McpG5CoverageTests
         };
     }
 
-    /// <summary>Everything a write could change in the space: its pages with their tags, icon and attachments, boards, contacts and tree nodes.
+    /// <summary>Everything a write could change in the space: its pages with their tags, icon and attachments, boards, contacts, tree nodes and comments.
     /// Pages and tree nodes also of the test's other space (home), the only other place the calls name: the site's other tests write theirs.</summary>
     private static async Task<string> StateAsync(McpSite f, string space, string home)
         => (string)(await f.Site.ScalarAsync("""
@@ -320,6 +324,7 @@ public sealed class McpG5CoverageTests
               (SELECT string_agg(t."Id" || ':' || coalesce(CAST(t."ParentPageId" AS text),'-') || ':' || t."IsTrashed", ',' ORDER BY t."Id") FROM "TreeReference" t WHERE t."SpaceId" IN (@space,@home)),
               (SELECT string_agg(g."Id" || ':' || g."TagId" || ':' || coalesce(CAST(g."ActiveTo" AS text),'-'), ',' ORDER BY g."Id") FROM "PageTag" g JOIN "Page" p ON p."Id"=g."PageId" WHERE p."SpaceId"=@space),
               (SELECT string_agg(d."PageId" || ':' || d."RevisionId" || ':' || coalesce(d."Icon",'-') || ':' || coalesce(d."Color",'-'), ',' ORDER BY d."PageId") FROM "PageDecoration" d JOIN "Page" p ON p."Id"=d."PageId" WHERE p."SpaceId"=@space),
-              (SELECT string_agg(a."Id" || ':' || coalesce(CAST(a."ActiveTo" AS text),'-'), ',' ORDER BY a."Id") FROM "Attachment" a JOIN "Page" p ON p."Id"=a."PageId" WHERE p."SpaceId"=@space))
+              (SELECT string_agg(a."Id" || ':' || coalesce(CAST(a."ActiveTo" AS text),'-'), ',' ORDER BY a."Id") FROM "Attachment" a JOIN "Page" p ON p."Id"=a."PageId" WHERE p."SpaceId"=@space),
+              (SELECT count(*) FROM "Comment" m JOIN "ContentResource" c ON c."Id"=m."ObjectId" WHERE c."SpaceId"=@space))
             """, ("space", Guid.Parse(space)), ("home", Guid.Parse(home))))!;
 }
