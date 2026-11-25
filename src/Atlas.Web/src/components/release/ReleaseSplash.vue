@@ -40,6 +40,10 @@ const more = computed(() => major ? [...props.note.text.matchAll(/^- \*\*(.+?):?
 const covered = !!props.note.cover && !!props.since && !props.patches?.length;
 const titleId = `release-splash-${useId()}`;
 const label = computed(() => `Atlas ${releaseLabel(props.note.version)}`);
+/** The codename's words, each on its own line in a named release's composition (two words with one initial, AGENTS.md). */
+const words = computed(() => props.note.codename?.split(/\s+/).filter(Boolean) ?? []);
+/** A named minor release sets its codename as a composition: the shared initial large and outlined behind the motif. */
+const composed = !major && !props.patches?.length && !!props.note.codename;
 const patch = computed(() => props.patches?.[0]);
 /** The fixes of the patches, oldest first. */
 const fixes = computed(() => [...props.patches ?? []].reverse().flatMap(points));
@@ -113,22 +117,23 @@ onBeforeUnmount(skip);
 </script>
 
 <template>
-  <section ref="root" class="release-splash" :aria-labelledby="titleId" data-release-splash :data-patch="patch ? '' : undefined" :data-major="major ? '' : undefined" :data-staged="staged ? '' : undefined"
+  <section ref="root" class="release-splash" :aria-labelledby="titleId" data-release-splash :data-composed="composed ? '' : undefined" :data-patch="patch ? '' : undefined" :data-major="major ? '' : undefined" :data-staged="staged ? '' : undefined"
     @click.capture="introClick" @keydown="key">
     <div ref="hero" class="release-splash-hero">
+      <span v-if="composed" class="release-splash-initial" aria-hidden="true" data-wave>{{ words[0]?.charAt(0) }}</span>
       <ReleaseCover v-if="note.mark && covered" :mark="note.mark" :label="t.splash.markLabel(label, note.codename ?? '')" />
       <ReleaseMark v-else-if="note.mark" :mark="note.mark" variant="hero" />
     </div>
-    <div class="release-splash-intro" data-wave>
-      <p class="release-splash-eyebrow">{{ patch ? t.splash.patchVersion(patch.version) : major ? (since ? t.splash.newMajorVersion : t.splash.majorVersion) : since ? t.splash.newVersion : t.splash.version }}<template v-if="(patch ?? note).date"> · {{ (patch ?? note).date }}</template></p>
+    <div class="release-splash-intro">
+      <p class="release-splash-eyebrow" data-wave>{{ patch ? t.splash.patchVersion(patch.version) : major ? (since ? t.splash.newMajorVersion : t.splash.majorVersion) : since ? t.splash.newVersion : t.splash.version }}<template v-if="(patch ?? note).date"> · {{ (patch ?? note).date }}</template></p>
       <h1 :id="titleId" class="release-splash-title">
-        <span class="release-splash-version">{{ `${label} ` }}</span>
-        <span class="release-splash-codename">{{ note.codename }}</span>
+        <span class="release-splash-version" data-wave>{{ `${label} ` }}</span>
+        <span class="release-splash-codename"><span v-for="(word, index) in words" :key="index" class="release-splash-word" data-wave>{{ index ? ` ${word}` : word }}</span></span>
       </h1>
-      <p v-if="patch" class="release-splash-lead">{{ t.splash.patchLead }}</p>
-      <p v-else-if="note.lead" class="release-splash-lead">{{ note.lead }}</p>
-      <p v-if="since && patch" class="release-splash-since">{{ t.splash.sincePatches(releaseLabel(since), patches!.length) }}</p>
-      <p v-else-if="since" class="release-splash-since">{{ t.splash.sinceReleases(releaseLabel(since), others.length + 1) }}</p>
+      <p v-if="patch" class="release-splash-lead" data-wave>{{ t.splash.patchLead }}</p>
+      <p v-else-if="note.lead" class="release-splash-lead" data-wave>{{ note.lead }}</p>
+      <p v-if="since && patch" class="release-splash-since" data-wave>{{ t.splash.sincePatches(releaseLabel(since), patches!.length) }}</p>
+      <p v-else-if="since" class="release-splash-since" data-wave>{{ t.splash.sinceReleases(releaseLabel(since), others.length + 1) }}</p>
     </div>
     <ul v-if="patch" class="release-splash-fixes" :aria-label="t.splash.fixesIn(patch.version)">
       <li v-for="(fix, index) in fixes" :key="index" data-wave>{{ fix }}</li>
@@ -179,8 +184,9 @@ onBeforeUnmount(skip);
 .release-splash-eyebrow { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .release-splash-title { margin: 6px 0 0; line-height: 1; }
 .release-splash-version { display: block; margin-bottom: 6px; color: var(--muted); font-size: clamp(16px, 2vw, 20px); font-weight: 700; }
-.release-splash-codename {
-  display: block; font-family: "Fraunces Variable", Georgia, "Times New Roman", serif; font-size: clamp(38px, 6vw, 64px); font-weight: 600; letter-spacing: -.02em; text-wrap: balance;
+.release-splash-codename { display: block; text-wrap: balance; }
+.release-splash-word {
+  font-family: "Fraunces Variable", Georgia, "Times New Roman", serif; font-size: clamp(38px, 6vw, 64px); font-weight: 600; letter-spacing: -.02em; text-wrap: balance;
   background: linear-gradient(100deg, var(--release-ink-1), var(--release-ink-2) 52%, var(--release-ink-3)); -webkit-background-clip: text; background-clip: text; color: transparent;
   /* The gradient paints only inside the box, and at line-height 1 the last line's descenders (the g of Tangerine) hang below it:
      the box reaches under them, the layout keeps its place. */
@@ -193,6 +199,29 @@ onBeforeUnmount(skip);
 .release-splash-card-title { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-weight: 700; }
 .release-splash-card-key { color: var(--release-ink-2); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .release-splash-card-text { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+/* A named minor release as a composition (data-composed): the motif larger on a soft spot of light, the codename's shared initial
+   large and outlined behind it, the eyebrow drawn out into a line, the codename's words on two lines, the second set in, each rising
+   on its own. Nothing of a release is in it: the words and the initial come from the codename of the notes. */
+.release-splash[data-composed] { grid-template-columns: minmax(0, 330px) minmax(0, 1fr); }
+.release-splash[data-composed] .release-splash-hero { position: relative; isolation: isolate; }
+.release-splash[data-composed] .release-splash-hero::before {
+  content: ""; position: absolute; inset: 8%; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--release-ink-2) 16%, transparent), color-mix(in srgb, var(--release-ink-3) 6%, transparent) 62%, transparent);
+}
+.release-splash[data-composed] .release-splash-hero :deep(.release-mark[data-variant="hero"]) { width: min(310px, 100%); }
+.release-splash-initial {
+  position: absolute; top: 50%; left: 50%; z-index: -1; translate: -50% -50%; pointer-events: none; user-select: none;
+  font-family: "Fraunces Variable", Georgia, "Times New Roman", serif; font-size: clamp(220px, 30vw, 380px); font-weight: 250; line-height: 1;
+  color: transparent; -webkit-text-stroke: 1.2px color-mix(in srgb, var(--release-ink-1) 42%, transparent);
+}
+.release-splash[data-composed] .release-splash-eyebrow { display: flex; align-items: center; gap: 12px; color: var(--release-ink-1); }
+.release-splash[data-composed] .release-splash-eyebrow::after {
+  content: ""; flex: 1; min-width: 24px; height: 1px; background: linear-gradient(90deg, color-mix(in srgb, var(--release-ink-2) 55%, transparent), transparent);
+}
+.release-splash[data-composed] .release-splash-title { margin-top: 14px; }
+.release-splash[data-composed] .release-splash-word { display: block; font-size: clamp(42px, 6.6vw, 76px); }
+.release-splash[data-composed] .release-splash-word + .release-splash-word { margin-left: clamp(28px, 6vw, 84px); }
+.release-splash[data-composed] .release-splash-lead { margin-top: 18px; padding-left: 14px; border-left: 2px solid color-mix(in srgb, var(--release-ink-3) 55%, transparent); }
 /* A highlight's live demo (`demos:` in the notes) on top of its card; the first such card is twice as wide. */
 .release-splash-demo {
   height: 150px; margin: -14px -16px 8px; overflow: hidden; border-bottom: 1px solid var(--line); border-radius: var(--st-radius, 14px) var(--st-radius, 14px) 0 0;
@@ -221,7 +250,7 @@ onBeforeUnmount(skip);
   border: 1px solid color-mix(in srgb, var(--release-ink-2) 45%, transparent); opacity: 0; animation: release-ring 6s ease-out 1s infinite;
 }
 .release-splash[data-major] .release-splash-eyebrow { color: var(--release-ink-1); }
-.release-splash[data-major] .release-splash-codename {
+.release-splash[data-major] .release-splash-word {
   font-size: clamp(52px, 10vw, 120px);
   background-image: linear-gradient(100deg, var(--release-ink-1), var(--release-ink-2) 30%, var(--release-ink-3) 45%, color-mix(in srgb, var(--release-ink-3) 40%, white) 50%, var(--release-ink-3) 55%, var(--release-ink-2) 70%, var(--release-ink-1));
   background-size: 300% 100%; background-position: 100% 0; animation: release-sheen 7s ease-in-out 1.6s infinite;
@@ -244,13 +273,13 @@ onBeforeUnmount(skip);
 @keyframes release-ring { 0% { scale: .7; opacity: .55; } 100% { scale: 1.7; opacity: 0; } }
 @keyframes release-aurora { from { translate: -3% 2%; rotate: -4deg; scale: 1; } to { translate: 4% -3%; rotate: 6deg; scale: 1.12; } }
 @keyframes release-sheen { 0%, 55% { background-position: 100% 0; } 100% { background-position: 0 0; } }
-@media (prefers-reduced-motion: reduce) { .release-splash[data-major]::before, .release-splash[data-major] .release-splash-hero::before, .release-splash[data-major] .release-splash-hero::after, .release-splash[data-major] .release-splash-codename { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .release-splash[data-major]::before, .release-splash[data-major] .release-splash-hero::before, .release-splash[data-major] .release-splash-hero::after, .release-splash[data-major] .release-splash-word { animation: none; } }
 :global(html[data-atlas-reduced-motion] .release-splash[data-major]::before), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-hero::before),
-:global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-hero::after), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-codename) { animation: none; }
+:global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-hero::after), :global(html[data-atlas-reduced-motion] .release-splash[data-major] .release-splash-word) { animation: none; }
 /* A small update of a known release: the motif smaller and quieter, the fixes as a plain two-column list instead of cards. */
 .release-splash[data-patch] { grid-template-columns: minmax(0, 160px) minmax(0, 1fr); }
 .release-splash[data-patch] .release-splash-hero :deep(.release-mark[data-variant]) { width: 150px; }
-.release-splash[data-patch] .release-splash-codename { font-size: clamp(28px, 4vw, 40px); }
+.release-splash[data-patch] .release-splash-word { font-size: clamp(28px, 4vw, 40px); }
 .release-splash[data-patch] .release-splash-lead { font-size: 15px; }
 .release-splash-fixes { grid-column: 1 / -1; columns: 2 22rem; column-gap: 28px; margin: 0; padding: 0 0 0 18px; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
 .release-splash-fixes li { break-inside: avoid; margin-bottom: 6px; }
@@ -259,12 +288,14 @@ onBeforeUnmount(skip);
 .release-splash-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .release-splash-hint { margin-left: auto; color: var(--muted); font-size: 12.5px; }
 @media (max-width: 760px) {
-  .release-splash, .release-splash[data-patch], .release-splash[data-major] { grid-template-columns: minmax(0, 1fr); }
+  .release-splash, .release-splash[data-patch], .release-splash[data-major], .release-splash[data-composed] { grid-template-columns: minmax(0, 1fr); }
   .release-splash-hero :deep(.release-mark[data-variant]) { width: 168px; }
   .release-splash-hero :deep(.release-cover) { width: 220px; }
   .release-splash-cards { grid-template-columns: minmax(0, 1fr); }
   .release-splash[data-staged] .release-splash-card[data-demo]:first-child { grid-column: auto; }
   .release-splash-hint { margin-left: 0; }
+  .release-splash-initial { font-size: 200px; }
+  .release-splash[data-composed] .release-splash-word + .release-splash-word { margin-left: 28px; }
 }
 @media (min-width: 761px) and (max-width: 980px) { .release-splash-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

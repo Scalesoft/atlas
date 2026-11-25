@@ -40,6 +40,17 @@ const en: ReleaseMessages = {
     agent: { title: "Meeting notes", asked: "Sum up the meeting in one sentence.", summary: "The budget is approved, we launch on Friday.", name: "Assistant" },
     qr: { mention: "Jana Nováková", role: "Head of operations", scan: "Scan with your phone" },
     graph: { question: (topic) => `Who knows ${topic}?`, topics: ["PostgreSQL", "Vue", "Accounting"], people: ["Jana", "Anna", "Petr", "Marek"] },
+    verify: {
+      title: "Server outage procedure", steward: "Owner", stewardName: "Jana Nováková", until: (date) => `valid until ${date}`, dates: ["2/25/2027", "5/25/2027"],
+      verified: "Verified", expiring: "Expires in 14 days", expired: "Verification expired", reminder: "Expires in 14 days: a reminder to its owner", verify: "Verify", today: "verified today by Jana",
+    },
+    health: {
+      tiles: ["Verified", "Expiring", "Expired", "No owner"], counts: [42, 5, 3, 2], readers: (count) => `${count} readers`,
+      pages: [{ title: "Leave and holidays", state: "verified", readers: 38 }, { title: "Server outage procedure", state: "expired", readers: 214 }, { title: "New starters", state: "expiring", readers: 96 }],
+      states: { verified: "Verified", expiring: "Expiring", expired: "Expired" },
+    },
+    discussion: { title: "Launch plan", name: "Jana", text: "I added the suppliers' contacts.", reply: "Reply", answer: "Thanks, I'll have a look.", send: "Send", dock: "Discussion" },
+    color: { title: "My colour", auto: "Automatic", you: "You", other: "Petr", line: "Launch on Friday" },
   },
 };
 export default en;

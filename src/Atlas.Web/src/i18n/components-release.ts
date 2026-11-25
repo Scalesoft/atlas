@@ -41,6 +41,17 @@ const cs = {
     agent: { title: "Zápis z porady", asked: "Shrň poradu do jedné věty.", summary: "Rozpočet je schválený, spouštíme v pátek.", name: "Asistent" },
     qr: { mention: "Jana Nováková", role: "Vedoucí provozu", scan: "Naskenujte telefonem" },
     graph: { question: (topic: string) => `Kdo umí ${topic}?`, topics: ["PostgreSQL", "Vue", "Účetnictví"], people: ["Jana", "Anna", "Petr", "Marek"] },
+    verify: {
+      title: "Postup při výpadku serveru", steward: "Garant", stewardName: "Jana Nováková", until: (date: string) => `platí do ${date}`, dates: ["25. 2. 2027", "25. 5. 2027"],
+      verified: "Ověřeno", expiring: "Vyprší za 14 dní", expired: "Ověření vypršelo", reminder: "Vyprší za 14 dní: připomínka garantovi", verify: "Ověřit", today: "dnes ověřila Jana",
+    },
+    health: {
+      tiles: ["Ověřeno", "Brzy vyprší", "Vypršelo", "Bez garanta"], counts: [42, 5, 3, 2], readers: (count: number) => `${count} čtenářů`,
+      pages: [{ title: "Dovolená a svátky", state: "verified", readers: 38 }, { title: "Postup při výpadku serveru", state: "expired", readers: 214 }, { title: "Noví kolegové", state: "expiring", readers: 96 }],
+      states: { verified: "Ověřeno", expiring: "Brzy vyprší", expired: "Vypršelo" },
+    },
+    discussion: { title: "Plán spuštění", name: "Jana", text: "Doplnila jsem kontakty na dodavatele.", reply: "Odpovědět", answer: "Díky, mrknu na to.", send: "Odeslat", dock: "Diskuse" },
+    color: { title: "Moje barva", auto: "Automaticky", you: "Vy", other: "Petr", line: "Spouštíme v pátek" },
   },
 };
 export type ReleaseMessages = typeof cs;

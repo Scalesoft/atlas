@@ -2,7 +2,7 @@
 
 Stav: **schváleno vlastníkem 2026-11-24** (rozhodnutí v § 9). Zatím nic není postavené.
 
-Kódové jméno (návrh podle abecední řady): **Upright Ugli** (ugli je citrus; „upright“ = poctivý, spolehlivý obsah).
+Kódové jméno: **Unerring Ume** (ume je japonská meruňka; „unerring“ = neomylný, ověřený obsah).
 
 ## 0. Cíl verze
 
