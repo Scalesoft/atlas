@@ -4,7 +4,8 @@ import componentsLibraryHome from "../../i18n/components-library-home";
 import { formatNumber } from "../../i18n";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import type { Space } from "../../api";
-import { formatAgo, formatDateTime } from "../../formatDate";
+import { formatDateTime } from "../../formatDate";
+import RelativeTime from "../RelativeTime.vue";
 import { roleLabel } from "../../roles";
 import AtlasIcon from "../AtlasIcon.vue";
 import SpaceCoverImage from "./SpaceCoverImage.vue";
@@ -70,7 +71,7 @@ watch(() => [props.space.pageCount, props.space.lastChangedAt, props.space.role]
         <span data-space-pages><b>{{ formatNumber(pageCount) }}</b> {{ pageWord }}</span>
         <template v-if="!preview">
           <span class="space-card-role" :title="componentsLibraryHome.accessOf(roleLabel(space.role))" data-space-access-level><AtlasIcon class="space-card-role-icon" :name="roleIcon" :size="13" aria-hidden="true" /><span class="space-card-role-text">{{ roleLabel(space.role) }}</span></span>
-          <time v-if="space.lastChangedAt" class="space-card-changed" :datetime="space.lastChangedAt" :title="t.card.changed(formatDateTime(space.lastChangedAt))">{{ formatAgo(space.lastChangedAt) }}</time>
+          <RelativeTime v-if="space.lastChangedAt" class="space-card-changed" :value="space.lastChangedAt" :title="t.card.changed(formatDateTime(space.lastChangedAt))" />
         </template>
       </div>
     </div>

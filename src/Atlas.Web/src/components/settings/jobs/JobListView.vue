@@ -3,7 +3,8 @@ import { computed, nextTick, onMounted, ref } from "vue";
 import { errorMessage } from "../../../api";
 import { rowKeys } from "../../../keyboard/navigation";
 import { useSearchKeys } from "../../../lib/searchKeys";
-import { formatAgo, formatDateTime } from "../../../formatDate";
+import { formatAgo } from "../../../formatDate";
+import RelativeTime from "../../RelativeTime.vue";
 import type { Job, JobApi, JobList } from "../../../jobs/jobApi";
 import { jobsTopic, useLiveFeed } from "../../../live/liveFeed";
 import t from "../../../i18n/settings-jobs";
@@ -168,7 +169,7 @@ onMounted(async () => {
               <SettingsListRow v-for="failure in failures" :key="failure.runId" :title="failure.jobTitle" icon="circle-x" :data-failure="failure.runId">
                 <template #title><a class="st-link" :href="router.href(`${base}/${encodeURIComponent(failure.jobId)}/runs/${failure.runId}`)">{{ failure.jobTitle }}</a></template>
                 <template #description><span class="job-failure-error">{{ failure.error ?? t.errorInDetail }}</span></template>
-                <template #meta><small class="job-when" :title="formatDateTime(failure.finishedAt)">{{ formatAgo(failure.finishedAt) }}</small></template>
+                <template #meta><RelativeTime class="job-when" :value="failure.finishedAt" /></template>
               </SettingsListRow>
             </SettingsList>
             <p v-else class="job-none">{{ t.list.noFailures }}</p>
