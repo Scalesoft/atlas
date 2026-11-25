@@ -12,9 +12,11 @@ public sealed class ListApiSpacesHandler
     private readonly IContentAccess m_access;
     private readonly SpaceRoles m_roles;
     private readonly PageListing m_listing;
+    private readonly IRequestChannel m_channel;
 
-    public ListApiSpacesHandler(ISession session, IContentAccess access, SpaceRoles roles, PageListing listing)
+    public ListApiSpacesHandler(ISession session, IContentAccess access, SpaceRoles roles, PageListing listing, IRequestChannel channel)
     {
+        m_channel = channel;
         m_session = session;
         m_access = access;
         m_roles = roles;
@@ -45,6 +47,11 @@ public sealed class ListApiSpacesHandler
             return [];
         }
         var spaces = LiveSpace.Query(m_session);
+        if (m_channel.Current.IsAiBound)
+        {
+            // G5: a space excluded from AI and MCP is not listed to a channel whose content may go to a model (ListMcpSpacesHandler).
+            spaces = spaces.And(Expression.Sql(AccessSql.SpaceInAi("{alias}.\"Id\"")));
+        }
         if (visible is not null)
         {
             spaces = spaces.And(GrantQueryLimits.InChunks(Projections.Property<Space>(x => x.Id), visible.Keys.ToList()));

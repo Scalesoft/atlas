@@ -43,9 +43,10 @@ public sealed record RequestChannel
 
     public bool IsMcp => Channel == ContentChannel.Mcp;
 
-    /// <summary>The content goes to a model, over MCP or to the in-process assistant: G5 hides a space excluded from AI and MCP (D10).
-    /// Every G5 decision asks this, never <see cref="IsMcp"/>, which only says a token came over /mcp.</summary>
-    public bool IsAiBound => Channel is ContentChannel.Mcp or ContentChannel.Assistant;
+    /// <summary>The content may go to a model: over MCP, to the in-process assistant, or over /api/v1, whose personal tokens AI tools use
+    /// too. G5 hides a space excluded from AI and MCP (D10). Every G5 decision asks this, never <see cref="IsMcp"/>, which only says a token
+    /// came over /mcp; the web session is never AI-bound.</summary>
+    public bool IsAiBound => Channel is ContentChannel.Mcp or ContentChannel.Assistant or ContentChannel.Api;
 
     /// <summary>An agent writes without seeing the editor, so it refuses unsaved live edits of anyone, its own user's included (S5).</summary>
     public bool RefusesOwnUnsaved => Channel is ContentChannel.Mcp or ContentChannel.Assistant;

@@ -57,6 +57,11 @@ public sealed class SpaceRoles
 
     public Task<bool> IsWikiAdminAsync(UserAccount actor, CancellationToken ct) => EffectiveWikiAdmin.IsAdminAsync(m_session, actor, ct);
 
+    /// <summary>G5: whether the space takes part in AI and MCP (<see cref="AccessSql.SpaceInAi"/>), in the caller's transaction.</summary>
+    public Task<bool> InAiAsync(Guid spaceId, CancellationToken ct)
+        => m_session.CreateSQLQuery($"SELECT {AccessSql.SpaceInAi(":space")} AS included").AddScalar("included", NHibernateUtil.Boolean)
+            .SetParameter("space", spaceId).UniqueResultAsync<bool>(ct);
+
     public const string WikiAdminOnly = "Tuto operaci může provést pouze správce wiki.";
 
     /// <summary>The wiki-administrator gate: the caller locks or loads <paramref name="actor"/> first, this decides with

@@ -49,7 +49,9 @@ public sealed class EntityHttpTests
 
         using var api = f.Site.Client();
         api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", (await IssueAsync(reader, f.Site.Password, ["read"], ["rest"])).Secret);
-        Assert.Equal(web.ToJsonString(), (await AtlasHttpSite.Json(await api.GetAsync("/api/v1/entities/contact?" + identity), HttpStatusCode.OK)).ToJsonString());
+        // REST, as MCP: the space out of AI shows none of its sources (G5; the web above shows both).
+        var rest = await AtlasHttpSite.Json(await api.GetAsync("/api/v1/entities/contact?" + identity), HttpStatusCode.OK);
+        Assert.Equal(page, rest["items"]![0]!["sources"]!.AsArray().Single()!["resourceId"]!.GetValue<string>());
 
         var mcp = await f.ClientAsync((await IssueAsync(reader, f.Site.Password, ["read"], ["mcp"])).Secret);
         var listed = Structured(await CallAsync(mcp, "atlas_list_entities", new { kind = "contact", scope = "instance", identity = "email:" + email }));

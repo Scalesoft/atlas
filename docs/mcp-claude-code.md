@@ -40,7 +40,7 @@ Nástroje pro ikony a tagy stránek (čtení: `atlas_get_labels`, `atlas_list_ap
 
 1. **Správce zapnul server MCP** v Administraci → Moduly a integrace. Dokud je modul vypnutý, server odpovídá 404.
 2. **Váš účet má úroveň API** aspoň Čtení (správce ji může snížit na Bez API).
-3. **Prostor není vyloučený** přepínačem „Zahrnout do AI a nástrojů MCP“. Takové prostory MCP nevidí.
+3. **Prostor není vyloučený** přepínačem „Zahrnout do AI a nástrojů MCP“. Takové prostory nevidí MCP ani osobní API (`/api/v1`), protože jeho tokeny používají i nástroje AI; web je ukazuje dál.
 4. **Máte token s kanálem MCP.** V Profil → Osobní API → Nový API token zvolte:
    - název, např. „Claude Code – notebook“;
    - rozsah: **Čtení**, nebo **Zápis**, když má Claude Code stránky měnit;
@@ -227,7 +227,7 @@ Ikona (s barvou) a tagy jsou vlastnosti stránky, ne její text. Nikdy je nevkl�
 
 **Souběžnost.** Ikona se mění s `expectedRevisionId` z posledního čtení (`null`, má-li stránka ikonu bez záznamu; po odstranění ikony záznam zůstává s novým `revisionId`). Cizí změna je `409 decoration_changed`. Sada tagů se nahrazuje s `expectedTagIds` (id aktuálních tagů); cizí změna je `409 tags_changed`. Přidání a odebrání (`add`/`remove`) se provede nad aktuální sadou pod zámkem stránky, takže ostatní tagy zůstanou i při souběžné úpravě; `expectedTagIds` je tu volitelné. Tag, který stránka nemá, se při odebrání přeskočí. Platí stávající pravidla: nejvýše 20 tagů na stránce, název 1–48 znaků, velikost písmen a duplicity se sjednocují.
 
-**Nabídka a hledání tagů** vrací jen tagy a stránky, které vlastník tokenu smí číst; přes MCP navíc jen z prostorů zahrnutých do MCP. Tag, který žije jen na skryté stránce nebo ve vyloučeném prostoru, se neobjeví.
+**Nabídka a hledání tagů** vrací jen tagy a stránky, které vlastník tokenu smí číst; přes MCP i REST navíc jen z prostorů zahrnutých do MCP. Tag, který žije jen na skryté stránce nebo ve vyloučeném prostoru, se neobjeví.
 
 ### Příklad: jednotná ikona pro příručky (REST)
 

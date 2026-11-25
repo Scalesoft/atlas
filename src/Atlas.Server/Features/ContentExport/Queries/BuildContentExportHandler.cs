@@ -75,6 +75,10 @@ public sealed class BuildContentExportHandler
             var currentActor = await RequireFreshActorAsync(requestedActor, ct);
             var singlePage = query.WholeSpace ? null : await m_session.GetAsync<Page>(query.Id, ct) ?? throw Missing();
             var spaceId = query.WholeSpace ? query.Id : singlePage!.SpaceId;
+            if (await m_listing.HiddenFromAiAsync(spaceId, ct))
+            {
+                throw Missing();
+            }
             // A whole space is a list: its listed pages, each with the revision the account may read (WP3 S3). One page is
             // ReadContent on that page.
             if (singlePage is null)
