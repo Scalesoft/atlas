@@ -19,6 +19,8 @@ public static class LiveModule
         services.AddSingleton<LiveSubscriptions>();
         services.AddSingleton<LiveRelay>();
         services.AddSingleton<LiveThrottle>();
+        // Shared with the collaboration hub (AddAtlasMarkdownSync): one colour table for a page's carets and its object presence.
+        services.TryAddSingleton<Atlas.Markdown.Sync.CollaboratorColors>();
         services.AddSingleton<ViewSessions>();
         // The platform's own channels: objects of every type, subscribed by view sessions, and each account's own.
         services.AddSingleton<ILiveChannel, ObjectLiveChannel>();

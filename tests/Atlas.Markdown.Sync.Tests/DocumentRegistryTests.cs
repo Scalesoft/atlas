@@ -8,7 +8,7 @@ namespace Atlas.Markdown.Sync.Tests;
 public class DocumentRegistryTests
 {
     private static DocumentRegistry NewRegistry(IDocumentStore store, MarkdownSyncOptions? options = null)
-        => new(store, options ?? new MarkdownSyncOptions(), NullLogger<DocumentRegistry>.Instance);
+        => new(store, options ?? new MarkdownSyncOptions(), new CollaboratorColors(), NullLogger<DocumentRegistry>.Instance);
 
     private static DocSnapshot Snapshot(byte[] state, string markdown, long sequence)
     {

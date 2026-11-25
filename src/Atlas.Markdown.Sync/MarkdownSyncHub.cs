@@ -224,11 +224,11 @@ public sealed partial class MarkdownSyncHub(
                 // connection is in the group" (ADR-018 §2 step 1).
                 await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(documentId), Context.ConnectionAborted)
                     .ConfigureAwait(false);
+                registry.AssignColor(doc, Context.ConnectionId, user);
                 doc.Peers[Context.ConnectionId] = new Peer
                 {
                     ConnectionId = Context.ConnectionId,
                     User = user,
-                    Color = doc.ColorFor(user),
                     CanWrite = access.CanWrite,
                     JoinOrder = doc.NextJoinOrder(),
                 };
@@ -493,7 +493,7 @@ public sealed partial class MarkdownSyncHub(
             }
             // Identity comes from the handshake in both protocols: one owned state, its user rewritten, its client id bound to this connection.
             AuthorityAwareness.Validated validated;
-            try { validated = AuthorityAwareness.Validate(payload, peer.User, authorityOptions.MaxAwarenessBytes, presenceOnly: !peer.CanWrite, color: peer.Color); }
+            try { validated = AuthorityAwareness.Validate(payload, peer.User, authorityOptions.MaxAwarenessBytes, presenceOnly: !peer.CanWrite, color: registry.ColorOf(doc, Context.ConnectionId)); }
             catch (InvalidDataException) { return; }
             if (peer.AwarenessReplaced || peer.AwarenessClientId is { } bound && bound != validated.ClientId) return;
             // A client reconnecting keeps its awareness client id (the provider keeps its Awareness): the same person's old connection, which
@@ -773,6 +773,7 @@ public sealed partial class MarkdownSyncHub(
         try
         {
             if (!doc.Peers.TryRemove(Context.ConnectionId, out left)) return;
+            registry.ReleaseColor(doc, Context.ConnectionId);
 
             if (doc.SeedInProgress && doc.SnapshotterConnId == Context.ConnectionId)
             {

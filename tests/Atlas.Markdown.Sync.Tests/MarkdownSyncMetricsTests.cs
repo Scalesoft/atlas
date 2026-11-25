@@ -20,7 +20,7 @@ public class MarkdownSyncMetricsTests
     [Fact]
     public void Metrics_publish_gauges_and_flush_histogram_under_the_meter_name()
     {
-        var registry = new DocumentRegistry(new InMemoryDocumentStore(), new MarkdownSyncOptions(), NullLogger<DocumentRegistry>.Instance);
+        var registry = new DocumentRegistry(new InMemoryDocumentStore(), new MarkdownSyncOptions(), new CollaboratorColors(), NullLogger<DocumentRegistry>.Instance);
         using var metrics = new MarkdownSyncMetrics(registry);
 
         // Every measurement per instrument: an instance another test left alive reports under the same name too.

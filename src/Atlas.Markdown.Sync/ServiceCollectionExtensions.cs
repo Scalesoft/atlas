@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
             throw new ArgumentOutOfRangeException(nameof(configure), "Access refresh and authorization timeout must be positive.");
         services.AddSingleton(options);
         services.TryAddSingleton(TimeProvider.System);
+        services.TryAddSingleton<CollaboratorColors>();
         services.AddSingleton<DocumentRegistry>();
         services.AddSingleton<DocumentAccessCoordinator>();
         services.AddSingleton<DocumentCompactor>();

@@ -39,6 +39,9 @@ public static class CollaborationModule
             options.AccessRefreshInterval = TimeSpan.FromSeconds(60);
             // A page left for a coffee is still in memory when its editor comes back: no reload and full rejoin of the state.
             options.WarmKeep = TimeSpan.FromMinutes(10);
+            // A page's live document (page:{N}:{generation}) shares collaborator colours with its view session (ViewSessions, page:{D}).
+            options.ColorScope = documentId => documentId.Split(':') is ["page", var page, _] && Guid.TryParseExact(page, "N", out var pageId)
+                ? "page:" + pageId.ToString("D") : documentId;
         });
         // WP3 Yjs boundary: every update, snapshot and seed is validated against the host manifest (HostDocumentValidator) before it is
         // stored or broadcast; violations are refused with [INVALID_CONTENT]. The default MaxDocumentBytes (4 MiB) matches

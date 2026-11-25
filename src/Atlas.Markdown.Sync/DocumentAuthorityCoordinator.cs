@@ -93,6 +93,7 @@ public sealed class DocumentAuthorityCoordinator(DocumentRegistry registry, IDoc
         doc.ClearSeedingState();
         foreach (var peer in peers)
         {
+            registry.ReleaseColor(doc, peer.ConnectionId);
             // ACL is not changed; existing V1 sessions must reconnect through V2 before writing.
             try { _ = ObserveAsync(hub.Clients.Client(peer.ConnectionId).SendCoreAsync(
                 "DocumentAccessChanged", [doc.DocumentId, false, false])); }

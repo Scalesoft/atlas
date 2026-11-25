@@ -30,6 +30,8 @@ public sealed class AppearanceCollaboratorColorTests
             var current = await read.QueryOver<UserAppearancePreference>().Where(p => p.UserId == user.Id && p.ActiveTo == null).SingleOrDefaultAsync();
             Assert.Equal(chosen, current.Appearance);
             Assert.Equal(CollaboratorPalette.Entries[CollaboratorPalette.SlotOf("violet")].Light, await CollaboratorColorPreference.ReadAsync(read, user.Id, CancellationToken.None));
+            Assert.Equal(new Dictionary<Guid, string> { [user.Id] = CollaboratorPalette.Entries[CollaboratorPalette.SlotOf("violet")].Light },
+                await CollaboratorColorPreference.ReadAllAsync(read, CancellationToken.None));   // the static surfaces' map, "auto" accounts left out
         }
         var refused = await Assert.ThrowsAsync<ApiException>(() => host.InvokeAsync<Appearance>(new UpdateAppearance(Appearance.Default with { CollaboratorColor = "#ff0000" })));
         Assert.Equal(400, refused.Status);
