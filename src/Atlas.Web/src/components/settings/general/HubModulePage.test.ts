@@ -6,6 +6,7 @@ import HubModulePage from "./HubModulePage.vue";
 import GroupDetail from "../people/GroupDetail.vue";
 import { provideReauthEnvironment } from "../useReauth";
 import { fakeApi, mountPage, problem, type FakeCall, type FakeHandler } from "./testing";
+import type { SettingsFlash } from "../flash";
 
 const endpoint = "/admin/modules/hub";
 const settings = () => ({
@@ -15,6 +16,7 @@ const settings = () => ({
   identities: [], pollSeconds: 60, maxValiditySeconds: 300,
 });
 let wrapper: VueWrapper;
+let flashOf: () => SettingsFlash;
 let calls: FakeCall[];
 async function open(handler?: FakeHandler) {
   calls = fakeApi((method, path, body) => handler?.(method, path, body) ?? (path === endpoint && method === "GET" ? settings() : problem(404, "Neočekávaný požadavek")));
@@ -22,7 +24,9 @@ async function open(handler?: FakeHandler) {
     provideReauthEnvironment({ method: "local", supported: true, verifyPassword: async () => ({ ok: true, proofId: "proof-1" }), verifyHub: async () => false });
     return () => h(HubModulePage);
   } });
-  wrapper = mountPage(Harness).wrapper;
+  const mounted = mountPage(Harness);
+  wrapper = mounted.wrapper;
+  flashOf = mounted.flash;
   await flushPromises();
 }
 async function confirm() {
@@ -124,7 +128,7 @@ it("tests the unsaved connection without persisting it and refreshes diagnostics
   await flushPromises();
   expect(calls.find(call => call.path === `${endpoint}/verify`)?.body).toEqual({});
   expect(wrapper.text()).toContain("Náhled · Ověřeno");
-  expect(wrapper.text()).toContain("Ověřeno: 1, neúspěšně: 0, odloženo: 0.");
+  expect(flashOf().message.value?.text).toContain("Ověřeno: 1, neúspěšně: 0, odloženo: 0.");
 });
 
 it("shows Hub management and members while removing local rename and membership controls", async () => {

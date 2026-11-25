@@ -13,7 +13,6 @@ import InlineReveal from "../InlineReveal.vue";
 import LoadingNote from "../LoadingNote.vue";
 import OptionPills from "../OptionPills.vue";
 import ReauthDialog from "../ReauthDialog.vue";
-import ResultBanner from "../ResultBanner.vue";
 import SaveBar from "../SaveBar.vue";
 import SearchableChoiceList from "../SearchableChoiceList.vue";
 import SettingsList from "../SettingsList.vue";
@@ -26,6 +25,7 @@ import { useSettingsRoute } from "../useSettingsRoute";
 import { disclosureHooks } from "../disclosure";
 import HubMigrationFlow from "./HubMigrationFlow.vue";
 import type { HubMigrationResult } from "../../../hub";
+import { useSettingsFlash } from "../flash";
 
 const router = useSettingsRoute();
 const state = ref<HubSettings>();
@@ -38,7 +38,7 @@ const loadError = ref("");
 const busy = ref(false);
 const error = ref("");
 const conflict = ref(false);
-const result = ref("");
+const flash = useSettingsFlash();
 const testResult = ref("");
 const query = ref("");
 const selected = ref<string | null>(null);
@@ -88,7 +88,7 @@ async function save(proof?: string | null) {
   error.value = "";
   try {
     const value = await hubApi.save(draftRequest(), proof);
-    if (!disposed) { accept(value); confirming.value = undefined; result.value = t.hub.connectionSaved; matches.value = undefined; selected.value = null; }
+    if (!disposed) { accept(value); confirming.value = undefined; flash.notify(t.hub.connectionSaved); matches.value = undefined; selected.value = null; }
   } catch (failure) {
     if (failure instanceof ApiError && failure.code === reauthRequiredCode) { confirming.value = "connection"; attempt.value++; }
     else { confirming.value = undefined; failed(failure); }
@@ -102,7 +102,7 @@ async function saveBinding(binding: HubBinding, proof?: string | null) {
   error.value = "";
   try {
     const saved = await hubApi.binding(binding.groupId, { ...value }, proof);
-    if (!disposed) { accept(saved); confirming.value = undefined; result.value = t.hub.bindingSaved; }
+    if (!disposed) { accept(saved); confirming.value = undefined; flash.notify(t.hub.bindingSaved); }
   } catch (failure) {
     if (failure instanceof ApiError && failure.code === reauthRequiredCode) { confirming.value = binding.groupId; attempt.value++; }
     else { confirming.value = undefined; failed(failure); }
@@ -133,7 +133,7 @@ async function attach() {
   busy.value = true; error.value = "";
   try {
     const saved = await hubApi.attach(selected.value, state.value.version);
-    if (!disposed) { accept(saved); selected.value = null; result.value = t.hub.groupAttached; }
+    if (!disposed) { accept(saved); selected.value = null; flash.notify(t.hub.groupAttached); }
   } catch (failure) { failed(failure); }
   finally { busy.value = false; }
 }
@@ -142,7 +142,7 @@ async function verify(userId?: string) {
   busy.value = true; error.value = "";
   try {
     const checked = await hubApi.verify(userId);
-    if (!disposed) result.value = t.hub.verifyResult(checked.verified, checked.failed, checked.deferred);
+    if (!disposed) flash.notify(t.hub.verifyResult(checked.verified, checked.failed, checked.deferred));
     const refreshed = await hubApi.settings();
     if (!disposed && state.value) state.value = { ...state.value, identities: refreshed.identities, health: refreshed.health };
   } catch (failure) { failed(failure); }
@@ -158,7 +158,7 @@ function identityLabel(identity: HubIdentity) {
 const date = (value: string | null) => value ? formatDateTime(value) : t.hub.neverVerified;
 async function migrationApplied(value: HubMigrationResult) {
   migrating.value = false;
-  result.value = t.hub.migrationDone(value.convertedGroups, value.removedGrants, value.removedWikiAdmins, value.isolatedPages);
+  flash.notify(t.hub.migrationDone(value.convertedGroups, value.removedGrants, value.removedWikiAdmins, value.isolatedPages));
   await load();
 }
 watch(draft, () => { testResult.value = ""; }, { deep: true });
@@ -174,7 +174,6 @@ onBeforeUnmount(() => { disposed = true; draft.value.token = ""; });
     <ErrorState v-if="loadError" :title="t.hub.loadFailed" :text="loadError" :busy="loading" @retry="load" />
     <LoadingNote v-else-if="loading && !state" :label="t.hub.loading" />
     <template v-else-if="state">
-      <ResultBanner v-if="result" :message="result" @dismiss="result = ''" />
       <Transition :css="false" v-bind="disclosureHooks">
         <p v-if="error" class="hub-error" role="alert">{{ error }}</p>
       </Transition>

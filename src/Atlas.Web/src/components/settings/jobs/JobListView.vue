@@ -14,7 +14,6 @@ import EmptyState from "../EmptyState.vue";
 import ErrorState from "../ErrorState.vue";
 import FilterMenu from "../FilterMenu.vue";
 import InlineReveal from "../InlineReveal.vue";
-import ResultBanner from "../ResultBanner.vue";
 import SearchField from "../SearchField.vue";
 import SettingsList from "../SettingsList.vue";
 import SettingsListRow from "../SettingsListRow.vue";
@@ -22,6 +21,7 @@ import SettingsPage from "../SettingsPage.vue";
 import SettingsSection from "../SettingsSection.vue";
 import StatusBadge from "../StatusBadge.vue";
 import type { ChoiceOption } from "../types";
+import { useSettingsFlash } from "../flash";
 import { useSettingsRoute } from "../useSettingsRoute";
 import JobRow from "./JobRow.vue";
 import JobSummaryTiles from "./JobSummaryTiles.vue";
@@ -43,12 +43,11 @@ const router = useSettingsRoute();
 
 const list = ref<JobList>();
 const loading = ref(true), error = ref(""), query = ref(""), busy = ref("");
-const notice = ref<{ key: number; text: string; icon?: string }>();
+const flash = useSettingsFlash();
 const root = ref<HTMLElement>();
-let noticeKey = 0;
 
 const folded = ref(true);
-const say = (text: string, icon?: string) => { notice.value = { key: ++noticeKey, text, icon }; };
+const say = (text: string, icon?: string) => flash.notify(text, { icon });
 
 async function load() {
   try {
@@ -152,7 +151,6 @@ onMounted(async () => {
 <template>
   <SettingsPage :title="t.list.title" icon="clock" :description="t.list.description">
     <div ref="root" class="jobs">
-      <ResultBanner v-if="notice" :key="notice.key" :message="notice.text" :icon="notice.icon" @dismiss="notice = undefined" />
       <ErrorState v-if="error" :title="t.list.loadFailed" :text="error" @retry="load" />
       <LiveUpdateNote v-if="liveOff" @refresh="refresh" />
       <JobSummaryTiles :list="list" :href="filterHref" />

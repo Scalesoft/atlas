@@ -3,7 +3,7 @@ import t from "../../i18n/components-personal";
 import { ref } from "vue";
 import { accessApi } from "../../accessApi";
 import AppDialog from "../AppDialog.vue";
-import ResultBanner from "../settings/ResultBanner.vue";
+import { useToast } from "../../composables/useToast";
 import ResourceAccess from "../settings/access/ResourceAccess.vue";
 import ResourceShareForm from "../settings/access/ResourceShareForm.vue";
 import type { ResourceAccess as ResourceAccessModel } from "../settings/access/accessModel";
@@ -19,13 +19,12 @@ withDefaults(defineProps<{ open: boolean; itemId: string; title: string; api?: P
 const emit = defineEmits<{ close: []; changed: [] }>();
 const list = ref<InstanceType<typeof ResourceAccess>>();
 const taken = ref<string[]>([]);
-const notice = ref<{ key: number; text: string }>();
-let noticeKey = 0;
+const toaster = useToast();
 function loaded(access: ResourceAccessModel) {
   taken.value = access.entries.map((entry) => `${entry.subject.kind}:${entry.subject.id}`);
 }
 function shared(message: string) {
-  notice.value = { key: ++noticeKey, text: message };
+  toaster.success(message);
   void list.value?.reload();
   emit("changed");
 }
@@ -35,7 +34,6 @@ function shared(message: string) {
   <AppDialog :title="t.share.title(title)" :open="open" size="wide" @close="emit('close')">
     <div class="share-item-dialog" data-share-item>
       <p class="st-muted share-item-note">{{ t.share.note }}</p>
-      <ResultBanner v-if="notice" :key="notice.key" :message="notice.text" icon="circle-check" @dismiss="notice = undefined" />
       <ResourceShareForm v-if="open" kind="item" :id="itemId" :title="title" :taken="taken" :api="api" @shared="shared" />
       <ResourceAccess v-if="open" ref="list" kind="item" :id="itemId" :title="t.share.sharedWith" compact :api="api" @loaded="loaded" @changed="emit('changed')" />
     </div>

@@ -3,6 +3,7 @@ import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import type { LogApi, LogEntry, LogFilter } from "../../../logs/logApi";
 import type { Job, JobApi, JobRun, JobSummary, SystemService } from "../../../jobs/jobApi";
 import { mountPage } from "../general/testing";
+import type { SettingsFlash } from "../flash";
 import { useJobsIssues } from "../global/issues";
 import { createFakeLiveFeed } from "../../../live/fakeLiveFeed";
 import JobsPage from "./JobsPage.vue";
@@ -51,9 +52,11 @@ function fakeApi(jobs: Job[], runs: JobRun[] = [], options: { list?: () => Job[]
   };
   return { api, calls };
 }
+let flashOf: () => SettingsFlash;
 const mount = (api: JobApi, part: string[] = [], query = "") => {
   const mounted = mountPage(JobsPage, { api, part, logApi }, { hash: `#/settings/general/jobs${query}`, feed: feed.source });
   wrapper = mounted.wrapper as unknown as VueWrapper;
+  flashOf = mounted.flash;
   return mounted.wrapper;
 };
 
@@ -89,7 +92,7 @@ describe("the list", () => {
     await flushPromises();
     expect(calls).toContain("runNow youtrack");
     // A paused job says that this run is the administrator's explicit will.
-    expect(view.text()).toContain("Úloha „Obnova YouTracku“ je pozastavená, ale spustili jste ji výslovně");
+    expect(flashOf().message.value?.text).toContain("Úloha „Obnova YouTracku“ je pozastavená, ale spustili jste ji výslovně");
   });
 
   it("reads the list again when the server tells a run changed and after a reconnect, never on a timer", async () => {

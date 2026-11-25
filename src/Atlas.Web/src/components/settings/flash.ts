@@ -6,6 +6,9 @@ import type { SettingsRouter } from "./useSettingsRoute";
  * lands on. It belongs to that page: it is bound to the route right after the flow navigates there
  * and disappears as soon as the user moves elsewhere or dismisses it. `highlight` marks the item the
  * flow created so its list row or card can glow once.
+ *
+ * Two feedback systems, one rule (owner decision D3): the settings frame and the profile use this result bar; everywhere else
+ * (dialogs, pages, personal notes) a toast (`useToast`). A reversible action always gets a toast with „Zpět“.
  */
 export interface SettingsFlashMessage {
   key: number;
