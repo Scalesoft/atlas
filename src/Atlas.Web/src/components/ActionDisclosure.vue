@@ -1,32 +1,20 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, useId, watch, type ComponentPublicInstance } from 'vue';
+import { nextTick, ref, useId, watch, type ComponentPublicInstance } from 'vue';
 import AtlasIcon from './AtlasIcon.vue';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Button, type ButtonVariants } from './ui/button';
 import { hostElement } from '../lib/templateRef';
-import { focusFirstAction } from '../lib/menuFocus';
+import { closeMenuWhenLost, focusFirstAction } from '../lib/menuFocus';
 // `variant`, `size` and `triggerClass`: a menu that stands where a labelled button stood (Nový → Stránka / Tabule) keeps
 // that button's look; the default is the quiet „…“ of every row and bar.
 const props = withDefaults(defineProps<{ label: string; disabled?: boolean; triggerTitle?: string; variant?: ButtonVariants["variant"]; size?: ButtonVariants["size"]; triggerClass?: string }>(),
   { variant: "ghost", size: "icon-sm" });
 const open = ref(false);
-// Two behaviours reka-ui does not provide, both from the September UI audit:
-// an overlay must never outlive the route underneath it, and a menu whose
-// trigger has just been disabled must not stay open over a control that can no
-// longer be reached.
+// The close rules every menu shares (route change, trigger scrolled away), and one of its own from the September UI audit:
+// a menu whose trigger has just been disabled must not stay open over a control that can no longer be reached.
 const trigger = ref<ComponentPublicInstance>();
-function routeChanged() { open.value = false; }
+closeMenuWhenLost(open, () => hostElement(trigger.value));
 watch(() => props.disabled, value => { if (value) open.value = false; });
-// reka-ui keeps a menu open and simply repositions it when its trigger scrolls
-// out of view. The audit settled the opposite: a menu anchored to something the
-// reader can no longer see is closed, not relocated. reka-ui returns focus to
-// the trigger on close, which is the rest of that behaviour.
-function closeIfAnchorLeft() {
-  if (!open.value) return;
-  const rect = hostElement(trigger.value)?.getBoundingClientRect();
-  if (!rect) return;
-  if (rect.bottom < 0 || rect.top > window.innerHeight) open.value = false;
-}
 // The APG menu-button pattern opens on ArrowUp with focus on the *last* item,
 // which reka-ui's trigger does not implement -- it opens on ArrowDown, Enter and
 // Space only. Reaching the bottom of a long action list without walking the
@@ -62,16 +50,6 @@ function moveAmongShown(event: KeyboardEvent) {
   event.stopPropagation();
   shown[next]?.focus();
 }
-onMounted(() => {
-  window.addEventListener('hashchange', routeChanged);
-  document.addEventListener('scroll', closeIfAnchorLeft, true);
-  window.addEventListener('resize', closeIfAnchorLeft);
-});
-onUnmounted(() => {
-  window.removeEventListener('hashchange', routeChanged);
-  document.removeEventListener('scroll', closeIfAnchorLeft, true);
-  window.removeEventListener('resize', closeIfAnchorLeft);
-});
 </script>
 <template>
   <DropdownMenu v-model:open="open" :modal="false">
@@ -98,29 +76,27 @@ onUnmounted(() => {
 </template>
 <style>
 /* The panel is portalled out of this component, so its rules cannot be scoped.
-   They were `:deep()` before for the same reason -- slotted buttons were never
-   this component's own elements either. */
-.action-disclosure-panel { z-index: 50; display: grid; min-width: 232px; max-width: calc(100vw - 24px); max-height: var(--reka-dropdown-menu-content-available-height, calc(100dvh - 16px)); overflow: auto; padding: 6px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); background: var(--surface); box-shadow: var(--shadow-menu); }
-.action-disclosure-panel button { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; min-height: var(--control-h); margin: 0; padding: 9px 10px; border: 0; border-radius: var(--atlas-radius-sm); color: var(--text); background: transparent; font-family: inherit; font-size: 13px; font-weight: 500; line-height: 1.4; text-align: left; white-space: normal; cursor: pointer; }
-.action-disclosure-panel button > svg { width: var(--icon); height: var(--icon); flex: 0 0 var(--icon); color: var(--muted); }
-/* A shortcut hint sits at the row's right edge, as in the tree's menu (ActionMenu). */
-.action-disclosure-panel button > .action-hint { margin-left: auto; padding-left: 16px; color: var(--text-dim, var(--muted)); font: 500 11px var(--font-mono, ui-monospace, monospace); }
+   The page editor's menu look (controls.css `.md-context-menu`, as ActionMenu wears it): its surface, 13 px rows with a 16 px icon
+   10 px from the label, and ActionMenu's highlight. Written out here rather than borrowed through the editor's classes: the editor's
+   stylesheet comes with its lazy chunk, and these menus show before it (Knihovna, settings, the profile). */
+.action-disclosure-panel { z-index: 50; display: grid; gap: 1px; min-width: 200px; max-width: calc(100vw - 24px); max-height: var(--reka-dropdown-menu-content-available-height, calc(100dvh - 16px)); overflow: auto; padding: 4px; border: 1px solid var(--line); border-radius: var(--radius-md, 8px); color: var(--text); background: var(--surface); box-shadow: var(--shadow-menu); }
+.action-disclosure-panel button { box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; min-height: var(--control-h, 36px); margin: 0; padding: 6px 10px; border: 0; border-radius: var(--radius-sm, 6px); outline: none; color: var(--text); background: transparent; font: inherit; font-size: 13px; line-height: 1.4; text-align: left; white-space: normal; cursor: pointer; }
+.action-disclosure-panel button > svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); flex: 0 0 auto; }
+/* A shortcut hint sits at the row's right edge, as in ActionMenu (.board-menu-key). */
+.action-disclosure-panel button > .action-hint { margin-left: auto; padding-left: 16px; color: var(--text-dim, var(--muted)); font-size: 12px; }
 /* An action without an icon (an editor plugin may bring none) keeps the icon's column, so its label lines up with the rest. */
-.action-disclosure-panel button > .action-icon-gap { flex: 0 0 var(--icon); }
-@media (hover: hover) and (pointer: fine) { .action-disclosure-panel button:hover:not(:disabled) { background: var(--hover); } }
+.action-disclosure-panel button > .action-icon-gap { flex: 0 0 var(--icon-sm, 16px); }
 .action-disclosure-panel button:disabled { opacity: .5; cursor: not-allowed; }
-/* reka-ui moves focus with `data-highlighted` rather than DOM focus on hover: the pointer gives the row its
-   background and colour only, the ring belongs to the keyboard (:focus-visible). */
-.action-disclosure-panel button:focus-visible,
-.action-disclosure-panel [data-highlighted] { background: var(--accent-soft); color: var(--accent); }
-.action-disclosure-panel button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* ActionMenu's highlight: the pointer and the keyboard light the row alike, the ring belongs to the keyboard. The editor's --bg-3 is
+   defined by its lazy theme stylesheet, so outside the editor the shell's hover tint stands in. */
+.action-disclosure-panel :is(button:focus-visible, [data-highlighted]) { background: var(--bg-3, var(--hover)); }
+.action-disclosure-panel button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
 /* Groups (ActionDisclosureGroup) stack like the items; a line follows every group but the last. */
-.action-disclosure-panel .action-disclosure-group { display: grid; }
-.action-disclosure-panel .action-disclosure-group:not(:last-child) { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.action-disclosure-panel .action-disclosure-group { display: grid; gap: 1px; }
+.action-disclosure-panel .action-disclosure-group:not(:last-child) { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+/* Destructive rows are red in every menu (ActionMenu's .board-menu-destructive). */
 .action-disclosure-panel button[data-destructive],
-.action-disclosure-panel button[data-destructive] > svg { color: var(--error); }
-.action-disclosure-panel button[data-destructive]:is(:focus-visible, [data-highlighted]) { background: color-mix(in srgb, var(--error) 10%, transparent); color: var(--error); }
-@media (hover: hover) and (pointer: fine) { .action-disclosure-panel button[data-destructive]:hover:not(:disabled) { background: color-mix(in srgb, var(--error) 10%, transparent); } }
+.action-disclosure-panel button[data-destructive] > svg { color: var(--error, var(--destructive)); }
 .atlas .document-primary-actions, .atlas .document-secondary-actions { display: flex; align-items: center; gap: 7px; }
 @media (max-width: 680px) {
   .action-disclosure-panel button { min-height: 44px; }
