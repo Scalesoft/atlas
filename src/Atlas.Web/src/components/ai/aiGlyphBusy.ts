@@ -1,4 +1,7 @@
-import "../../styles/aiBusy.css";
+import css from "../../styles/aiBusy.css?inline";
+
+// Injected here, not imported as a stylesheet: the eager glyph's import() then carries no list of preloads (first-load budget).
+document.head.append(Object.assign(document.createElement("style"), { textContent: css }));
 
 /** The busy variants of styles/aiBusy.css, `data-move` 1…24 in this order (names for the gallery). */
 export const AI_GLYPH_MOVES = [
