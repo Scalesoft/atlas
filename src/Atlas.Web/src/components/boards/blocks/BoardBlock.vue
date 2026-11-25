@@ -22,6 +22,7 @@ import { blockName } from "../../../boards/boardFlow";
 import { kindOfNode } from "../../../overview/overviewKinds";
 import OverviewReadCard from "../../../overview/OverviewReadCard.vue";
 import AtlasIcon from "../../AtlasIcon.vue";
+import { createSavePause } from "../savePause";
 import "../text/boardTextSurface.css";
 import "./boardBlockLayouts.css";
 
@@ -82,7 +83,7 @@ watch(() => props.block, () => { failed.value = false; });
 // ends the editing and leaves the block as it was.
 onErrorCaptured(() => {
   // What the failed editor held is gone with it: no late save, and the board stops saying „Neuloženo“ (W4-6).
-  clearTimeout(saveTimer);
+  savePause.cancel();
   hold(false);
   if (!editable.value) failed.value = true;
   else if (!done) { done = true; emit("cancel"); }
@@ -215,8 +216,7 @@ watch(() => props.block, (now, before) => {
 });
 // While edited, the block reaches the board after a pause in typing and when the page is hidden (a reload, a closed tab), and
 // the editing goes on (review cycle 3, U3-1); until then the board says „Neuloženo“.
-const savePause = 1000;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
+const savePause = createSavePause(() => save());
 let holding = false;
 function hold(now: boolean) {
   if (holding !== now) emit("unsaved", holding = now);
@@ -229,7 +229,7 @@ function changedNode() {
   return stored && JSON.stringify(stored) !== JSON.stringify(props.block) ? stored : undefined;
 }
 function save() {
-  clearTimeout(saveTimer);
+  savePause.cancel();
   if (done || !editable.value || props.insert || !props.block) return;
   const node = changedNode();
   if (node) { base = node; emit("save", node); }
@@ -238,10 +238,10 @@ function save() {
 function hidden() { if (document.visibilityState === "hidden") save(); }
 watch(draft, () => {
   if (!editable.value || done || props.insert || !props.block) return;
-  clearTimeout(saveTimer);
+  savePause.cancel();
   if (!changedNode()) { hold(false); return; }
   hold(true);
-  saveTimer = setTimeout(save, savePause);
+  savePause.start();
 });
 // A module inserting by its own panel is done once the panel inserted.
 watch(draft, now => { if (props.insert?.open && editable.value && firstBlock(now.document)) finish(); });
@@ -341,7 +341,7 @@ function finish() {
   if (done || !editable.value) return;
   done = true;
   clearTimeout(opening);
-  clearTimeout(saveTimer);
+  savePause.cancel();
   hold(false);
   const result = firstBlock(draft.value.document);
   if (!result) { if (props.insert || !props.block) emit("cancel"); else emit("remove"); return; }

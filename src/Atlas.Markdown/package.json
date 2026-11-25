@@ -119,10 +119,6 @@
       "types": "./dist/collaboration/simulator.d.ts",
       "import": "./dist/collaboration/simulator.js"
     },
-    "./draft": {
-      "types": "./dist/draft/index.d.ts",
-      "import": "./dist/draft.js"
-    },
     "./server": {
       "types": "./dist/server/index.d.ts",
       "import": "./dist/server.js"
