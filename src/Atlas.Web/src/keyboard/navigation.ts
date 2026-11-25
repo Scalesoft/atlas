@@ -72,9 +72,12 @@ export function opensActions(event: KeyboardEvent): boolean {
  * Rows of several controls (a contact card per row; bind to the list's keydown): ↑/↓ go to the first control of the
  * previous/next row, Home/End to the first/last row; Tab keeps walking the controls of a row. Not from inside a text field,
  * where the arrows move the caret. A row that is itself focusable (carries a `tabindex`, a list with one Tab stop) is focused as a whole.
+ * Space ticks the row's bulk-selection box (`.bulk-box`, BulkSelectBar), unless the focused control takes Space itself.
  */
 export function rowKeys(event: KeyboardEvent, rowSelector: string): void {
-  if (event.defaultPrevented || !["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key) || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (event.key === " ") return tickRow(event, rowSelector);
+  if (!["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
   if ((event.target as Element | null)?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
   const list = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
   const rows = [...(list?.querySelectorAll<HTMLElement>(rowSelector) ?? [])];
@@ -85,6 +88,17 @@ export function rowKeys(event: KeyboardEvent, rowSelector: string): void {
   if (!target) return;
   event.preventDefault();
   target.focus();
+}
+function tickRow(event: KeyboardEvent, rowSelector: string) {
+  const at = event.target as Element | null;
+  if (at?.closest?.('button, input, textarea, select, [contenteditable="true"], [role="checkbox"], [role="button"]')) return;
+  // The rows as the list finds them (a selector with :scope, as SettingsList's, means nothing to closest()).
+  const list = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+  const row = [...(list?.querySelectorAll<HTMLElement>(rowSelector) ?? [])].find(item => !!at && item.contains(at));
+  const box = row?.querySelector<HTMLElement>(".bulk-box:not([disabled])");
+  if (!box) return;
+  event.preventDefault();
+  box.click();
 }
 
 /**

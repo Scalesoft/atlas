@@ -21,13 +21,15 @@ import OptionPills from './settings/OptionPills.vue';
 import StatTile from './settings/StatTile.vue';
 import EmptyState from './settings/EmptyState.vue';
 import FilterMenu from './settings/FilterMenu.vue';
-import InlineReveal from './settings/InlineReveal.vue';
+import BulkSelectBar from './settings/BulkSelectBar.vue';
+import { useBulkSelection } from './settings/bulkSelection';
 import SearchField from './settings/SearchField.vue';
 import type { ChoiceOption } from './settings/types';
-import { enterCells, ghostCells, glideColumns, readColumns, releaseGhosts, type GlideColumn } from './library/glideColumns';
 import { disclosureHooks } from './settings/disclosure';
-import { motionMs } from '../motion/aiMotion';
 import { Button } from './ui/button';
+import { Checkbox } from './ui/checkbox';
+import RowActionsMenu from './RowActionsMenu.vue';
+import type { ActionMenuItem } from './ActionMenu.vue';
 import LoadingSkeleton from './LoadingSkeleton.vue';
 import { lazyComponent } from '../lazyComponent';
 import { rovingInit, rowKeys } from '../keyboard/navigation';
@@ -47,13 +49,13 @@ const RelationsGraph = lazyComponent(() => import('./objects/RelationsGraph.vue'
  * its relations (BoardCanvas, read-only). Pages, boards (with the module Boards) and contacts are rows of the same list: no section of
  * their own, a type tile is enough. Obsah replaces the old Stránky tab: that one knew pages and boards from the tree and nothing of
  * what leads where, so a contact placed nowhere, a board nobody links and a link to a page in the trash were invisible.
- * Writers can select drafts (the pages of the tree `pages` knows) and publish them in one go.
+ * Writers tick drafts (the pages of the tree `pages` knows) and publish them in one go: the selection of every list (BulkSelectBar), no mode.
  */
 const props = defineProps<{ pages: TreePage[]; canWrite: boolean; initialType?: '' | TreeNodeType; spaceId: string; relations?: RelationsApi; usage?: UsageApi }>();
 const emit = defineEmits<{ open: [id: string, type: TreeNodeType]; published: []; refresh: []; /** What the type tiles add up to: the tab shows it. */ counted: [count: number] }>();
-const selected = ref<string[]>([]), published = ref(new Set<string>());
+const published = ref(new Set<string>());
 const busy = ref(false), completed = ref(0), total = ref(0), error = ref('');
-const query = ref(''), selecting = ref(false);
+const query = ref('');
 const relation = ref<ContentRelation | ''>('');
 // The rows (below); declared here because the watchers that reset on a filter read them while the setup runs.
 const contentRows = shallowRef<ContentRow[]>([]);
@@ -66,22 +68,24 @@ const isLive = (item: TreePage) => item.isPublished || published.value.has(item.
 const drafts = computed(() => props.pages.filter(item => !isLive(item)));
 // The list holds objects of every type; only a page of the tree can be a draft.
 const visibleDrafts = computed(() => contentRows.value.map(row => byId.value.get(row.id)).filter((item): item is TreePage => !!item && !isBoardNode(item) && !isLive(item)));
-const selection = computed(() => drafts.value.filter(item => selected.value.includes(item.id)));
 const filtered = computed(() => !!query.value.trim() || !!type.value || !!relation.value);
 // Nothing unused and no name looked for: good news, not a failed search.
 const allUsed = computed(() => relation.value === 'unused' && !query.value.trim());
-const choosing = computed(() => props.canWrite && selecting.value && drafts.value.length > 0);
+// Ticking a shown draft starts the selection; its column stands while the space has drafts, so ticking moves nothing.
+const pickable = computed(() => props.canWrite && drafts.value.length > 0);
+const selection = useBulkSelection(() => (props.canWrite ? visibleDrafts.value.map(item => item.id) : []));
+// In the tree's order (a parent before its subpages), as publishing always went.
+const chosen = computed(() => drafts.value.filter(item => selection.has(item.id)));
 const inSpace = computed(() => Object.values(summary.value?.types ?? {}).reduce((sum, count) => sum + count, 0));
 watch(summary, counts => { if (counts) emit('counted', inSpace.value); });
 const shownText = computed(() => {
   return t.content.shown(formatNumber(contentRows.value.length) + (nextCursor.value ? '+' : ''), inSpace.value ? formatNumber(inSpace.value) : '', relation.value === 'mostUsed');
 });
-watch([query, type, relation, selecting], () => { selected.value = []; });
+watch([query, type, relation], () => selection.clear());
 const loadMore = () => { void load(true); };
 let disposed = false;
 onBeforeUnmount(() => { disposed = true; clearTimeout(typingTimer); request?.abort(); hideObjectDetail(); });
 watch(() => props.pages, () => {
-  selected.value = selected.value.filter(id => drafts.value.some(item => item.id === id));
   // A publication or a move changed what Obsah counts.
   if (loaded.value) void load();
 });
@@ -253,55 +257,31 @@ function graphOpen(id: string, typeId: string) {
   if (typeId === 'atlas.page' || typeId === 'atlas.board') emit('open', id, typeId === 'atlas.board' ? 'board' : 'page');
 }
 function graphBack() { root.value?.querySelector<HTMLElement>('[data-content-view="graph"]')?.focus(); }
-function selectAll(event: Event) {
-  selected.value = (event.target as HTMLInputElement).checked ? visibleDrafts.value.map(item => item.id) : [];
-}
-/* Entering and leaving selection adds and removes a column at the left. The table changes its tracks in one step and the
-   cells glide from where they stood (glideColumns.ts, a FLIP on the compositor), so nothing moves in one frame and a
-   hundred rows are not laid out again on every frame. The checkboxes come in with the same travel, and go out as copies
-   pinned in their rows (a Transition per row would measure every row on the way out). Only what can be seen moves. */
 const table = ref<HTMLElement>();
-const glidingColumns: GlideColumn[] = [{ probe: '.space-page-row .space-page-main', cells: '.space-page-main, .space-head-main' }];
-let standing: number[] = [];
-let gliding: Animation[] = [];
-let leaving: HTMLElement[] = [];
-// Just before the tracks change: where the columns are drawn now (a glide that is still running included) and, when
-// the checkboxes are about to go, a copy of each one that can be seen.
-watch(choosing, (now) => {
-  const element = table.value;
-  if (!element) return;
-  standing = readColumns(element, glidingColumns);
-  leaving = now ? [] : ghostCells(element, '.page-selection');
-}, { flush: 'sync' });
-watch(choosing, (now) => {
-  const element = table.value;
-  const copies = leaving;
-  leaving = [];
-  if (!element) { for (const copy of copies) copy.remove(); return; }
-  for (const glide of gliding) glide.cancel();
-  const options = { duration: motionMs(element, '--atlas-motion-base'), easing: getComputedStyle(element).getPropertyValue('--atlas-ease-out').trim() || 'ease-out' };
-  // What the content travelled is what the checkboxes travel, from or to the left edge.
-  const travel = Math.abs(standing[0]! - readColumns(element, glidingColumns)[0]!);
-  gliding = glideColumns(element, glidingColumns, standing, options);
-  if (!Number.isFinite(travel)) { for (const copy of copies) copy.remove(); return; }
-  if (now) gliding.push(...enterCells(element, '.page-selection', -travel, options));
-  else releaseGhosts(copies, -travel, options);
-}, { flush: 'post' });
-onBeforeUnmount(() => { for (const glide of gliding) glide.cancel(); });
-/* One Tab stop for the whole list (SH2-14): ↑ ↓ Home End walk the rows (rowKeys), the stop follows the focus. While choosing, every title and checkbox stays a stop. */
+/* One Tab stop for the whole list (SH2-14): ↑ ↓ Home End walk the rows and Space ticks a draft (rowKeys), the stop follows the focus. */
 const TITLES = '.space-page-title';
-watch([table, contentRows, choosing], () => {
-  if (!choosing.value) rovingInit(table.value, TITLES);
-  else for (const title of table.value?.querySelectorAll<HTMLElement>(TITLES) ?? []) title.tabIndex = 0;
-}, { flush: 'post' });
+watch([table, contentRows], () => rovingInit(table.value, TITLES), { flush: 'post' });
 function roveTo(event: FocusEvent) {
   const title = event.target instanceof HTMLElement && event.target.matches(TITLES) ? event.target : null;
-  if (!title || choosing.value) return;
+  if (!title) return;
   for (const other of table.value?.querySelectorAll<HTMLElement>(TITLES) ?? []) other.tabIndex = other === title ? 0 : -1;
 }
+/** „Co s tím jde dělat“ of a row (P2, RowActionsMenu): what the row's title, its detail and usage buttons and its box do. */
+const rowMenu = (row: ContentRow): ActionMenuItem[] => [
+  ...(openable(row) ? [{ id: 'open', label: t.content.menuOpen, icon: 'file-text' }] : []),
+  { id: 'detail', label: t.content.menuDetail, icon: 'info' },
+  { id: 'usage', label: t.content.menuUsage, icon: 'layers', checked: expandedId.value === row.id },
+  ...(props.canWrite && isDraftRow(row) ? [{ id: 'pick', label: t.content.menuPick, icon: 'check', checked: selection.has(row.id), disabled: busy.value }] : []),
+];
+function rowAction(row: ContentRow, id: string) {
+  if (id === 'open') openRow(undefined, row);
+  else if (id === 'detail') showDetail(row);
+  else if (id === 'usage') toggleUsage(row);
+  else if (id === 'pick') selection.toggle(row.id);
+}
 async function publish() {
-  if (busy.value || !props.canWrite || !selection.value.length) return;
-  const batch = selection.value.map(item => ({ ...item }));
+  if (busy.value || !props.canWrite || !chosen.value.length) return;
+  const batch = chosen.value.map(item => ({ ...item }));
   busy.value = true; error.value = ''; completed.value = 0; total.value = batch.length;
   try {
     for (const item of batch) {
@@ -310,7 +290,7 @@ async function publish() {
         // Unsaved live edits refuse, never published without (UX EP2-8).
         await post(`/pages/${item.id}/publish`, publishRequest(item.version, null, true));
         published.value.add(item.id);
-        selected.value = selected.value.filter(id => id !== item.id);
+        selection.toggle(item.id, false);
         completed.value++;
       } catch (reason) {
         error.value = t.content.publishFailed(item.title, errorMessage(reason));
@@ -341,19 +321,12 @@ async function publish() {
         <SearchField v-model="query" :label="t.content.search" :placeholder="t.content.searchPlaceholder" :disabled="busy" data-content-search @keydown="searchKeys" />
         <OptionPills v-model="type" :options="typePills" :label="t.content.type" hide-label class="content-type-pills" />
         <FilterMenu v-model="relation" :options="relationOptions()" :label="t.content.relation" icon="network" data-content-relation />
-        <Button v-if="canWrite && drafts.length" data-select-pages variant="ghost" class="space-list-select" :aria-pressed="selecting" :disabled="busy" @click="selecting = !selecting">
-          <AtlasIcon :name="selecting ? 'close' : 'check'" :size="15" />{{ selecting ? t.content.endSelect : t.content.selectDrafts(drafts.length) }}
-        </Button>
         <OptionPills v-model="view" segmented class="content-view-switch" :options="viewOptions()" :label="t.content.viewLabel" hide-label />
       </div>
-      <!-- Unfolds in height and opacity (InlineReveal) instead of pushing the table down in one frame. -->
-      <InlineReveal :open="choosing && visibleDrafts.length > 0">
-        <div class="publish-toolbar">
-          <label><input type="checkbox" :aria-label="t.content.selectAllAria" :checked="selection.length === visibleDrafts.length" :indeterminate="selection.length > 0 && selection.length < visibleDrafts.length" :disabled="busy" @change="selectAll" />{{ t.content.selectShown }} <span class="muted">({{ visibleDrafts.length }})</span></label>
-          <Button data-publish variant="default" size="sm" :disabled="busy || !selection.length" @click="publish"><AtlasIcon name="published" :size="15" />{{ busy ? t.content.publishing(completed, total) : t.content.publishSelected(selection.length) }}</Button>
-          <p>{{ t.content.publishNote }}</p>
-        </div>
-      </InlineReveal>
+      <BulkSelectBar v-if="view === 'list'" class="content-bulk" :selection="selection" :disabled="busy">
+        <Button data-publish variant="default" size="sm" :disabled="busy || !chosen.length" @click="publish"><AtlasIcon name="published" :size="15" />{{ busy ? t.content.publishing(completed, total) : t.content.publishSelected(chosen.length) }}</Button>
+        <p class="content-bulk-note">{{ t.content.publishNote }}</p>
+      </BulkSelectBar>
     </div>
     <!-- The notes unfold in height and opacity (the disclosure hooks); the page is a flex column so the gap above them unfolds with them. -->
     <Transition :css="false" v-bind="disclosureHooks">
@@ -367,9 +340,9 @@ async function publish() {
       <LoadingRegion v-else :loading="loading" :ready="loaded" :rows="6" :label="t.content.loading" class="content-region">
         <Transition name="content-view" mode="out-in">
           <div v-if="view === 'list'" key="list" class="content-view">
-            <div v-if="contentRows.length" ref="table" class="space-page-table is-obsah" :class="{ 'is-choosing': choosing }" role="table" :aria-label="t.content.tableLabel" @keydown="contentKeys" @focusin="roveTo">
+            <div v-if="contentRows.length" ref="table" class="space-page-table is-obsah" :class="{ 'is-pickable': pickable, 'bulk-selecting': selection.count > 0 }" role="table" :aria-label="t.content.tableLabel" @keydown="contentKeys" @focusin="roveTo">
               <div class="space-page-head" role="row">
-                <span v-if="choosing" role="columnheader" class="space-head-pick"><span class="sr-only">{{ t.content.colSelect }}</span></span>
+                <span v-if="pickable" role="columnheader" class="space-head-pick"><span class="sr-only">{{ t.content.colSelect }}</span></span>
                 <span role="columnheader" class="space-head-main">{{ t.content.colContent }}</span>
                 <span role="columnheader" class="content-head-used">{{ t.content.colUsed }}</span>
                 <span role="columnheader" class="content-head-links">{{ t.content.colLinks }}</span>
@@ -377,10 +350,10 @@ async function publish() {
                 <span role="columnheader" class="content-head-changed">{{ t.content.colChanged }}</span>
               </div>
               <template v-for="(row, index) in contentRows" :key="row.id">
-              <div class="space-page-row content-row" :class="{ 'is-active': index === active && !!query.trim(), 'is-open': openDetailId() === row.id }"
-                role="row" :aria-current="openDetailId() === row.id || undefined" draggable="true" :data-content-id="row.id" :style="{ '--i': Math.min(index % 100, 8) }"
+              <div class="space-page-row content-row bulk-row" :class="{ 'is-active': index === active && !!query.trim(), 'is-open': openDetailId() === row.id }"
+                role="row" :aria-current="openDetailId() === row.id || undefined" data-row-actions draggable="true" :data-content-id="row.id" :style="{ '--i': Math.min(index % 100, 8) }"
                 @click="onRowClick($event, row)" @dragstart="startObjectDrag($event, draggedRow(row))">
-                <span v-if="choosing" role="cell" class="page-selection"><input v-if="isDraftRow(row)" v-model="selected" type="checkbox" :value="row.id" :aria-label="t.content.select(plainTitle(row.title))" :disabled="busy" /></span>
+                <span v-if="pickable" role="cell" class="page-selection"><Checkbox v-if="isDraftRow(row)" class="bulk-box" tabindex="-1" :model-value="selection.has(row.id)" :aria-label="t.content.select(plainTitle(row.title))" :disabled="busy" @update:model-value="selection.toggle(row.id)" /></span>
                 <span role="cell" class="space-page-main">
                   <PageIcon v-if="decorationOf(row)?.icon" :decoration="decorationOf(row)!" /><AtlasIcon v-else :name="typeInfo(row.typeId).icon" :size="16" />
                   <span class="content-title-block">
@@ -401,6 +374,7 @@ async function publish() {
                     <AtlasIcon name="arrow-left" :size="12" />{{ row.linksIn }}<AtlasIcon name="arrow-right" :size="12" />{{ row.linksOut }}</span>
                   <span role="cell" class="content-comments" :class="{ 'is-zero': !row.comments }" :aria-label="t.content.commentsLabel(row.comments)" :title="t.content.commentsLabel(row.comments)"><AtlasIcon name="quote" :size="12" />{{ row.comments }}</span>
                 </span>
+                <RowActionsMenu :items="rowMenu(row)" :label="t.content.rowActions(plainTitle(row.title))" @select="rowAction(row, $event)" />
                 <time role="cell" class="content-changed" :datetime="row.updatedAt" :title="formatDateTime(row.updatedAt)">{{ formatShortDate(row.updatedAt) }}</time>
               </div>
               <Transition :css="false" v-bind="disclosureHooks">
@@ -443,31 +417,27 @@ async function publish() {
 /* A flex column, not a grid: the notes above the table unfold with the disclosure hooks, which give the gap above them
    back as they fold (a grid track never gets smaller than 0). */
 .space-pages { container: space-pages / inline-size; position: relative; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-/* One line (board 02): search, Stav, and Vybrat koncepty on the right. */
+/* One line (board 02): search, type, Vztah, and the view switch on the right. */
 .space-list-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 /* SearchField passes attributes to its input, so its frame is reached by its own class. */
 .space-list-controls > .search-field { flex: 1 1 240px; max-width: 360px; }
 .space-list-controls :deep(.search-field-input) { min-height: 36px; border-radius: 10px; font-size: 14px; }
 .space-list-controls :deep(.filter-menu-trigger) { min-height: 36px; padding: 0 12px; border-radius: 10px; font-size: 14px; }
-.space-list-select { margin-left: auto; height: 36px; padding: 0 12px; border-radius: 10px; color: var(--accent); font-weight: 600; }
-.space-list-select[aria-pressed="true"] { background: var(--accent-soft); }
-.publish-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: 12px; background: var(--accent-soft); }
-.publish-toolbar label { display: flex; align-items: center; gap: 9px; flex: 1; font-size: 13px; }
-.publish-toolbar p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 12px; }
+.content-bulk { margin-top: 10px; }
+.content-bulk-note { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 12px; }
 .space-list-note { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .space-list-note.is-error { color: var(--error); }
-input[type=checkbox] { position: relative; z-index: 1; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
 
 /* `clip`, not `hidden`: the frame stays rounded without becoming a scroll container, so the column header sticks under the top bar while the rows pass under it. */
 .space-page-table { overflow: clip; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
 /* The geometry of a row comes from variables of the table (set by the container query at the end). Only the table
    answers the query: with every row and cell inside the @container rule, each start and end of a row's entrance made
    the browser restyle and lay out all hundred rows again (one layout 44 ms instead of 7 ms at CPU ×4). */
-/* There is always a first track for the checkboxes of selection: 0 wide at rest, 20 px plus its gap while choosing. The
-   padding on its side is the page's margin less that gap, so the row at rest is where it always was (16 px in); the table
-   switches the width in one step and the cells glide (glideColumns.ts). */
+/* There is always a first track for the selection's boxes: 0 wide for a reader, 20 px plus its gap for a writer of a space with
+   drafts (the boxes show on hover and focus, BulkSelectBar). The padding on its side is the page's margin less that gap, so a
+   reader's row is where it always was (16 px in). */
 .space-page-table { --space-col-gap: 16px; --space-row-gap-y: 0px; --space-pad-y: 0px; --space-pad-x: 16px; --space-pick-w: calc(20px + var(--space-col-gap)); }
-.is-choosing :is(.space-page-head, .space-page-row) { grid-template-columns: var(--space-pick-w) var(--space-row-columns, minmax(0, 2.6fr) minmax(0, 2fr) 148px); }
+.is-pickable :is(.space-page-head, .space-page-row) { grid-template-columns: var(--space-pick-w) var(--space-row-columns, minmax(0, 2.6fr) minmax(0, 2fr) 148px); }
 .space-page-head, .space-page-row { display: grid; grid-template-columns: 0px var(--space-row-columns, minmax(0, 2.6fr) minmax(0, 2fr) 148px); grid-template-areas: var(--space-row-areas, "pick main used links comments changed"); align-items: center; gap: var(--space-row-gap-y) var(--space-col-gap); padding: var(--space-pad-y) var(--space-pad-x) var(--space-pad-y) calc(var(--space-pad-x) - var(--space-col-gap)); }
 .space-page-head { display: var(--space-head-display, grid); position: sticky; top: var(--atlas-topbar-height, 52px); z-index: 2; height: 36px; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, var(--surface)); background: color-mix(in srgb, var(--line) 16%, var(--surface)); color: var(--muted); font-size: 12px; font-weight: 600; }
 .space-page-row {
@@ -489,7 +459,7 @@ input[type=checkbox] { position: relative; z-index: 1; width: 16px; height: 16px
 .space-page-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .space-page-main > svg { flex-shrink: 0; color: var(--muted); }
 .space-page-title { overflow: hidden; color: var(--text); font-size: 14px; font-weight: 500; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; outline: none; }
-/* The title is the row's link, stretched over it; a selection checkbox stays above. */
+/* The title is the row's link, stretched over it; a selection box stays above. */
 .space-page-title::after { content: ""; position: absolute; inset: 0; }
 .space-page-foot { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 16px; background: color-mix(in srgb, var(--line) 16%, var(--surface)); color: var(--muted); font-size: 13px; }
 .space-page-foot > span { flex: 1; font-variant-numeric: tabular-nums; }
@@ -511,7 +481,6 @@ input[type=checkbox] { position: relative; z-index: 1; width: 16px; height: 16px
 .content-view-enter-active { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
 .content-view-leave-active { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; }
 .content-view-switch { margin-left: auto; }
-.space-list-select ~ .content-view-switch { margin-left: 0; }
 
 .is-obsah { --space-row-columns: minmax(0, 1fr) 72px 104px 84px 84px; --space-row-areas: "pick main used links comments changed"; }
 .is-obsah .space-page-row { cursor: default; min-height: 52px; content-visibility: auto; contain-intrinsic-size: auto 52px; }
@@ -561,7 +530,6 @@ input[type=checkbox] { position: relative; z-index: 1; width: 16px; height: 16px
 /* Narrow room (a phone, or a laptop with the sidebar and the page dock open): each page on two lines (title, then where it lives), the state on the right. */
 @container space-pages (max-width: 680px) {
   .space-list-controls > .search-field { flex-basis: 100%; max-width: none; }
-  .space-list-select { margin-left: 0; }
   .space-page-table {
     --space-head-display: none;
     --space-col-gap: 10px; --space-row-gap-y: 2px; --space-pad-y: 8px; --space-pad-x: 12px;

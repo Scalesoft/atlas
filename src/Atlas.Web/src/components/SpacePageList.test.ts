@@ -33,8 +33,7 @@ it('selects all drafts and publishes only the selected versions, with progress',
   let complete!: (value: unknown) => void;
   vi.mocked(post).mockImplementationOnce(() => new Promise(resolve => { complete = resolve; })).mockResolvedValueOnce({});
   await show();
-  await wrapper.get('[data-select-pages]').trigger('click');
-  await wrapper.get('input[aria-label="Vybrat všechny koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('button[data-publish]').trigger('click');
   expect(wrapper.get('button[data-publish]').attributes('disabled')).toBeDefined();
   expect(post).toHaveBeenCalledWith('/pages/first/publish', { expectedVersion: 3, refuseUnsavedLiveEdits: true });
@@ -43,18 +42,18 @@ it('selects all drafts and publishes only the selected versions, with progress',
   expect(post).toHaveBeenCalledTimes(2);
   expect(wrapper.get('[role=status]').text()).toContain('2');
   expect(wrapper.emitted('published')).toHaveLength(1);
-  expect(wrapper.findAll('input[type=checkbox]')).toHaveLength(0);
+  // Nothing is left to publish: the column of boxes is gone with the last draft.
+  expect(wrapper.findAll('.content-row [role=checkbox]')).toHaveLength(0);
 });
 
 it('stops on a stale revision and keeps remaining drafts selected without retrying automatically', async () => {
   vi.mocked(post).mockResolvedValueOnce({}).mockRejectedValueOnce(new ApiError(409, 'Stránka byla změněna.'));
   await show();
-  await wrapper.get('[data-select-pages]').trigger('click');
-  await wrapper.get('input[aria-label="Vybrat všechny koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('button[data-publish]').trigger('click'); await flushPromises();
   expect(wrapper.get('[role=alert]').text()).toContain('Druhý koncept');
   expect(wrapper.get('[role=alert]').text()).toContain('Stránka byla změněna.');
-  expect(wrapper.get<HTMLInputElement>('input[aria-label="Vybrat: Druhý koncept"]').element.checked).toBe(true);
+  expect(wrapper.get('[role=checkbox][aria-label="Vybrat: Druhý koncept"]').attributes('aria-checked')).toBe('true');
   expect(post).toHaveBeenCalledTimes(2);
   expect(wrapper.emitted('published')).toHaveLength(1);
 });
@@ -62,15 +61,16 @@ it('stops on a stale revision and keeps remaining drafts selected without retryi
 it('allows a subset selection and offers no publishing controls to readers', async () => {
   vi.mocked(post).mockResolvedValue({});
   await show();
-  expect(wrapper.find('input[type=checkbox]').exists()).toBe(false);
-  await wrapper.get('[data-select-pages]').trigger('click');
-  await wrapper.get('input[aria-label="Vybrat: Druhý koncept"]').setValue(true);
+  // Nothing ticked yet: no bar, only „Vybrat zobrazené“ above the table.
+  expect(wrapper.find('[data-bulk-bar]').exists()).toBe(false);
+  await wrapper.get('[role=checkbox][aria-label="Vybrat: Druhý koncept"]').trigger('click');
   await wrapper.get('button[data-publish]').trigger('click'); await flushPromises();
   expect(post).toHaveBeenCalledExactlyOnceWith('/pages/second/publish', { expectedVersion: 7, refuseUnsavedLiveEdits: true });
   await wrapper.setProps({ canWrite: false });
   // The publish bar folds away through InlineReveal; it is gone once that has settled.
   await flushPromises();
-  expect(wrapper.find('input[type=checkbox]').exists()).toBe(false);
+  expect(wrapper.find('[role=checkbox]').exists()).toBe(false);
+  expect(wrapper.find('[data-bulk-all]').exists()).toBe(false);
   expect(wrapper.find('button[data-publish]').exists()).toBe(false);
   expect(wrapper.findAll('a.space-page-title')).toHaveLength(4);
 });
@@ -85,21 +85,20 @@ it('finds titles without accents, sorts them, marks drafts and only selects visi
   await wrapper.get('input[aria-label="Hledat v obsahu prostoru"]').setValue('PRVNI');
   await new Promise(resolve => setTimeout(resolve, 260)); await flushPromises();
   expect(rowTitles()).toEqual(['První koncept']);
-  await wrapper.get('[data-select-pages]').trigger('click');
-  await wrapper.get('input[aria-label="Vybrat všechny koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('button[data-publish]').trigger('click'); await flushPromises();
   expect(post).toHaveBeenCalledExactlyOnceWith('/pages/first/publish', { expectedVersion: 3, refuseUnsavedLiveEdits: true });
 });
 
 it('clears selection when filters change and explains an empty result', async () => {
   await show();
-  await wrapper.get('[data-select-pages]').trigger('click');
-  await wrapper.get('input[aria-label="Vybrat: První koncept"]').setValue(true);
+  await wrapper.get('[role=checkbox][aria-label="Vybrat: První koncept"]').trigger('click');
   expect(wrapper.get('button[data-publish]').attributes('disabled')).toBeUndefined();
   await wrapper.get('[data-content-tile="type:atlas.board"]').trigger('click'); await flushPromises();
   expect(rowTitles()).toEqual(['Plán']);
   await wrapper.get('[data-content-tile="type:atlas.board"]').trigger('click'); await flushPromises();
-  expect(wrapper.get('button[data-publish]').attributes('disabled')).toBeDefined();
+  // The filter cleared the selection: the bar with its action has folded away.
+  expect(wrapper.find('button[data-publish]').exists()).toBe(false);
   await wrapper.get('input[aria-label="Hledat v obsahu prostoru"]').setValue('neexistující');
   await new Promise(resolve => setTimeout(resolve, 260)); await flushPromises();
   expect(wrapper.text()).toContain('Nic neodpovídá');
@@ -108,40 +107,34 @@ it('clears selection when filters change and explains an empty result', async ()
   expect(wrapper.findAll('.content-row')).toHaveLength(4);
 });
 
-it('moves nothing in one frame when selection starts and ends: the columns glide, the checkboxes travel with them', async () => {
-  // jsdom has no layout and no Web Animations: the title column stands 36 px further in while choosing, and the animations are recorded.
-  const animated: { element: Element; frames: Keyframe[] }[] = [];
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-    const choosing = !!this.closest('.is-choosing');
-    return { left: this.matches('.space-page-main') ? (choosing ? 386 : 350) : 0, top: 0, bottom: 10 } as DOMRect;
-  });
-  Element.prototype.animate = function (this: Element, frames: Keyframe[] | PropertyIndexedKeyframes | null) {
-    animated.push({ element: this, frames: frames as Keyframe[] });
-    return { finished: Promise.resolve(), addEventListener() {}, cancel() {} } as unknown as Animation;
-  };
-  try {
-    await show();
-    animated.length = 0;
-    await wrapper.get('[data-select-pages]').trigger('click');
-    const cells = animated.filter(({ element }) => element.matches('.space-page-main, .space-head-main'));
-    // The header's cell and the four rows' cells of the column glide by what the column travelled.
-    expect(cells).toHaveLength(5);
-    expect(cells[0]!.frames[0]).toEqual({ translate: '-36px 0' });
-    // The checkboxes come in from the edge, fading, by the same distance.
-    const boxes = animated.filter(({ element }) => element.matches('.page-selection'));
-    expect(boxes).toHaveLength(4);
-    expect(boxes[0]!.frames[0]).toEqual({ translate: '-36px 0', opacity: 0 });
+it('starts the selection by ticking a row, with no mode: the column stands, Space on a row ticks it, the bar unfolds above', async () => {
+  await show();
+  expect(wrapper.find('[data-select-pages]').exists()).toBe(false);
+  // The column of boxes stands from the start, so ticking moves nothing; the boxes are no Tab stops (the list has one).
+  expect(wrapper.get('.space-page-table').classes()).toContain('is-pickable');
+  const box = wrapper.get('[data-content-id="first"] .bulk-box');
+  expect(box.attributes('tabindex')).toBe('-1');
+  expect(wrapper.find('[data-content-id="plan"] .bulk-box').exists()).toBe(false);
+  expect(wrapper.find('[data-bulk-bar]').exists()).toBe(false);
+  const title = wrapper.get<HTMLElement>('[data-content-id="first"] .space-page-title');
+  title.element.focus();
+  await title.trigger('keydown', { key: ' ' }); await flushPromises();
+  expect(box.attributes('aria-checked')).toBe('true');
+  expect(wrapper.get('[data-bulk-bar]').text()).toContain('Vybráno: 1');
+  expect(wrapper.get('.space-page-table').classes()).toContain('bulk-selecting');
+  expect(wrapper.get('[data-bulk-all]').attributes('aria-checked')).toBe('mixed');
+});
 
-    animated.length = 0;
-    await wrapper.get('[data-select-pages]').trigger('click');
-    expect(animated.filter(({ element }) => element.matches('.space-page-main'))[0]!.frames[0]).toEqual({ translate: '36px 0' });
-    // The checkboxes that are gone leave as copies pinned in their rows, and are hidden from assistive technology.
-    const leaving = animated.filter(({ element }) => element.matches('.page-selection[aria-hidden="true"]'));
-    expect(leaving).toHaveLength(4);
-    expect(leaving[0]!.frames).toEqual([{ translate: '0 0', opacity: 1 }, { translate: '-36px 0', opacity: 0 }]);
-  } finally {
-    delete (Element.prototype as { animate?: unknown }).animate;
-  }
+it("offers a row's actions in its „Co s tím jde dělat“, ticking a draft among them", async () => {
+  await show();
+  const row = wrapper.get('[data-content-id="first"]');
+  row.element.dispatchEvent(new KeyboardEvent('keydown', { key: '.', ctrlKey: true, bubbles: true }));
+  await flushPromises();
+  const items = () => [...document.querySelectorAll<HTMLElement>('[data-row-action]')];
+  expect(items().map(item => item.textContent?.trim())).toEqual(['Otevřít', 'Detail', 'Kde je použito', 'Vybrat']);
+  items().find(item => item.textContent?.trim() === 'Vybrat')!.click();
+  await flushPromises();
+  expect(wrapper.get('[data-bulk-bar]').text()).toContain('Vybráno: 1');
 });
 
 it("lists the space's boards among its objects and opens a board as a board", async () => {
@@ -149,7 +142,7 @@ it("lists the space's boards among its objects and opens a board as a board", as
   const board = wrapper.get('[data-content-row="board"]');
   expect(board.attributes('href')).toContain('#/boards/plan');
   // A board is never a draft to publish.
-  expect(wrapper.get('[data-select-pages]').text()).toContain('(2)');
+  expect(wrapper.get('[data-bulk-select]').text()).toContain('(2)');
   board.element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
   expect(wrapper.emitted('open')).toEqual([['plan', 'board']]);
 });
