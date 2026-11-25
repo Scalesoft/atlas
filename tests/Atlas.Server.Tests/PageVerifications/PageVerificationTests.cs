@@ -115,6 +115,13 @@ public sealed class PageVerificationTests
         var writing = await f.ClientAsync((await IssueAsync(f.Admin, f.Site.Password, ["read", "write"], ["mcp"], "Write")).Secret);
         Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, verify = true })).IsError != true);
         Assert.True((await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["verifiedViaAi"]!.GetValue<bool>());
+        // The steward is set and cleared over MCP as on the web.
+        Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, stewardId = readerId })).IsError != true);
+        Assert.Equal(readerId, (await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["stewardId"]!.GetValue<string>());
+        Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, clearSteward = true })).IsError != true);
+        Assert.Null((await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["stewardId"]);
+        Assert.Equal("invalid_argument", ErrorCode(await CallAsync(writing, "atlas_set_verification",
+            new { spaceId = space, pageIds = new[] { page.Id }, stewardId = readerId, clearSteward = true })));
         Assert.Equal(PageVerificationStates.Verified,
             Structured(await CallAsync(reading, "atlas_get_page", new { pageId = page.Id }))["verification"]!["state"]!.GetValue<string>());
         Assert.Equal(1, Structured(await CallAsync(reading, "atlas_list_content_health", new { spaceId = space }))["summary"]!["verified"]!.GetValue<int>());

@@ -49,11 +49,11 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
 
     [McpServerTool(Name = "atlas_set_verification", Title = "Ověřit stránku nebo nastavit garanta", Destructive = false, Idempotent = false, OpenWorld = false, ReadOnly = false)]
     [McpToolScope(ApiScopes.Write)]
-    [AssistantDescription("Ověří publikovanou stránku (verify), nastaví garanta (stewardId nebo stewardFromLastAuthor) nebo interval ověření. pageId, nebo spaceId s pageIds hromadně.")]
+    [AssistantDescription("Ověří publikovanou stránku (verify), nastaví garanta (stewardId nebo stewardFromLastAuthor), zruší ho (clearSteward) nebo interval ověření. pageId, nebo spaceId s pageIds hromadně.")]
     [Description("Ověří publikovanou verzi stránky (verify: true, volitelně until = datum platnosti, jinak dnes + interval), nastaví garanta " +
-        "(stewardId = id uživatele, který smí stránku číst; stewardFromLastAuthor: true = autor poslední publikované verze) nebo interval ověření " +
+        "(stewardId = id uživatele, který smí stránku číst; stewardFromLastAuthor: true = autor poslední publikované verze; clearSteward: true = bez garanta) nebo interval ověření " +
         "(intervalMonths: inherit = podle prostoru, 0 = neověřovat, 3, 6, 12). Hromadně: spaceId a pageIds (až 500; verify, stewardId, " +
-        "stewardFromLastAuthor), spaceId bez pageIds se stewardFromLastAuthor nastaví garanta všem ověřovaným stránkám prostoru bez garanta. " +
+        "clearSteward, stewardFromLastAuthor = jen stránkám bez garanta), spaceId bez pageIds se stewardFromLastAuthor nastaví garanta všem ověřovaným stránkám prostoru bez garanta. " +
         "Smí každý s právem úprav stránky; ověření se označí „přes AI“. Šablony se neověřují. Přes MCP vyžaduje rozsah Zápis. " + States)]
     public Task<CallToolResult> SetVerificationAsync(
         [Description("pageId stránky (nebo spaceId s pageIds pro hromadnou změnu).")] string? pageId = null,
@@ -61,6 +61,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
         [Description("Datum, do kdy ověření platí (ISO 8601), jen s verify.")] string? until = null,
         [Description("Id uživatele, který bude garantem.")] string? stewardId = null,
         [Description("true = garantem bude autor poslední publikované verze.")] bool? stewardFromLastAuthor = null,
+        [Description("true = stránka nebude mít garanta.")] bool? clearSteward = null,
         [Description("inherit (podle prostoru), 0 (neověřovat), 3, 6 nebo 12.")] string? intervalMonths = null,
         [Description("Pro hromadnou změnu: spaceId prostoru.")] string? spaceId = null,
         [Description("Pro hromadnou změnu: pageIds stránek prostoru.")] string[]? pageIds = null,
@@ -92,7 +93,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
                 months = parsedMonths;
             }
             var request = new SetPageVerificationRequest(verify, end, McpArguments.OptionalId(stewardId, "stewardId"), stewardFromLastAuthor, months,
-                intervalMonths == "inherit" ? true : null);
+                intervalMonths == "inherit" ? true : null, clearSteward);
             if (space is not null && (months is not null || intervalMonths is not null || end is not null))
             {
                 return McpErrors.InvalidArgument("Hromadně lze jen ověřit a nastavit garanta; interval a datum nastavte po stránkách.");
@@ -101,13 +102,14 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
             if (space is { } spaceToChange)
             {
                 // One action per call, as Stav obsahu sends it.
-                var action = verify == true && request.StewardId is null && stewardFromLastAuthor != true ? "verify"
-                    : verify != true && request.StewardId is not null && stewardFromLastAuthor != true ? "steward"
-                    : verify != true && request.StewardId is null && stewardFromLastAuthor == true ? "stewardFromLastAuthor"
+                var steward = (request.StewardId is not null ? 1 : 0) + (clearSteward == true ? 1 : 0);
+                var action = verify == true && steward == 0 && stewardFromLastAuthor != true ? "verify"
+                    : verify != true && steward == 1 && stewardFromLastAuthor != true ? "steward"
+                    : verify != true && steward == 0 && stewardFromLastAuthor == true ? "stewardFromLastAuthor"
                     : null;
                 if (action is null)
                 {
-                    return McpErrors.InvalidArgument("Hromadně zadejte právě jedno: verify, stewardId, nebo stewardFromLastAuthor.");
+                    return McpErrors.InvalidArgument("Hromadně zadejte právě jedno: verify, stewardId, clearSteward, nebo stewardFromLastAuthor.");
                 }
                 var bulk = await bus.InvokeAsync<SpaceVerificationResult>(new SetMcpSpaceVerification(spaceToChange,
                     new SetSpaceVerificationRequest(action, ids, request.StewardId)), ct);
