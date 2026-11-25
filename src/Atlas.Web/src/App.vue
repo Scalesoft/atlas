@@ -1444,7 +1444,10 @@ function canOpenSettings(target: SettingsLocation) {
   const owner = user.value;
   if (!owner) return false;
   if (owner.isWikiAdmin) return true;
-  return target.scope === "space" && spaces.value.some(item => item.id === target.spaceId && item.role === "Admin" && !item.itemAccessOnly);
+  if (target.scope !== "space") return false;
+  // Stav obsahu is also the space writers' (the server asks for an editor): they get that one section of the space settings.
+  const contentHealth = /\/settings\/content-health(?:[/?]|$)/.test(target.hash);
+  return spaces.value.some(item => item.id === target.spaceId && !item.itemAccessOnly && (item.role === "Admin" || (contentHealth && item.role === "Writer")));
 }
 /**
  * Opens global or space settings at a hash. Moving within the open surface is the surface's own
