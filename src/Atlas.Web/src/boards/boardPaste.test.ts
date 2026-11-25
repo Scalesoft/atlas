@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { maxNoteText, maxPasteItems, parsePaste, scanPaste, type PasteContext, type PasteItem } from "./boardPaste";
+import { maxNoteText, parsePaste, scanPaste, type PasteContext, type PasteItem } from "./boardPaste";
+import { maxPasteItems } from "./boardDrop";
 
 const id = "3f2b8c1e-5a4d-4e6f-9a1b-2c3d4e5f6a7b";
 const other = "a1b2c3d4-0000-4000-8000-000000000001";

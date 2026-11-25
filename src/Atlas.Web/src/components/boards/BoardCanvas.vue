@@ -22,7 +22,6 @@ import { geometryOf } from "../../boards/geometry";
 import { defaultBoardSettings, maxBatchChanges, type BoardBlockNode, type BoardChange, type BoardColor, type BoardEdit, type BoardLinksShow, type ObjectEdit, type BoardPropsPatch, type BoardSettings, type BoardSide, type Geometry } from "../../boards/boardApi";
 import { resolvePasteItems, type BoardInsert, type PickedObject, type YouTrackIssueSnapshot } from "../../boards/boardBlockNodes";
 import { boardClipboardType, copyPayload, pasteChanges, readPayload } from "../../boards/boardClipboard";
-import { dropAccepts, placedContacts, readDrop } from "../../boards/boardDrop";
 import { contactRemoved, contactsRestored, repeatedContact } from "../../contacts/contactLinking";
 import {
   alignChanges, blockLayoutOf, boundsOf, connectChanges, connectToNewNoteChanges, createChange, defaultProps, deleteChanges, distributeChanges, duplicateChanges, fitGeometry,
@@ -47,7 +46,7 @@ import type { Port } from "../../boards/boardRoute";
 import { linkOf, neighbourhood, pathBetween, type Highlight } from "../../boards/boardNeighbours";
 import type { BoardItem } from "../../boards/boardModel";
 import { planGroupMotion, planMotion } from "../../boards/boardMotion";
-import { appPasteContext, parsePaste, type PasteContext, type PasteItem } from "../../boards/boardPaste";
+import { appPasteContext, dropAccepts, parsePaste, placedContacts, readDrop, type PasteContext, type PasteItem } from "../../boards/boardPaste";
 import type { BoardBlockHost, EditorBlockModule } from "../../boards/editorBlocks";
 import { whenIdle } from "../../idle";
 import { preheatTextEditor } from "./text/textEditorChunk";
@@ -1934,7 +1933,7 @@ function onPaste(event: ClipboardEvent) {
   }
   void insertPasted(parsePaste(event.clipboardData.getData("text/plain"), props.pasteContext ?? appPasteContext()), at);
 }
-// Dropping a page from the tree, a link or text (boardDrop.ts).
+// Dropping a page from the tree, a link or text (boardPaste.ts, the drag payloads of boardDrop.ts).
 function onDragOver(event: DragEvent) {
   if (!props.canEdit || !event.dataTransfer || !dropAccepts(event.dataTransfer.types)) return;
   event.preventDefault();

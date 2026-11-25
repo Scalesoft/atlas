@@ -277,3 +277,35 @@ onBeforeUnmount(() => { mounted = false; stopSuggestions(); if (!persisting) { g
     </AppDialog>
   </div>
 </template>
+
+<style>
+/* The tag row and the tag editor come with this lazy part, not with the eager page-tags.css (the chips stay there for the search). */
+.atlas .page-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 13px; }
+/* Refresh 2.5: the tags share the metadata row under the title (board 03). */
+.atlas .document-meta > .page-tags { flex-basis: auto; width: auto; margin-top: 0; }
+.atlas .page-tags:has(> .app-dialog:only-child) { display: none; }
+.atlas .page-tags .edit-page-tags { display: inline-flex; align-items: center; gap: 5px; min-height: 27px; padding: 3px 7px; border: 1px dashed var(--line); border-radius: 7px; background: transparent; color: var(--muted); font-size: 12px; font-weight: 500; }
+/* A locked page keeps the row (J7.1): an untagged page holds the place of „Přidat tagy“ invisibly. */
+.atlas .page-tags .edit-page-tags.is-locked { visibility: hidden; }
+@media (hover: hover) and (pointer: fine) { .atlas .page-tags .edit-page-tags:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); } }
+/* A fast answer never flashes „Načítání tagů…“: the note waits for the defer, and the tags fade in where they stay. */
+.atlas .tag-loading { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both; }
+.atlas .page-tags .tag-chip-list > .tag-chip { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
+.atlas .tag-editor-intro { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.atlas .tag-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; min-height: 65px; padding: 14px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 12px; background: var(--hover); }
+.atlas .tag-selection-empty { color: var(--muted); font-size: 13px; }
+.atlas .tag-input-label { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; font-weight: 600; margin: 0 0 8px; }
+.atlas .tag-input-label > span { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.atlas .tag-input-wrap { display: flex; align-items: center; gap: 10px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--muted); }
+.atlas .tag-input-wrap:focus-within { outline: var(--state-focus-ring); outline-offset: var(--state-focus-offset); }
+.atlas .tag-options { max-height: 230px; overflow-y: auto; margin-top: 8px; overscroll-behavior: contain; }
+.atlas .tag-options button { display: grid; grid-template-columns: 32px minmax(0, 1fr) 16px; gap: 10px; align-items: center; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; text-align: left; color: var(--text); }
+.atlas .tag-options button.active { background: var(--state-active-row-bg); box-shadow: var(--state-active-row-mark); }
+.atlas .tag-options button > span:nth-child(2) { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.atlas .tag-options strong { font-size: 13px; font-weight: 600; }
+.atlas .tag-options small { font-size: 11px; color: var(--muted); }
+.atlas .tag-option-icon { display: inline-grid; place-items: center; height: 32px; border-radius: 8px; color: var(--tag-ink); background: color-mix(in srgb, var(--tag-ink) 9%, var(--surface)); }
+.atlas .tag-editor-help { display: flex; align-items: center; gap: 7px; margin: 20px 0 0; color: var(--muted); font-size: 12px; }
+.atlas .tag-editor-help > svg { flex-shrink: 0; }
+@media (max-width: 680px) { .atlas .tag-editor-help { align-items: flex-start; } }
+</style>

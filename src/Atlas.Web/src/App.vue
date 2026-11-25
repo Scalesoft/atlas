@@ -69,7 +69,6 @@ import { plainTitle } from "./objects/relationsApi";
 import { isBoardNode, isPageNode, isReferenceNode, pageAncestors, resolveTreeInsert, resolveTreeMove, treePlaceOf, type TreeNodeType, type TreePage, type TreeDrop } from "./treeMove";
 import { carriesReference, readReferenceDrop, type ReferenceDrop } from "./boards/boardDrop";
 import type { TreeAction } from "./components/PageTree.vue";
-import { boardApi } from "./boards/boardApi";
 import { readTreeExpansion, revealTreeAncestors, writeTreeExpansion } from "./treeExpansion";
 import { organizationApi, treeReferenceApi, type OrganizationChanged } from "./organization";
 import { readDocument } from "./document";
@@ -2776,7 +2775,8 @@ async function trashBoard() {
   if (!id || !space || boardTrashBusy.value) return;
   boardTrashBusy.value = true; boardTrashError.value = "";
   try {
-    await boardApi.remove(id);
+    // The board API (and the live objects its cards read) comes with the open board (BoardView): the shell imports it only here.
+    await (await import("./boards/boardApi")).boardApi.remove(id);
     if (boardId.value !== id) return;
     boardTrashOpen.value = false;
     libraryRefresh.value++;

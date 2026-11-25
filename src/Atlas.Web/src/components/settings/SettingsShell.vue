@@ -336,3 +336,76 @@ function navigate(item: SettingsNavItem, event: MouseEvent) {
 }
 .settings-sheet-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 </style>
+
+<style>
+/* The rail's sections and the phone's Sekce sheet (refresh 2.5) come with this lazy shell, not with the eager refresh.css. */
+.atlas .settings-rail-outside:not(.md-editor):not(.md-editor *) { display: grid; gap: 10px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas .settings-rail-search:not(.md-editor):not(.md-editor *) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  margin: 0 0 2px;
+  padding: 0 10px;
+  border: 1px solid var(--input-line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--muted);
+  transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out), box-shadow var(--atlas-motion-fast) var(--atlas-ease-out);
+}
+.atlas .settings-rail-search:focus-within:not(.md-editor):not(.md-editor *) { outline: var(--state-focus-ring); outline-offset: var(--state-focus-offset); }
+.atlas .settings-rail-search input:not(.md-editor):not(.md-editor *) { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 13px; }
+.atlas .settings-rail-empty:not(.md-editor):not(.md-editor *) { margin: 4px 12px; color: var(--muted); font-size: 13px; }
+.atlas .settings-sidebar-rail .settings-nav:not(.md-editor):not(.md-editor *) { gap: 10px; }
+.atlas .settings-sidebar-rail .settings-nav-heading:not(.md-editor):not(.md-editor *) { margin: 0 0 2px; padding: 6px 8px 0; font-size: 11px; letter-spacing: 0.06em; }
+.atlas .settings-sidebar-rail .settings-nav-group ul:not(.md-editor):not(.md-editor *) { gap: 1px; }
+.atlas .settings-sidebar-rail .settings-nav-link:not(.md-editor):not(.md-editor *) {
+  min-height: 30px;
+  padding: 0 8px;
+  gap: 10px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+@media (hover: hover) and (pointer: fine) { .atlas .settings-sidebar-rail .settings-nav-link:hover:not(.md-editor):not(.md-editor *) { background: var(--refresh-glass); } }
+.atlas .settings-sidebar-rail .settings-nav-link[aria-current="page"]:not(.md-editor):not(.md-editor *) { background: var(--navigation-selected-bg); color: var(--text); font-weight: 650; }
+.atlas .settings-sidebar-rail .settings-nav-link[aria-current="page"] .settings-nav-icon:not(.md-editor):not(.md-editor *) { color: var(--accent); }
+/* The icon column of the rail is 18 px wide, as in the wiki navigation (the icon at the row's 8 px inset), so the labels
+   start on the same line (46 px) after the switch and the icons stand under the headings above them. */
+.atlas .settings-sidebar-rail .settings-nav-icon:not(.md-editor):not(.md-editor *) { width: 18px; color: var(--muted); }
+.atlas .settings-sidebar-rail .profile-rail-action:not(.md-editor):not(.md-editor *) { justify-content: flex-start; width: 100%; margin-top: 4px; color: var(--muted); }
+.atlas .settings-sidebar-rail > .settings-rail-outside:has([data-profile-logout]):not(.md-editor):not(.md-editor *) { flex: 1 0 auto; display: flex; flex-direction: column; }
+.atlas .settings-sidebar-rail .settings-rail-outside > .profile-rail-action:not(.md-editor):not(.md-editor *) {
+  min-height: 36px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--refresh-soft-line);
+  border-radius: 0;
+}
+
+/* The "Sekce" sheet of a phone answers the navigation drawer (refresh-theme.css §5): the same backdrop, a
+   grab handle, rounded corners towards the page, and it slides in from its edge (motion.css 2.5 theme).
+   `body` outranks the sheet's own rules, which load later with the lazy settings chunk. */
+body .settings-sheet[data-state="open"] { animation: atlas-sheet-in var(--atlas-motion-slow) var(--atlas-ease-out); }
+body .settings-sheet[data-state="closed"] { animation: atlas-sheet-out var(--atlas-motion-base) var(--atlas-ease-out); }
+body .settings-sheet { padding-top: 18px; border-top: 1px solid var(--line); }
+body .settings-sheet::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+  translate: -50% 0;
+}
+[data-mode="dark"] body .settings-sheet { background: var(--atlas-glow) no-repeat, var(--surface); box-shadow: var(--shadow-modal), var(--atlas-glow-ring); }
+@media (prefers-reduced-motion: reduce) {
+  body .settings-sheet[data-state="open"] { animation-name: st-fade-in; }
+  body .settings-sheet[data-state="closed"] { animation-name: st-fade-out; }
+}
+[data-atlas-reduced-motion] body .settings-sheet[data-state="open"] { animation-name: st-fade-in; }
+[data-atlas-reduced-motion] body .settings-sheet[data-state="closed"] { animation-name: st-fade-out; }
+</style>

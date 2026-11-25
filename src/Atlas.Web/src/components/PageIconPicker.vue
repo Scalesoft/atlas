@@ -90,3 +90,15 @@ onBeforeUnmount(stop);
     </section>
   </InlineReveal>
 </template>
+
+<style>
+/* The icon button and the picker come with this lazy part, not with the eager page-icons.css. */
+.atlas .document-meta .page-icon-edit { display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; color: var(--muted); padding: 2px 4px; font-size: 12px; border-radius: 5px; }
+@media (hover: hover) and (pointer: fine) { .atlas .document-meta .page-icon-edit:hover { color: var(--accent); background: var(--accent-soft); } }
+.atlas .page-icon-error { color: var(--error); font-size: 12px; }
+.atlas .page-icon-picker { display: grid; gap: 14px; max-width: 760px; margin: 10px 0 6px; padding: 16px; border: 1px solid var(--line); border-radius: var(--atlas-radius-lg); background: var(--surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 5%, transparent); font-size: 13px; }
+/* While editing the title above it already leaves 14 px: the card keeps the same room below, before the state chip (it was 24 px above and 6 px below). */
+.atlas .page-icon-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.atlas .page-icon-help { margin-left: auto; color: var(--muted); font-size: 12px; }
+.atlas .page-icon-failure { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--error); font-size: 13px; }
+</style>
