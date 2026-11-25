@@ -1,5 +1,7 @@
 import type { Editor } from "@tiptap/core";
-import { Plugin, PluginKey, type EditorState, type Transaction } from "@tiptap/pm/state";
+import { markdownChangeMapping } from "@atlas/markdown/core";
+import { Plugin, PluginKey, type EditorState } from "@tiptap/pm/state";
+import type { Mapping } from "@tiptap/pm/transform";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { ySyncPluginKey } from "@tiptap/y-tiptap";
 import type * as Y from "yjs";
@@ -67,11 +69,13 @@ export function createAgentReveal(editor: Editor): AgentReveal {
         const now = tr.getMeta(key) as number | undefined ?? performance.now();
         let typing = new Map(value.typing);
         if (tr.docChanged) {
+          // A collaborator's change replaces whole blocks; mapped by what really changed, the typing keeps its ranges.
+          const mapping = markdownChangeMapping(tr);
           typing = new Map([...typing].map(([client, entry]) => [client, { ...entry, ranges: entry.ranges
-            .map(range => ({ from: tr.mapping.map(range.from, 1), to: tr.mapping.map(range.to, -1) }))
+            .map(range => ({ from: mapping.map(range.from, 1), to: mapping.map(range.to, -1) }))
             .filter(range => range.to > range.from) }]));
           const written = writing !== undefined && (tr.getMeta(ySyncPluginKey) as { isChangeOrigin?: boolean } | undefined)?.isChangeOrigin
-            ? insertedRanges(tr) : [];
+            ? insertedRanges(mapping) : [];
           if (writing !== undefined && written.length && !prefersReducedMotion(editor.view.dom)) {
             const dom = editor.view.dom;
             const units = written.reduce((sum, range) => sum + range.to - range.from, 0);
@@ -111,23 +115,15 @@ export function createAgentReveal(editor: Editor): AgentReveal {
   };
 }
 
-/**
- * What a remote transaction inserted, in its new document. y-tiptap replaces the whole block a remote change touched, so what each
- * step wrote is only where its document differs from the one before (blocks it left alone keep their nodes, a quick comparison).
- */
-function insertedRanges(tr: Transaction) {
+/** What a remote transaction inserted, in its new document (its mapping narrowed to what really changed). */
+function insertedRanges(mapping: Mapping) {
   const ranges: { from: number; to: number }[] = [];
-  tr.steps.forEach((_step, index) => {
-    const before = tr.docs[index]!.content, after = (tr.docs[index + 1] ?? tr.doc).content;
-    const start = before.findDiffStart(after);
-    if (start === null) return;
-    const end = before.findDiffEnd(after)!;
-    // Repeated content around the change: both ends may overlap the start.
-    const endB = end.b + Math.max(0, start - Math.min(end.a, end.b));
-    const rest = tr.mapping.slice(index + 1);
-    const from = rest.map(start, 1), to = rest.map(endB, -1);
-    if (to > from) ranges.push({ from, to });
-  });
+  mapping.maps.forEach((map, index) => map.forEach((_oldFrom, _oldTo, from, to) => {
+    const rest = mapping.slice(index + 1);
+    const start = rest.map(from, 1);
+    const end = rest.map(to, -1);
+    if (end > start) ranges.push({ from: start, to: end });
+  }));
   return ranges.sort((a, b) => a.from - b.from);
 }
 

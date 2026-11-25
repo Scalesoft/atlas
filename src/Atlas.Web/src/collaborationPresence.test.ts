@@ -622,6 +622,40 @@ describe("an agent's write typed in", () => {
     expect(unwritten()).toBe("");
   });
 
+  it("keeps typing in the agent's text when a collaborator edits the same paragraph meanwhile", () => {
+    const now = 1000;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const ydoc = new Y.Doc();
+    const awareness = new Awareness(ydoc);
+    const host = document.createElement("div");
+    document.body.append(host);
+    const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
+      CollaborationCarets.configure({ provider: { awareness }, user: { name: "Petr", color: "#0284c7" } })] });
+    vi.spyOn(editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {} });
+    const abort = new AbortController();
+    const cleanup = presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor, controller: {} as never, signal: abort.signal }) as () => void;
+    attached.push(() => { cleanup(); editor.destroy(); host.remove(); awareness.destroy(); });
+    editor.commands.insertContent("abcdef");
+    presence.update([{ clientId: 777, id: "ai:0f3c", name: "Jana · AI (MCP)", color: "#7c3aed" }]);
+    const remoteWrite = (clientId: number, at: number, text: string) => {
+      const remote = new Y.Doc();
+      remote.clientID = clientId;
+      Y.applyUpdate(remote, Y.encodeStateAsUpdate(ydoc));
+      ((remote.getXmlFragment("default").get(0) as Y.XmlElement).get(0) as Y.XmlText).insert(at, text);
+      Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(remote, Y.encodeStateVector(ydoc)));
+    };
+    remoteWrite(777, 6, " agent píše dál");
+    frame(now);
+    const unwritten = () => [...host.querySelectorAll(".atlas-agent-unwritten")].map(span => span.textContent).join("");
+    expect(unwritten()).toBe(" agent píše dál");
+    // y-tiptap replaces the whole paragraph for the collaborator's letter; the agent's text stays unwritten, not shown at once.
+    remoteWrite(888, 0, "X");
+    frame(now);
+    expect(editor.getText()).toBe("Xabcdef agent píše dál");
+    expect(unwritten()).toBe(" agent píše dál");
+  });
+
   it("types a long write in at most one step a frame, within its bounded time, while a person keeps typing (perf guard)", () => {
     let now = 1000;
     vi.spyOn(performance, "now").mockImplementation(() => now);
