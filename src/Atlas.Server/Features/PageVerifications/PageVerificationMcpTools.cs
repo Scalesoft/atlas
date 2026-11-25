@@ -58,7 +58,7 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
     public Task<CallToolResult> SetVerificationAsync(
         [Description("pageId stránky (nebo spaceId s pageIds pro hromadnou změnu).")] string? pageId = null,
         [Description("true = ověřit publikovanou verzi.")] bool? verify = null,
-        [Description("Datum, do kdy ověření platí (ISO 8601), jen s verify.")] string? until = null,
+        [Description("Datum, do kdy ověření platí (ISO 8601; samotné datum platí do konce dne v čase Europe/Prague), jen s verify.")] string? until = null,
         [Description("Id uživatele, který bude garantem.")] string? stewardId = null,
         [Description("true = garantem bude autor poslední publikované verze.")] bool? stewardFromLastAuthor = null,
         [Description("true = stránka nebude mít garanta.")] bool? clearSteward = null,
@@ -77,7 +77,8 @@ public sealed class PageVerificationMcpTools(IMessageBus bus, ILogger<PageVerifi
             DateTime? end = null;
             if (until is not null)
             {
-                if (!DateTime.TryParse(until, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var parsed))
+                // As the web's JSON: a date or a time without a zone stays unspecified, and the shared handler reads it in Europe/Prague.
+                if (!DateTime.TryParse(until, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsed))
                 {
                     return McpErrors.InvalidArgument("until musí být datum ISO 8601.");
                 }

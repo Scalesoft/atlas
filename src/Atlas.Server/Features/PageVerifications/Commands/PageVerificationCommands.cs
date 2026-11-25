@@ -31,6 +31,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
 {
     public const int MaxBulk = 500;
     public const int MaxNote = 500;
+    private static readonly TimeZoneInfo Zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
     public async Task<PageVerificationView> Handle(SetPageVerification command, CancellationToken ct)
     {
@@ -194,7 +195,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             var published = await PublishedVersionAsync(page, ct)
                 ?? throw new ApiException(400, "Ověřit lze jen publikovanou stránku. Nejdřív ji publikujte.", "not_published");
             var now = clock.GetUtcNow().UtcDateTime;
-            var until = request.Until?.ToUniversalTime() ?? now.AddMonths(interval);
+            var until = request.Until is { } chosen ? Until(chosen) : now.AddMonths(interval);
             if (until <= now || until > now.AddYears(5))
             {
                 throw new ApiException(400, "Ověřit lze do data v budoucnosti, nejvýše za pět let.");
@@ -221,6 +222,12 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", stewardId).SetParameter("page", page.Id).UniqueResultAsync<bool>(ct);
         return reads ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
     }
+
+    /// <summary>„Ověřit do“: a time with a zone (Z or an offset) as it is; one without a zone in Europe/Prague, whatever the server's own
+    /// zone, and a bare date (the web's date field, „2027-03-01“ over MCP) valid through the end of that day.</summary>
+    public static DateTime Until(DateTime chosen) => chosen.Kind != DateTimeKind.Unspecified
+        ? chosen.ToUniversalTime()
+        : TimeZoneInfo.ConvertTimeToUtc(chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen, Zone);
 
     private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)
         => (await session.GetAsync<PageVerification>(pageId, ct))?.StewardId is { } steward && (await session.GetAsync<UserAccount>(steward, ct))?.IsActive == true;

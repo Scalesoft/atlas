@@ -35,6 +35,20 @@ public sealed class PageVerificationTests
         Assert.Null(PageVerificationStates.Interval(3, 6, true));
     }
 
+    [Fact]
+    public void A_date_without_a_time_is_verified_through_that_day_in_Prague()
+    {
+        // Winter (UTC+1) and summer (UTC+2): the last microsecond of the day there, so the chip still shows that day.
+        var winter = PageVerificationHandler.Until(new DateTime(2027, 3, 1));
+        Assert.Equal(new DateTime(2027, 3, 1, 23, 0, 0, DateTimeKind.Utc).AddTicks(-10), winter);
+        Assert.Equal(new DateTime(2027, 7, 1, 22, 0, 0, DateTimeKind.Utc).AddTicks(-10), PageVerificationHandler.Until(new DateTime(2027, 7, 1)));
+        Assert.Equal(PageVerificationStates.Expiring, PageVerificationStates.Of(6, winter, new DateTime(2027, 3, 1, 22, 59, 59, DateTimeKind.Utc)));
+        Assert.Equal(PageVerificationStates.Expired, PageVerificationStates.Of(6, winter, new DateTime(2027, 3, 1, 23, 0, 0, DateTimeKind.Utc)));
+        // A time without a zone is Prague's; one with a zone is taken as it is.
+        Assert.Equal(new DateTime(2027, 3, 1, 9, 0, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 1, 10, 0, 0)));
+        Assert.Equal(new DateTime(2027, 3, 1, 10, 0, 0, DateTimeKind.Utc), PageVerificationHandler.Until(new DateTime(2027, 3, 1, 10, 0, 0, DateTimeKind.Utc)));
+    }
+
     [PostgreSqlFact]
     public async Task Each_action_follows_the_page_rights_and_the_reads_carry_the_verification()
     {
@@ -122,6 +136,13 @@ public sealed class PageVerificationTests
         Assert.Null((await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["stewardId"]);
         Assert.Equal("invalid_argument", ErrorCode(await CallAsync(writing, "atlas_set_verification",
             new { spaceId = space, pageIds = new[] { page.Id }, stewardId = readerId, clearSteward = true })));
+        // „Ověřit do“ a bare date: through the end of that day in Europe/Prague, the same over MCP and on the web.
+        var day = DateTime.UtcNow.AddMonths(4).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var endOfDay = PageVerificationHandler.Until(DateTime.ParseExact(day, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+        Assert.True((await CallAsync(writing, "atlas_set_verification", new { pageId = page.Id, verify = true, until = day })).IsError != true);
+        Assert.Equal(endOfDay, (await AtlasHttpSite.Json(await f.Admin.GetAsync(url), HttpStatusCode.OK))["verifiedUntil"]!.GetValue<DateTime>().ToUniversalTime());
+        Assert.Equal(endOfDay, (await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, url, new { verify = true, until = day }),
+            HttpStatusCode.OK))["verifiedUntil"]!.GetValue<DateTime>().ToUniversalTime());
         Assert.Equal(PageVerificationStates.Verified,
             Structured(await CallAsync(reading, "atlas_get_page", new { pageId = page.Id }))["verification"]!["state"]!.GetValue<string>());
         Assert.Equal(1, Structured(await CallAsync(reading, "atlas_list_content_health", new { spaceId = space }))["summary"]!["verified"]!.GetValue<int>());
