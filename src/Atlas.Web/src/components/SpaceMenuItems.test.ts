@@ -42,7 +42,7 @@ it("offers the same space actions in the breadcrumb's list and in the sidebar's"
   await wrapper.get('[aria-label="Další akce prostoru Provoz"]').trigger("click"); await settle();
   // The sidebar adds only what concerns its tree (Najít ve stromu, Sbalit vše, Odepnout), none of which an empty, unpinned space has.
   expect(labels()).toEqual(breadcrumb);
-  expect(breadcrumb).toEqual(["Nová stránka", "Nová tabule", "Nastavení prostoru", "Šablony stránek", "Přístupy", "Připnutí pro všechny…", "Koš stránek", "Exportovat prostor"]);
+  expect(breadcrumb).toEqual(["Nová stránka", "Nová tabule", "Stav obsahu", "Nastavení prostoru", "Šablony stránek", "Přístupy", "Připnutí pro všechny…", "Koš stránek", "Exportovat prostor"]);
   rows().find(row => row.textContent?.includes("Šablony"))!.click(); await settle();
   expect(wrapper.emitted("templates")).toHaveLength(1);
 });

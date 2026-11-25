@@ -59,6 +59,7 @@ const en: ShellMessages = {
     sidePanel: "Page side panel",
   },
   cmd: {
+    contentHealth: "Content health",
     copyPageLink: "Copy page link",
     selectedText: "Selected text",
     deploymentBoard: "Deployment board",

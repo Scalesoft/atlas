@@ -63,6 +63,7 @@ const cs = {
     sidePanel: "Boční panel stránky",
   },
   cmd: {
+    contentHealth: "Stav obsahu",
     copyPageLink: "Kopírovat odkaz na stránku",
     selectedText: "Vybraný text",
     deploymentBoard: "Tabule nasazení",

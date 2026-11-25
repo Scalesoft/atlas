@@ -986,6 +986,8 @@ const commands = computed<WikiCommand[]>(() => {
   if (user.value.isWikiAdmin) items.push({ id: 'space-trash', label: t.cmd.spaceTrash, detail: t.common.wikiAdmin, icon: 'trash', keywords: ['obnovit'], run: () => openSettings(`${globalSettingsBase}/spaces/trash`) });
   if (user.value.isWikiAdmin) items.push({ id: 'settings', label: t.common.wikiAdmin, detail: t.common.settings, icon: 'settings', keywords: ['nastavení'], run: openAdministration });
   if (currentSpace.value && spaceCanManage(currentSpace.value)) items.push({ id: 'space-settings', label: t.common.spaceSettings, detail: currentSpace.value.name, icon: 'settings', run: () => openSettings(spaceSettingsHash(currentSpace.value!.id)) });
+  // Stav obsahu is every editor's of the space (5.2 §6), its one section of the space settings.
+  if (currentSpace.value && spaceCanWrite(currentSpace.value)) { const space = currentSpace.value; items.push({ id: 'content-health', label: t.cmd.contentHealth, detail: space.name, icon: 'shield-check', keywords: ['ověření', 'verification'], run: () => spaceMenu(space, 'content-health') }); }
   if (currentSpace.value && projectorEnabled.value) {
     const space = currentSpace.value;
     items.push(
@@ -2671,8 +2673,9 @@ async function exportContent(kind: "pages" | "spaces", format: "zip" | "pdf" = "
   });
 }
 /** One answer for the space menu wherever it opens (SpaceMenuItems: the breadcrumb's and the sidebar's). The trash and the export are of the open space, so another one opens first. */
-async function spaceMenu(space: Space, action: "settings" | "templates" | "access" | "trash" | "export") {
+async function spaceMenu(space: Space, action: "settings" | "templates" | "access" | "trash" | "export" | "content-health") {
   if (action === "settings") return openSettings(spaceSettingsHash(space.id));
+  if (action === "content-health") return openSettings(spaceSettingsHash(space.id, "content-health"));
   if (action === "templates") return openSpaceTemplates(space.id);
   if (action === "access") return openSettings(spaceSettingsHash(space.id, "access"));
   if (currentSpace.value?.id !== space.id && !(await selectSpace(space))) return;
@@ -4626,6 +4629,7 @@ onUnmounted(() => {
                 @access="spaceMenu(space, 'access')"
                 @trash="spaceMenu(space, 'trash')"
                 @export-space="spaceMenu(space, 'export')"
+                @content-health="spaceMenu(space, 'content-health')"
                 @create-page="createPageInSpace(space)"
                 @create-board="createBoardInSpace(space)"
                 @set-collapsed="(ids, collapse) => setPagesCollapsed(space.id, ids, collapse)"
@@ -4748,7 +4752,7 @@ onUnmounted(() => {
                       <!-- The same list as the sidebar's „Další akce prostoru“ (SpaceMenuItems). -->
                       <SpaceMenuItems :can-write="spaceCanWrite(currentSpace)" can-manage :boards="boardsEnabled" :empty="!(spacePages[currentSpace.id]?.length)"
                         @create-page="createPageInSpace(currentSpace)" @create-board="createBoardInSpace(currentSpace)" @settings="spaceMenu(currentSpace, 'settings')" @pin-policy="spaceMenu(currentSpace, 'settings')"
-                        @templates="spaceMenu(currentSpace, 'templates')" @access="spaceMenu(currentSpace, 'access')" @trash="spaceMenu(currentSpace, 'trash')" @export-space="spaceMenu(currentSpace, 'export')" />
+                        @templates="spaceMenu(currentSpace, 'templates')" @access="spaceMenu(currentSpace, 'access')" @trash="spaceMenu(currentSpace, 'trash')" @export-space="spaceMenu(currentSpace, 'export')" @content-health="spaceMenu(currentSpace, 'content-health')" />
                     </ActionDisclosure>
                   </li>
                   <li v-if="templateView"><span class="breadcrumb-separator" aria-hidden="true">/</span><span class="breadcrumb-title" aria-current="page">{{ templateView === 'new-page' ? t.common.newPage : templateView === 'new-board' ? t.common.newBoard : templateView === 'new-deployment' ? t.nav.newDeployment : t.nav.newTemplate }}</span></li>

@@ -18,13 +18,15 @@ defineProps<{
   /** The space has no page yet: there is nothing to export. */
   empty?: boolean;
 }>();
-const emit = defineEmits<{ createPage: []; createBoard: []; settings: []; templates: []; access: []; pinPolicy: []; trash: []; exportSpace: [] }>();
+const emit = defineEmits<{ createPage: []; createBoard: []; settings: []; templates: []; access: []; pinPolicy: []; trash: []; exportSpace: []; contentHealth: [] }>();
 </script>
 
 <template>
   <slot name="before" />
   <ActionDisclosureItem v-if="canWrite" data-space-menu="new-page" @click="emit('createPage')"><AtlasIcon name="file-plus" />{{ t.spaceMenu.newPage }}</ActionDisclosureItem>
   <ActionDisclosureItem v-if="canWrite && boards" data-space-menu="new-board" @click="emit('createBoard')"><AtlasIcon name="layout-dashboard" />{{ t.spaceMenu.newBoard }}</ActionDisclosureItem>
+  <!-- Stav obsahu (5.2 §6) is every editor's of the space, not only its administrators': its one section of the space settings. -->
+  <ActionDisclosureItem v-if="canWrite" data-space-menu="content-health" @click="emit('contentHealth')"><AtlasIcon name="shield-check" />{{ t.spaceMenu.contentHealth }}</ActionDisclosureItem>
   <template v-if="canManage">
     <ActionDisclosureItem data-space-menu="settings" @click="emit('settings')"><AtlasIcon name="settings" />{{ t.spaceMenu.settings }}</ActionDisclosureItem>
     <ActionDisclosureItem data-space-menu="templates" @click="emit('templates')"><AtlasIcon name="layout-template" />{{ t.spaceMenu.templates }}</ActionDisclosureItem>

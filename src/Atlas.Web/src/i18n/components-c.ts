@@ -36,6 +36,7 @@ const cs = {
     exportEmpty: "Prostor zatím neobsahuje žádné stránky.",
     exportHint: "ZIP uložených verzí dostupných stránek včetně příloh. Nejde o zálohu serveru.",
     export: "Exportovat prostor",
+    contentHealth: "Stav obsahu",
   },
   tagSearch: {
     tags: "Tagy",

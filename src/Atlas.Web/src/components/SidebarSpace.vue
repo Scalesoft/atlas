@@ -67,6 +67,7 @@ const emit = defineEmits<{
   access: [];
   trash: [];
   exportSpace: [];
+  contentHealth: [];
   setCollapsed: [ids: string[], collapsed: boolean];
   select: [page: TreePage];
   toggleCollapsed: [id: string];
@@ -433,7 +434,7 @@ function dragLeave(event: DragEvent) {
         <ActionDisclosure :label="componentsSidebar.sidebar.moreActions(space.name)" :disabled="busy">
           <SpaceMenuItems :can-write="canWrite" :can-manage="canManage" :boards="boards" :empty="pages !== undefined && !pages.length"
             @create-page="emit('createPage')" @create-board="emit('createBoard')" @settings="emit('settings')" @pin-policy="emit('pinPolicy')"
-            @templates="emit('templates')" @access="emit('access')" @trash="emit('trash')" @export-space="emit('exportSpace')">
+            @templates="emit('templates')" @access="emit('access')" @trash="emit('trash')" @export-space="emit('exportSpace')" @content-health="emit('contentHealth')">
             <template #before>
               <ActionDisclosureItem v-if="pages?.length" data-sidebar-space-filter @click="openFilter()"><AtlasIcon name="search" />{{ componentsSidebar.sidebar.find }}</ActionDisclosureItem>
               <ActionDisclosureItem v-if="canCollapse" @click="setAllCollapsed"><AtlasIcon :name="allCollapsed ? 'chevrons-up-down' : 'chevrons-down-up'" />{{ allCollapsed ? componentsSidebar.sidebar.expandAll : componentsSidebar.sidebar.collapseAll }}</ActionDisclosureItem>
