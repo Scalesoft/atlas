@@ -29,6 +29,8 @@ const props = defineProps<{
   view: LibraryPart;
   /** The tab's search from the address (`#/library/contacts?q=`). */
   query?: string;
+  /** The contact whose dock Kontakty opens (`?contact=`). */
+  contact?: string;
   userId: string;
   spaces: Space[];
   canCreate: boolean;
@@ -61,7 +63,7 @@ const listTab = computed<LibraryTab | undefined>(() =>
   <SpaceDirectory v-else-if="view === 'spaces'" :key="`spaces:${userId}`" :spaces="spaces" :can-create="canCreate" :can-manage="canManage" :pending-ids="pendingIds" :limit="limit"
     :storage-key="`atlas:reading:${userId}:library-view`" @open="emit('open', $event)" @pin="(space, pinned) => emit('pin', space, pinned)" @create="emit('create')" />
   <!-- Kontakty: the overview of where people occur, with the directory to edit as its Adresář (UX1-14). -->
-  <ContactOverview v-else-if="view === 'contacts'" :key="`contacts:${userId}`" :focus="query"><template #directory><ContactDirectory :initial-query="query" /></template>
+  <ContactOverview v-else-if="view === 'contacts'" :key="`contacts:${userId}`" :focus="query"><template #directory><ContactDirectory :initial-query="query" :initial-contact="contact" /></template>
     <template #skills><SkillGraph :spaces="spaces" /></template></ContactOverview>
   <PersonalItems v-else-if="view === 'personal' || view === 'shared'" :key="`${view}:${userId}`" :mode="view === 'personal' ? 'mine' : 'shared'"
     :refresh-key="refreshKey" />

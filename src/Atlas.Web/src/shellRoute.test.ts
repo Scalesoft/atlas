@@ -10,6 +10,7 @@ describe("shell route grammar", () => {
       ["#/", home],
       ["#/library/favorites", { view: "library", tab: "favorites" }],
       ["#/library/updates", { view: "library", tab: "updates" }],
+      ["#/library/contacts?contact=0a1b2c3d-0000-0000-0000-00000000000c", { view: "library", tab: "contacts", contact: "0a1b2c3d-0000-0000-0000-00000000000c" }],
       ["#/spaces/space-1", { view: "space", spaceId: "space-1" }],
       ["#/spaces/space-1/about", { view: "space", spaceId: "space-1", tab: "about" }],
       ["#/spaces/space-1/boards", { view: "space", spaceId: "space-1", tab: "boards" }],

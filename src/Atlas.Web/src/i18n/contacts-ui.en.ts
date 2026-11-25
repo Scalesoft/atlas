@@ -1,7 +1,20 @@
 import { plural } from ".";
 import type { ContactsUiMessages } from "./contacts-ui";
 
-const en: ContactsUiMessages = {  card: {
+const en: ContactsUiMessages = {
+  activity: {
+    title: "Activity",
+    space: "Space",
+    allSpaces: "All spaces",
+    searchSpace: "Search spaces",
+    loading: "Loading activity…",
+    failed: "Could not load the activity",
+    empty: "No changes in the last 30 days",
+    emptyText: "Changes of pages you may read show here.",
+    open: "Activity",
+    openOf: (name: string) => `Activity: ${name}`,
+  },
+  card: {
     name: "Name",
     title: "Role",
     organization: "Organization",

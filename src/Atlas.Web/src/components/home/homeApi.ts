@@ -30,8 +30,10 @@ export interface RecentChangeList { items: RecentChange[]; next: string | null }
 
 /** The reads of the home dashboard's cards: one object, so a card's data comes from the server or (gallery, tests) from sample data. */
 export const homeApi = {
-  changes: (filter: ChangeFilter, cursor: string | null, signal?: AbortSignal, limit = 8) =>
-    api<RecentChangeList>(`/me/changes?filter=${filter}&limit=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, { signal }),
+  /** `scope`: one person's changes (their account) and one space (PersonActivity). */
+  changes: (filter: ChangeFilter, cursor: string | null, signal?: AbortSignal, limit = 8, scope: { author?: string; space?: string } = {}) =>
+    api<RecentChangeList>(`/me/changes?filter=${filter}&limit=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`
+      + `${scope.author ? `&author=${encodeURIComponent(scope.author)}` : ""}${scope.space ? `&space=${encodeURIComponent(scope.space)}` : ""}`, { signal }),
   recent: (signal?: AbortSignal): Promise<LibraryList> => personalLibraryApi.list("recent", 0, signal, 6),
   drafts: (signal?: AbortSignal): Promise<LibraryList> => personalLibraryApi.list("drafts", 0, signal, 3),
 };

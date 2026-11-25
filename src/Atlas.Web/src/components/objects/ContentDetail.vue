@@ -17,12 +17,17 @@ import { Button } from "../ui/button";
 import ObjectRelations from "./ObjectRelations.vue";
 import UsagePanel from "./UsagePanel.vue";
 import t from "../../i18n/components-objects";
+import { lazyComponent } from "../../lazyComponent";
+
+// Loaded with an internal person's dock only: the first load of the app carries none of it.
+const PersonActivity = lazyComponent(() => import("../contacts/PersonActivity.vue"), { loading: LoadingSkeleton });
 
 /**
  * The detail of one row of Obsah in the dock (WorkspaceSidePanel with the tabs of the board's object detail, minus Popis): Přehled
  * from the row, Vazby from the relations endpoint for any object (ObjectRelations), Použito na from the usage service (UsagePanel), Diskuse (CommentThread) and
  * Historie. It is BoardObjectDetail's sibling, not a copy: that one knows a card of a board, this one an object of a space.
- * A contact shows its directory card in Přehled (the tree's reference node to a contact opens here too). `graph`: the host has a
+ * A contact shows its directory card in Přehled (the tree's reference node to a contact opens here too), and an internal person (the contact of
+ * an account, `directoryId`) their Aktivita under it (PersonActivity). `graph`: the host has a
  * graph to put the object into (Ukázat v grafu).
  */
 const props = withDefaults(defineProps<{ row: DetailRow; tab: BoardDetailTab; api?: RelationsApi; usage?: UsageApi; graph?: boolean }>(), { api: undefined, usage: undefined, graph: true });
@@ -72,6 +77,8 @@ watch(() => [props.row.id, props.row.typeId], async () => {
         <Button v-if="openable" size="sm" type="button" data-content-detail-open @click="emit('open', row.id, row.typeId)"><AtlasIcon name="external" :size="15" />{{ t.detail.open }}</Button>
         <Button v-if="graph" variant="outline" size="sm" type="button" data-content-detail-focus @click="emit('focus', row.id)"><AtlasIcon name="network" :size="15" />{{ t.detail.showInGraph }}</Button>
       </div>
+      <PersonActivity v-if="contact?.status === 'ready' && contact.data.directoryId" :key="contact.data.directoryId" :account-id="contact.data.directoryId"
+        @open="emit('open', $event, 'atlas.page')" />
     </template>
 
     <ObjectRelations v-else-if="tab === 'relations'" :key="`${row.id}:relations`" :object-id="row.id" :api="api" @open="(id, typeId) => emit('open', id, typeId)" />

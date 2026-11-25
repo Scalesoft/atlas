@@ -175,3 +175,7 @@ it("gives the editor a contact linked to an account as that internal person, so 
   expect(withAccount({ state: "ok", contact: { name: "Petr" } })).toEqual({ state: "ok", contact: { name: "Petr" } });
   expect(withAccount({ state: "hidden" })).toEqual({ state: "hidden" });
 });
+
+it("leads the read-only card's „Otevřít v adresáři“ to that contact's dock, where a colleague's activity is", () => {
+  expect(contactPluginOptions().directoryUrl!("0a1b2c3d-0000-0000-0000-00000000000c")).toBe("#/library/contacts?contact=0a1b2c3d-0000-0000-0000-00000000000c");
+});
