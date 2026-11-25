@@ -185,7 +185,8 @@ public sealed class McpG5CoverageTests
 
     /// <summary>The same sweep over every /api/v1 route with a REST token: the space's administrator with the space out of AI, or an
     /// account without a grant on it. Route ids by name (an {id} by the segment before it), the marker as the query, the request type's
-    /// plain body for a write. A route answers 404 or 403, or succeeds without showing anything of the space; nothing there changes.</summary>
+    /// plain body for a write; an {objectId} with each object kind of the space (contact, page, board). A route answers 404 or 403, or
+    /// succeeds without showing anything of the space; nothing there changes.</summary>
     [PostgreSqlTheory]
     [InlineData(false)]
     [InlineData(true)]
@@ -200,26 +201,31 @@ public sealed class McpG5CoverageTests
         });
         await using var marked = await MarkAsync(f, outsider);
         var before = await StateAsync(f, marked.Space, marked.Home);
-        var ids = marked.Ids;
         var routes = f.Site.Services.GetRequiredService<EndpointDataSource>().Endpoints.OfType<RouteEndpoint>()
             .Where(endpoint => endpoint.RoutePattern.RawText?.StartsWith("/api/v1/", StringComparison.Ordinal) == true)
             .SelectMany(endpoint => (endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? []).Where(method => method != "HEAD")
                 .Select(method => (Method: method, Endpoint: endpoint)))
             .OrderBy(route => route.Endpoint.RoutePattern.RawText, StringComparer.Ordinal).ThenBy(route => route.Method, StringComparer.Ordinal).ToArray();
         Assert.NotEmpty(routes);
+        // Every object kind behind {objectId}: the space's contact, page and board, each decided by its own type.
+        var sweep = routes.SelectMany(route => (route.Endpoint.RoutePattern.Parameters.Any(parameter => parameter.Name == "objectId")
+                ? new[] { marked.Contact, marked.Page.Id, marked.Board } : [marked.Contact])
+            .Select(objectId => (route.Method, route.Endpoint, ObjectId: objectId))).ToArray();
         var reaching = RestReaching(marked);
         Assert.Empty(reaching.Keys.Except(routes.Select(route => $"{route.Method} {route.Endpoint.RoutePattern.RawText}")));
         var api = f.Site.Client();
         var failures = new List<string>();
-        for (var sent = 0; sent < routes.Length; sent++)
+        for (var sent = 0; sent < sweep.Length; sent++)
         {
             // A token may send 120 requests a minute ("personal-api"): the sweep takes a fresh one before it runs out.
             if (sent % 80 == 0)
             {
                 api.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await TokenAsync(f, marked, "rest"));
             }
-            var (method, endpoint) = routes[sent];
+            var (method, endpoint, objectId) = sweep[sent];
+            var ids = new Dictionary<string, string>(marked.Ids) { ["objectId"] = objectId };
             var name = $"{method} {endpoint.RoutePattern.RawText}";
+            var label = objectId == marked.Contact ? name : $"{name} (objectId {(objectId == marked.Board ? "board" : "page")})";
             var segments = endpoint.RoutePattern.PathSegments.Select(segment => segment.Parts.Single()).ToArray();
             var path = new List<string>();
             string? unknown = null;
@@ -251,7 +257,7 @@ public sealed class McpG5CoverageTests
             }
             if (unknown is not null)
             {
-                failures.Add($"{name}: {{{unknown}}} needs an id of the space or a reason in OwnIds (an {{id}} by the segment before it in IdOf).");
+                failures.Add($"{label}: {{{unknown}}} needs an id of the space or a reason in OwnIds (an {{id}} by the segment before it in IdOf).");
                 continue;
             }
             // The query names everything a route may require; a route ignores what it does not read.
@@ -269,11 +275,11 @@ public sealed class McpG5CoverageTests
             var answer = await response.Content.ReadAsStringAsync();
             if (Shown.Append(Marker + " obsah přílohy").FirstOrDefault(shown => answer.Contains(shown, StringComparison.Ordinal)) is { } leaked)
             {
-                failures.Add($"{name} shows \"{leaked}\" ({(int)response.StatusCode}).");
+                failures.Add($"{label} shows \"{leaked}\" ({(int)response.StatusCode}).");
             }
             else if (!response.IsSuccessStatusCode && response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.Forbidden))
             {
-                failures.Add($"{name} stopped with {(int)response.StatusCode} before the access check: give it arguments that reach it. {answer}");
+                failures.Add($"{label} stopped with {(int)response.StatusCode} before the access check: give it arguments that reach it. {answer}");
             }
         }
         Assert.True(failures.Count == 0, string.Join("\n", failures));
