@@ -190,7 +190,6 @@
 .atlas .app-dialog.search-dialog .search-content > :is(p[role="status"], .search-did-you-mean, .search-answer-rescue):not(.visually-hidden, .md-editor *) { animation: st-rise-in var(--atlas-motion-base) var(--atlas-ease-out) backwards; }
 
 /* The retry inside the error notice reads as an action, not as more of the message. */
-.atlas .app-dialog.search-dialog .search-retry:not(.md-editor *) { margin-left: 10px; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .atlas .app-dialog.search-dialog .search-group:not(.md-editor *) { margin: 0 0 6px; }
 /* "Měli jste na mysli" stood 4 px from the row edge, in line with neither the edge nor the rows' content (12 px). */
 .atlas .app-dialog.search-dialog :is(.search-did-you-mean, .search-relaxed):not(.md-editor *) { margin: 10px 12px 0; }

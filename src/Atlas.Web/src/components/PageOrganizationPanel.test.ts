@@ -6,7 +6,7 @@ import { organizationApi, type OrganizationTree, type TrashList } from "../organ
 import { objectApi } from "../objects/objectApi";
 
 vi.mock("../organization", () => ({ organizationApi: {
-  tree: vi.fn(), trashList: vi.fn(), move: vi.fn(), moveSpace: vi.fn(), trash: vi.fn(), untrash: vi.fn(), rename: vi.fn(),
+  tree: vi.fn(), trashList: vi.fn(), move: vi.fn(), moveSpace: vi.fn(), trash: vi.fn(), untrash: vi.fn(),
 } }));
 vi.mock("../objects/objectApi", () => ({ objectApi: { purge: vi.fn() } }));
 let wrapper: VueWrapper | undefined;
@@ -40,33 +40,8 @@ afterEach(() => {
 });
 
 describe("page organization", () => {
-  it("gives the tabs one thumb that is placed first and then follows the chosen tab", async () => {
-    // jsdom has no layout: Obecné sits at 4 px (348 px wide), Umístění at 356 px (348 px wide).
-    const left = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetLeft");
-    const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetWidth");
-    const location = (element: HTMLElement) => element.textContent === "Umístění";
-    Object.defineProperty(HTMLElement.prototype, "offsetLeft", { configurable: true, get() { return location(this) ? 356 : 4; } });
-    Object.defineProperty(HTMLElement.prototype, "offsetWidth", { configurable: true, get() { return this.tagName === "BUTTON" && this.closest(".organization-tabs") ? 348 : 0; } });
-    const frame = () => new Promise<void>(done => requestAnimationFrame(() => done()));
-    try {
-      await open();
-      await frame(); await frame(); await flushPromises();
-      const track = wrapper!.get(".organization-tabs .option-pills-group");
-      expect(track.attributes("data-segmented")).toBeDefined();
-      expect(track.attributes("style")).toContain("--thumb-x: 4px");
-      expect(track.attributes("style")).toContain("--thumb-w: 348px");
-      expect(track.attributes("data-thumb")).toBe("ready");
-      await wrapper!.get(".organization-tabs button:nth-child(2)").trigger("click");
-      await flushPromises(); await frame();
-      expect(track.attributes("style")).toContain("--thumb-x: 356px");
-    } finally {
-      if (left) Object.defineProperty(HTMLElement.prototype, "offsetLeft", left); else delete (HTMLElement.prototype as { offsetLeft?: number }).offsetLeft;
-      if (width) Object.defineProperty(HTMLElement.prototype, "offsetWidth", width); else delete (HTMLElement.prototype as { offsetWidth?: number }).offsetWidth;
-    }
-  });
   it('finds a sibling position without a flat select and sends the chosen before-page ID', async () => {
     await open();
-    await wrapper!.get('.organization-tabs button:nth-child(2)').trigger('click');
     expect(wrapper!.find('select#organization-before').exists()).toBe(false);
     await wrapper!.get('[aria-controls=organization-position-reveal]').trigger('click'); await flushPromises();
     await wrapper!.get('#organization-before input').setValue('Cil');
@@ -81,8 +56,6 @@ describe("page organization", () => {
     wrapper = mount(PageOrganizationPanel, { props: { spaceId: "space", spaceRole: "Writer", isWikiAdmin: false, board: { id: "board-1", title: "Plán" },
       spaces: [{ id: "space", name: "Source", role: "Writer" }, { id: "destination", name: "Target", role: "Writer" }] as never }, attachTo: document.body });
     await flushPromises();
-    expect(wrapper.find('form[aria-label="Přejmenovat stránku"]').exists()).toBe(false);
-    expect(wrapper.find(".organization-tabs").exists()).toBe(false);
     expect(wrapper.find(".organization-trash-trigger").exists()).toBe(false);
     expect(wrapper.find(".organization-transfer").exists()).toBe(false);
     expect(wrapper.get('#organization-parent [data-page-id="page"]').attributes("aria-selected")).toBe("true");
@@ -93,21 +66,18 @@ describe("page organization", () => {
     expect(organizationApi.move).toHaveBeenCalledWith("board-1", "target", null, 7, "board");
     expect(wrapper.emitted("changed")?.[0]?.[0]).toEqual({ kind: "move", affectedIds: ["board-1"] });
   });
-  it("U17: the Umístění tab puts the caret into the search of the parent picker", async () => {
-    await open();
-    await wrapper!.get('.organization-tabs button:nth-child(2)').trigger('click');
-    await flushPromises();
-    expect(document.activeElement).toBe(wrapper!.get('#organization-parent .location-search input').element);
-  });
-  it("separates location from general settings and asks before trashing a leaf page", async () => {
+  it("asks before trashing a leaf page in the one shared confirmation, and Zrušit goes back to the organization", async () => {
     await open({ page: { ...page, id: 'target', title: 'Cíl' } });
-    expect(wrapper!.get('form[aria-label="Přejmenovat stránku"]').isVisible()).toBe(true);
-    expect(wrapper!.get('form[aria-label="Přesunout stránku"]').isVisible()).toBe(false);
-    await wrapper!.get('button[aria-label="Přesunout do koše"]').trigger('click');
+    await wrapper!.get('button[aria-label="Přesunout do koše"]').trigger('click'); await flushPromises();
     expect(organizationApi.trash).not.toHaveBeenCalled();
-    expect(wrapper!.get('.organization-trash-confirm').text()).toContain('Cíl');
+    expect(wrapper!.getComponent({ name: "ConfirmDialog" }).props("title")).toBe("Přesunout stránku do koše?");
+    expect(wrapper!.find(".organization-trash-confirm").exists()).toBe(false);
+    document.querySelector<HTMLButtonElement>("[data-confirm-cancel]")!.click(); await flushPromises();
+    expect(wrapper!.find(".organization-dialog").exists()).toBe(true);
+    expect(wrapper!.emitted("close")).toBeUndefined();
+    await wrapper!.get('button[aria-label="Přesunout do koše"]').trigger('click'); await flushPromises();
     vi.mocked(organizationApi.trash).mockResolvedValue({ version: 8, affectedIds: ['target'], hasSiblingTitleCollision: false });
-    await wrapper!.get('.organization-trash-confirm form').trigger('submit'); await flushPromises();
+    document.querySelector<HTMLButtonElement>("[data-confirm-action]")!.click(); await flushPromises();
     expect(organizationApi.trash).toHaveBeenCalledWith('target', false, 7, 1);
   });
   // T7: the page menu's „Přesunout do koše“ is the same ConfirmDialog as a board's, with the subpages' choice inside it.
@@ -162,46 +132,28 @@ describe("page organization", () => {
     expect(organizationApi.tree).toHaveBeenLastCalledWith("destination");
     expect(wrapper!.emitted("changed")).toBeUndefined();
   });
-  it("keeps drafts on CAS conflicts and requires explicit reload before rename can retry", async () => {
-    await open();
-    await wrapper!.get("#organization-name").setValue("Můj nový název");
-    vi.mocked(organizationApi.rename).mockRejectedValueOnce(new ApiError(409, "Conflict"));
-    await wrapper!.findAll("form")[0]!.trigger("submit"); await flushPromises();
-    expect(wrapper!.get("#organization-name").element).toHaveProperty("value", "Můj nový název");
-    expect(wrapper!.get("fieldset").attributes("disabled")).toBeDefined();
-    vi.mocked(organizationApi.tree).mockResolvedValue(tree(8, 4));
-    await wrapper!.get(".organization-refresh").trigger("click"); await flushPromises();
-    expect(wrapper!.get("#organization-name").element).toHaveProperty("value", "Můj nový název");
-    vi.mocked(organizationApi.rename).mockResolvedValue({ ...page, title: "Můj nový název", version: 5 });
-    await wrapper!.findAll("form")[0]!.trigger("submit"); await flushPromises();
-    expect(organizationApi.rename).toHaveBeenLastCalledWith("page", "Můj nový název", 4);
-    expect(wrapper!.emitted("renamed")?.[0]?.[0]).toMatchObject({ contentJson: "live-rich", version: 5 });
-    expect(page.contentJson).toBe("live-rich");
-  });
-
   it("excludes the page and descendants as move destinations and never submits without the host guard", async () => {
     const guard = vi.fn().mockResolvedValue(false);
     await open({ beforeMutation: guard });
-    await wrapper!.get('.organization-tabs button:nth-child(2)').trigger('click');
     expect(wrapper!.get("#organization-parent").findAll('[role=treeitem]').map(item => item.attributes('data-page-id'))).toEqual(["", "target"]);
     await wrapper!.get('#organization-parent [data-page-id="target"]').trigger('click');
-    await wrapper!.findAll("form")[1]!.trigger("submit"); await flushPromises();
+    await wrapper!.findAll("form")[0]!.trigger("submit"); await flushPromises();
     expect(guard).toHaveBeenCalledOnce(); expect(organizationApi.move).not.toHaveBeenCalled();
     guard.mockResolvedValue(true);
     vi.mocked(organizationApi.move).mockResolvedValue({ version: 8, affectedIds: ["page"], hasSiblingTitleCollision: false });
-    await wrapper!.findAll("form")[1]!.trigger("submit"); await flushPromises();
+    await wrapper!.findAll("form")[0]!.trigger("submit"); await flushPromises();
     expect(organizationApi.move).toHaveBeenCalledWith("page", "target", null, 7);
     expect(wrapper!.emitted("changed")).toEqual([[{ kind: "move", affectedIds: ["page"] }]]);
   });
 
   it("requires explicit subtree confirmation for trash and carries the current content CAS", async () => {
     await open();
-    await wrapper!.get('button[aria-label="Přesunout do koše"]').trigger('click');
-    await wrapper!.findAll("form")[2]!.trigger("submit"); await flushPromises();
-    expect(organizationApi.trash).not.toHaveBeenCalled();
-    await wrapper!.get(".organization-trash input[type=checkbox]").setValue(true);
+    await wrapper!.get('button[aria-label="Přesunout do koše"]').trigger('click'); await flushPromises();
+    const confirm = () => document.querySelector<HTMLButtonElement>("[data-confirm-action]")!;
+    expect(confirm().disabled).toBe(true);
+    document.querySelector<HTMLInputElement>(".organization-check input[type=checkbox]")!.click(); await flushPromises();
     vi.mocked(organizationApi.trash).mockResolvedValue({ version: 9, affectedIds: ["page", "child"], hasSiblingTitleCollision: false });
-    await wrapper!.findAll("form")[2]!.trigger("submit"); await flushPromises();
+    confirm().click(); await flushPromises();
     expect(organizationApi.trash).toHaveBeenCalledWith("page", true, 7, 3);
     expect(wrapper!.emitted("changed")).toEqual([[{ kind: "trash", affectedIds: ["page", "child"] }]]);
     expect(wrapper!.emitted("close")).toHaveLength(1);
@@ -224,7 +176,6 @@ describe("page organization", () => {
     expect(organizationApi.untrash).toHaveBeenCalledWith("trashed", "target", false, 7, undefined);
     expect(wrapper!.text()).toContain("obě zůstaly zachované");
     expect(wrapper!.emitted("changed")).toEqual([[{ kind: "untrash", affectedIds: ["trashed"] }]]);
-    expect(wrapper!.emitted("renamed")).toBeUndefined();
   });
 
   it("lists a trashed board with the pages, restores it through its own endpoint and never offers a board as a parent", async () => {
@@ -274,12 +225,12 @@ describe("page organization", () => {
     // Focus starts on the panel's first control, not on the close button before it (keyboard pass).
     expect(wrapper!.get('dialog').element.contains(document.activeElement)).toBe(true);
     expect(document.activeElement).not.toBe(wrapper!.get('.app-dialog-header [aria-label="Zavřít"]').element);
-    let resolve!: (value: Page) => void;
-    vi.mocked(organizationApi.rename).mockReturnValue(new Promise(done => { resolve = done; }));
+    let resolve!: (value: unknown) => void;
+    vi.mocked(organizationApi.move).mockReturnValue(new Promise(done => { resolve = done as never; }));
     await wrapper!.findAll("form")[0]!.trigger("submit"); await flushPromises();
     await wrapper!.setProps({ spaceRole: "Reader", page: { ...page, canEdit: false } });
-    resolve({ ...page, version: 4 }); await flushPromises();
-    expect(wrapper!.emitted("renamed")).toBeUndefined();
+    resolve({ version: 8, affectedIds: ["page"], hasSiblingTitleCollision: false } as never); await flushPromises();
+    expect(wrapper!.emitted("changed")).toBeUndefined();
     await wrapper!.get("dialog").trigger("cancel");
     expect(wrapper!.emitted("close")).toHaveLength(1);
     wrapper!.unmount(); wrapper = undefined;

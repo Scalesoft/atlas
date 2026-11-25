@@ -1575,7 +1575,7 @@ describe("omnisearch keyboard and failure feedback", () => {
       "Tato stránka už není dostupná.",
     );
     expect(app.get(".search-dialog").attributes("open")).toBeDefined();
-    await app.get(".search-retry").trigger("click");
+    await app.get(".search-dialog .error-state button").trigger("click");
     await vi.advanceTimersByTimeAsync(180);
     await flushPromises();
     expect(
