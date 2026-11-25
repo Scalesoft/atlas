@@ -1970,7 +1970,7 @@ function startTreeDrag(spaceId: string, source: TreePage, event: DragEvent) {
   if (pending.value || moduleSetup.value || !source.canEdit || treeVersions.value[spaceId] === undefined) { event.preventDefault(); return; }
   // A page's own unsaved changes save by themselves and a move in the tree leaves its content alone (3.6); a settings form does not.
   if (settingsDirty.value) {
-    event.preventDefault(); error.value = t.toast.saveBeforeMove; return;
+    event.preventDefault(); toaster.error(t.toast.saveBeforeMove); return;
   }
   treeDrag.value = { spaceId, id: source.id, version: treeVersions.value[spaceId]!, type: source.type };
 }
@@ -2114,7 +2114,7 @@ function dropTree(spaceId: string, destination: TreeDrop) {
   const byKeyboard = !!destination.sourceId;
   endTreeDrag();
   if (!source || source.spaceId !== spaceId || pending.value || moduleSetup.value) return;
-  if (settingsDirty.value) { error.value = t.toast.saveBeforeMove; return; }
+  if (settingsDirty.value) { toaster.error(t.toast.saveBeforeMove); return; }
   const space = spaces.value.find(item => item.id === spaceId);
   if (!space || (!user.value?.isWikiAdmin && space.role === "Reader")) return;
   const move = resolveTreeMove(pagesBySpace.value[spaceId] ?? [], source.id, destination);
@@ -4509,7 +4509,7 @@ onUnmounted(() => {
           <span class="brand-mark"><AtlasBrandLogo motion="static" /></span>
           {{ wikiName }}
         </div>
-        <template v-if="loading"><h1 id="entry-title" class="sr-only">{{ t.nav.connectionHeading }}</h1><p role="status"><AtlasIcon name="refresh" class="atlas-spinner" /> {{ t.nav.connecting }}</p></template>
+        <template v-if="loading"><h1 id="entry-title" class="sr-only">{{ t.nav.connectionHeading }}</h1><LoadingNote :label="t.nav.connecting" /></template>
         <template v-else-if="!status || !status.databaseReady"
           ><h1 id="entry-title">{{ t.nav.setupHeading }}</h1>
           <p>
@@ -5097,7 +5097,7 @@ onUnmounted(() => {
             @settings="openSettings(spaceSettingsHash(currentSpace!.id))" @new-page="showCreatePage" @new-board="showCreateBoard" />
           <!-- Obsah (once Stránky) and O prostoru are for everyone who can open the space; Ke schválení has no address of its own. -->
           <div ref="spaceTabsRow" v-scroll-edges:x class="space-tabs" role="tablist" :aria-label="t.nav.spaceViews" @keydown="tablistKeys">
-            <button type="button" role="tab" data-space-tab="pages" :aria-selected="spaceView === 'pages'" :tabindex="spaceView === 'pages' ? 0 : -1" :class="{ active: spaceView === 'pages' }" @click="showSpaceTab('pages')">{{ t.common.contents }}<!-- Only Obsah's own count: the tree's number first jumped to it once the summary came (F3, 175 → 294). --><span v-if="contentCounts[currentSpace.id] !== undefined" class="space-tab-count">{{ contentCounts[currentSpace.id]!.toLocaleString("cs-CZ") }}</span></button>
+            <button type="button" role="tab" data-space-tab="pages" :aria-selected="spaceView === 'pages'" :tabindex="spaceView === 'pages' ? 0 : -1" :class="{ active: spaceView === 'pages' }" @click="showSpaceTab('pages')">{{ t.common.contents }}<!-- Only Obsah's own count: the tree's number first jumped to it once the summary came (F3, 175 → 294). --><span v-if="contentCounts[currentSpace.id] !== undefined" class="space-tab-count">{{ formatNumber(contentCounts[currentSpace.id]!) }}</span></button>
             <button type="button" role="tab" data-space-tab="contacts" :aria-selected="spaceView === 'contacts'" :tabindex="spaceView === 'contacts' ? 0 : -1" :class="{ active: spaceView === 'contacts' }" @click="showSpaceTab('contacts')">{{ t.cmd.contacts }}</button>
             <button v-if="unlinkedCounts[currentSpace.id] || spaceView === 'unlinked'" type="button" role="tab" data-space-tab="unlinked" :aria-selected="spaceView === 'unlinked'" :tabindex="spaceView === 'unlinked' ? 0 : -1" :class="{ active: spaceView === 'unlinked' }" @click="showSpaceTab('unlinked')">{{ t.nav.unlinkedMentions }}<span v-if="unlinkedCounts[currentSpace.id]" class="space-tab-count">{{ unlinkedCounts[currentSpace.id] }}</span></button>
             <button type="button" role="tab" data-space-tab="about" :aria-selected="spaceView === 'about'" :tabindex="spaceView === 'about' ? 0 : -1" :class="{ active: spaceView === 'about' }" @click="showSpaceTab('about')">{{ t.nav.aboutSpace }}</button>
