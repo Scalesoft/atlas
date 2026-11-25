@@ -163,7 +163,7 @@ describe("Stav obsahu", () => {
     await flushPromises();
     expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: ["p2"] });
 
-    await list()[1]!.trigger("keydown", { key: "g" });
+    await list()[1]!.trigger("keydown", { key: "s" });
     await flushPromises();
     await vi.waitFor(() => expect(people).toHaveBeenCalledWith("p2", "", expect.anything()));
     await flushPromises();

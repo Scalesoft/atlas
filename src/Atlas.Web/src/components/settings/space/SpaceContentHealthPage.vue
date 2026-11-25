@@ -30,14 +30,15 @@ import { useSettingsContext } from "../context";
 import { useSettingsFlash } from "../flash";
 import { useSettingsRoute } from "../useSettingsRoute";
 import type { ChoiceOption } from "../types";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * Stav obsahu (5.2, plan §6): what of a space is verified, what expires and what people actually read, in existing parts only: StatTile row that sets
  * the filter, one SettingsList with a search and FilterMenus, a selection with bulk actions. Counts of readers, never names. The default order is
  * „Nejdřív čtené a neověřené“. Keyboard first: arrows move through the rows, Space selects (BulkSelectBar, the selection of every list), V verifies
- * the selection (or the row), G picks the owner,
+ * the selection (or the row), S picks the owner (G collides with the „g …“ go-to keys),
  * Enter opens the page. The server answers the state of every page (one C# function), so nothing is derived here. A row offers only what the reader
- * can do there: Ověřit, the checkbox, V and G where it may edit the page and the page verifies; „Přesunout do koše“ (the tree's trash, Zpět in
+ * can do there: Ověřit, the checkbox, V and S where it may edit the page and the page verifies; „Přesunout do koše“ (the tree's trash, Zpět in
  * the toast) on an unread page it may edit. „Bez garanta“ offers the owner from the last author for the whole space (the server's fill).
  */
 const props = withDefaults(defineProps<{
@@ -215,18 +216,18 @@ async function pickSteward(stewardId: string) {
 }
 const openPage = (id: string) => context.openPage(id);
 
-/** The keys of a row (↑ ↓ Home End and Space are the list's, rowKeys): V verifies, G picks an owner, Enter opens. Not while a button or field has the key. */
+/** The keys of a row (↑ ↓ Home End and Space are the list's, rowKeys): V verifies, S picks an owner, Enter opens. Not while a button or field has the key. */
 function rowKey(event: KeyboardEvent, index: number) {
   if (event.altKey || event.ctrlKey || event.metaKey || (event.target as HTMLElement).closest("input, textarea, button, a, [role='checkbox']")) return;
   const key = event.key.toLowerCase();
   if (key === "v") { event.preventDefault(); void verify(); }
-  else if (key === "g") { event.preventDefault(); openPicker(); }
+  else if (key === "s") { event.preventDefault(); openPicker(); }
   else if (key === "enter") { event.preventDefault(); openPage(items.value[index]!.pageId); }
 }
 
-/** The row's menu: what the bulk buttons do (Ověřit, Garant), Otevřít and, where it is offered, „Přesunout do koše“. No V/G hints until the keys are settled (D6). */
+/** The row's menu: what the bulk buttons do (Ověřit, Garant), Otevřít and, where it is offered, „Přesunout do koše“. V and S are `shortcut` hints (the keys themselves are rowKey's). */
 const rowMenu = (item: ContentHealthItem) => [
-  ...(actionable(item) ? [{ id: "verify", label: t.health.verify, icon: "shield-check", disabled: busy.value }, { id: "steward", label: t.health.setSteward, icon: "user", disabled: busy.value }] : []),
+  ...(actionable(item) ? [{ id: "verify", label: t.health.verify, icon: "shield-check", shortcut: "V", disabled: busy.value }, { id: "steward", label: t.health.setSteward, icon: "user", shortcut: "S", disabled: busy.value }] : []),
   { id: "open", label: t.health.open, icon: "file-text" },
   ...(item.canEdit && !item.views ? [{ id: "trash", label: t.health.toTrash, icon: "trash", destructive: true, disabled: busy.value }] : []),
 ];
@@ -268,7 +269,7 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
           <div :aria-busy="loading" class="health-rows" :class="{ 'bulk-selecting': selection.count > 0 }">
             <BulkSelectBar :selection="selection">
               <Button size="sm" type="button" :disabled="busy" data-health-verify @click="verify()"><AtlasIcon name="shield-check" :size="15" />{{ t.health.verify }}<kbd>V</kbd></Button>
-              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-steward @click="openPicker()"><AtlasIcon name="user" :size="15" />{{ t.health.setSteward }}<kbd>G</kbd></Button>
+              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-steward @click="openPicker()"><AtlasIcon name="user" :size="15" />{{ t.health.setSteward }}<kbd>S</kbd></Button>
               <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-from-author @click="fromAuthor"><AtlasIcon name="history" :size="15" />{{ t.health.fromAuthor }}</Button>
             </BulkSelectBar>
             <SettingsList v-if="items.length" :label="t.health.list">
@@ -287,9 +288,9 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
               </SettingsListRow>
             </SettingsList>
             <EmptyState v-if="empty" compact icon="search" :title="t.health.emptyTitle" :text="t.health.emptyText" />
-            <Button v-if="data?.nextCursor" variant="outline" size="sm" type="button" :disabled="loading" class="health-more" data-health-more @click="load(true)">{{ t.health.more }}</Button>
+            <LoadMoreButton v-if="data?.nextCursor" class="health-more" :busy="loading" data-health-more @click="load(true)" />
           </div>
-          <p class="health-keys">{{ t.health.keys }}</p>
+          <p class="health-keys" data-health-keys>{{ t.health.keysLead }} <kbd>V</kbd> {{ t.health.keysVerify }}, <kbd>S</kbd> {{ t.health.keysSteward }}, <kbd>Enter</kbd> {{ t.health.keysOpen }}.</p>
         </SettingsSection>
       </template>
     </SettingsPage>

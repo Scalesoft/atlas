@@ -323,10 +323,10 @@ for (const combo of combos) {
       await expect(page.locator('[data-secret="s-vpn"] [data-access-entry="user:u-jana"]')).toContainText('Z trezoru');
       await shot('17-secret-access');
       if (combo.device === 'mobile') {
-        await page.getByRole('button', { name: /Sekce/ }).click();
-        await expect(page.getByRole('dialog', { name: 'Sekce' })).toBeVisible();
+        await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
+        await expect(page.locator('#atlas-settings-rail')).toBeVisible();
         await shot('18-mobile-sections');
-        await page.getByRole('dialog').getByRole('link', { name: /Obecné/ }).click();
+        await page.locator('#atlas-settings-rail').getByRole('link', { name: /Obecné/ }).click();
         await expect(page).toHaveURL(/#\/spaces\/provoz\/settings\/general$/);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport(combo.device).width);

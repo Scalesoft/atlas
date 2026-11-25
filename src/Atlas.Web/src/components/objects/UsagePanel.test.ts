@@ -5,6 +5,8 @@ import { atlasObjectDragType } from "../../boards/boardDrop";
 import { memoryUsage, type MemoryObject } from "../../objects/memoryRelations";
 import type { RelationEdge, UsageApi } from "../../objects/relationsApi";
 
+vi.mock("../../api", async importOriginal => ({ ...await importOriginal<typeof import("../../api")>(), api: vi.fn(async () => []) }));
+
 const object = (id: string, typeId: string, title: string, extra: Partial<MemoryObject> = {}): MemoryObject => ({ id, typeId, title, spaceId: "s", spaceName: "Provoz", readable: true, ...extra });
 const jana = "11111111-1111-4111-8111-111111111111", handbook = "22222222-2222-4222-8222-222222222222", plan = "33333333-3333-4333-8333-333333333333",
   budget = "44444444-4444-4444-8444-444444444444", secret = "55555555-5555-4555-8555-555555555555";
@@ -112,4 +114,17 @@ it("pages on with Načíst další místa, says Nikde nepoužito, and an unreada
   expect((await show({ objectId: plan })).text()).toContain("Nikde nepoužito");
   wrapper!.unmount();
   expect((await show({ objectId: secret })).text()).toContain("Použití není k dispozici");
+});
+
+it("offers „Přidat do stromu…“ in the row menu, so a place reaches the tree without dragging", async () => {
+  const panel = await show();
+  const place = panel.findAll("[data-usage-place]")[2]!.element as HTMLElement;
+  place.focus();
+  place.dispatchEvent(new KeyboardEvent("keydown", { key: "F10", shiftKey: true, bubbles: true, cancelable: true }));
+  await flushPromises();
+  const item = [...document.querySelectorAll<HTMLElement>("[data-row-action]")].find(entry => entry.textContent?.trim() === "Přidat do stromu…");
+  expect(item).toBeTruthy();
+  item!.click();
+  await flushPromises();
+  expect(document.body.textContent).toContain("Přidat do stromu");
 });

@@ -2,7 +2,7 @@
 import { observeMarkdownProximity } from "@atlas/markdown/core";
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { errorMessage } from "../../api";
-import { startObjectDrag } from "../../boards/boardDrop";
+import { startObjectDrag, type DraggedObject } from "../../boards/boardDrop";
 import { rowKeys } from "../../keyboard/navigation";
 import t from "../../i18n/components-objects";
 import { kindInfo, plainTitle, typeInfo, usageApi, type UsageApi, type UsageCount, type UsagePage, type UsageRow } from "../../objects/relationsApi";
@@ -12,6 +12,9 @@ import EmptyState from "../settings/EmptyState.vue";
 import ErrorState from "../settings/ErrorState.vue";
 import { disclosureHooks } from "../settings/disclosure";
 import { Button } from "../ui/button";
+import RowActionsMenu from "../RowActionsMenu.vue";
+import AddToTreeDialog from "./AddToTreeDialog.vue";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * „Použito na“ (plan 3.1 M5, U1): where ONE object is used, the same panel for a contact, a board, a page, a template and a catalog
@@ -97,6 +100,10 @@ defineExpose({ refresh: () => { if (expanded.value) void load(); } });
 function open(place: Place) {
   if (!props.still) emit("open", place.id, place.typeId, partOf(place));
 }
+/** „Přidat do stromu…“: the place whose reference node is being added (the menu path of dragging it onto the tree). */
+const adding = shallowRef<DraggedObject | null>(null);
+const rowMenu = [{ id: "addToTree", label: t.addToTree.menu, icon: "folder-input" }];
+const placeObject = (place: Place) => ({ id: place.id.toLowerCase(), typeId: place.typeId, title: place.title });
 function drag(event: DragEvent, place: Place) {
   if (props.still) event.preventDefault();
   else startObjectDrag(event, { id: place.id.toLowerCase(), typeId: place.typeId, title: place.title });
@@ -135,15 +142,17 @@ function drag(event: DragEvent, place: Place) {
                       <q v-for="text in excerpts(place)" :key="text" class="usage-excerpt">{{ text }}</q>
                     </span>
                   </div>
+                  <RowActionsMenu v-if="!still" :items="rowMenu" :label="t.addToTree.rowActions(place.title)" @select="adding = placeObject(place)" />
                 </li>
               </ul>
             </section>
           </div>
           <p v-if="page.hidden" class="usage-hidden" data-usage-hidden><AtlasIcon name="lock" :size="14" />{{ t.usage.hidden(page.items.length > 0, page.hidden) }}</p>
-          <Button v-if="page.nextCursor" variant="outline" size="sm" class="usage-more" :disabled="loading" data-usage-more @click="load(true)">{{ t.usage.loadMore }}</Button>
+          <LoadMoreButton v-if="page.nextCursor" class="usage-more" :busy="loading" data-usage-more @click="load(true)" />
         </template>
       </LoadingRegion>
     </Transition>
+    <AddToTreeDialog :open="!!adding" :object="adding" @close="adding = null" />
   </div>
 </template>
 

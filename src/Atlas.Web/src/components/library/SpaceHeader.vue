@@ -2,7 +2,7 @@
 import componentsLibraryHome from "../../i18n/components-library-home";
 import { computed } from "vue";
 import type { PageSummary, Space } from "../../api";
-import { formatAgo, formatDateTime } from "../../formatDate";
+import RelativeTime from "../RelativeTime.vue";
 import { roleLabel } from "../../roles";
 import { spaceCoverSrc } from "../../spaceCover";
 import AtlasIcon from "../AtlasIcon.vue";
@@ -39,7 +39,7 @@ const hasCover = computed(() => spaceCoverSrc(props.space.id, props.space.cover)
         <span key="pages" class="space-fact" data-space-fact="pages">{{ componentsLibraryHome.pages(pageTotal) }}</span>
         <span v-if="drafts" key="drafts" class="space-fact" data-tone="warning" data-space-fact="drafts">{{ componentsLibraryHome.drafts(drafts) }}</span>
         <span key="role" class="space-fact" data-tone="accent" :title="componentsLibraryHome.accessOf(roleLabel(space.role))" data-space-fact="role"><span class="sr-only">{{ componentsLibraryHome.access }}: </span>{{ roleLabel(space.role) }}</span>
-        <span v-if="space.lastChangedAt" key="changed" class="space-fact-plain">{{ componentsLibraryHome.header.lastChange }} <time :datetime="space.lastChangedAt" :title="formatDateTime(space.lastChangedAt)">{{ formatAgo(space.lastChangedAt) }}</time></span>
+        <span v-if="space.lastChangedAt" key="changed" class="space-fact-plain">{{ componentsLibraryHome.header.lastChange }} <RelativeTime :value="space.lastChangedAt" /></span>
       </TransitionGroup>
     </div>
     <div v-if="canManage || canWrite" class="space-hero-actions">

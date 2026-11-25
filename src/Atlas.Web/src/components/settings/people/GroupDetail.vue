@@ -28,6 +28,7 @@ import type { ChoiceOption } from "../types";
 import { useSettingsRoute } from "../useSettingsRoute";
 import "./people.css";
 import { locale } from "../../../i18n";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * The Členové tab of a group's card in Nastavení wiki → Skupiny: rename with the CAS version (SaveBar), members added
@@ -304,7 +305,7 @@ onBeforeUnmount(() => {
       </SettingsList>
       <EmptyState v-else compact icon="account" :title="t.groupDetail.emptyTitle" :text="managed ? t.groupDetail.emptyManaged : t.groupDetail.emptyLocal" />
       <div v-if="moreMembers && !membersError" class="st-actions">
-        <Button variant="outline" size="sm" type="button" :disabled="loadingMore" data-more-members @click="loadMoreMembers"><AtlasIcon :name="loadingMore ? 'loader-circle' : 'plus'" :size="15" :class="{ 'atlas-spinner': loadingMore }" />{{ t.common.loadMore }}</Button>
+        <LoadMoreButton :busy="loadingMore" data-more-members @click="loadMoreMembers" />
       </div>
     </SettingsSection>
 

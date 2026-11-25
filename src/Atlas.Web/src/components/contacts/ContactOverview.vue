@@ -18,6 +18,7 @@ import { Button } from "../ui/button";
 import ContactCard from "./ContactCard.vue";
 import UsagePanel from "../objects/UsagePanel.vue";
 import "../settings/settings.css";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * Kontakty napříč wiki (Atlas 3 plan §14.4): every person the reader may see, merged from contact cards and mentions in pages and from
@@ -178,7 +179,7 @@ function openPlace(id: string, typeId: string) {
       </ul>
       <footer v-if="items.length" class="contact-overview-footer">
         <p class="help" role="status">{{ t.directory.count(items.length, total) }}</p>
-        <Button v-if="total > items.length" variant="outline" type="button" :disabled="loading" :aria-busy="loading" data-entity-more @click="more"><AtlasIcon name="refresh" :size="16" />{{ t.overviewView.more }}</Button>
+        <LoadMoreButton v-if="total > items.length" :busy="loading" data-entity-more @click="more" />
       </footer>
     </template>
   </section>

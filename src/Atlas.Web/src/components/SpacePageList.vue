@@ -5,7 +5,9 @@ import { formatDateTime, formatShortDate } from '../formatDate';
 import t from '../i18n/components-spaces';
 import { formatNumber } from '../i18n';
 import { isPickEnter } from '../lib/pickEnter';
-import { startObjectDrag } from '../boards/boardDrop';
+import { startObjectDrag, type DraggedObject } from '../boards/boardDrop';
+import objects from '../i18n/components-objects';
+import AddToTreeDialog from './objects/AddToTreeDialog.vue';
 import { detail, hideObjectDetail, openDetailId, showObjectDetail } from '../objects/objectDetail';
 import { plainTitle, relationsApi, typeInfo, type ContentRelation, type ContentRow, type ContentSummary, type DetailRow, type RelationsApi, type UsageApi } from '../objects/relationsApi';
 import UsagePanel from './objects/UsagePanel.vue';
@@ -35,6 +37,7 @@ import { lazyComponent } from '../lazyComponent';
 import { rovingInit, rowKeys } from '../keyboard/navigation';
 // The rows enter one after another with the settings design system's step (--st-stagger).
 import './settings/settings.css';
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 // The graph (Vue Flow and the board canvas) loads when it is first shown, not with the list. While its chunk comes it is the region's
 // own skeleton again (one canvas-high row, without a second fade-in), so the placeholder does not blink.
@@ -256,7 +259,7 @@ function graphSelect(id: string) {
 function graphOpen(id: string, typeId: string) {
   if (typeId === 'atlas.page' || typeId === 'atlas.board') emit('open', id, typeId === 'atlas.board' ? 'board' : 'page');
 }
-function graphBack() { root.value?.querySelector<HTMLElement>('[data-content-view="graph"]')?.focus(); }
+function graphBack() { root.value?.querySelector<HTMLElement>('.content-view-switch [data-value="graph"]')?.focus(); }
 const table = ref<HTMLElement>();
 /* One Tab stop for the whole list (SH2-14): ↑ ↓ Home End walk the rows and Space ticks a draft (rowKeys), the stop follows the focus. */
 const TITLES = '.space-page-title';
@@ -267,16 +270,19 @@ function roveTo(event: FocusEvent) {
   for (const other of table.value?.querySelectorAll<HTMLElement>(TITLES) ?? []) other.tabIndex = other === title ? 0 : -1;
 }
 /** „Co s tím jde dělat“ of a row (P2, RowActionsMenu): what the row's title, its detail and usage buttons and its box do. */
+const adding = ref<DraggedObject | null>(null);
 const rowMenu = (row: ContentRow): ActionMenuItem[] => [
   ...(openable(row) ? [{ id: 'open', label: t.content.menuOpen, icon: 'file-text' }] : []),
   { id: 'detail', label: t.content.menuDetail, icon: 'info' },
   { id: 'usage', label: t.content.menuUsage, icon: 'layers', checked: expandedId.value === row.id },
+  { id: 'addToTree', label: objects.addToTree.menu, icon: 'folder-input' },
   ...(props.canWrite && isDraftRow(row) ? [{ id: 'pick', label: t.content.menuPick, icon: 'check', checked: selection.has(row.id), disabled: busy.value }] : []),
 ];
 function rowAction(row: ContentRow, id: string) {
   if (id === 'open') openRow(undefined, row);
   else if (id === 'detail') showDetail(row);
   else if (id === 'usage') toggleUsage(row);
+  else if (id === 'addToTree') adding.value = draggedRow(row);
   else if (id === 'pick') selection.toggle(row.id);
 }
 async function publish() {
@@ -385,7 +391,7 @@ async function publish() {
               </template>
               <div class="space-page-foot">
                 <span aria-live="polite">{{ shownText }}</span>
-                <Button v-if="nextCursor" variant="outline" size="sm" data-more-pages :disabled="loading" @click="loadMore">{{ t.content.loadMore }}</Button>
+                <LoadMoreButton v-if="nextCursor" data-more-pages :busy="loading" @click="loadMore" />
               </div>
             </div>
             <EmptyState v-else compact :icon="allUsed ? 'check' : 'search'" :title="allUsed ? t.content.allUsedTitle : filtered ? t.content.noMatchTitle : t.content.emptyTitle"
@@ -410,6 +416,7 @@ async function publish() {
           </div>
         </Transition>
       </LoadingRegion>
+    <AddToTreeDialog :open="!!adding" :object="adding" @close="adding = null" />
   </div>
 </template>
 

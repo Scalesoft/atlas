@@ -202,7 +202,6 @@ const cs = {
   },
   peek: {
     aria: (name: string) => `Člověk: ${name}`,
-    close: "Zavřít náhled člověka",
     you: "Vy",
     openCard: "Otevřít kartu",
     accountAndPassword: "Účet a heslo",

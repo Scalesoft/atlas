@@ -67,6 +67,18 @@ const en: ObjectsMessages = {
     noneTitle: "No links",
     noneText: "Nothing refers to this object, it is on no board and mentions nothing.",
   },
+  addToTree: {
+    menu: "Add to tree…",
+    title: "Add to tree",
+    space: "Space",
+    under: "Under page",
+    confirm: "Add",
+    cancel: "Cancel",
+    added: "The link was added to the tree.",
+    refused: "This object cannot be added to the tree: it does not exist, or you do not have access to it.",
+    noSpace: "You have no space you can write to.",
+    rowActions: (title) => `Actions: ${title}`,
+  },
   usage: {
     wholeWiki: "Whole wiki",
     untitled: "Untitled",

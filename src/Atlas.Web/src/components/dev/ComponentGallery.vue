@@ -19,6 +19,7 @@ import { requirementKeymap } from "../../projector/requirementKeymap";
 import InlineRevealExample from "./InlineRevealExample.vue";
 import StubbedPopoverExample from "./StubbedPopoverExample.vue";
 import LoadingSkeleton from "../LoadingSkeleton.vue";
+import LoadMoreButton from "../LoadMoreButton.vue";
 import LoadingRegion from "../LoadingRegion.vue";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -45,6 +46,8 @@ import type { Space } from "../../api";
 import { themeAccents } from "../../profile";
 import AccountStatusBadge from "../settings/people/AccountStatusBadge.vue";
 import PageStatusBadge from "../PageStatusBadge.vue";
+import RelativeTime from "../RelativeTime.vue";
+import { formatDateTime, formatShortDate } from "../../formatDate";
 import PageIcon from "../PageIcon.vue";
 import PageTree from "../PageTree.vue";
 import { resolveTreeInsert, resolveTreeMove, type TreeDrop, type TreePage } from "../../treeMove";
@@ -73,6 +76,8 @@ import StatTile from "../settings/StatTile.vue";
 import ActivityHeatmap from "../ActivityHeatmap.vue";
 import { shiftDay } from "../../activity";
 import OptionPills from "../settings/OptionPills.vue";
+import BulkSelectBar from "../settings/BulkSelectBar.vue";
+import { useBulkSelection } from "../settings/bulkSelection";
 import SearchableTags from "../settings/SearchableTags.vue";
 import SearchField from "../settings/SearchField.vue";
 import AppearancePickerExample from "./AppearancePickerExample.vue";
@@ -164,6 +169,9 @@ const rowName = ref("");
 const checked = ref(true);
 const enabled = ref(true);
 const period = ref("week");
+const viewMode = ref("list");
+const bulkRows = ["Přístupová příručka", "Postup při výpadku", "Noví kolegové"];
+const bulk = useBulkSelection(() => bulkRows);
 const pdfCover = ref<PdfCoverDetail[]>(["revision", "state", "revisionDate"]);
 const pdfDownloadOpen = ref(false);
 const sliderSteps = ["Rychle", "Důkladně", "Do hloubky"];
@@ -314,7 +322,8 @@ const galleryVersions: PageRevisionSummary[] = [
   galleryVersion(2, {}),
 ];
 const resultVisible = ref(true);
-const retried = ref(false);
+const retried = ref(false), loadMoreBusy = ref(false);
+const demoLoadMore = () => { loadMoreBusy.value = true; setTimeout(() => { loadMoreBusy.value = false; }, 1200); };
 // LoadingRegion demo: the first load shows a skeleton, later refreshes keep the rows in place.
 const regionReady = ref(true), regionLoading = ref(false);
 const regionRows = ref(["Provozní řád", "Onboarding"]);
@@ -471,6 +480,16 @@ const steps: FlowStep[] = [
           <label class="gallery-choice"><Switch v-model="enabled" /> Povolit oznámení</label>
           <OptionPills v-model="period" label="Období" :options="[{ value: 'week', label: 'Týden' }, { value: 'month', label: 'Měsíc' }, { value: 'year', label: 'Rok', disabled: true }]" />
         </SettingsSection>
+        <SettingsSection title="OptionPills segmented" description="settings/OptionPills.vue s segmented — tichý vzhled přepínače pohledu (Karty | Seznam, Náhled | Markdown): jeden zvednutý čip klouže na zvolenou volbu. Chování je stejné jako u pilulek. Použijte ho pro přepínání pohledů na stejný obsah; obyčejné pilulky jsou pro nezávislé filtry, SettingsTabs pro části detailu.">
+          <OptionPills v-model="viewMode" segmented label="Pohled" hide-label :options="[{ value: 'list', label: 'Seznam' }, { value: 'cards', label: 'Karty' }]" />
+        </SettingsSection>
+        <SettingsSection title="BulkSelectBar" description="settings/BulkSelectBar.vue + useBulkSelection — jediný hromadný výběr seznamu (Obsah, Schvalování konceptů, Stav obsahu): Notionův model, výběr začíná zaškrtnutím řádku a lišta s počtem a akcemi se rozbalí při prvním zaškrtnutí. Ne pro volbu položek ve formuláři nebo dialogu.">
+          <BulkSelectBar :selection="bulk"><Button size="sm" type="button">Publikovat vybrané</Button></BulkSelectBar>
+          <label v-for="row in bulkRows" :key="row" class="gallery-choice"><Checkbox :model-value="bulk.has(row)" @update:model-value="bulk.toggle(row)" /> {{ row }}</label>
+        </SettingsSection>
+        <SettingsSection title="FormField error" description="FormField.vue s error — sdílená chyba pole mimo nastavení: v nastavení SettingsRow, jinde FormField. Zpráva stojí pod polem (role=alert) a pole ji čte přes aria-describedby.">
+          <FormField label="Název" error="Název je povinný"><template #default="{ describedBy }"><Input model-value="" :aria-describedby="describedBy" aria-invalid="true" /></template></FormField>
+        </SettingsSection>
         <SettingsSection title="PdfCoverDetailsField" description="PdfCoverDetailsField.vue — co titulní strana PDF uvede o revizi; ruční export (Export do PDF) i automatický export (Titulní strana) jedním polem. Předvolby (OptionPills: Všechny údaje, Formální, Bez údajů), jednotlivé údaje zaškrtávátky a vedle živý náhled titulní strany s ukázkovými údaji: zaškrtnutý údaj se do papíru rozvine, odškrtnutý složí, řádek pod ukazatelem či fokusem se na papíře zvýrazní. Samostatná komponenta, protože ji sdílí dva dialogy a náhled patří jen k ní; obecný výběr více voleb → ChoiceCards multiple.">
           <PdfCoverDetailsField v-model="pdfCover" title="Příručka Acme Care" space="Zdravotnictví" />
           <p class="st-muted">Hodnota: {{ pdfCover.length ? pdfCover.join(", ") : "žádné údaje" }}</p>
@@ -546,6 +565,9 @@ const steps: FlowStep[] = [
           <div class="st-actions"><PageStatusBadge :is-published="false" :version="1" :published-version="null" /><PageStatusBadge :is-published="true" :version="2" :published-version="1" /><PageStatusBadge :is-published="true" :version="2" :published-version="2" /></div>
           <div class="st-actions"><AccountStatusBadge :account="{ isActive: true, credentialState: 'active' }" /><AccountStatusBadge :account="{ isActive: true, credentialState: 'pending' }" /><AccountStatusBadge :account="{ isActive: false, credentialState: 'active' }" /></div>
         </SettingsSection>
+        <SettingsSection title="RelativeTime" description="RelativeTime.vue — jedno pravidlo pro datum: řádek seznamu = „před …“ s přesným datem a časem v title (RelativeTime, obnovuje se jednou sdílenou minutovou hodinou), sloupec tabulky = formatShortDate + title, detail nebo dok = formatDateTime. Ručně sestavený čas v řádku seznamu nepsat.">
+          <div class="st-actions"><RelativeTime :value="new Date(Date.now() - 5 * 60_000).toISOString()" /><time :title="formatDateTime('2026-09-07T16:33:00Z')">{{ formatShortDate('2026-09-07T16:33:00Z') }}</time><time>{{ formatDateTime('2026-09-07T16:33:00Z') }}</time></div>
+        </SettingsSection>
         <SettingsSection title="PageIcon + SearchHighlight" description="PageIcon.vue — dekorace stránky. SearchHighlight.vue — bezpečné zvýraznění nalezeného textu.">
           <div class="gallery-choice"><PageIcon :decoration="{ revisionId: 'gallery', icon: 'book-open', color: 'blue' }" /><SearchHighlight text="Provozní dokumentace a návody" query="dokumentace" /></div>
         </SettingsSection>
@@ -570,6 +592,13 @@ const steps: FlowStep[] = [
           <EmptyState title="Zatím žádné položky" text="Zde bude obsah po přidání první položky." icon="folder" />
           <EmptyState inline icon="search" title="Nic neodpovídá hledání. Zkuste jiné slovo." />
           <LoadingSkeleton :rows="2" label="Ukázka načítání" />
+        </SettingsSection>
+        <SettingsSection title="LoadMoreButton" description="LoadMoreButton.vue — jediné tlačítko „Načíst další“ pro seznamy stránkované kurzorem nebo offsetem (D10): bez ikony, běžící načítání je stav busy tlačítka (točítko, zakázané, aria-busy), „Starší…“ (older) jen v historii. U seznamu, který už řádky ukazuje, failed přidá tichou větu „Načtení dalších selhalo“ a tlačítko se stane opakováním. Samo se nenačítá nic; automaticky se dál načítá jen hledání (jeho vlastní hlídač na konci výsledků). Ruční tlačítko ve vlastním stylu místo tohoto je zakázané.">
+          <div class="flex flex-wrap items-start gap-3">
+            <LoadMoreButton :busy="loadMoreBusy" @click="demoLoadMore" />
+            <LoadMoreButton older />
+            <LoadMoreButton failed />
+          </div>
         </SettingsSection>
         <SettingsSection title="HistoryChanges" description="HistoryChanges.vue — změny verze stránky jako vykreslené bloky (Přidáno / Odstraněno / Upraveno se zvýrazněnými slovy), nezměněné bloky sbalené; přepínač Náhled | Markdown. Lišta nejdřív řekne počet změn, počty slov doplní, až je spočítá mimo hlavní vlákno; změny se vykreslují odshora po několika na snímek („Načítám další změny…“), šipky ↑ ↓ na změně nebo na tlačítkách mezi nimi skáčou. Bloky, které se liší jen neviditelně (identita nadpisu, prázdné a výchozí atributy starší revize), se za změnu nepočítají. Použití: historie stránky, schvalování konceptů, karta návrhu konceptu v asistentovi (prop label místo řádku verzí, jen Markdown; ukázka v AssistantPanel, scény Návrh úpravy sekce a Přeformátování).">
           <HistoryChanges :revision="galleryHistoryAfter" :previous="galleryHistoryBefore" />

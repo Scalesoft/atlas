@@ -3,7 +3,7 @@ import { computed } from "vue";
 import AtlasIcon from "../AtlasIcon.vue";
 import ChannelBadge from "../ChannelBadge.vue";
 import SubjectAvatar from "../settings/SubjectAvatar.vue";
-import { formatAgo, formatDateTime } from "../../formatDate";
+import RelativeTime from "../RelativeTime.vue";
 import { isPlainNavigationClick, pageLink } from "../../pageLinks";
 import type { RecentChange } from "./homeApi";
 import t from "../../i18n/components-home";
@@ -14,7 +14,7 @@ import t from "../../i18n/components-home";
  * the page; „Historie“ opens this change in the page history, for those who may edit the page. Use it for changes of pages; a list of
  * pages without an author (Nedávné, Oblíbené) is PersonalLibraryPanel's row.
  */
-const props = defineProps<{ change: RecentChange; now?: number }>();
+const props = defineProps<{ change: RecentChange }>();
 const emit = defineEmits<{ open: [change: RecentChange]; history: [change: RecentChange] }>();
 const href = computed(() => pageLink(props.change.pageId));
 // A channel with AI has its own mark; a person's web change has none, the name says it all.
@@ -37,7 +37,7 @@ function open(event: MouseEvent) {
           <span class="change-author">{{ change.authorName }}</span>
           <span v-if="change.isAi" class="change-ai" data-change-ai :title="t.changes.aiMarkTitle">{{ t.changes.aiMark }}</span>
           <ChannelBadge v-if="agent" :channel="change.channel" :token="change.apiToken" detailed />
-          <time :datetime="change.at" :title="formatDateTime(change.at)">{{ formatAgo(change.at, now) }}</time>
+          <RelativeTime :value="change.at" />
           <span v-if="change.furtherChanges > 0" class="change-further change-further-inline">{{ t.changes.further(change.furtherChanges) }}</span>
         </span>
       </span>

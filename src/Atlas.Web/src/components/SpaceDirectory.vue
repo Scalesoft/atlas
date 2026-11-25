@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onBeforeUpdate, ref, shallowRef, watch } from "vue";
 import type { Space } from "../api";
-import { formatAgo, formatDateTime } from "../formatDate";
+import RelativeTime from "./RelativeTime.vue";
 import { readStored, writeStored } from "../lib/browserStorage";
 import { foldText } from "../lib/foldText";
 import { isPlainNavigationClick, spaceLink } from "../pageLinks";
@@ -220,12 +220,12 @@ function leaving(element: Element) {
                     <span class="space-directory-text">
                       <a class="space-directory-link" :href="spaceLink(space.id)" :title="space.name" @click="open(space, $event)">{{ space.name }}</a>
                       <small v-if="!narrow" :class="{ 'is-empty': !space.itemAccessOnly && !space.description?.trim() }" :title="descriptionOf(space)">{{ descriptionOf(space) }}</small>
-                      <small v-else>{{ pages(space.pageCount ?? 0) }}<template v-if="space.lastChangedAt"> · <time :datetime="space.lastChangedAt" :title="formatDateTime(space.lastChangedAt)">{{ formatAgo(space.lastChangedAt) }}</time></template></small>
+                      <small v-else>{{ pages(space.pageCount ?? 0) }}<template v-if="space.lastChangedAt"> · <RelativeTime :value="space.lastChangedAt" /></template></small>
                     </span>
                   </span>
                   <span role="cell" class="is-number" data-space-pages>{{ formatNumber(space.pageCount ?? 0) }}</span>
                   <span role="cell"><span class="space-directory-role" :title="t.directory.yourAccess(roleLabel(space.role))" data-space-access-level>{{ roleLabel(space.role) }}</span></span>
-                  <span role="cell" class="space-directory-changed"><time v-if="space.lastChangedAt" :datetime="space.lastChangedAt" :title="formatDateTime(space.lastChangedAt)">{{ formatAgo(space.lastChangedAt) }}</time></span>
+                  <span role="cell" class="space-directory-changed"><RelativeTime v-if="space.lastChangedAt" :value="space.lastChangedAt" /></span>
                   <span role="cell" class="space-directory-pin"><SpacePinToggle :space="space" :pending="pendingIds.has(space.id)" @toggle="togglePin(space, $event)" /></span>
                 </div>
               </TransitionGroup>

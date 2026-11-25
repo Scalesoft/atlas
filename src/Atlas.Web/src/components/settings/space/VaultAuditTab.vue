@@ -12,6 +12,7 @@ import type { ActivityItem } from "../activity";
 import { auditActivity, auditCategoryLabels, vaultAuditSource } from "../auditActivity";
 import { useSettingsContext } from "../context";
 import LoadingNote from "../LoadingNote.vue";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 // Audit of one vault (V5 GET /api/vaults/{id}/audit): password releases and refusals, client reports,
 // access requests and grants of the vault and its secrets, for every Spravuje holder (space
@@ -57,7 +58,7 @@ onBeforeUnmount(() => controller?.abort());
         <ActivityLog :items="items" :label="t.audit.label(vault.name)" :categories="auditCategoryLabels" />
         <!-- Only with something to load: an empty row still took its gap and pushed the note 28 px off the log. -->
         <div v-if="hasMore" class="st-actions">
-          <Button variant="outline" size="sm" type="button" :disabled="loading" data-audit-more @click="load(true)"><AtlasIcon name="history" :size="15" />{{ t.audit.older }}</Button>
+          <LoadMoreButton older :busy="loading" data-audit-more @click="load(true)" />
         </div>
         <p class="st-note"><AtlasIcon name="info" :size="15" />{{ t.audit.note }}</p>
       </template>

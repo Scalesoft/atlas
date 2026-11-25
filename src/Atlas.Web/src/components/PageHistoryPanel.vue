@@ -26,6 +26,7 @@ import { formatDate, formatDateTime } from "../formatDate";
 import ChannelBadge from "./ChannelBadge.vue";
 import { channelSearchText, channelText } from "../channel";
 import { scrollBehavior } from "../motion/aiMotion";
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 const HistoryRevisionPreview = lazyComponent(() => import("./HistoryRevisionPreview.vue"));
 const HistoryActivityChart = lazyComponent(() => import("./history/HistoryActivityChart.vue"));
@@ -356,7 +357,7 @@ onBeforeUnmount(() => {
             </li>
           </ol>
         </section>
-        <Button variant="ghost" v-if="nextBeforeVersion !== null" class="history-load-more" :disabled="loading || busy || filtering" :aria-busy="loading" @click="load(true)">{{ t.panel.older }}</Button>
+        <LoadMoreButton v-if="nextBeforeVersion !== null" older class="history-load-more" :busy="loading" :disabled="busy || filtering" @click="load(true)" />
       </nav>
       <section class="history-preview" :aria-label="t.panel.selected" :aria-busy="previewLoading || busy">
         <div class="history-context"><AtlasIcon name="updates" :size="14" /><span>{{ t.panel.historic }}</span><span class="history-readonly">{{ t.panel.readOnly }}</span><LoadingNote inline class="history-context-note" :active="previewLoading && !!preview" :label="t.panel.loadingVersion" /></div>

@@ -11,6 +11,7 @@ import { rowKeys } from "../../keyboard/navigation";
 import type { LibraryView } from "../../shellRoute";
 import type { DashboardCardDefinition } from "./dashboardCards";
 import t from "../../i18n/components-home";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 // Co se změnilo: the newest change of each page the reader may read, Vše · Změny od AI · Moje stránky; „Načíst další“ follows the cursor.
 const props = defineProps<{ card: DashboardCardDefinition }>();
@@ -20,7 +21,6 @@ const filter = ref<ChangeFilter>("all");
 const items = shallowRef<RecentChange[]>([]);
 const next = ref<string | null>(null);
 const loaded = ref(false), loading = ref(false), error = ref("");
-const now = Date.now();
 const options = computed(() => [
   { value: "all", label: t.changes.all },
   { value: "ai", label: t.changes.ai },
@@ -57,11 +57,11 @@ onBeforeUnmount(() => abort?.abort());
     @retry="load()">
     <template #actions><OptionPills v-model="filter" class="changes-filter" :label="t.changes.filter" hide-label :options="options" /></template>
     <ul class="changes-list atlas-stagger" :aria-label="t.changes.title" @keydown="rowKeys($event, '.change-row')">
-      <li v-for="change in items" :key="change.pageId"><ChangeRow :change="change" :now="now" @open="emit('select', $event.pageId, 'page')" @history="emit('history', $event)" /></li>
+      <li v-for="change in items" :key="change.pageId"><ChangeRow :change="change" @open="emit('select', $event.pageId, 'page')" @history="emit('history', $event)" /></li>
     </ul>
     <div v-if="next || (error && items.length)" class="changes-more">
       <p v-if="error && items.length" class="changes-error" role="alert">{{ error }}</p>
-      <Button variant="outline" size="sm" :disabled="loading" :aria-busy="loading" @click="load(true)"><AtlasIcon name="refresh" :size="15" />{{ t.changes.more }}</Button>
+      <LoadMoreButton :busy="loading" @click="load(true)" />
     </div>
   </DashboardCard>
 </template>

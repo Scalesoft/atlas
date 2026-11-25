@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import AtlasIcon from "../AtlasIcon.vue";
-import { formatAgo, formatDateTime } from "../../formatDate";
+import RelativeTime from "../RelativeTime.vue";
 import { contentItemLink, isPlainNavigationClick } from "../../pageLinks";
 import type { LibraryItem } from "../../personalLibrary";
 
 // A page or board of the dashboard's short lists (Naposledy navštívené, the drafts of Čeká na mě): the compact form of Knihovna's row
 // (PersonalLibraryPanel), which these cards link to with „Zobrazit vše“. Private to the dashboard.
-const props = defineProps<{ item: LibraryItem; at?: string | null; label: string; now?: number }>();
+const props = defineProps<{ item: LibraryItem; at?: string | null; label: string }>();
 const emit = defineEmits<{ open: [item: LibraryItem] }>();
 function open(event: MouseEvent) {
   if (!isPlainNavigationClick(event)) return;
@@ -19,7 +19,7 @@ function open(event: MouseEvent) {
   <a class="home-page-row" :href="contentItemLink(item)" :aria-label="label" :data-library-type="item.type ?? 'page'" @click="open">
     <AtlasIcon :name="item.type === 'board' ? 'layout-dashboard' : 'page'" :size="18" />
     <span class="home-page-copy"><strong :title="item.title">{{ item.title }}</strong><span :title="item.spaceName">{{ item.spaceName }}</span></span>
-    <time v-if="at" :datetime="at" :title="formatDateTime(at)">{{ formatAgo(at, now) }}</time>
+    <RelativeTime v-if="at" :value="at" />
   </a>
 </template>
 

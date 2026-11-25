@@ -76,9 +76,9 @@ for (const combo of combos) {
       const shot = shooter(page, combo);
       await open(page, combo, '#/settings/general/modules', { enabled: true, configured: true, embeddingsDown: true, activeIndex: true });
       await expect(page.locator('[data-module="ai"]')).toHaveCount(0);
-      if (combo.device === 'mobile') await page.getByRole('button', { name: /^Sekce/ }).click();
+      if (combo.device === 'mobile') await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
       await expect(page.locator('.settings-nav [data-path="general/modules/ai"]').filter({ visible: true })).toBeVisible();
-      if (combo.device === 'mobile') await page.getByRole('button', { name: 'Zavřít sekce' }).click();
+      if (combo.device === 'mobile') await page.keyboard.press('Escape');
       await shot('01-module-card');
 
       await go(page, `${base}/overview`);

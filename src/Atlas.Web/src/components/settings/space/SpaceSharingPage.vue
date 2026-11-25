@@ -22,6 +22,7 @@ import StatusBadge from "../StatusBadge.vue";
 import { disclosureHooks } from "../disclosure";
 import { useSettingsFlash } from "../flash";
 import type { StatusTone } from "../types";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 // Sdílení of a space: the anonymous links policy (turning it off revokes every active link, so it
 // asks first) and the inventory of the space's links, fifty at a time, each revocable. `embedded` renders the same
@@ -203,7 +204,7 @@ function detail(link: ShareLink) {
         </SettingsList>
         <EmptyState v-else compact icon="link" :title="t.sharing.noLinks" :text="policy.enabled ? t.sharing.noLinksOn : t.sharing.noLinksOff" />
         <div v-if="hasMore" class="st-actions">
-          <Button variant="outline" size="sm" type="button" :disabled="busy" data-load-more @click="more"><AtlasIcon name="down" :size="15" />{{ t.sharing.loadMore }}</Button>
+          <LoadMoreButton :busy="busy" data-load-more @click="more" />
         </div>
       </SettingsSection>
       </InlineReveal>

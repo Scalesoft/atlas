@@ -9,6 +9,7 @@ import AtlasIcon from "../AtlasIcon.vue";
 import TrashList from "../settings/TrashList.vue";
 import { useTrashLoad } from "../settings/useTrashLoad";
 import { Button } from "../ui/button";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * Kontakty → Koš: the wiki contacts in the trash that the reader may bring back, newest first, in the one trash list (TrashList),
@@ -51,7 +52,7 @@ function left(item: TrashedObject, how: "restored" | "purged") {
       @retry="load()" @left="left">
       <footer v-if="items.length" class="contact-trash-footer">
         <p class="help" role="status">{{ t.trash.count(items.length, total) }}</p>
-        <Button v-if="total > items.length" variant="outline" type="button" :disabled="loading" :aria-busy="loading" @click="load(true)"><AtlasIcon name="refresh" :size="16" />{{ t.trash.more }}</Button>
+        <LoadMoreButton v-if="total > items.length" :busy="loading" @click="load(true)" />
       </footer>
       <template #purge="{ item }">
         <p>{{ t.trash.purgeLead }} <strong>{{ item.title }}</strong> {{ t.trash.purgeTail }}</p>

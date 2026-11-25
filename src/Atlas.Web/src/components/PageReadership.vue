@@ -20,6 +20,7 @@ import type { ChoiceOption } from "./settings/types";
 import "./settings/settings.css";
 import { periodQuery, type Readership, type ReadershipItem } from "../activity";
 import { pragueNow } from "@atlas/markdown/core";
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 /**
  * Čtenost stránky, the side panel (AppDialog size="side") of the page's "…" menu like Historie: the year's calendar of views (the ActivityHeatmap of
@@ -126,7 +127,7 @@ onUnmounted(() => { summaryRequest?.abort(); logRequest?.abort(); });
                 </template>
               </SettingsList>
               <EmptyState v-else compact icon="bar-chart-3" :title="t.readership.noViews" :text="selected ? t.readership.noViewsDay : t.readership.noViewsYear" />
-              <div v-if="log.hasMore" class="st-actions"><Button variant="outline" size="sm" type="button" data-more :disabled="logLoading" :aria-busy="logLoading" @click="loadLog(true)"><AtlasIcon name="down" :size="15" />{{ t.readership.moreVisits }}</Button></div>
+              <div v-if="log.hasMore" class="st-actions"><LoadMoreButton data-more :busy="logLoading" @click="loadLog(true)" /></div>
             </template>
           </LoadingRegion>
         </section>

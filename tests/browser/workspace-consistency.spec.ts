@@ -71,13 +71,10 @@ test('document workspace and routed profile remain consistent on desktop and mob
     await expect(page.getByRole('dialog', { name: 'Profil', exact: true })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
     await page.screenshot({ path: `../../artifacts/profile-account-${viewport.width}.png`, fullPage: true, animations: 'disabled' });
-    // Profile sections sit in the application rail on a wide screen (2.5); a phone offers them in the "Sekce" sheet.
+    // Profile sections sit in the application rail on a wide screen (2.5); a phone offers them in the drawer.
     const openSection = async (name: string) => {
-      if (viewport.width > 680) return page.locator('#atlas-settings-rail').getByRole('link', { name, exact: true }).click();
-      await profile.getByRole('button', { name: /^Sekce/ }).click();
-      const sheet = page.getByRole('dialog', { name: 'Sekce', exact: true });
-      await sheet.getByRole('link', { name, exact: true }).click();
-      await expect(sheet).toBeHidden();
+      if (viewport.width <= 680) await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
+      await page.locator('#atlas-settings-rail').getByRole('link', { name, exact: true }).click();
     };
     await openSection('Zabezpečení');
     await expect(profile.getByRole('heading', { name: 'Přihlášení', exact: true })).toBeVisible();

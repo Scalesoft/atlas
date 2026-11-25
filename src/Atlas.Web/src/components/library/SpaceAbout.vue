@@ -3,7 +3,7 @@ import t from "../../i18n/components-library";
 import componentsLibraryHome from "../../i18n/components-library-home";
 import { computed } from "vue";
 import type { PageSummary, Space } from "../../api";
-import { formatAgo, formatDateTime } from "../../formatDate";
+import RelativeTime from "../RelativeTime.vue";
 import { roleLabel } from "../../roles";
 import { spaceSettingsHash } from "../../settingsRoutes";
 import AtlasIcon from "../AtlasIcon.vue";
@@ -63,7 +63,7 @@ const adminLinks = [
     <p v-if="space.description" class="space-about-description">{{ space.description }}</p>
     <SummaryList :items="facts" :label="t.about.facts">
       <template #value-changed>
-        <time v-if="space.lastChangedAt" :datetime="space.lastChangedAt" :title="formatDateTime(space.lastChangedAt)">{{ formatAgo(space.lastChangedAt) }}</time>
+        <RelativeTime v-if="space.lastChangedAt" :value="space.lastChangedAt" />
       </template>
     </SummaryList>
 

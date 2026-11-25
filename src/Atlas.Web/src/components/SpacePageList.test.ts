@@ -131,7 +131,7 @@ it("offers a row's actions in its „Co s tím jde dělat“, ticking a draft am
   row.element.dispatchEvent(new KeyboardEvent('keydown', { key: '.', ctrlKey: true, bubbles: true }));
   await flushPromises();
   const items = () => [...document.querySelectorAll<HTMLElement>('[data-row-action]')];
-  expect(items().map(item => item.textContent?.trim())).toEqual(['Otevřít', 'Detail', 'Kde je použito', 'Vybrat']);
+  expect(items().map(item => item.textContent?.trim())).toEqual(['Otevřít', 'Detail', 'Kde je použito', 'Přidat do stromu…', 'Vybrat']);
   items().find(item => item.textContent?.trim() === 'Vybrat')!.click();
   await flushPromises();
   expect(wrapper.get('[data-bulk-bar]').text()).toContain('Vybráno: 1');

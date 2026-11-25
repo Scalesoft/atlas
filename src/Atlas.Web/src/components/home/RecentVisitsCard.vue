@@ -17,7 +17,6 @@ const emit = defineEmits<{ select: [id: string, type: TreeNodeType]; navigate: [
 const source = inject(homeApiKey, homeApi);
 const items = shallowRef<LibraryItem[]>([]);
 const loaded = ref(false), loading = ref(false), error = ref("");
-const now = Date.now();
 let abort: AbortController | undefined;
 
 async function load() {
@@ -42,7 +41,7 @@ onBeforeUnmount(() => abort?.abort());
     :empty="loaded && !items.length" :empty-title="t.recent.emptyTitle" :empty-text="t.recent.emptyHint" empty-icon="recent" :rows="6" row-height="52px"
     @retry="load()" @navigate="emit('navigate', $event)">
     <ul class="home-rows atlas-stagger" :aria-label="card.title()" @keydown="listKeys">
-      <li v-for="item in items" :key="item.id"><HomePageRow :item="item" :at="item.visitedAt" :now="now" :label="t.recent.openPage(item.title)"
+      <li v-for="item in items" :key="item.id"><HomePageRow :item="item" :at="item.visitedAt" :label="t.recent.openPage(item.title)"
         @open="emit('select', $event.id, $event.type === 'board' ? 'board' : 'page')" /></li>
     </ul>
   </DashboardCard>
