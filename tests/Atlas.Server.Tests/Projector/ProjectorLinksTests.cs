@@ -315,7 +315,8 @@ public sealed class ProjectorLinksTests
         {
             var prerequisite = Assert.Single(await f.As<IReadOnlyList<RequirementPrerequisite>>(f.Reader, new GetRequirementPrerequisites([reference])));
             Assert.Equal((false, null), (prerequisite.Readable, prerequisite.Title));
-            Assert.Null((await f.As<RequirementCycle>(f.Admin, new CheckRequirementCycle(source, "vpn", [$"portal.ssl@{page:D}"]))).Path);
+            // The page itself is missing to MCP once its space is out of AI (the shared access gates decide it), so there is no cycle to tell.
+            Assert.Equal(404, (await Assert.ThrowsAsync<ApiException>(() => f.As<RequirementCycle>(f.Admin, new CheckRequirementCycle(source, "vpn", [$"portal.ssl@{page:D}"])))).Status);
         }
         finally
         {
