@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { userColor } from "../../../live/objectPresence";
+import { userColor } from "../../../live/collaboratorColors";
 import t from "../../../i18n/components-release";
 import { typeText, useDemoLoop } from "./demoClock";
 

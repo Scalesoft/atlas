@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from "vue";
 import "../../../collaborationPresence.css";
-import { userColor } from "../../../live/objectPresence";
+import { userColor } from "../../../live/collaboratorColors";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import AtlasIcon from "../../AtlasIcon.vue";
 import CollaborationPointer from "../../CollaborationPointer.vue";
