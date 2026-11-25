@@ -293,12 +293,13 @@ onBeforeUnmount(skip);
 .release-splash-hint { margin-left: auto; color: var(--muted); font-size: 12.5px; }
 @media (max-width: 760px) {
   .release-splash, .release-splash[data-patch], .release-splash[data-major], .release-splash[data-composed] { grid-template-columns: minmax(0, 1fr); }
-  .release-splash-hero :deep(.release-mark[data-variant]) { width: 168px; }
+  /* The composed rule is more specific than the plain one: it repeats the phone's width, or a named release's motif fills the phone. */
+  .release-splash-hero :deep(.release-mark[data-variant]), .release-splash[data-composed] .release-splash-hero :deep(.release-mark[data-variant="hero"]) { width: 168px; }
   .release-splash-hero :deep(.release-cover) { width: 220px; }
   .release-splash-cards { grid-template-columns: minmax(0, 1fr); }
   .release-splash[data-staged] .release-splash-card[data-demo]:first-child { grid-column: auto; }
   .release-splash-hint { margin-left: 0; }
-  .release-splash-initial { font-size: 200px; }
+  .release-splash-initial { font-size: 180px; }
   .release-splash[data-composed] .release-splash-word + .release-splash-word { margin-left: 28px; }
 }
 @media (min-width: 761px) and (max-width: 980px) { .release-splash-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
