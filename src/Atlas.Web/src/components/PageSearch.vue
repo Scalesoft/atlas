@@ -12,6 +12,7 @@ import AtlasIcon from "./AtlasIcon.vue";
 import SearchField from "./settings/SearchField.vue";
 import SearchHighlight from "./SearchHighlight.vue";
 import { Button } from "./ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 /**
  * Hledat ve stránce (3.5 J), the tab „Hledat“ of the page dock (PageSidePanel): every match marked in the page, the current one
@@ -214,8 +215,8 @@ onBeforeUnmount(() => {
         role="combobox" aria-autocomplete="list" :aria-expanded="results.length > 0" :aria-controls="listId"
         :aria-activedescendant="results.length ? optionId(current) : undefined" @keydown="keys" />
       <span class="page-search-count" role="status" aria-live="polite">{{ status }}</span>
-      <Button variant="ghost" size="icon-sm" :disabled="!results.length" :aria-label="t.psearch.previousLabel" :title="t.psearch.previousTitle" @click="next(true)"><AtlasIcon name="chevron-up" :size="16" /></Button>
-      <Button variant="ghost" size="icon-sm" :disabled="!results.length" :aria-label="t.psearch.nextLabel" :title="t.psearch.nextTitle" @click="next(false)"><AtlasIcon name="chevron-down" :size="16" /></Button>
+      <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" :disabled="!results.length" :aria-label="t.psearch.previousLabel" @click="next(true)"><AtlasIcon name="chevron-up" :size="16" /></Button></TooltipTrigger><TooltipContent>{{ t.psearch.previousTitle }}</TooltipContent></Tooltip>
+      <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" :disabled="!results.length" :aria-label="t.psearch.nextLabel" @click="next(false)"><AtlasIcon name="chevron-down" :size="16" /></Button></TooltipTrigger><TooltipContent>{{ t.psearch.nextTitle }}</TooltipContent></Tooltip>
     </div>
     <p v-if="!searched.trim()" class="page-search-hint">{{ t.psearch.hint0 }} <kbd>Enter</kbd> {{ t.psearch.hint1 }} <kbd>Shift Enter</kbd> {{ t.psearch.hint2 }} <kbd>↑</kbd> <kbd>↓</kbd> {{ t.psearch.hint3 }} <kbd>Esc</kbd> {{ t.psearch.hint4 }}</p>
     <Button v-if="editing && results.length" variant="outline" size="sm" class="page-search-replace" @click="replace"><AtlasIcon name="search" :size="15" />{{ t.psearch.replace }}</Button>

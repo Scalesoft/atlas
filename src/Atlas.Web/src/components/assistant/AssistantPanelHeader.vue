@@ -8,6 +8,7 @@ import AtlasIcon from "../AtlasIcon.vue";
 import AiGlyph from "../ai/AiGlyph.vue";
 import ConfirmDialog from "../settings/ConfirmDialog.vue";
 import { Button } from "../ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 /**
  * The header of the Assistant panel (the `header` slot of WorkspaceSidePanel, which adds the close button), as on the board
@@ -37,8 +38,8 @@ async function remove() {
   <span class="assistant-header" data-assistant-header>
     <AiGlyph size="m" :state="glyphState" />
     <span class="assistant-header-title">{{ t.header.title }}</span>
-    <Button type="button" variant="ghost" size="icon-sm" class="assistant-header-action" :aria-label="t.header.new" :title="t.header.new" data-assistant-new @click="assistant.newConversation()"><AtlasIcon name="plus" :size="16" /></Button>
-    <Button type="button" variant="ghost" size="icon-sm" class="assistant-header-action" :aria-label="t.header.mine" :title="t.header.mine" :aria-pressed="assistant.view.value === 'list'" data-assistant-history @click="assistant.view.value === 'list' ? assistant.showThread() : assistant.showList()"><AtlasIcon name="history" :size="16" /></Button>
+    <Tooltip><TooltipTrigger as-child><Button type="button" variant="ghost" size="icon-sm" class="assistant-header-action" :aria-label="t.header.new" data-assistant-new @click="assistant.newConversation()"><AtlasIcon name="plus" :size="16" /></Button></TooltipTrigger><TooltipContent>{{ t.header.new }}</TooltipContent></Tooltip>
+    <Tooltip><TooltipTrigger as-child><Button type="button" variant="ghost" size="icon-sm" class="assistant-header-action" :aria-label="t.header.mine" :aria-pressed="assistant.view.value === 'list'" data-assistant-history @click="assistant.view.value === 'list' ? assistant.showThread() : assistant.showList()"><AtlasIcon name="history" :size="16" /></Button></TooltipTrigger><TooltipContent>{{ t.header.mine }}</TooltipContent></Tooltip>
     <ActionDisclosure :label="t.header.more" class="assistant-header-menu">
       <ActionDisclosureItem :disabled="!assistant.conversationId.value" @click="confirming = true"><AtlasIcon name="trash" :size="16" />{{ t.header.delete }}</ActionDisclosureItem>
     </ActionDisclosure>

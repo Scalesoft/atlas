@@ -151,7 +151,7 @@ function enter(root: HTMLDialogElement, from?: Keyframe, backdropFrom: string | 
     entering = unfoldFrom(root, trigger);
   } else if (props.size === "side") {
     // The side panel slides in 3 rise tokens and fades (slow, ease-out); reduced motion keeps the fade only.
-    entering = animateAtlas(root, [{ opacity: 0, transform: "translateX(24px)" }, { opacity: 1, transform: "none" }], { duration: motionMs(root, "--atlas-motion-slow") });
+    entering = animateAtlas(root, [{ opacity: 0, transform: "translateX(100%)" }, { opacity: 1, transform: "none" }], { duration: motionMs(root, "--atlas-motion-slow") });
   } else {
     // Board "Pohyb v refreshi": the dialog grows from .98 and 8 px over the base duration, behind the 160 ms backdrop.
     entering = animateAtlas(root, [{ opacity: 0, transform: "translateY(8px) scale(.98)" }, { opacity: 1, transform: "none" }], { duration: motionMs(root, "--atlas-motion-base") });
@@ -161,7 +161,7 @@ function enter(root: HTMLDialogElement, from?: Keyframe, backdropFrom: string | 
 function leaveOut(root: HTMLDialogElement, from: Keyframe) {
   root.setAttribute("inert", "");
   root.setAttribute("aria-hidden", "true");
-  const to = props.size === "side" ? "translateX(24px)" : "translateY(8px) scale(.98)";
+  const to = props.size === "side" ? "translateX(100%)" : "translateY(8px) scale(.98)";
   return animateAtlas(root, [from, { opacity: 0, transform: to }], { duration: motionMs(root, "--atlas-motion-surface"), fill: "forwards" });
 }
 function finishHide(root: HTMLDialogElement) {
