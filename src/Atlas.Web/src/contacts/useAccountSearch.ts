@@ -1,6 +1,6 @@
 import { onScopeDispose, ref, shallowRef, watch } from "vue";
 import type { ChoiceOption } from "../components/settings/types";
-import type { PagePerson } from "./contactSources";
+import { pageAccounts, type PagePerson } from "./contactSources";
 
 /** The accounts with access to one page whose name matches `text` (contactSources' pageAccounts; the gallery passes local ones). */
 export type PageAccountSource = (pageId: string, text: string, signal: AbortSignal) => Promise<PagePerson[]>;
@@ -12,8 +12,9 @@ const maxPages = 20;
  * The accounts that may be a page's owner, as a SearchableChoiceList's remote options (`query`, `options`, `loading`): those with access to
  * every page of `pageIds` (one page: the verification popover; a selection: Stav obsahu). Typing waits a moment and the previous read is
  * aborted, so only the newest answer lands; `start()` reads at once with an empty query (the picker opened). A failed read shows nothing.
+ * `people` defaults to the page's accounts on the server; the gallery passes local ones.
  */
-export function useAccountSearch(pageIds: () => readonly string[], people: PageAccountSource) {
+export function useAccountSearch(pageIds: () => readonly string[], people: PageAccountSource = (id, text, signal) => pageAccounts(id)(text, signal)) {
   const query = ref("");
   const options = shallowRef<ChoiceOption[]>([]);
   const loading = ref(false);

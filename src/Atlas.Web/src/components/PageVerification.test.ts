@@ -7,11 +7,11 @@ import { verificationIcon, verificationLabel, verificationTone, type PageVerific
 const day = 86_400_000;
 const at = (days: number) => new Date(Date.now() + days * day).toISOString();
 const sample = (state: VerificationState, over: Partial<Verification> = {}): Verification => ({ state, stewardId: "u1", stewardName: "Jana Malá", verifiedAt: at(-30), verifiedUntil: at(90), verifiedVersion: 3, changedSinceVerification: false, verifiedByName: "Petr Test", intervalMonths: null, spaceIntervalMonths: 6, ...over });
-const api = () => ({ read: vi.fn(), change: vi.fn(async (_: string, change: object) => sample("verified", { verifiedUntil: at(180), ...change })), report: vi.fn(async () => {}) });
+const api = () => ({ read: vi.fn(), change: vi.fn(async (_: string, change: object) => sample("verified", { verifiedUntil: at(180), ...change })), report: vi.fn(async () => ({ notified: 1 })) });
 const people = vi.fn(async () => [{ id: "u2", name: "Eva Nováková" }, { id: "u3", name: "Eva Dvořáková" }]);
 
 let wrapper: VueWrapper | undefined;
-function open(verification: Verification | null, props: { canEdit?: boolean; isPublished?: boolean; api?: ReturnType<typeof api> } = {}) {
+function open(verification: Verification | null, props: { pageId?: string; canEdit?: boolean; isPublished?: boolean; online?: boolean; api?: ReturnType<typeof api> } = {}) {
   wrapper = mount(PageVerification, { attachTo: document.body, props: { pageId: "p1", verification, canEdit: true, isPublished: true, api: api(), people, ...props } });
   return wrapper;
 }
@@ -145,5 +145,45 @@ describe("PageVerification popover", () => {
     await flushPromises();
     expect(pop()!.querySelector("[data-verification-note]")).toBeNull();
     expect(pop()!.querySelector("[data-verification-reported]")).not.toBeNull();
+  });
+
+  it("tells the reader when the report reached nobody, and offers „Porovnat verze“ only to who may open the history", async () => {
+    const service = api();
+    service.report.mockResolvedValueOnce({ notified: 0 });
+    open(sample("expired", { changedSinceVerification: true }), { pageId: "p-nobody", canEdit: false, api: service });
+    await openPopover();
+    expect(pop()!.querySelector("[data-verification-changed]")!.textContent).toContain("Změněno po ověření");
+    expect(pop()!.querySelector("[data-verification-compare]")).toBeNull();
+    pop()!.querySelector<HTMLElement>("[data-verification-report]")!.click();
+    await flushPromises();
+    pop()!.querySelector<HTMLFormElement>("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+    await flushPromises();
+    expect(pop()!.querySelector("[data-verification-reported]")!.textContent).toContain("nemá komu přijít");
+    wrapper!.unmount();
+    open(sample("expired", { changedSinceVerification: true }));
+    await openPopover();
+    expect(pop()!.querySelector("[data-verification-compare]")).not.toBeNull();
+  });
+
+  it("keeps an offline editor's actions, disabled, instead of the reader's", async () => {
+    open(sample("expired"), { online: false });
+    await openPopover();
+    expect(pop()!.querySelector("[data-verification-report]")).toBeNull();
+    expect(pop()!.querySelector<HTMLButtonElement>("[data-verification-verify]")!.disabled).toBe(true);
+    expect(pop()!.querySelector<HTMLButtonElement>("[data-verification-steward-change]")!.disabled).toBe(true);
+  });
+
+  it("opens on the owner search from the page panel and gives the keyboard back to the panel's link", async () => {
+    const link = document.createElement("button");
+    document.body.append(link);
+    open(sample("verified"));
+    link.focus();
+    await (wrapper!.vm as unknown as { openSteward(): Promise<void> }).openSteward();
+    await flushPromises();
+    expect(pop()!.querySelector("input[type=search]")).not.toBeNull();
+    pop()!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    await vi.waitFor(() => expect(pop()).toBeNull());
+    await flushPromises();
+    expect(document.activeElement).toBe(link);
   });
 });
