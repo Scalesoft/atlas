@@ -1586,11 +1586,13 @@ function askComponentDraft(fromHistory: boolean, resume?: () => void) {
   const target = location.href;
   if (fromHistory) { searchUrl(false); history.pushState(null, "", currentRoute()); }
   const go = resume ?? (() => { history.pushState(null, "", target); void historyNavigation(); });
-  void (async () => {
-    if (detailDirty.value && !((await editor.value?.resolveDetailDraft()) ?? true)) return;
-    if (sourceDirty.value && !((await editor.value?.resolveSourceDraft()) ?? true)) return;
-    goOn({ resume: go });
-  })();
+  void resolveComponentDrafts().then(resolved => { if (resolved) goOn({ resume: go }); });
+}
+/** Each component with an unconfirmed input asks about it; true once none is left (applied or dropped). */
+async function resolveComponentDrafts() {
+  if (detailDirty.value && !((await editor.value?.resolveDetailDraft()) ?? true)) return false;
+  if (sourceDirty.value && !((await editor.value?.resolveSourceDraft()) ?? true)) return false;
+  return true;
 }
 /**
  * Everything that belongs to the signed-in account, in one place. Logout and a session the
@@ -3005,11 +3007,9 @@ function openPageHistory(revision?: PageRevisionSummary | Event) {
   historyInitialRevision.value = revision && "version" in revision ? revision : undefined;
   historyOpen.value = true;
 }
-// Restoring over component input in progress asks through the house ConfirmDialog; the answer resolves here.
-const restoreConfirm = ref<((proceed: boolean) => void) | null>(null);
-function answerRestoreConfirm(proceed: boolean) { restoreConfirm.value?.(proceed); restoreConfirm.value = null; }
 async function beforeHistoryRestore() {
-  const allowed = !!page.value && pageCanWrite.value && !pending.value && (!documentDraft() || await new Promise<boolean>(resolve => { restoreConfirm.value = resolve; }));
+  // Component input in progress asks through its component, as when leaving the page.
+  const allowed = !!page.value && pageCanWrite.value && !pending.value && (!documentDraft() || await resolveComponentDrafts());
   if (!allowed) return false;
   // The restored revision replaces the document; a confirmed discard must not leave a "lost block" draft behind.
   if (detailDirty.value) editor.value?.discardDetailDraft();
@@ -5200,10 +5200,6 @@ onUnmounted(() => {
     </ConfirmDialog>
     <DiscardChangesDialog v-if="discardSeen && page && publication?.publishedRevisionId" :open="discardOpen" :title="t.dlg.discardTitle" :page-id="page.id" :published-revision-id="publication.publishedRevisionId" :version="page.version"
       :dark="dark" :accent="appearance.accent" :prepare="saveBeforeDiscard" :before-restore="beforeHistoryRestore" @close="discardOpen = false" @restored="discarded" />
-    <ConfirmDialog v-if="restoreConfirm" :open="!!restoreConfirm" :title="t.dlg.restoreTitle" :confirm-label="t.dlg.restoreAction" confirm-icon="history"
-      @confirm="answerRestoreConfirm(true)" @cancel="answerRestoreConfirm(false)">
-      <p>{{ t.toast.confirmRestore }}</p>
-    </ConfirmDialog>
     <ConfirmDialog v-if="boardOpen" :open="boardTrashOpen" :title="t.dlg.boardTrashTitle" :confirm-label="t.common.moveToTrash" confirm-icon="trash"
       :busy="boardTrashBusy" :error="boardTrashError || undefined" @confirm="trashBoard" @cancel="boardTrashOpen = false">
       <p><strong>{{ boardTitle }}</strong> {{ t.dlg.boardTrashText }}</p>

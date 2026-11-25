@@ -6,7 +6,7 @@ import { prefetchPageSource } from "../pageSource";
 import type { PageSourceDraftOptions } from "../pageSourceDraft";
 import DocumentEditor from "./DocumentEditor.vue";
 
-// The editor's source draft, panel and confirmation are replaced by small fakes, so Monaco never loads. The editor is real.
+// The editor's source draft, panel and the unsaved-changes question are replaced by small fakes, so Monaco never loads. The editor is real.
 const fake = vi.hoisted(() => ({ options: undefined as unknown, draft: undefined as unknown }));
 vi.mock("../pageSource", async original => ({ ...await original<object>(), prefetchPageSource: vi.fn() }));
 vi.mock("../pageSourceDraft", async original => {
@@ -24,15 +24,19 @@ vi.mock("../pageSourceDraft", async original => {
       return draft;
     },
     MarkdownSourcePanel: component({ props: ["draft"], setup: () => () => render("div", { class: "fake-source-panel" }, "Zdroj") }),
-    MarkdownDraftConfirmation: component({
-      props: ["open", "label", "message", "applyLabel", "busy"], emits: ["continue", "discard", "apply"],
-      setup: (props, { emit }) => () => props.open ? render("div", { class: "fake-confirmation", "data-apply": props.applyLabel ?? "" }, [
-        render("button", { class: "fake-continue", onClick: () => emit("continue") }, "Pokračovat"),
-        render("button", { class: "fake-discard", onClick: () => emit("discard") }, "Zahodit"),
-        render("button", { class: "fake-apply", onClick: () => emit("apply") }, "Použít"),
-      ]) : null,
-    }),
   };
+});
+// The shared unsaved-changes question, as a fake: its own behaviour is UnsavedChangesDialog.test.ts.
+vi.mock("./UnsavedChangesDialog.vue", async () => {
+  const { defineComponent: component, h: render } = await import("vue");
+  return { default: component({
+    props: ["open", "canSave", "saving", "message", "saveLabel"], emits: ["stay", "discard", "save"],
+    setup: (props, { emit }) => () => props.open ? render("div", { class: "fake-confirmation", "data-apply": props.canSave ? props.saveLabel : "" }, [
+      render("button", { class: "fake-continue", onClick: () => emit("stay") }, "Zůstat"),
+      render("button", { class: "fake-discard", onClick: () => emit("discard") }, "Zahodit"),
+      render("button", { class: "fake-apply", onClick: () => emit("save") }, "Použít"),
+    ]) : null,
+  }) };
 });
 type FakeDraft = { text: { value: string }; base: { value: string }; busy: { value: boolean }; apply: ReturnType<typeof vi.fn>; discard: ReturnType<typeof vi.fn>; close: ReturnType<typeof vi.fn> };
 const draft = () => fake.draft as FakeDraft;

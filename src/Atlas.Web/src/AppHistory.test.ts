@@ -7,13 +7,13 @@ import type { Page } from "./api";
 import { emptyDocument } from "./document";
 import { jsonResponse as response, mountApp, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "./testing/appHarness";
 
-const counters = vi.hoisted(() => ({ mounts: 0, hydratedMarkdown: "" }));
+const counters = vi.hoisted(() => ({ mounts: 0, hydratedMarkdown: "", resolveDetailDraft: vi.fn(async () => true), discardDetailDraft: vi.fn() }));
 vi.mock("./components/DocumentEditor.vue", () => ({ __esModule: true, default: defineComponent({
-  props: ["value", "readonly"], emits: ["ready", "change", "collaborationStatus", "editIntent"],
+  props: ["value", "readonly"], emits: ["ready", "change", "collaborationStatus", "editIntent", "detailDraft"],
   setup(props, { emit, expose }) {
     counters.mounts++;
     watch(() => props.readonly, () => emit("collaborationStatus", { enabled: true, canSave: true }));
-    expose({ focus: () => true, capture: () => ({ contentJson: JSON.stringify(props.value), markdown: counters.hydratedMarkdown, collaborationGeneration: "generation-1" }) });
+    expose({ focus: () => true, resolveDetailDraft: counters.resolveDetailDraft, discardDetailDraft: counters.discardDetailDraft, capture: () => ({ contentJson: JSON.stringify(props.value), markdown: counters.hydratedMarkdown, collaborationGeneration: "generation-1" }) });
     onMounted(() => { emit("ready"); emit("collaborationStatus", { enabled: true, canSave: true }); });
     return () => h("button", { class: "editor-test-change", onClick: () => emit("change") }, "Change editor");
   },
@@ -41,7 +41,7 @@ async function startEditing(app: VueWrapper) {
 /** A writer's title is a field, not a heading (3.6-A). */
 const titleOf = (app: VueWrapper) => (app.get(".document-title-text").element as HTMLTextAreaElement).value;
 async function start(role = "Writer", custom?: Route) {
-  counters.mounts = 0; counters.hydratedMarkdown = "";
+  counters.mounts = 0; counters.hydratedMarkdown = ""; counters.resolveDetailDraft.mockClear(); counters.discardDetailDraft.mockClear();
   const team: Route = path => {
     if (path === "/api/auth/me") return response({ id: "user-1", username: "writer", displayName: "Writer", isWikiAdmin: false, appearance: { layout: "connected", accent: "blue", mode: "system" } });
     if (path === "/api/spaces") return response([{ id: "space-1", name: "Team", role, icon: "book", color: "blue" }]);
@@ -92,6 +92,27 @@ describe("history integration", () => {
     expect(titleOf(app)).toBe("Restored title");
     expect(success).toHaveBeenCalledWith(expect.stringContaining("Historická verze byla obnovena"), expect.anything());
     expect(app.find("[data-page-save-state]").text()).not.toContain("Ukládám");
+  });
+  it("asks about a component's unapplied input through the component itself before restoring, no question of its own", async () => {
+    const app = await start("Writer", (path, init) => {
+      if (path === "/api/pages/page-1" && init?.method === "PUT") return Promise.resolve(response({ ...page, ...JSON.parse(init.body as string), version: 3 }));
+      if (path === "/api/pages/page-1") return Promise.resolve(response({ ...page, activeFrom: "2026-09-10T10:42:00Z" }));
+    });
+    await startEditing(app);
+    app.getComponent(DocumentEditor).vm.$emit("detailDraft", true); await flushPromises();
+    await app.get("button.document-updated").trigger("click"); await flushPromises();
+    // Zůstat in the component's own question: nothing is restored.
+    counters.resolveDetailDraft.mockResolvedValueOnce(false);
+    await app.get(".history-test-restore").trigger("click"); await flushPromises();
+    expect(counters.resolveDetailDraft).toHaveBeenCalledTimes(1);
+    expect(document.querySelector("dialog[open]")).toBeNull();
+    expect(counters.mounts).toBe(1);
+    // Zahodit (or Použít): the restore goes on.
+    counters.resolveDetailDraft.mockResolvedValueOnce(true);
+    await app.get(".history-test-restore").trigger("click"); await flushPromises();
+    expect(counters.resolveDetailDraft).toHaveBeenCalledTimes(2);
+    expect(counters.mounts).toBe(2);
+    expect(titleOf(app)).toBe("Restored title");
   });
   it("retains later local edits when an older publication completes", async () => {
     let resolvePublish!: (response: Response) => void;

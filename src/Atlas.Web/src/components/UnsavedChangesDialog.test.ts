@@ -58,3 +58,10 @@ it("disables discard and save while saving, and labels the primary button", asyn
   expect(view.get("button[data-variant=default]").attributes("disabled")).toBeDefined();
   expect(view.get("button[data-variant=default]").text()).toBe("Ukládání…");
 });
+
+it("says what a component's draft holds and how it is kept", () => {
+  const view = open({ message: "Zdroj stránky obsahuje neuložené změny.", saveLabel: "Použít a zavřít" });
+  expect(view.text()).toContain("Zdroj stránky obsahuje neuložené změny.");
+  expect(view.text()).not.toContain("Máte rozepsané změny");
+  expect(view.get("button[data-variant=default]").text()).toBe("Použít a zavřít");
+});

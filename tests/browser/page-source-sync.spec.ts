@@ -136,13 +136,13 @@ test('document edits survive a local source draft, the question before leaving i
   await expect(panel.getByRole('button', { name: 'Použít', exact: true })).toBeEnabled();
 
   // „Dokument“ (and Esc) over an unsaved draft asks first; the draft never reaches the document or the server unapplied.
-  const question = page.getByRole('alertdialog', { name: 'Rozpracované změny zdroje', exact: true });
+  const question = page.getByRole('dialog', { name: 'Neuložené změny', exact: true });
   await switchButton(page, 'Dokument').click();
   await expect(question).toBeVisible();
-  await question.getByRole('button', { name: 'Pokračovat v úpravách', exact: true }).click();
+  await question.getByRole('button', { name: 'Zůstat', exact: true }).click();
   await page.getByRole('textbox', { name: 'Zdroj stránky', exact: true }).press('Escape');
   await expect(question).toBeVisible();
-  await question.getByRole('button', { name: 'Pokračovat v úpravách', exact: true }).click();
+  await question.getByRole('button', { name: 'Zůstat', exact: true }).click();
   await expect(question).toBeHidden();
   await expect(switchButton(page, 'Zdroj')).toHaveAttribute('aria-pressed', 'true');
   await expectDocumentMarker(page, documentMarker);
@@ -182,7 +182,7 @@ test('remote edits make a dirty source stale without losing either author’s wo
   await panel.getByRole('button', { name: 'Načíst aktuální verzi', exact: true }).click();
   const confirmation = page.getByRole('alertdialog', { name: 'Načíst aktuální verzi', exact: true });
   await expect(confirmation).toBeVisible();
-  await confirmation.getByRole('button', { name: 'Pokračovat v úpravách', exact: true }).click();
+  await confirmation.getByRole('button', { name: 'Zůstat', exact: true }).click();
   await expectSourceMarker(page, localMarker);
   await expect(panel.getByRole('button', { name: 'Použít', exact: true })).toBeDisabled();
 

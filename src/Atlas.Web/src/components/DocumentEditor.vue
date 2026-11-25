@@ -86,7 +86,8 @@ import { historyApi } from "../history";
 import { reapplyUnsent } from "../editor/unsentEdits";
 import OpenApiDetailPanels from "./OpenApiDetailPanels.vue";
 import { prefetchPageSource, type PageSourceSaveResult } from "../pageSource";
-import { MarkdownDraftConfirmation, MarkdownSourcePanel, markdownProjection, usePageSourceDraft } from "../pageSourceDraft";
+import { MarkdownSourcePanel, markdownProjection, usePageSourceDraft } from "../pageSourceDraft";
+import UnsavedChangesDialog from "./UnsavedChangesDialog.vue";
 import {
   createMarkdownImportHooks,
   documentFiles,
@@ -1278,11 +1279,10 @@ defineExpose({
   <div v-if="sourceTab" ref="sourcePane" class="source-pane" :style="{ '--source-height': sourceHeight }" :aria-label="shellMore.doc.pageSource" role="region">
     <!-- The panel rises in, not the pane: the pane is measured where it stands. -->
     <component :is="MarkdownSourcePanel" :draft="sourceDraft" class="atlas-view-enter" @escape="requestSourceClose" />
-    <!-- Inside the pane, so the dialog keeps the pane's theme tokens. -->
-    <component :is="MarkdownDraftConfirmation" :open="!!sourceConfirmation" :label="shellMore.doc.draftChanges"
-      :message="sourceConfirmation?.apply ? shellMore.doc.sourceUnsaved : shellMore.doc.sourceUnsavedExcluded"
-      :apply-label="sourceConfirmation?.apply ? shellMore.doc.applyAndClose : undefined" :busy="sourceDraft.busy.value"
-      @continue="chooseSource('continue')" @discard="chooseSource('discard')" @apply="chooseSource('apply')" />
+    <!-- The shared unsaved-changes question (Zůstat / Zahodit / Použít a zavřít); a host operation offers no Apply. -->
+    <UnsavedChangesDialog :open="!!sourceConfirmation" :can-save="!!sourceConfirmation?.apply" :saving="sourceDraft.busy.value"
+      :message="sourceConfirmation?.apply ? shellMore.doc.sourceUnsaved : shellMore.doc.sourceUnsavedExcluded" :save-label="shellMore.doc.applyAndClose"
+      @stay="chooseSource('continue')" @discard="chooseSource('discard')" @save="chooseSource('apply')" />
   </div>
   <OpenApiDetailPanels :detail="detail" :change="detailChange" />
   <component :is="SecretReauthDialog" v-if="secretReauth.pending.value" :controller="secretReauth" />
