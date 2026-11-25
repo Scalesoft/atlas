@@ -533,8 +533,6 @@
 .atlas .publish-button > svg { flex: 0 0 auto; }
 .atlas .publish-button:not([aria-busy="true"]) > svg { transition: transform var(--atlas-motion-base) var(--atlas-ease-out); }
 .atlas .publish-button:not(:disabled):hover > svg { transform: translate(1px, -1px); }
-.atlas .document-status[data-transient] { overflow: visible; }
-.atlas .document-status .status-badge { white-space: normal; }
 @media (prefers-reduced-motion: reduce) {
   .atlas .publish-button:not(:disabled):hover > svg { transform: none; }
 }
