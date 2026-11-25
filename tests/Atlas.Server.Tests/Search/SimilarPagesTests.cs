@@ -18,7 +18,10 @@ namespace Atlas.Server.Tests.Search;
 
 /// <summary>P1: while a page is being created, existing pages with a similar title, previous title, import path or
 /// section are suggested. Word-AND search misses a longer new title, so similarity has its own function; access is
-/// the search ACL, and a lookup that runs too long answers nothing instead of an error.</summary>
+/// the search ACL, and a lookup that runs too long answers nothing instead of an error.
+/// The lookup's own 1 s statement timeout (PlannerSettings.TypingTimeout) is a wall-clock bound, so the class runs alone after the
+/// parallel tests, as the timed tests do: under the parallel suite the lookup ran past it and answered nothing.</summary>
+[Collection(SimilarPagesCollection.Name)]
 public sealed class SimilarPagesTests
 {
     [Trait("Category", "Smoke")]
@@ -263,4 +266,10 @@ public sealed class SimilarPagesTests
         var page = await f.Pages.CreateAsync(new(f.SpaceId, null, title, rich, markdown), f.Writer, default);
         return await f.Pages.PublishAsync(page.Id, new(1), f.Writer, default);
     }
+}
+
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class SimilarPagesCollection
+{
+    public const string Name = "Similar pages";
 }
