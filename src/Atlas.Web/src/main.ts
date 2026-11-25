@@ -7,6 +7,8 @@ import "./shell.css";
 import "./styles/palettes.css";
 import "./styles/appearance.css";
 import "@atlas/markdown/styles/states.css";
+// The menu look of ActionMenu and ActionDisclosure: settings and the profile show menus before any editor loads its stylesheet.
+import "@atlas/markdown/styles/menu.css";
 import "./motion.css";
 import "./styles/ai.css";
 import "./styles/refresh.css";

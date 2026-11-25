@@ -43,7 +43,8 @@ test('page and space actions share aligned icons, readable styling and usable di
       await expect(menu).toBeVisible();
       await menu.screenshot({ path: `../../artifacts/ux-deep/shell-${slug}-actions-${viewport.width}.png` });
       const rows = menu.getByRole('menuitem');
-      const [text, error] = await page.locator('.atlas').evaluate(el => {
+      // The menu wears the editor's menu look (ActionMenu's), so its rows read in the menu's own colours, not the shell's.
+      const [text, error] = await menu.evaluate(el => {
         const probe = el.appendChild(document.createElement('span'));
         probe.style.color = 'var(--error)';
         const colors = [getComputedStyle(el).color, getComputedStyle(probe).color];
@@ -52,10 +53,10 @@ test('page and space actions share aligned icons, readable styling and usable di
       });
       for (const row of await rows.all()) {
         await expect(row.locator('svg')).toHaveCount(1);
-        await expect(row).toHaveCSS('column-gap', '12px');
+        await expect(row).toHaveCSS('column-gap', '10px');
         await expect(row).toHaveCSS('align-items', 'center');
         // The keyboard-highlighted row takes the accent; a destructive row (Přesunout do koše) reads in the error colour;
-        // every other row reads in the shell's text colour.
+        // every other row reads in the menu's text colour.
         if (await row.getAttribute('data-highlighted') === null) await expect(row).toHaveCSS('color', await row.getAttribute('data-destructive') === null ? text : error);
       }
       const iconPositions = await rows.evaluateAll(elements => elements.map(el => el.querySelector('svg')!.getBoundingClientRect().x));

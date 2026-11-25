@@ -10,7 +10,7 @@ withDefaults(defineProps<{ disabled?: boolean; destructive?: boolean; checked?: 
 </script>
 
 <!-- One action inside ActionDisclosure. `as-child` keeps a real <button>, so the
-     panel's existing styles (`.action-disclosure-panel :deep(button)`) and every
+     panel's styles (the editor menu rows, actionMenu.css) and every
      caller's markup carry over unchanged, while reka-ui owns the roving focus,
      typeahead and menuitem role.
 

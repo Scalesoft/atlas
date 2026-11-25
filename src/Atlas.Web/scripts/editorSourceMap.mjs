@@ -44,6 +44,8 @@ export const editorSourceExports = Object.freeze({
   "@atlas/markdown/styles/base.css": "src/styles/editor.css",
   // The state tokens (P12), loaded globally by main.ts so the shell, boards and the editor share them.
   "@atlas/markdown/styles/states.css": "src/styles/states.css",
+  // The menu look of ActionMenu and ActionDisclosure, loaded globally by main.ts before any editor.
+  "@atlas/markdown/styles/menu.css": "src/styles/menu.css",
   ...Object.fromEntries(themes.map(theme => [`@atlas/markdown/themes/${theme}.css`, `src/styles/${theme}.css`])),
 });
 

@@ -5,11 +5,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './ui/dro
 import { Button, type ButtonVariants } from './ui/button';
 import { hostElement } from '../lib/templateRef';
 import { closeMenuWhenLost, focusFirstAction } from '../lib/menuFocus';
+import { useEditorTheme } from '../editor/editorSetup';
+import './boards/canvas/boardPopover.css';
+import './actionMenu.css';
 // `variant`, `size` and `triggerClass`: a menu that stands where a labelled button stood (Nový → Stránka / Tabule) keeps
 // that button's look; the default is the quiet „…“ of every row and bar.
 const props = withDefaults(defineProps<{ label: string; disabled?: boolean; triggerTitle?: string; variant?: ButtonVariants["variant"]; size?: ButtonVariants["size"]; triggerClass?: string }>(),
   { variant: "ghost", size: "icon-sm" });
 const open = ref(false);
+// ActionMenu's look: the editor's menu classes in the editor's theme (light, dark, green accent).
+const theme = useEditorTheme();
 // The close rules every menu shares (route change, trigger scrolled away), and one of its own from the September UI audit:
 // a menu whose trigger has just been disabled must not stay open over a control that can no longer be reached.
 const trigger = ref<ComponentPublicInstance>();
@@ -69,37 +74,28 @@ function moveAmongShown(event: KeyboardEvent) {
       :disabled="disabled"
       @keydown.up="openAtLast"
     ><slot name="trigger"><AtlasIcon name="more" :size="18" /></slot></Button></DropdownMenuTrigger>
-    <DropdownMenuContent :id="panelId" class="action-disclosure-panel" align="end" :side-offset="6" :collision-padding="12" :aria-label="label" @open-auto-focus="focusFirstAction" @keydown.capture="moveAmongShown">
-      <slot />
+    <DropdownMenuContent :id="panelId" class="md-editor atlas-document-editor md-context-popover md-context-menu md-context-menu-compact board-menu action-disclosure-panel" :class="theme"
+      align="end" :side-offset="6" :collision-padding="12" :aria-label="label" @open-auto-focus="focusFirstAction" @keydown.capture="moveAmongShown">
+      <div class="md-context-popover-body"><slot /></div>
     </DropdownMenuContent>
   </DropdownMenu>
 </template>
 <style>
-/* The panel is portalled out of this component, so its rules cannot be scoped.
-   The page editor's menu look (controls.css `.md-context-menu`, as ActionMenu wears it): its surface, 13 px rows with a 16 px icon
-   10 px from the label, and ActionMenu's highlight. Written out here rather than borrowed through the editor's classes: the editor's
-   stylesheet comes with its lazy chunk, and these menus show before it (Knihovna, settings, the profile). */
-.action-disclosure-panel { z-index: 50; display: grid; gap: 1px; min-width: 200px; max-width: calc(100vw - 24px); max-height: var(--reka-dropdown-menu-content-available-height, calc(100dvh - 16px)); overflow: auto; padding: 4px; border: 1px solid var(--line); border-radius: var(--radius-md, 8px); color: var(--text); background: var(--surface); box-shadow: var(--shadow-menu); }
-.action-disclosure-panel button { box-sizing: border-box; display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%; min-height: var(--control-h, 36px); margin: 0; padding: 6px 10px; border: 0; border-radius: var(--radius-sm, 6px); outline: none; color: var(--text); background: transparent; font: inherit; font-size: 13px; line-height: 1.4; text-align: left; white-space: normal; cursor: pointer; }
-.action-disclosure-panel button > svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); flex: 0 0 auto; }
+/* The panel is portalled out of this component, so its rules cannot be scoped. Its surface, rows and highlight are ActionMenu's: the editor's
+   menu look (@atlas/markdown/styles/menu.css, loaded with the app, so Knihovna, settings and the profile show it before any editor) and
+   actionMenu.css. Only what the slotted buttons bring stays here. */
+.action-disclosure-panel { padding: 0; max-height: var(--reka-dropdown-menu-content-available-height, calc(100dvh - 16px)); }
+.action-disclosure-panel [role^="menuitem"] { justify-content: flex-start; margin: 0; line-height: 1.4; white-space: normal; }
 /* A shortcut hint sits at the row's right edge, as in ActionMenu (.board-menu-key). */
-.action-disclosure-panel button > .action-hint { margin-left: auto; padding-left: 16px; color: var(--text-dim, var(--muted)); font-size: 12px; }
+.action-disclosure-panel [role^="menuitem"] > .action-hint { margin-left: auto; padding-left: 16px; color: var(--text-dim, var(--muted)); font-size: 12px; }
 /* An action without an icon (an editor plugin may bring none) keeps the icon's column, so its label lines up with the rest. */
-.action-disclosure-panel button > .action-icon-gap { flex: 0 0 var(--icon-sm, 16px); }
-.action-disclosure-panel button:disabled { opacity: .5; cursor: not-allowed; }
-/* ActionMenu's highlight: the pointer and the keyboard light the row alike, the ring belongs to the keyboard. The editor's --bg-3 is
-   defined by its lazy theme stylesheet, so outside the editor the shell's hover tint stands in. */
-.action-disclosure-panel :is(button:focus-visible, [data-highlighted]) { background: var(--bg-3, var(--hover)); }
-.action-disclosure-panel button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.action-disclosure-panel [role^="menuitem"] > .action-icon-gap { flex: 0 0 var(--icon-sm, 16px); }
+.action-disclosure-panel [role^="menuitem"] > .discussion-count { margin-left: auto; }
 /* Groups (ActionDisclosureGroup) stack like the items; a line follows every group but the last. */
 .action-disclosure-panel .action-disclosure-group { display: grid; gap: 1px; }
 .action-disclosure-panel .action-disclosure-group:not(:last-child) { margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
-/* Destructive rows are red in every menu (ActionMenu's .board-menu-destructive). */
-.action-disclosure-panel button[data-destructive],
-.action-disclosure-panel button[data-destructive] > svg { color: var(--error, var(--destructive)); }
 .atlas .document-primary-actions, .atlas .document-secondary-actions { display: flex; align-items: center; gap: 7px; }
 @media (max-width: 680px) {
-  .action-disclosure-panel button { min-height: 44px; }
   .atlas .document-actions { justify-content: space-between; }
   .atlas .document-primary-actions { margin-left: auto; }
 }
