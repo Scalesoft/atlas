@@ -56,7 +56,7 @@ const cs = {  card: {
     count: (shown: number, total: number) => `Kontakty: ${shown} z ${total}.`,
     contactWord: "Kontakt",
     usedIn: (places: string) => `se používá na ${places}`,
-    usedUnknown: "se možná někde používá (počet se nepodařilo načíst)",
+    usedUnknown: "se možná někde používá",
     trashTail: "Stránky a tabule ho pak ukážou jako kontakt v koši; obnova z koše vše vrátí.",
     trashed: "Kontakt je v koši.",
   },

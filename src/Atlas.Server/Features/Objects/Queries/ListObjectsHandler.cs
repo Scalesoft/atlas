@@ -25,9 +25,11 @@ public sealed class ListObjectsHandler
     private readonly SpaceRoles m_roles;
     private readonly ObjectScopeAccess m_scopes;
     private readonly ObjectTypes m_types;
+    private readonly IRequestChannel m_channel;
 
-    public ListObjectsHandler(ISession session, IContentAccess access, SpaceRoles roles, ObjectScopeAccess scopes, ObjectTypes types)
+    public ListObjectsHandler(ISession session, IContentAccess access, SpaceRoles roles, ObjectScopeAccess scopes, ObjectTypes types, IRequestChannel channel)
     {
+        m_channel = channel;
         m_session = session;
         m_access = access;
         m_roles = roles;
@@ -50,6 +52,11 @@ public sealed class ListObjectsHandler
             .Add(Restrictions.Where<ContentResource>(x => x.Scope == ObjectScopes.Wiki))
             .Add(Restrictions.Where<ContentResource>(x => x.Scope == ObjectScopes.Private && x.OwnerId == actor.Id));
         var inSpace = Restrictions.Where<ContentResource>(x => x.Scope == ObjectScopes.Space);
+        if (m_channel.Current.IsAiBound)
+        {
+            // G5, as ObjectScopeAccess: a space excluded from AI and MCP lists nothing to a channel whose content may go to a model.
+            inSpace = Restrictions.And(inSpace, Expression.Sql(AccessSql.SpaceInAi("{alias}.\"SpaceId\"")));
+        }
         if (wikiAdmin)
         {
             readable.Add(Restrictions.And(inSpace, Subqueries.WhereProperty<ContentResource>(x => x.SpaceId).In(LiveSpace.Ids())));

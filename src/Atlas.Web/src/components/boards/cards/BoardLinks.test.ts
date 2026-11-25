@@ -171,7 +171,7 @@ it("asks what to follow before it shows uses, then shows the object's uses and o
   show({ api, show: "usage" });
   expect(wrapper!.text()).toContain("Vyberte, co sledovat");
   wrapper!.unmount();
-  const usage: UsagePage = { objectId: "c1", total: 3, hidden: 1, nextCursor: null, items: [
+  const usage: UsagePage = { objectId: "c1", total: 2, nextCursor: null, items: [
     { placeId: "p1", placeTypeId: "atlas.page", placeTitle: "Projekt Alfa", spaceId: "s", spaceName: "Provoz", kind: "mention", count: 1, draft: false },
     { placeId: "b1", placeTypeId: "atlas.board", placeTitle: "Plán", spaceId: "s", spaceName: "Provoz", kind: "placement", count: 1, draft: false },
   ] };
@@ -179,8 +179,6 @@ it("asks what to follow before it shows uses, then shows the object's uses and o
   show({ api: fakeApi({ usage, contents: [row("c1", "Jana", 3)] }).api, show: "usage", objectId: "c1" });
   await flushPromises();
   expect(wrapper!.findAll("[data-usage-place]").map(place => place.find(".usage-title").text())).toEqual(["Projekt Alfa", "Plán"]);
-  // A place the reader may not see is a number, never a name.
-  expect(wrapper!.get("[data-usage-hidden]").text()).toContain("1 místě");
   await wrapper!.get("[data-usage-place][data-type='atlas.board']").trigger("click");
   expect(wrapper!.emitted("open")).toEqual([["b1", "atlas.board"]]);
   // The scope picker for usage offers every type, without „Celý prostor“.

@@ -27,7 +27,7 @@ describe("reading relations", () => {
   it("skips a relation kind the web does not know yet, in the graph and in the uses", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => Response.json(url.includes("/usage/")
       ? { objectId: "b", items: [{ placeId: "a", placeTypeId: "atlas.page", placeTitle: "A", spaceId: null, spaceName: null, kind: "attendee", count: 1, draft: false },
-        { placeId: "a", placeTypeId: "atlas.page", placeTitle: "A", spaceId: null, spaceName: null, kind: "link", count: 1, draft: false }], total: 2, hidden: 0, nextCursor: null }
+        { placeId: "a", placeTypeId: "atlas.page", placeTitle: "A", spaceId: null, spaceName: null, kind: "link", count: 1, draft: false }], total: 2, nextCursor: null }
       : { nodes: [], edges: [edge("attendee"), edge("link")] })));
     expect((await relationsApi.relations("b", 1))!.edges.map(item => item.kind)).toEqual(["link"]);
     expect((await usageApi.usage("b"))!.items.map(item => item.kind)).toEqual(["link"]);

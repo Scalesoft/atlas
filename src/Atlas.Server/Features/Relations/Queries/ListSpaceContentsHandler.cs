@@ -47,11 +47,16 @@ public sealed class ListSpaceContentsHandler(IContentAccess access, PageListing 
         var actor = await access.LockActorAsync(query.SpaceId, ct);
         await listing.RequireSpaceAsync(actor, query.SpaceId, ct);
         // The links and the graph are the publications'; „Použito“ counts the places as „Použito na“ and atlas_list_usage do (ObjectUsage:
-        // links, drafts and hidden places included), and a use of any kind keeps an object from being unused, as from the cleanup.
+        // links and drafts, the reader's places only), and a use of any kind, hidden places too, keeps an object from being unused, as from the cleanup.
         var edges = await reader.EdgesAsync(query.SpaceId, null, ct, drafts: true);
         var graph = await reader.GraphAsync(actor, query.SpaceId, edges.Where(edge => !edge.Draft).ToArray(), [], ct);
         var uses = edges.Where(edge => RelationKinds.UsedEnd(edge) != RelationKinds.PlaceOf(edge)).GroupBy(RelationKinds.UsedEnd)
-            .ToDictionary(group => group.Key, group => ObjectUsage.Split(group, graph).Total);
+            .ToDictionary(group => group.Key, group =>
+            {
+                var split = ObjectUsage.Split(group, graph);
+                // A reference node at the root of this space is a use the reader sees, though the space is no node (Split counts it as hidden).
+                return (Shown: split.Visible.Count + group.Count(edge => RelationKinds.PlaceOf(edge) == query.SpaceId), Used: split.Total > 0);
+            });
         var rows = Rows(graph, query.SpaceId, uses);
         var wikiWriters = await reader.WikiWriterTypesAsync(actor, rows.Where(row => row.Item.Scope == ObjectScopes.Wiki).Select(row => row.Item.TypeId), ct);
         rows = rows.Select(row => row.Item.Scope == ObjectScopes.Wiki && wikiWriters.Contains(row.Item.TypeId) ? row with { Item = row.Item with { CanEdit = true } } : row)
@@ -84,8 +89,8 @@ public sealed class ListSpaceContentsHandler(IContentAccess access, PageListing 
 
     private sealed record Row(ContentRow Item, bool Attached, bool Unused, bool NoIncoming, bool Broken, int Incoming);
 
-    /// <param name="uses">The places each object is used, those the reader may not see too: unused is what the orphan cleanup decides.</param>
-    private static List<Row> Rows(RelationGraph graph, Guid spaceId, IReadOnlyDictionary<Guid, int> uses)
+    /// <param name="uses">The places each object is used, those the reader may not see too: unused is what the orphan cleanup decides; only the visible ones are counted.</param>
+    private static List<Row> Rows(RelationGraph graph, Guid spaceId, IReadOnlyDictionary<Guid, (int Shown, bool Used)> uses)
     {
         var used = new Dictionary<Guid, int>();
         var linksIn = new Dictionary<Guid, int>();
@@ -124,9 +129,9 @@ public sealed class ListSpaceContentsHandler(IContentAccess access, PageListing 
             var incoming = used.GetValueOrDefault(node.Id) + linksIn.GetValueOrDefault(node.Id);
             var attached = node.HostId is not null;
             var inTree = !attached && node.TypeId is PagesAtlasModule.ContentType or BoardsAtlasModule.ContentType;
-            rows.Add(new Row(new ContentRow(node.Id, node.TypeId, node.Title, Path(graph, node), node.Scope, node.SpaceId, node.HostId, uses.GetValueOrDefault(node.Id),
+            rows.Add(new Row(new ContentRow(node.Id, node.TypeId, node.Title, Path(graph, node), node.Scope, node.SpaceId, node.HostId, uses.GetValueOrDefault(node.Id).Shown,
                     linksIn.GetValueOrDefault(node.Id), linksOut.GetValueOrDefault(node.Id), node.Comments, node.UpdatedAt, node.CanEdit),
-                attached, !inTree && !attached && uses.GetValueOrDefault(node.Id) == 0, inTree && incoming == 0, broken.Contains(node.Id), incoming));
+                attached, !inTree && !attached && !uses.GetValueOrDefault(node.Id).Used, inTree && incoming == 0, broken.Contains(node.Id), incoming));
         }
         return rows;
     }

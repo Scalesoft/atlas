@@ -15,11 +15,13 @@ public sealed class ObjectScopeAccess
 {
     private readonly ISession m_session;
     private readonly SpaceRoles m_roles;
+    private readonly IRequestChannel m_channel;
 
-    public ObjectScopeAccess(ISession session, SpaceRoles roles)
+    public ObjectScopeAccess(ISession session, SpaceRoles roles, IRequestChannel channel)
     {
         m_session = session;
         m_roles = roles;
+        m_channel = channel;
     }
 
     public async Task<ObjectAccess> AuthorizeAsync(ObjectActor actor, Guid objectId, CancellationToken ct)
@@ -37,7 +39,8 @@ public sealed class ObjectScopeAccess
             case ObjectScopes.Wiki:
                 return await m_roles.IsWikiAdminAsync(account, ct) ? ObjectAccess.Write : ObjectAccess.Read;
             case ObjectScopes.Space when envelope.SpaceId is { } spaceId:
-                if (!await LiveSpace.ExistsAsync(m_session, spaceId, ct))
+                // G5 (D10): a space excluded from AI and MCP is as missing on a channel whose content may go to a model, as IContentAccess.
+                if (!await LiveSpace.ExistsAsync(m_session, spaceId, ct) || m_channel.Current.IsAiBound && !await m_roles.InAiAsync(spaceId, ct))
                 {
                     return ObjectAccess.None;
                 }

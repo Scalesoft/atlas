@@ -48,18 +48,18 @@ public sealed class RelationRightsTests
         Assert.Equal((1, ObjectScopes.Private), (await f.ContentsAsync(f.Writer)).Items.Where(row => row.Title == "Own").Select(row => (row.UsedCount, row.Scope)).Single());
         await BoardsFixture.Refused(404, () => f.ContentsAsync(f.Outsider));
 
-        // Kde je použito: the unreadable linking page is a lock, the readable reader's own view of Pub otherwise.
+        // Kde je použito: the unreadable linking page and board are not there at all, neither a lock nor a number (as „Použito na“).
         var asReader = await f.RelationsAsync(f.Reader, shared.Id);
-        Assert.Equal(new RelationNodeDto(secret.Id, null, null, null, null, false), asReader.Nodes.Single(node => node.Id == secret.Id));
-        Assert.False(asReader.Nodes.Single(node => node.Id == deploy).Readable);
+        Assert.DoesNotContain(asReader.Nodes, node => node.Id == secret.Id || node.Id == deploy);
+        Assert.DoesNotContain(asReader.Edges, edge => edge.SourceId == secret.Id || edge.SourceId == deploy || edge.TargetId == deploy);
         Assert.Equal("Secret", (await f.RelationsAsync(f.Manager, shared.Id)).Nodes.Single(node => node.Id == secret.Id).Title);
         await BoardsFixture.Refused(404, () => f.RelationsAsync(f.Reader, secret.Id));
         await BoardsFixture.Refused(404, () => f.RelationsAsync(f.Reader, deploy));
         await BoardsFixture.Refused(404, () => f.RelationsAsync(f.Outsider, shared.Id));
         await BoardsFixture.Refused(404, () => f.RelationsAsync(f.Admin, own));
         Assert.Equal([plan], (await f.RelationsAsync(f.Writer, own)).Edges.Select(edge => edge.TargetId));
-        // To the reader the private card's object is a lock on the board, never named.
-        Assert.Equal([false], (await f.RelationsAsync(f.Reader, plan)).Nodes.Where(node => node.Id == own).Select(node => node.Readable));
+        // To the reader the private card's object is not on the board's relations at all.
+        Assert.DoesNotContain((await f.RelationsAsync(f.Reader, plan)).Nodes, node => node.Id == own);
     }
 
     [PostgreSqlFact]

@@ -11,6 +11,7 @@ public sealed class ContentAccessService : IContentAccess
     private readonly IAtlasLocks m_locks;
     private readonly SpaceRoles m_roles;
     private readonly ResourceGrantSnapshots m_grants;
+    private readonly IRequestChannel m_channel;
     // Per transaction: the spaces locked FOR SHARE and their grant snapshots (account + space defaults), stable under those locks.
     private readonly HashSet<Guid> m_lockedSpaces = [];
     private readonly Dictionary<Guid, ResourceGrantSnapshot> m_spaceGrants = [];
@@ -19,8 +20,10 @@ public sealed class ContentAccessService : IContentAccess
     // Per transaction: the locked account's administrator sources, read once for every decision under its lock.
     private WikiAdminSources? m_wikiAdmin;
 
-    public ContentAccessService(ISession session, ICurrentActor currentActor, IAtlasLocks locks, SpaceRoles roles, ResourceGrantSnapshots grants)
+    public ContentAccessService(ISession session, ICurrentActor currentActor, IAtlasLocks locks, SpaceRoles roles, ResourceGrantSnapshots grants,
+        IRequestChannel channel)
     {
+        m_channel = channel;
         m_session = session;
         m_currentActor = currentActor;
         m_locks = locks;
@@ -71,7 +74,7 @@ public sealed class ContentAccessService : IContentAccess
         {
             throw new ApiException(404, "Prostor nebyl nalezen.");
         }
-        var role = await IsWikiAdminAsync(actor, ct) ? SpaceRole.Admin : await m_roles.EffectiveAsync(actor, spaceId, ct);
+        var role = await HiddenFromAiAsync(spaceId, ct) ? null : await IsWikiAdminAsync(actor, ct) ? SpaceRole.Admin : await m_roles.EffectiveAsync(actor, spaceId, ct);
         if (!ResourceAccessPolicy.AllowsLegacyContent(false, role, required))
         {
             // Who reads the space knows it exists, so it is told the missing right (review S3); anyone else learns nothing.
@@ -109,8 +112,9 @@ public sealed class ContentAccessService : IContentAccess
         var result = new PageAuthorization[pages.Count];
         foreach (var space in pages.Select(page => page.SpaceId).Distinct())
         {
-            // The private draft rule needs no grant, so an invisible page never costs a query.
-            var visible = pages.Where(page => page.SpaceId == space && PageVisibility.IsVisible(page, actor.Id, wikiAdmin)).Select(page => page.Id).ToArray();
+            // The private draft rule needs no grant, so an invisible page never costs a query; a space hidden from AI shows none (G5).
+            var visible = await HiddenFromAiAsync(space, ct) ? []
+                : pages.Where(page => page.SpaceId == space && PageVisibility.IsVisible(page, actor.Id, wikiAdmin)).Select(page => page.Id).ToArray();
             var snapshot = visible.Length == 0 ? null : (await SpaceGrantsAsync(actor, space, ct)).With(await m_grants.PageGrantsAsync(actor, space, visible, ct));
             for (var index = 0; index < pages.Count; index++)
             {
@@ -127,6 +131,10 @@ public sealed class ContentAccessService : IContentAccess
     {
         return (await AuthorizePageAsync(page, operation, ct)).Require();
     }
+
+    /// <summary>G5 (D10): on a channel whose content may go to a model, a space excluded from AI and MCP is as missing as one the actor
+    /// may not read, for everyone, a WikiAdmin too. The web session never asks.</summary>
+    private async Task<bool> HiddenFromAiAsync(Guid spaceId, CancellationToken ct) => m_channel.Current.IsAiBound && !await m_roles.InAiAsync(spaceId, ct);
 
     /// <summary>The account and space defaults of a space locked in this transaction; its FOR SHARE lock keeps them stable.</summary>
     private async Task<ResourceGrantSnapshot> SpaceGrantsAsync(UserAccount actor, Guid spaceId, CancellationToken ct)

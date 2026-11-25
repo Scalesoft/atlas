@@ -8,7 +8,7 @@ using Atlas.Server.Features.PageTags.Queries;
 
 namespace Atlas.Server.Features.PageTags;
 
-public sealed class PageTagsHandler(ISession session, PersonalPageGuard guard, OrganizationLocks locks, PageTagStore store)
+public sealed class PageTagsHandler(ISession session, PersonalPageGuard guard, OrganizationLocks locks, PageTagStore store, IRequestChannel channel)
 {
     public async Task<PageTagState> Handle(GetPageTags query, CancellationToken ct)
     {
@@ -89,7 +89,7 @@ public sealed class PageTagsHandler(ISession session, PersonalPageGuard guard, O
     {
         var actor = await guard.LockIdentityAsync(null, false, ct);
         var normalized = TagNames.Normalize(query.Query, 200, true).ToLowerInvariant();
-        return await store.SuggestAsync(actor, normalized, query.AiScopeOnly, ct);
+        return await store.SuggestAsync(actor, normalized, Ai(query.AiScopeOnly), ct);
     }
 
     public async Task<SearchResponse> Handle(ListTaggedPages query, CancellationToken ct)
@@ -107,6 +107,9 @@ public sealed class PageTagsHandler(ISession session, PersonalPageGuard guard, O
             "month" => DateTime.UtcNow.AddDays(-30),
             _ => throw new ApiException(400, "Vyberte podporované období poslední změny.")
         };
-        return await store.BrowseAsync(actor, query, TagNames.Normalize(query.Query, 200, true).ToLowerInvariant(), since, query.AiScopeOnly, ct);
+        return await store.BrowseAsync(actor, query, TagNames.Normalize(query.Query, 200, true).ToLowerInvariant(), since, Ai(query.AiScopeOnly), ct);
     }
+
+    /// <summary>G5: a channel whose content may go to a model sees nothing of a space switched out of AI (RequestChannel.IsAiBound).</summary>
+    private bool Ai(bool requested) => requested || channel.Current.IsAiBound;
 }
