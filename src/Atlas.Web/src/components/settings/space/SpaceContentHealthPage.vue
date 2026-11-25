@@ -202,8 +202,7 @@ async function trash(item: ContentHealthItem) {
 const pickerRows = ref<ContentHealthItem[]>([]);
 const pickerOpen = ref(false);
 const { query: peopleQuery, options: people, loading: searching, start: findPeople } = useAccountSearch(() => pickerRows.value.map((row) => row.pageId), props.people);
-function openPicker() {
-  const rows = target();
+function openPicker(rows = target()) {
   if (!rows.length) return;
   pickerRows.value = rows;
   pickerOpen.value = true;
@@ -216,20 +215,23 @@ async function pickSteward(stewardId: string) {
 }
 const openPage = (id: string) => context.openPage(id);
 
-/** The keys of the list: ↑ ↓ move (roving tab stop), Space selects, V verifies, G picks an owner, Enter opens. Not while a button or field has the key. */
+/** The keys of a row (↑ ↓ Home End are the list's): Space selects, V verifies, G picks an owner, Enter opens. Not while a button or field has the key. */
 function rowKey(event: KeyboardEvent, index: number) {
   if (event.altKey || event.ctrlKey || event.metaKey || (event.target as HTMLElement).closest("input, textarea, button, a, [role='checkbox']")) return;
   const key = event.key.toLowerCase();
-  if (key === "arrowdown" || key === "arrowup") {
-    event.preventDefault();
-    const next = Math.min(items.value.length - 1, Math.max(0, index + (key === "arrowdown" ? 1 : -1)));
-    active.value = next;
-    (root.value?.querySelectorAll<HTMLElement>("[data-health-row]")[next])?.focus();
-  } else if (key === " ") { event.preventDefault(); if (actionable(items.value[index]!)) toggle(items.value[index]!.pageId); }
+  if (key === " ") { event.preventDefault(); if (actionable(items.value[index]!)) toggle(items.value[index]!.pageId); }
   else if (key === "v") { event.preventDefault(); void verify(); }
   else if (key === "g") { event.preventDefault(); openPicker(); }
   else if (key === "enter") { event.preventDefault(); openPage(items.value[index]!.pageId); }
 }
+
+/** The row's menu: what the bulk buttons do (Ověřit, Garant), Otevřít and, where it is offered, „Přesunout do koše“. No V/G hints until the keys are settled (D6). */
+const rowMenu = (item: ContentHealthItem) => [
+  ...(actionable(item) ? [{ id: "verify", label: t.health.verify, icon: "shield-check", disabled: busy.value }, { id: "steward", label: t.health.setSteward, icon: "user", disabled: busy.value }] : []),
+  { id: "open", label: t.health.open, icon: "file-text" },
+  ...(item.canEdit && !item.views ? [{ id: "trash", label: t.health.toTrash, icon: "trash", destructive: true, disabled: busy.value }] : []),
+];
+const rowAction = (item: ContentHealthItem, id: string) => { if (id === "verify") void verify([item]); else if (id === "steward") openPicker([item]); else if (id === "open") openPage(item.pageId); else void trash(item); };
 
 const rowText = (item: ContentHealthItem) => [item.path.length ? item.path.join(t.health.pathSep) : "", t.health.steward(item.stewardName)].filter(Boolean).join(" · ");
 const rowDetail = (item: ContentHealthItem) => [t.health.readers(item.readers, periodDays()), t.health.lastPublished(item.lastPublishedAt ? formatDate(item.lastPublishedAt) : null)].join(" · ");
@@ -276,7 +278,7 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
           <div :aria-busy="loading" class="health-rows">
             <label v-if="items.some(actionable)" class="health-all"><Checkbox :model-value="allShown" :aria-label="t.health.selectAll" data-health-all @update:model-value="toggleAll" /><span>{{ t.health.selectAll }}</span></label>
             <SettingsList v-if="items.length" :label="t.health.list">
-              <SettingsListRow v-for="(item, index) in items" :key="item.pageId" :title="item.title" :description="rowText(item)" :tabindex="index === active ? 0 : -1" class="health-row" data-health-row :data-page="item.pageId" :data-selected="selected.has(item.pageId) || undefined" @keydown="rowKey($event, index)" @focusin="active = index">
+              <SettingsListRow v-for="(item, index) in items" :key="item.pageId" :title="item.title" :description="rowText(item)" :tabindex="index === active ? 0 : -1" class="health-row" :menu="rowMenu(item)" :menu-label="t.health.rowActions(item.title)" :more="actionable(item)" data-health-row :data-page="item.pageId" :data-selected="selected.has(item.pageId) || undefined" @select="rowAction(item, $event)" @keydown="rowKey($event, index)" @focusin="active = index">
                 <!-- A row it cannot verify keeps the checkbox's room (the titles stay in one line) without the checkbox. -->
                 <template #leading><Checkbox :model-value="selected.has(item.pageId)" :aria-label="t.health.selectRow(item.title)" tabindex="-1" :class="{ invisible: !actionable(item) }" :disabled="!actionable(item)" @update:model-value="toggle(item.pageId)" /></template>
                 <template #meta>

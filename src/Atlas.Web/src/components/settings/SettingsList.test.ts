@@ -96,3 +96,23 @@ describe("SettingsList", () => {
     expect(rows.a!.hasAttribute("inert")).toBe(false);
   });
 });
+
+describe("SettingsList keys and the row menu", () => {
+  it("walks the rows with the arrows and opens a row's menu from its ⋯", async () => {
+    const { default: SettingsListRow } = await import("./SettingsListRow.vue");
+    const picked: string[] = [];
+    const wrapper = mount(defineComponent({
+      setup: () => () => h(SettingsList, { label: "Seznam" }, { default: () => ["a", "b"].map((id) => h(SettingsListRow, { key: id, title: id, menu: [{ id: "remove", label: "Odebrat", shortcut: "Delete" }], menuLabel: `Akce ${id}`, more: true, "data-id": id, onSelect: (item: string) => picked.push(`${id}:${item}`) }, { actions: () => h("button", { "data-first": id }, "Upravit") })) }),
+    }), { attachTo: document.body, global: { stubs: { TransitionGroup: false } } });
+    const first = wrapper.get<HTMLButtonElement>("[data-first=a]").element;
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+    expect(document.activeElement).toBe(wrapper.get("[data-id=b] [data-first=b]").element);
+    // Delete runs the item that names it as its shortcut, without the menu.
+    document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true, cancelable: true }));
+    expect(picked).toEqual(["b:remove"]);
+    await wrapper.get("[data-id=a] [data-row-more]").trigger("click");
+    await flushPromises();
+    expect(document.querySelector("[data-row-action]")?.textContent).toContain("Odebrat");
+  });
+});

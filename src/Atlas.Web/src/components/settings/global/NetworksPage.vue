@@ -2,8 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import AtlasIcon from "../../AtlasIcon.vue";
 import { disclosureHooks } from "../disclosure";
-import ActionDisclosure from "../../ActionDisclosure.vue";
-import ActionDisclosureItem from "../../ActionDisclosureItem.vue";
 import { Button } from "../../ui/button";
 import { Switch } from "../../ui/switch";
 import { errorMessage } from "../../../api";
@@ -50,6 +48,8 @@ const loading = ref(true);
 const error = ref("");
 const conflict = ref("");
 const busy = ref(false);
+/** The row menu: Delete removes (it is confirmed next), not while a change is running. */
+const removeMenu = (label: string) => [{ id: "remove", label, icon: "trash", shortcut: "Delete", destructive: true, disabled: busy.value }];
 const actionError = ref("");
 let disposed = false;
 
@@ -264,6 +264,10 @@ async function saveNetwork(draft: NetworkRuleDraft, proof: string | null) {
               :icon-tone="item.isActive ? undefined : 'neutral'"
               :highlighted="flash.highlight.value === item.id"
               :data-network="item.id"
+              :menu="removeMenu(t.networks.removeNetwork)"
+              :menu-label="t.networks.moreActions(item.name)"
+              more
+              @select="ask({ kind: 'remove', item, list: 'networks' })"
             >
               <template #description><code class="st-mono">{{ item.range }}</code> · {{ size(item.range) }} · {{ kindLabel(item.kind) }}</template>
               <template #meta>
@@ -272,9 +276,6 @@ async function saveNetwork(draft: NetworkRuleDraft, proof: string | null) {
               </template>
               <template #actions>
                 <Switch :model-value="pendingFor(item)?.kind === 'toggle' ? (pendingFor(item) as { active: boolean }).active : item.isActive" :disabled="busy" :aria-label="t.networks.activeAria(item.name)" data-network-active @update:model-value="ask({ kind: 'toggle', item, active: $event, list: 'networks' })" />
-                <ActionDisclosure :label="t.networks.moreActions(item.name)" :disabled="busy">
-                  <ActionDisclosureItem :disabled="busy" :aria-label="t.networks.removeNetworkAria(item.name)" data-network-remove @click="ask({ kind: 'remove', item, list: 'networks' })"><AtlasIcon name="trash" :size="16" />{{ t.networks.removeNetwork }}</ActionDisclosureItem>
-                </ActionDisclosure>
               </template>
               <InlineReveal :open="!!pendingFor(item)">
                 <div class="network-confirm">
@@ -294,7 +295,8 @@ async function saveNetwork(draft: NetworkRuleDraft, proof: string | null) {
           <p v-if="recovery" class="st-note proxy-warning" role="status"><AtlasIcon name="shield-alert" :size="15" />{{ t.networks.recovery }}</p>
           <p v-else-if="proxies.environment.differs" class="st-note" role="status"><AtlasIcon name="info" :size="15" />{{ t.networks.differs(proxies.environment.addresses) }}</p>
           <SettingsList v-if="proxies.items.length" :label="t.networks.proxiesLabel">
-            <SettingsListRow v-for="item in proxies.items" :key="item.id" :title="item.name" icon="server" :icon-tone="item.isActive ? undefined : 'neutral'" :data-proxy="item.id">
+            <SettingsListRow v-for="item in proxies.items" :key="item.id" :title="item.name" icon="server" :icon-tone="item.isActive ? undefined : 'neutral'" :data-proxy="item.id"
+              :menu="recovery ? undefined : removeMenu(t.networks.removeProxy)" :menu-label="t.networks.moreActions(item.name)" more @select="ask({ kind: 'remove', item, list: 'proxies' })">
               <template #description><code class="st-mono">{{ item.range }}</code></template>
               <template #meta>
                 <StatusBadge :tone="item.isActive ? 'success' : 'neutral'" :label="item.isActive ? t.networks.trustedBadge : t.networks.off" size="sm" />
@@ -302,9 +304,6 @@ async function saveNetwork(draft: NetworkRuleDraft, proof: string | null) {
               </template>
               <template v-if="!recovery" #actions>
                 <Switch :model-value="pendingFor(item)?.kind === 'toggle' ? (pendingFor(item) as { active: boolean }).active : item.isActive" :disabled="busy" :aria-label="t.networks.trustProxyAria(item.name)" @update:model-value="ask({ kind: 'toggle', item, active: $event, list: 'proxies' })" />
-                <ActionDisclosure :label="t.networks.moreActions(item.name)" :disabled="busy">
-                  <ActionDisclosureItem :disabled="busy" :aria-label="t.networks.removeProxyAria(item.name)" @click="ask({ kind: 'remove', item, list: 'proxies' })"><AtlasIcon name="trash" :size="16" />{{ t.networks.removeProxy }}</ActionDisclosureItem>
-                </ActionDisclosure>
               </template>
               <InlineReveal :open="!!pendingFor(item)">
                 <div class="network-confirm">

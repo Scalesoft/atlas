@@ -83,6 +83,7 @@ const en: VerificationMessages = {
     toTrash: "Move to trash",
     selected: (n) => plural(n, { one: "# page selected", other: "# pages selected" }),
     selectRow: (title) => `Select ${title}`,
+    rowActions: (title) => `Actions of ${title}`,
     selectAll: "Select all shown",
     clear: "Clear selection",
     fromAuthor: "Owner from last author",
