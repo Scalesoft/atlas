@@ -400,7 +400,7 @@ describe("Stav obsahu for a space's editors", () => {
   it("leads a Writer from the space menu into Stav obsahu, opens it by its address and refuses the other sections", async () => {
     const { toast } = await import("vue-sonner");
     const refused = vi.spyOn(toast, "error");
-    const app = await start("#/spaces/space-1", { user: member, spaces: [space("space-1", "Tým", "Writer")], routes: health });
+    const app = await start("#/spaces/space-1", { user: member, spaces: [space("space-1", "Tým", "Writer", { verificationOn: true })], routes: health });
     await app.get('[aria-label="Další akce prostoru Tým"]').trigger("click"); await settleMenu();
     expect(document.querySelector("[role=menu] [data-space-menu=settings]")).toBeNull();
     document.querySelector<HTMLElement>("[role=menu] [data-space-menu=content-health]")!.click(); await settle();
@@ -413,6 +413,13 @@ describe("Stav obsahu for a space's editors", () => {
     expect(refused).toHaveBeenCalledWith("Nastavení prostoru může otevřít jen jeho správce.", expect.anything());
     await visit("#/spaces/space-1/settings/content-health");
     expect(location.hash).toBe("#/spaces/space-1/settings/content-health");
+  });
+
+  it("offers no Stav obsahu while the space does not verify, as before 5.2", async () => {
+    const app = await start("#/spaces/space-1", { user: member, spaces: [space("space-1", "Tým", "Writer")], routes: health });
+    await app.get('[aria-label="Další akce prostoru Tým"]').trigger("click"); await settleMenu();
+    expect(document.querySelector("[role=menu] [data-space-menu=new-page]")).not.toBeNull();
+    expect(document.querySelector("[role=menu] [data-space-menu=content-health]")).toBeNull();
   });
 
   it("offers a Reader no Stav obsahu", async () => {

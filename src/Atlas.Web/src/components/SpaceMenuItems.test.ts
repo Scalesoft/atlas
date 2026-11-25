@@ -32,12 +32,12 @@ it("lights the first enabled action of an ActionMenu (the tree row's menu) when 
 // 3.6 review F22: the breadcrumb's and the sidebar's space menu are the same list.
 it("offers the same space actions in the breadcrumb's list and in the sidebar's", async () => {
   const props = { canWrite: true, canManage: true, boards: true };
-  wrapper = mount({ components: { ActionDisclosure, SpaceMenuItems }, template: '<ActionDisclosure label="Akce prostoru: Provoz"><SpaceMenuItems v-bind="$attrs" /></ActionDisclosure>', inheritAttrs: false }, { attachTo: document.body, attrs: props });
+  wrapper = mount({ components: { ActionDisclosure, SpaceMenuItems }, template: '<ActionDisclosure label="Akce prostoru: Provoz"><SpaceMenuItems v-bind="$attrs" /></ActionDisclosure>', inheritAttrs: false }, { attachTo: document.body, attrs: { ...props, contentHealth: true } });
   await wrapper.get("[aria-expanded]").trigger("click"); await settle();
   const breadcrumb = labels();
   wrapper.unmount(); document.body.replaceChildren();
 
-  const space = { id: "s", name: "Provoz", icon: "book", color: "blue", role: "Admin" as const, pinPolicy: "None" as const, pinned: false, pageCount: 0, lastChangedAt: null };
+  const space = { id: "s", name: "Provoz", icon: "book", color: "blue", role: "Admin" as const, pinPolicy: "None" as const, pinned: false, pageCount: 0, lastChangedAt: null, verificationOn: true };
   wrapper = mount(SidebarSpace, { props: { space, pages: [], expanded: false, ...props }, attachTo: document.body });
   await wrapper.get('[aria-label="Další akce prostoru Provoz"]').trigger("click"); await settle();
   // The sidebar adds only what concerns its tree (Najít ve stromu, Sbalit vše, Odepnout), none of which an empty, unpinned space has.

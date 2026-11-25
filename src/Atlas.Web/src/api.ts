@@ -50,6 +50,8 @@ export interface Space {
   lastChangedAt: string | null;
   /** The image of the space with its source (spaceCover.ts); omitted or null only by an older server, which reads as no image. */
   cover?: SpaceCover | null;
+  /** Ověřený obsah (5.2): the space verifies its pages; only then do its menu and the palette offer Stav obsahu. */
+  verificationOn?: boolean;
 }
 export type SpacePinPolicy = "None" | "Default" | "Required";
 export interface PageSummary {

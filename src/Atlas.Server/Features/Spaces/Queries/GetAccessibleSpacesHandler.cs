@@ -52,7 +52,7 @@ public sealed class GetAccessibleSpacesHandler
             .Select(Projections.Property(() => space.Id), Projections.Property(() => space.Name), Projections.Property(() => space.Icon),
                 Projections.Property(() => space.Color), Projections.Property(() => space.Description), Projections.Property(() => space.PinPolicy),
                 Projections.Property(() => pin.Pinned), Projections.Property(() => cover.Sha256), Projections.Property(() => cover.Tinted),
-                Projections.Property(() => cover.Source), Projections.Property(() => cover.CatalogKey))
+                Projections.Property(() => cover.Source), Projections.Property(() => cover.CatalogKey), Projections.Property(() => space.VerificationIntervalMonths))
             .OrderBy(() => space.Name).Asc
             .ThenBy(() => space.Id).Asc
             .Take(MaxSpaces)
@@ -69,6 +69,7 @@ public sealed class GetAccessibleSpacesHandler
                 return item with
                 {
                     PinPolicy = policy.ToString(), Pinned = SpacePin.Effective(policy, row[6] as bool?), PageCount = count, LastChangedAt = changedAt,
+                    VerificationOn = row[11] is not null,
                     // The automatic pick reads the description the account sees (item.Description, empty for ItemAccessOnly),
                     // so a drawing never tells what a description it may not read says.
                     Cover = SpaceCoverDto.From(row[9] as SpaceCoverSource?, row[10] as string, row[7] as string, row[8] as bool?,

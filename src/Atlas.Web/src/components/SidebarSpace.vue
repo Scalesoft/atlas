@@ -432,7 +432,7 @@ function dragLeave(event: DragEvent) {
         <AtlasIcon name="search" :size="14" /></button>
       <span v-if="hasActions || pages?.length" class="sidebar-space-actions">
         <ActionDisclosure :label="componentsSidebar.sidebar.moreActions(space.name)" :disabled="busy">
-          <SpaceMenuItems :can-write="canWrite" :can-manage="canManage" :boards="boards" :empty="pages !== undefined && !pages.length"
+          <SpaceMenuItems :can-write="canWrite" :can-manage="canManage" :boards="boards" :empty="pages !== undefined && !pages.length" :content-health="space.verificationOn"
             @create-page="emit('createPage')" @create-board="emit('createBoard')" @settings="emit('settings')" @pin-policy="emit('pinPolicy')"
             @templates="emit('templates')" @access="emit('access')" @trash="emit('trash')" @export-space="emit('exportSpace')" @content-health="emit('contentHealth')">
             <template #before>

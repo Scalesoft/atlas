@@ -17,6 +17,8 @@ defineProps<{
   boards?: boolean;
   /** The space has no page yet: there is nothing to export. */
   empty?: boolean;
+  /** The space verifies its pages (Space.verificationOn): Stav obsahu. Off, the menu is the one of 5.1. */
+  contentHealth?: boolean;
 }>();
 const emit = defineEmits<{ createPage: []; createBoard: []; settings: []; templates: []; access: []; pinPolicy: []; trash: []; exportSpace: []; contentHealth: [] }>();
 </script>
@@ -26,7 +28,7 @@ const emit = defineEmits<{ createPage: []; createBoard: []; settings: []; templa
   <ActionDisclosureItem v-if="canWrite" data-space-menu="new-page" @click="emit('createPage')"><AtlasIcon name="file-plus" />{{ t.spaceMenu.newPage }}</ActionDisclosureItem>
   <ActionDisclosureItem v-if="canWrite && boards" data-space-menu="new-board" @click="emit('createBoard')"><AtlasIcon name="layout-dashboard" />{{ t.spaceMenu.newBoard }}</ActionDisclosureItem>
   <!-- Stav obsahu (5.2 §6) is every editor's of the space, not only its administrators': its one section of the space settings. -->
-  <ActionDisclosureItem v-if="canWrite" data-space-menu="content-health" @click="emit('contentHealth')"><AtlasIcon name="shield-check" />{{ t.spaceMenu.contentHealth }}</ActionDisclosureItem>
+  <ActionDisclosureItem v-if="canWrite && contentHealth" data-space-menu="content-health" @click="emit('contentHealth')"><AtlasIcon name="shield-check" />{{ t.spaceMenu.contentHealth }}</ActionDisclosureItem>
   <template v-if="canManage">
     <ActionDisclosureItem data-space-menu="settings" @click="emit('settings')"><AtlasIcon name="settings" />{{ t.spaceMenu.settings }}</ActionDisclosureItem>
     <ActionDisclosureItem data-space-menu="templates" @click="emit('templates')"><AtlasIcon name="layout-template" />{{ t.spaceMenu.templates }}</ActionDisclosureItem>
