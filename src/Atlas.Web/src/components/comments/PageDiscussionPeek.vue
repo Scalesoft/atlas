@@ -142,7 +142,8 @@ async function send(bubble: DiscussionBubble, markdown: string) {
 .peek-author { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .peek-text { display: -webkit-box; overflow: hidden; color: var(--muted); -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
 /* „Odpovědět“ is a quiet text row under the bubble's text (in the flow, so the bubble never changes shape and nothing overlays the author line). */
-.peek-reply { margin: -4px 0 6px 4px; color: var(--accent); }
+.peek-open:has(+ .peek-reply) { padding-bottom: 4px; }
+.peek-reply { margin: 0 0 6px 4px; color: var(--accent); }
 .peek-compose { padding: 0 8px 8px; }
 .peek-failure { margin: 6px 0 0; color: var(--error); font-size: 12px; }
 .peek-hide { position: absolute; top: 5px; right: 5px; color: var(--muted); opacity: 0; }
