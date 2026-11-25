@@ -26,4 +26,5 @@ Motion uses tokens only (`--atlas-motion-*`) and reduced motion is respected eve
 | Status / date / person | `StatusBadge` (icon plus word); `formatDate.ts`; `SubjectAvatar` | Date: list row "ago" plus exact title; table column short date plus title; detail date and time (pending owner decision D9). Every user in their own colour (pending owner decision D8). |
 | Load more | `LoadMoreButton`, "Načíst další" (pending owner decision D10) | Automatic only in search. |
 | Discussion | `PageDiscussionButton` + `CommentThread` in the dock | Pages and boards alike; phone: page below content, board in the dock. |
+| Who else edits now | `CollaboratorAvatars` in the top bar, before Diskuse | Pages and boards alike: everyone with the document open to edit (page: its Yjs awareness; board: a heartbeat on its view session `board:{id}`), a click goes to their pointer. Avatars on a board card say who edits that card's object, not the board. |
 | Contact card | Editor block and `ContactCard` render the same data | Change one, check the other (pending owner decision D7). |

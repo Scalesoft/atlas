@@ -338,6 +338,37 @@ it("tells the shell's bar of colleagues only when who is here changes, not on ev
   await point(90, "#e85d75");
   expect(told()).toBe(after + 1);
 });
+it("tells the bar who has the board open to edit, as a page's co-editors, also while their pointer is still, and says so itself", async () => {
+  vi.useFakeTimers();
+  const api = { get: vi.fn(async () => board), submit: vi.fn(), after: vi.fn(async () => ({ sequence: 1, batches: [] })) };
+  const { views, objects } = fakeViews();
+  wrapper = mount(BoardView, { attachTo: document.body, props: { boardId: "b1", deps: { api, views, references: async () => [] } } });
+  await letTimePass(0);
+  // An editor announces itself on the board's own view session (no second one), again every heartbeat, and leaves with editing false.
+  expect(views.open).toHaveBeenCalledTimes(1);
+  const sent = views.open.mock.results[0]!.value.presence as ReturnType<typeof vi.fn>;
+  expect(sent).toHaveBeenLastCalledWith("b1", { editing: true });
+  await letTimePass(10_000);
+  expect(sent).toHaveBeenCalledTimes(2);
+  const peers = () => wrapper!.emitted("peers")!.at(-1)![0];
+  const tell = async (payload: Record<string, unknown>) => {
+    objects.get("b1")!.presence!({ objectId: "b1", userId: "u2", displayName: "Jana", color: "#2a9d8f", payload, via: "board:b1" });
+    await letTimePass(20);
+  };
+  await tell({ cursor: { x: 10, y: 0 } });
+  expect(peers()).toMatchObject([{ id: "u2", name: "Jana", color: "#2a9d8f", cursorAvailable: true }]);
+  // The pointer goes quiet; the heartbeat keeps the colleague in the bar, without a pointer to go to.
+  await letTimePass(6000);
+  await tell({ editing: true });
+  expect(peers()).toMatchObject([{ id: "u2", cursorAvailable: false }]);
+  await letTimePass(20_000);
+  expect(peers()).toHaveLength(1);
+  await tell({ editing: false });
+  expect(peers()).toEqual([]);
+  wrapper.unmount();
+  expect(sent).toHaveBeenLastCalledWith("b1", { editing: false });
+  wrapper = undefined;
+});
 // Contract K13: the page's lock on a board. Locked, the canvas reads as for a reader, until E or the toggle opens it again.
 it("opens locked when asked, as a page does, and E or the lock toggle switches the board's editing", async () => {
   const { views, opener } = fakeViews();
