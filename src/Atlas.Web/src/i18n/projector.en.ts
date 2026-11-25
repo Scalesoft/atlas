@@ -170,7 +170,7 @@ const en: ProjectorMessages = {
     customState: "Custom state",
     customExample: "E.g. verify",
     countsAs: state => `Counts as ${state}. Empty restores the state's default name.`,
-    save: "Save",
+    save: "Apply",
     custom: "Custom…",
     customNamed: word => `Custom: ${word}`,
     stillMissing: n => `Still missing ${counts.prerequisites(n)} — mark as done anyway?`,

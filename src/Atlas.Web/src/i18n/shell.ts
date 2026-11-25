@@ -75,7 +75,7 @@ const cs = {
     lockEditing: "Zamknout úpravy",
     edit: "Upravit",
     versionsRestore: "Verze a obnovení",
-    organize: "Uspořádat stránku",
+    organize: "Přesunout…",
     organizeDetail: "Přesun, název a umístění",
     pageToTrash: "Přesunout stránku do koše",
     publishChanges: "Publikovat změny",

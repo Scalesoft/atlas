@@ -50,7 +50,7 @@ const en: ComponentsSearchMessages = {
     editComment: "Edit comment",
     edit: "Edit",
     deleteComment: "Delete comment",
-    delete: "Delete",
+    delete: "Delete permanently",
     removed: "The comment was removed",
     sending: "Sending…",
     apply: "Apply",

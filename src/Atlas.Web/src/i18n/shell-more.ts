@@ -120,16 +120,6 @@ const cs = {
       description: "Zmínka stránky v textu se propojí.",
     },
   },
-  code: {
-    code: "Kód",
-    copyLanguage: (language: string) => `Kopírovat kód ${language}`,
-    copyCode: "Kopírovat kód",
-    copy: "Kopírovat",
-    copied: "Zkopírováno",
-    notCopied: "Nezkopírováno",
-    copiedStatus: "Kód zkopírován",
-    copyFailedStatus: "Kód se nepodařilo zkopírovat; označte jej a zkopírujte ručně.",
-  },
   tb: {
     undo: "Zpět",
     bold: "Tučně",

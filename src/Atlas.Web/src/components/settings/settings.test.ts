@@ -302,7 +302,7 @@ describe("SaveBar", () => {
     await wrapper.setProps({ saving: true });
     // The button keeps its label (and width); the message beside it reports the save.
     expect(wrapper.get("[data-save-bar-save]").attributes("aria-busy")).toBe("true");
-    expect(wrapper.get(".save-bar-message").text()).toContain("Ukládání");
+    expect(wrapper.get(".save-bar-message").text()).toContain("Ukládám");
     await wrapper.setProps({ saving: false, dirty: false });
     expect(wrapper.get('[role="region"]').text()).toContain("Uloženo");
     vi.advanceTimersByTime(2000);

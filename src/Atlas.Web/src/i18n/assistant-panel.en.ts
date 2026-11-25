@@ -9,7 +9,7 @@ const en: AssistantPanelMessages = {
     more: "More assistant actions",
     delete: "Delete conversation",
     confirmTitle: "Delete the conversation?",
-    confirm: "Delete",
+    confirm: "Delete permanently",
     confirmText: "The conversation and all its answers will be deleted. Wiki pages stay unchanged.",
   },
   list: {

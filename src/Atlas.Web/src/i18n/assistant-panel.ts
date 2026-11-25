@@ -9,7 +9,7 @@ const cs = {
     more: "Další akce asistenta",
     delete: "Smazat konverzaci",
     confirmTitle: "Smazat konverzaci?",
-    confirm: "Smazat",
+    confirm: "Smazat trvale",
     confirmText: "Konverzace i všechny její odpovědi se smažou. Stránky wiki zůstanou beze změny.",
   },
   list: {

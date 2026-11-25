@@ -71,7 +71,7 @@ const en: ShellMessages = {
     lockEditing: "Lock editing",
     edit: "Edit",
     versionsRestore: "Versions and restore",
-    organize: "Organize page",
+    organize: "Move…",
     organizeDetail: "Move, title and location",
     pageToTrash: "Move page to trash",
     publishChanges: "Publish changes",

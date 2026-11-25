@@ -7,7 +7,7 @@ const cs = {
     message: "Máte neuložené změny",
     region: "Uložení změn",
     saved: "Uloženo",
-    saving: "Ukládání…",
+    saving: "Ukládám…",
   },
   retry: "Zkusit znovu",
   dismissBanner: "Skrýt oznámení",

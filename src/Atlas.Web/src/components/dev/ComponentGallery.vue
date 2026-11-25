@@ -452,7 +452,7 @@ const steps: FlowStep[] = [
           <div class="st-actions">
             <Button>Přidat</Button><Button variant="secondary">Sekundární</Button>
             <Button variant="outline">Zpět</Button><Button variant="ghost">Zrušit</Button>
-            <Button variant="destructive">Odstranit</Button><Button disabled>Nedostupné</Button>
+            <Button variant="destructive">Odstranit</Button><Button disabled>Nedostupné</Button><Button busy><AtlasIcon name="pencil" />Ukládám…</Button>
             <Button variant="outline" size="icon" aria-label="Upravit"><AtlasIcon name="pencil" /></Button>
           </div>
         </SettingsSection>

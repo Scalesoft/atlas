@@ -181,7 +181,7 @@ const cs = {
     customState: "Vlastní stav",
     customExample: "Např. ověřit",
     countsAs: (state: string) => `Počítá se jako ${state}. Prázdné vrátí výchozí název stavu.`,
-    save: "Uložit",
+    save: "Použít",
     custom: "Vlastní…",
     customNamed: (word: string) => `Vlastní: ${word}`,
     stillMissing: (n: number) => `Ještě chybí ${counts.prerequisites(n)} — označit přesto?`,
