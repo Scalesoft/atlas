@@ -5,6 +5,7 @@ import { loadMarkdownDialect, prepareMarkdownModulesForExport } from "@atlas/mar
 import { createCodeBlockHighlighting } from "@atlas/markdown/plugins/editor-tools";
 import { atlasContentPlugins } from "../documentWidgets";
 import { readDocument } from "../document";
+import { formatPragueDay } from "../formatDate";
 import { editorChrome, editorOutline } from "../editor/editorSetup";
 import type { PrintSnapshot } from "./main";
 import { dropNeutralFilter } from "./printImages";
@@ -15,7 +16,7 @@ const value = readDocument(props.snapshot.contentJson);
 // checkbox, chips, state and tint, the overviews over the live document. No host: history's policy (no writes, no directories).
 const plugins = atlasContentPlugins({ kind: "history" });
 const shows = (detail: string) => props.snapshot.details.includes(detail);
-const date = (input: string) => new Intl.DateTimeFormat("cs-CZ", { dateStyle: "long", timeZone: "Europe/Prague" }).format(new Date(input));
+const date = (input: string) => formatPragueDay(input);
 // The editor takes its code block and the `a-` dialect once, at creation (DocumentEditor waits for both the same way).
 const codeBlock = shallowRef<Awaited<ReturnType<typeof createCodeBlockHighlighting>>>();
 const loaded = shallowRef(false);

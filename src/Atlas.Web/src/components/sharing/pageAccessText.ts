@@ -1,6 +1,5 @@
 import type { AccessPerson, AccessSource, PageAccessExplanation } from "../../sharing";
-import { formatShortDate } from "../../formatDate";
-import { locale } from "../../i18n";
+import { formatShortDate, formatTime } from "../../formatDate";
 import t from "../../i18n/components-sharing";
 import type { AccessPath, ChoiceOption } from "../settings/types";
 
@@ -24,7 +23,7 @@ function validity(source: AccessSource, now: Date): string {
 }
 
 function expiryDateTime(value: string | null | undefined, now: Date): string | undefined {
-  return value ? `${formatShortDate(value, now)} ${new Date(value).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}` : undefined;
+  return value ? `${formatShortDate(value, now)} ${formatTime(value)}` : undefined;
 }
 
 /** The reason of one source, e.g. „Přímo na stránce · do 31. 12.“ or „Výchozí prostoru (Čte)“ (a space role). */

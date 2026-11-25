@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { ApiError, errorMessage } from "../../../api";
-import { locale } from "../../../i18n";
+import { formatDate } from "../../../formatDate";
 import t from "../../../i18n/settings-space";
 import { searchGapsApi, type SearchGap, type SearchGapDays, type SearchGapsApi } from "../../../searchGaps";
 import { collapseHeight } from "../../../motion/aiMotion";
@@ -98,7 +98,7 @@ async function resolve(gap: SearchGap) {
 
 const day = (value: string) => {
   const [year, month, date] = value.split("-").map(Number);
-  return year && month && date ? new Date(year, month - 1, date).toLocaleDateString(locale, { dateStyle: "medium" }) : value;
+  return year && month && date ? formatDate(new Date(year, month - 1, date)) : value;
 };
 const seen = (gap: SearchGap) => t.gaps.seen(gap.users, day(gap.lastSearchedOn));
 const emptyTitle = computed(() => t.gaps.emptyTitle(minimumUsers.value));

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import t from "../i18n/components-b";
-import { locale } from "../i18n";
+import { formatDay } from "../formatDate";
 import { computed, ref } from "vue";
 import { ALL_PDF_COVER_DETAILS, PDF_COVER_DETAILS, type PdfCoverDetail } from "../contentExport";
 import { Checkbox } from "./ui/checkbox";
@@ -35,7 +35,7 @@ function toggle(detail: PdfCoverDetail, on: boolean) {
 }
 
 // The sample cover: the document's own title and space where the dialog knows them, illustrative values for the rest.
-const day = (offset: number) => new Intl.DateTimeFormat(locale, { dateStyle: "long" }).format(new Date(Date.now() - offset * 86_400_000));
+const day = (offset: number) => formatDay(new Date(Date.now() - offset * 86_400_000).toISOString().slice(0, 10));
 const sample = { revision: "12", state: t.pdfcover.publishedState, revisionDate: day(3), exportedAt: day(0), pageId: "8c41f2a0-5d7e-4b19-a3c6-2f90d1e74b58" };
 const rows = computed(() => [
   { detail: "revision" as const, label: t.pdfcover.rowRevision, value: sample.revision },

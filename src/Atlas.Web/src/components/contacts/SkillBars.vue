@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { formatNumber } from "../../i18n";
 import t from "../../i18n/contacts-ui";
 import { foldText } from "../../lib/foldText";
 import { topicUrl } from "../../contacts/contactLinking";
@@ -52,7 +53,7 @@ function toggle(key: string) { const next = new Set(opened.value); if (next.has(
           :aria-label="`${skill.name}: ${t.skills.levels[Math.round(shownLevel(skill) ?? 1) - 1]}`">
           <span class="skill-bars-name" :title="skill.name">{{ skill.name }}</span>
           <span class="skill-bars-track" aria-hidden="true"><span class="skill-bars-fill" :style="{ '--level': (shownLevel(skill) ?? 0) / 5 }" /></span>
-          <span class="skill-bars-value" aria-hidden="true">{{ (shownLevel(skill) ?? 0).toLocaleString(undefined, { maximumFractionDigits: 1 }) }}</span>
+          <span class="skill-bars-value" aria-hidden="true">{{ formatNumber(Math.round((shownLevel(skill) ?? 0) * 10) / 10) }}</span>
         </a>
         <button v-if="!filtering && group.items.length > perGroup" type="button" class="skill-bars-more" :aria-expanded="opened.has(group.key)" @click="toggle(group.key)">
           {{ opened.has(group.key) ? t.skills.showLess : t.skills.showMore(group.items.length - perGroup) }}

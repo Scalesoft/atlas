@@ -155,7 +155,7 @@ onBeforeUnmount(() => {
               <span class="ai-tile-line">{{ index.model }}</span>
               <span class="ai-tile-line">{{ t.overview.ofPages(formatNumber(index.indexedPages), pagesText(index.eligiblePages), completeness) }}</span>
               <span class="ai-meter" aria-hidden="true"><span ref="meter" class="ai-meter-bar" :style="{ width: `${completeness}%` }" /></span>
-              <span class="ai-tile-line" data-ai-queue>{{ t.overview.queue(index.queue.pending, index.queue.failing) }}<template v-if="index.queue.oldestPendingAt"> · {{ t.overview.oldest(formatAgo(index.queue.oldestPendingAt)) }}</template></span>
+              <span class="ai-tile-line" data-ai-queue :title="index.queue.oldestPendingAt ? formatDateTime(index.queue.oldestPendingAt) : undefined">{{ t.overview.queue(index.queue.pending, index.queue.failing) }}<template v-if="index.queue.oldestPendingAt"> · {{ t.overview.oldest(formatAgo(index.queue.oldestPendingAt)) }}</template></span>
               <StatusBadge v-if="index.rebuildRecommended" tone="warning" icon="refresh" :label="t.overview.rebuildRecommended" size="sm" data-ai-rebuild />
             </template>
             <span v-else class="ai-tile-line">{{ t.overview.noIndex }}</span>

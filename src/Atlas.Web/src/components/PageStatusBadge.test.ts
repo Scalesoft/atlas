@@ -10,28 +10,28 @@ const published: Props = { isPublished: true, version: 4, publishedVersion: 4 };
 describe("page status badge", () => {
   it("names the three page states with one vocabulary", () => {
     const states: [Props, string, string, string][] = [
-      [draft, "draft", "Koncept", "muted"],
+      [draft, "draft", "Koncept", "neutral"],
       [behind, "unpublished", "Nepublikované změny", "warning"],
       [published, "published", "Publikováno", "success"],
     ];
     for (const [props, status, text, tone] of states) {
       const badge = mount(PageStatusBadge, { props });
-      expect(badge.get("[data-slot=badge]").attributes("data-status")).toBe(status);
-      expect(badge.get("[data-slot=badge]").attributes("data-tone")).toBe(tone);
+      expect(badge.get(".status-badge").attributes("data-status")).toBe(status);
+      expect(badge.get(".status-badge").attributes("data-tone")).toBe(tone);
       expect(badge.text()).toBe(text);
       badge.unmount();
     }
   });
   it("treats a missing published version as nothing published yet", () => {
     const badge = mount(PageStatusBadge, { props: { isPublished: true, version: 2, publishedVersion: null } });
-    expect(badge.get("[data-slot=badge]").attributes("data-status")).toBe("unpublished");
+    expect(badge.get(".status-badge").attributes("data-status")).toBe("unpublished");
     badge.unmount();
   });
   it("leaves the usual published state unmarked on request and still shows what needs attention", () => {
     // The lists of pages (library, space, dashboard) pass hidePublished.
     for (const [props, shown] of [[published, false], [draft, true], [behind, true]] as const) {
       const badge = mount(PageStatusBadge, { props: { ...props, hidePublished: true } });
-      expect(badge.find("[data-slot=badge]").exists()).toBe(shown);
+      expect(badge.find(".status-badge").exists()).toBe(shown);
       badge.unmount();
     }
   });

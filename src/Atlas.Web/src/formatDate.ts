@@ -84,3 +84,16 @@ export function pragueDate(value: string | number | Date, days = 0): string {
   const parts = Object.fromEntries(pragueDayFormat.formatToParts(new Date(value)).map((part) => [part.type, part.value]));
   return new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day) + days)).toISOString().slice(0, 10);
 }
+
+const weekdayDateFormat = new Intl.DateTimeFormat(locale, { weekday: "long", day: "numeric", month: "long" });
+/** A day heading with its weekday, e.g. „pondělí 3. listopadu“ (the activity groups). */
+export function formatWeekdayDate(value: string | Date | null | undefined): string {
+  const date = parse(value);
+  return date ? weekdayDateFormat.format(date) : "";
+}
+
+const pragueDayLongFormat = new Intl.DateTimeFormat(locale, { timeZone: "Europe/Prague", dateStyle: "long" });
+/** The Europe/Prague day of a moment, spelled out (the print cover's date). */
+export function formatPragueDay(value: string | Date): string {
+  return pragueDayLongFormat.format(new Date(value));
+}

@@ -1,10 +1,11 @@
-import { closeMarkdownHistory, createMarkdownSuggestionRenderer, dispatchMarkdownHistoryOperation, historyStampText, markMarkdownAutoConversion, pragueNow,
+import { closeMarkdownHistory, createMarkdownSuggestionRenderer, dispatchMarkdownHistoryOperation, markMarkdownAutoConversion, pragueNow,
   shouldShowMarkdownSuggestion } from "@atlas/markdown/core";
 import { Extension, InputRule, type Editor, type Range } from "@tiptap/core";
 import type { Node as PMNode, ResolvedPos } from "@tiptap/pm/model";
 import { Plugin, PluginKey, type EditorState, type Transaction } from "@tiptap/pm/state";
 import Suggestion, { type SuggestionOptions } from "@tiptap/suggestion";
 import { useToast } from "../composables/useToast";
+import { formatDay } from "../formatDate";
 import t from "../i18n/projector";
 import { normalizeContact } from "@atlas/markdown/plugins/contacts";
 import ContactPicker from "../components/contacts/ContactPicker.vue";
@@ -73,7 +74,7 @@ function writeHeadingPhrase(tr: Transaction, id: string, phrase: Range, write: (
 
 /** Every typed date says so, its „Zpět“ at hand: what read as a date may have meant something else. */
 function announceDeadline(editor: Editor, id: string, before: string, date: string) {
-  const message = before && before !== date ? t.inline.deadlineReplaced(historyStampText({ date: before }), historyStampText({ date })) : t.inline.deadline(historyStampText({ date }));
+  const message = before && before !== date ? t.inline.deadlineReplaced(formatDay(before), formatDay(date)) : t.inline.deadline(formatDay(date));
   useToast().success(message, { undo: () => { setHeadingDeadline(editor, id, before); editor.commands.focus(); } });
 }
 

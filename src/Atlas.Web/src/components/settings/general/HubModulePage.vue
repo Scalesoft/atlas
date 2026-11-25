@@ -4,7 +4,7 @@ import { ApiError, errorMessage } from "../../../api";
 import { hubApi, hubErrorMessage, type HubBinding, type HubBindingDraft, type HubDraft, type HubGroups, type HubIdentity, type HubMode, type HubSettings } from "../../../hub";
 import { reauthRequiredCode } from "../../../protection";
 import t from "../../../i18n/settings-modules";
-import { locale } from "../../../i18n";
+import { formatDateTime } from "../../../formatDate";
 import { Button } from "../../ui/button";
 import { Switch } from "../../ui/switch";
 import ConflictNote from "../ConflictNote.vue";
@@ -155,7 +155,7 @@ function identityLabel(identity: HubIdentity) {
   const label = ({ Active: t.hub.identity.Active, Disabled: t.hub.identity.Disabled, Missing: t.hub.identity.Missing, Unverified: t.hub.identity.Unverified } as Record<string, string>)[identity.state] ?? t.hub.identity.Unverified;
   return state.value?.mode === "Preview" ? t.hub.identity.preview(label) : label;
 }
-const date = (value: string | null) => value ? new Date(value).toLocaleString(locale) : t.hub.neverVerified;
+const date = (value: string | null) => value ? formatDateTime(value) : t.hub.neverVerified;
 async function migrationApplied(value: HubMigrationResult) {
   migrating.value = false;
   result.value = t.hub.migrationDone(value.convertedGroups, value.removedGrants, value.removedWikiAdmins, value.isolatedPages);

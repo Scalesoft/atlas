@@ -23,7 +23,8 @@
  *   Stránky zakázek jsou svižné …
  *   - **Hledat ve stránce** `Ctrl F`: výsledky s okolím …
  */
-import { language, locale, waitForTexts } from "../i18n";
+import { language, waitForTexts } from "../i18n";
+import { formatDate } from "../formatDate";
 import { brandMarks } from "./brandMarks";
 import { releaseDemos } from "./releaseDemos";
 import { releaseLine } from "./notice";
@@ -133,7 +134,7 @@ const englishNotes = import.meta.glob<string>("../../release-notes/*.en.md", { q
 /** The date of the Czech note („2. 11. 2026“) as the page language writes it. */
 const dateIn = (date: string | undefined) => {
   const [day, month, year] = date?.match(/\d+/g)?.map(Number) ?? [];
-  return year ? new Date(year, month! - 1, day).toLocaleDateString(locale, { dateStyle: "medium" }) : date;
+  return year ? formatDate(new Date(year, month! - 1, day)) : date;
 };
 
 // The English note replaces the Czech one in place, before anything that waits for texts renders (i18n `waitForTexts`).

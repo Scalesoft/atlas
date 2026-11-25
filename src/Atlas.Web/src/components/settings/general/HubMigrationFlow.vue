@@ -4,7 +4,7 @@ import { ApiError, errorMessage } from "../../../api";
 import { hubApi, hubMigrationApi, type HubGroups, type HubMigrationDraft, type HubMigrationGrant, type HubMigrationInventory, type HubMigrationPage, type HubMigrationPreview, type HubMigrationResult, type HubMigrationRoute } from "../../../hub";
 import { roleLabel } from "../../../roles";
 import t from "../../../i18n/settings-modules";
-import { locale } from "../../../i18n";
+import { formatDateTime } from "../../../formatDate";
 import { reauthRequiredCode } from "../../../protection";
 import { Button } from "../../ui/button";
 import ConfirmWithReauth from "../ConfirmWithReauth.vue";
@@ -62,7 +62,7 @@ const role = (value: number) => ({ 1: t.hubMigration.roles.reader, 2: t.hubMigra
 const subject = (grant: { userId: string | null; groupId: string | null }) => grant.groupId ? t.hubMigration.subjectGroup(groupName(grant.groupId)) : grant.userId ? userName(grant.userId) : t.hubMigration.subjectUnknown;
 const grantLabel = (grant: HubMigrationGrant) => `${subject(grant)} · ${role(grant.role)} · ${grant.pageId ? pageName(grant.pageId) : spaceName(grant.spaceId!)}`;
 const names = (ids: string[]) => ids.map(userName).join(", ") || t.hubMigration.nobody;
-const date = (value: string) => new Date(value).toLocaleString(locale);
+const date = (value: string) => formatDateTime(value);
 function routeLabel(route: HubMigrationRoute) {
   const destination = route.resourceId ? (route.resourceKind === "space" ? spaceName(route.resourceId) : pageName(route.resourceId)) : t.hubMigration.wholeWiki;
   const [origin, inherited] = route.source.split(":");

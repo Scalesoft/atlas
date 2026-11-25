@@ -2,7 +2,7 @@
  * "Kdo co kdy": the activity model behind ActivityTimeline and ActivityFilters.
  * Readable sentence first (actor + action + target), technical details only on demand.
  */
-import { locale } from "../../i18n";
+import { formatTime, formatWeekdayDate } from "../../formatDate";
 import t from "../../i18n/settings-activity";
 
 export type ActivityOutcome = "allowed" | "denied" | "changed" | "failed";
@@ -106,7 +106,7 @@ export function groupActivityByDay(items: ActivityItem[], now: Date = new Date()
     let group = groups.find((candidate) => candidate.key === key);
     if (!group) {
       const label =
-        key === today ? t.today : key === yesterday ? t.yesterday : date.toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
+        key === today ? t.today : key === yesterday ? t.yesterday : formatWeekdayDate(date);
       group = { key, label, items: [] };
       groups.push(group);
     }
@@ -132,5 +132,5 @@ export function foldRepeats(items: ActivityItem[]) {
 }
 
 export function activityTime(at: string) {
-  return new Date(at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  return formatTime(at);
 }

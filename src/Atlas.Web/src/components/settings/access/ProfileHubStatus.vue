@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { errorMessage } from "../../../api";
 import { hubErrorMessage, hubModeLabels, profileHubApi, type ProfileHubStatus } from "../../../hub";
-import { locale } from "../../../i18n";
+import { formatDateTime } from "../../../formatDate";
 import t from "../../../i18n/settings-access";
 import { Button } from "../../ui/button";
 import SettingsSection from "../SettingsSection.vue";
@@ -24,7 +24,7 @@ const stateLabel = computed(() => {
   if (identity.verifiedUntil && new Date(identity.verifiedUntil).getTime() <= now.value) return t.hub.expired;
   return t.hub.state[identity.state] ?? t.hub.state.Unverified!;
 });
-const date = (value: string | null) => value ? new Date(value).toLocaleString(locale) : t.hub.notYet;
+const date = (value: string | null) => value ? formatDateTime(value) : t.hub.notYet;
 const facts = computed(() => {
   const identity = status.value?.identity;
   return identity ? [

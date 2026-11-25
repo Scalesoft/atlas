@@ -12,7 +12,7 @@ import LoadingNote from "../../LoadingNote.vue";
 import SettingsSection from "../../SettingsSection.vue";
 import StatTile from "../../StatTile.vue";
 import { useOptionalSettingsRoute } from "../../useSettingsRoute";
-import { locale } from "../../../../i18n";
+import { formatNumber, locale } from "../../../../i18n";
 import t from "../../../../i18n/settings-ai";
 
 const props = withDefaults(defineProps<{ kind: "usage" | "quality"; compact?: boolean; client?: AiReportsClient; exportHref?: string | null }>(), {
@@ -26,7 +26,9 @@ const loading = ref(true);
 const error = ref("");
 const root = ref<HTMLElement>();
 let request: AbortController | undefined;
-const number = (value: number | null) => value === null ? t.reports.unknown : value.toLocaleString(locale, { maximumFractionDigits: 2 });
+// Costs keep up to 6 digits: formatNumber would round a tiny cost to zero.
+const costFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+const number = (value: number | null) => value === null ? t.reports.unknown : formatNumber(value);
 const providers = computed(() => usage.value?.providers ?? []);
 const recorded = computed(() => providers.value.reduce((n, x) => n + x.calls, 0));
 const cloudCalls = computed(() => providers.value.filter(x => x.location === "cloud").reduce((n, x) => n + x.calls, 0));
@@ -40,7 +42,7 @@ const total = computed(() => props.kind === "usage"
   : quality.value?.items.reduce((n, x) => n + x.count, 0) ?? 0);
 const positive = computed(() => quality.value?.items.filter(x => x.rating === "up").reduce((n, x) => n + x.count, 0) ?? 0);
 const costText = (value: number | null) => value === null ? t.reports.unknown : value > 0 && value < 0.000001
-  ? t.reports.tinyCost : value.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 6 }) + " USD";
+  ? t.reports.tinyCost : costFormat.format(value) + " USD";
 const providerLabel = (value: string) => ({
   anthropic: "Anthropic", "openai-compatible": t.reports.openaiCompatible, gateway: "Gateway",
 } as Record<string, string>)[value] ?? value;
