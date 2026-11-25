@@ -201,7 +201,10 @@ const cs = {
     codeFinished: "Aktivační kód už nelze znovu zobrazit.",
   },
   peek: {
-    aria: (name: string) => `Člověk: ${name}`,
+    title: "Účet",
+    noAccount: "Kontakt zatím nemá účet ve wiki.",
+    createAccount: "Vytvořit účet",
+    createAccountOf: (name: string) => `Vytvořit účet: ${name}`,
     you: "Vy",
     openCard: "Otevřít kartu",
     accountAndPassword: "Účet a heslo",

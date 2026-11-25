@@ -201,7 +201,10 @@ const en: SettingsPeopleMessages = {
     codeFinished: "The activation code can no longer be shown again.",
   },
   peek: {
-    aria: (name) => `Person: ${name}`,
+    title: "Account",
+    noAccount: "This contact has no wiki account yet.",
+    createAccount: "Create account",
+    createAccountOf: (name) => `Create account: ${name}`,
     you: "You",
     openCard: "Open card",
     accountAndPassword: "Account and password",

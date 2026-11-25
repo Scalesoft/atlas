@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { ApiError, errorMessage } from "../../api";
-import { contactTypeId, type ContactData } from "../../contacts/contactData";
+import { errorMessage } from "../../api";
+import { contactTypeId, type ContactData, type ContactPatch } from "../../contacts/contactData";
+import { uploadContactPhoto } from "../../contacts/contactPhoto";
+import { liveObjects, type LiveObjects } from "../../objects/liveObjects";
 import { pageCommentHost } from "../../comments/pageCommentHost";
 import type { BoardDetailTab } from "../../boards/boardDetail";
 import { formatDateTime } from "../../formatDate";
-import { objectApi } from "../../objects/objectApi";
 import { plainTitle, typeInfo, type DetailRow, type RelationsApi, type UsageApi } from "../../objects/relationsApi";
 import AtlasIcon from "../AtlasIcon.vue";
 import CommentThread from "../comments/CommentThread.vue";
@@ -19,40 +20,50 @@ import UsagePanel from "./UsagePanel.vue";
 import t from "../../i18n/components-objects";
 import { lazyComponent } from "../../lazyComponent";
 
-// Loaded with an internal person's dock only: the first load of the app carries none of it.
+// The parts of a person's profile load with it: the first load of the app carries none of them.
 const PersonActivity = lazyComponent(() => import("../contacts/PersonActivity.vue"), { loading: LoadingSkeleton });
+const SkillGraph = lazyComponent(() => import("../contacts/SkillGraph.vue"), { loading: LoadingSkeleton });
+const PersonAccount = lazyComponent(() => import("../settings/people/PersonAccount.vue"));
 
 /**
  * The detail of one row of Obsah in the dock (WorkspaceSidePanel with the tabs of the board's object detail, minus Popis): Přehled
  * from the row, Vazby from the relations endpoint for any object (ObjectRelations), Použito na from the usage service (UsagePanel), Diskuse (CommentThread) and
  * Historie. It is BoardObjectDetail's sibling, not a copy: that one knows a card of a board, this one an object of a space.
- * A contact shows its directory card in Přehled (the tree's reference node to a contact opens here too), and an internal person (the contact of
- * an account, `directoryId`) their Aktivita under it (PersonActivity). `graph`: the host has a
- * graph to put the object into (Ukázat v grafu).
+ * A contact's Přehled is the one person profile (contactDock.ts opens it from search, the directory, Lidé, a board card, a tree node and the
+ * page's person card): any contact's card, edited in place through the directory's live objects as everywhere else (an external person
+ * too), and for the contact of an account (`directoryId`) their competences (SkillGraph of that person above the level bars) and Aktivita
+ * (PersonActivity); the account part (PersonAccount) shows a wiki administrator the account, or „Vytvořit účet“ for a contact without one.
+ * `graph`: the host has a graph to put the object into (Ukázat v grafu). `store` is replaced by tests.
  */
-const props = withDefaults(defineProps<{ row: DetailRow; tab: BoardDetailTab; api?: RelationsApi; usage?: UsageApi; graph?: boolean }>(), { api: undefined, usage: undefined, graph: true });
+const props = withDefaults(defineProps<{ row: DetailRow; tab: BoardDetailTab; api?: RelationsApi; usage?: UsageApi; graph?: boolean;
+  store?: Pick<LiveObjects, "get" | "load" | "refresh" | "edit"> }>(), { api: undefined, usage: undefined, graph: true, store: () => liveObjects });
 const emit = defineEmits<{ open: [id: string, typeId: string]; focus: [id: string]; comments: [objectId: string, count: number] }>();
 
 const type = computed(() => typeInfo(props.row.typeId));
 const title = computed(() => plainTitle(props.row.title) || t.detail.untitled);
 const scope = computed(() => (props.row.scope === "wiki" ? t.detail.scopeWiki : props.row.scope === "private" ? t.detail.scopePrivate : t.detail.scopeSpace));
 const openable = computed(() => props.row.typeId === "atlas.page" || props.row.typeId === "atlas.board");
+const loading = ref(false);
+watch(() => [props.row.id, props.row.typeId], async () => {
+  if (props.row.typeId !== contactTypeId) return;
+  loading.value = true;
+  try { await props.store.load(props.row.id); } finally { loading.value = false; }
+}, { immediate: true });
+// The directory's live object: what the profile shows and edits is what every card of the contact shows.
+const contact = computed(() => {
+  if (props.row.typeId !== contactTypeId) return null;
+  const object = props.store.get(props.row.id);
+  return loading.value && !object ? { status: "loading" as const } : !object ? { status: "failed" as const }
+    : !object.available || !object.data ? { status: "missing" as const }
+    : { status: "ready" as const, data: object.data as unknown as ContactData, canEdit: object.canEdit, name: object.title };
+});
 // A colleague's profile: their card names them and says what they do; the object's head and facts would only repeat it.
 const person = computed(() => (contact.value?.status === "ready" ? contact.value.data.directoryId : undefined));
-
-const contact = ref<{ status: "loading" } | { status: "ready"; data: ContactData } | { status: "missing" } | { status: "failed"; error: string } | null>(null);
-watch(() => [props.row.id, props.row.typeId], async () => {
-  const id = props.row.id;
-  if (props.row.typeId !== contactTypeId) { contact.value = null; return; }
-  contact.value = { status: "loading" };
-  try {
-    const object = await objectApi.get(id);
-    if (id === props.row.id) contact.value = object.data ? { status: "ready", data: object.data as unknown as ContactData } : { status: "missing" };
-  } catch (failure) {
-    if (id !== props.row.id) return;
-    contact.value = failure instanceof ApiError && failure.status === 404 ? { status: "missing" } : { status: "failed", error: errorMessage(failure) };
-  }
-}, { immediate: true });
+const editError = ref("");
+async function change(patch: ContactPatch) {
+  editError.value = "";
+  try { await props.store.edit(props.row.id, patch); } catch (failure) { editError.value = errorMessage(failure); }
+}
 </script>
 
 <template>
@@ -64,8 +75,15 @@ watch(() => [props.row.id, props.row.typeId], async () => {
       </header>
       <LoadingSkeleton v-if="contact?.status === 'loading'" :rows="3" :label="t.detail.loading" />
       <EmptyState v-else-if="contact?.status === 'missing'" compact icon="lock" :title="t.detail.missingTitle" :text="t.detail.missingText" />
-      <EmptyState v-else-if="contact?.status === 'failed'" compact icon="alert" :title="t.detail.failedTitle" :text="contact.error" />
-      <template v-else-if="contact?.status === 'ready'"><ContactCard :contact="contact.data" /><ContactSkillLine :key="row.id" :contact-id="row.id" bars :name="title" /></template>
+      <EmptyState v-else-if="contact?.status === 'failed'" compact icon="alert" :title="t.detail.failedTitle" />
+      <template v-else-if="contact?.status === 'ready'">
+        <ContactCard :contact="contact.data" :editable="contact.canEdit" :upload="contact.canEdit ? file => uploadContactPhoto(row.id, file) : undefined" @change="change" />
+        <p v-if="editError" class="content-detail-error" role="alert">{{ editError }}</p>
+        <template v-if="person">
+          <SkillGraph :key="`${row.id}:skills`" :contact-id="row.id" />
+          <ContactSkillLine :key="row.id" :contact-id="row.id" bars :name="title" />
+        </template>
+      </template>
       <dl v-if="!person" class="content-detail-facts">
         <dt>{{ t.detail.kind }}</dt><dd>{{ type.label }}</dd>
         <template v-if="row.path"><dt>{{ t.detail.location }}</dt><dd>{{ row.hostId ? t.detail.belongsTo(row.path) : row.path }}</dd></template>
@@ -81,6 +99,8 @@ watch(() => [props.row.id, props.row.typeId], async () => {
       </div>
       <PersonActivity v-if="person" :key="person" :account-id="person"
         @open="emit('open', $event, 'atlas.page')" />
+      <PersonAccount v-if="contact?.status === 'ready'" :key="`${row.id}:${person ?? ''}`" :account-id="person" :contact="{ id: row.id, name: contact.name }"
+        @created="store.refresh(row.id)" />
     </template>
 
     <ObjectRelations v-else-if="tab === 'relations'" :key="`${row.id}:relations`" :object-id="row.id" :api="api" @open="(id, typeId) => emit('open', id, typeId)" />
@@ -102,4 +122,5 @@ watch(() => [props.row.id, props.row.typeId], async () => {
 .content-detail-facts dt { color: var(--muted); }
 .content-detail-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .content-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.content-detail-error { margin: 0; color: var(--error); font-size: 12.5px; }
 </style>

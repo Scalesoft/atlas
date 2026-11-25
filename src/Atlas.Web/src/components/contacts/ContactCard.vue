@@ -260,7 +260,8 @@ async function photoPicked(file: File | undefined) {
 .contact-reveal { animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .contact-lines { display: flex; flex-wrap: wrap; gap: 0 10px; color: var(--muted); font-size: 13px; }
 .contact-lines > .contact-field { display: inline-flex; align-items: baseline; }
-.contact-lines > .contact-field + .contact-field::before { content: "·"; margin-right: 10px; color: var(--muted); }
+/* Centred: a field holding the inline editor's text has no text baseline, so a baseline-aligned dot sank to its bottom („ , “). */
+.contact-lines > .contact-field + .contact-field::before { content: "·"; align-self: center; margin-right: 10px; color: var(--muted); }
 .contact-field { min-width: 0; border-radius: 6px; overflow-wrap: anywhere; }
 .contact-field.is-editing { flex-basis: 100%; }
 /* A changed value fades in where the old one was; nothing moves. */

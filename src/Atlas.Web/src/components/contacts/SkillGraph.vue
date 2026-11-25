@@ -24,9 +24,11 @@ import "../../page-tags.css";
  * (the topics of its pages, asked of the server) and a topic's text (it, its linked topics and their people). A topic opens its dashboard
  * (`#/library/contacts?q=`), a person opens the person's card beneath (ContactCard with the skill bars). Drawn with ECharts as
  * HistoryActivityChart does, through the charts plugin (loadGraphRenderer: the same ECharts with the graph series). The list is the same graph for the
- * keyboard and narrow rooms: under 680 px of room only the list shows. `api` and `data` are the gallery's.
+ * keyboard and narrow rooms: under 680 px of room only the list shows. `contactId` is one person's graph in their profile (ContentDetail):
+ * their topics as the reader may see them, asked of the server, no filters, drawn in a narrow room too, nothing when they have no topic yet.
+ * `api` and `data` are the gallery's.
  */
-const props = defineProps<{ spaces?: readonly { id: string; name: string }[]; api?: Pick<SkillApi, "graph" | "contact" | "rate" | "topics">; data?: SkillGraph }>();
+const props = defineProps<{ spaces?: readonly { id: string; name: string }[]; api?: Pick<SkillApi, "graph" | "contact" | "rate" | "topics">; data?: SkillGraph; contactId?: string }>();
 const api = computed(() => props.api ?? defaultApi);
 const graph = ref<SkillGraph | null>(props.data ?? null);
 const loading = ref(!props.data), error = ref("");
@@ -41,7 +43,7 @@ const chartReady = ref(false);
 async function load() {
   if (props.data) return;
   loading.value = true; error.value = "";
-  try { graph.value = await api.value.graph(space.value || null); }
+  try { graph.value = await api.value.graph(space.value || null, undefined, props.contactId); }
   catch (failure) { error.value = errorMessage(failure); }
   finally { loading.value = false; }
 }
@@ -86,7 +88,7 @@ const showGraph = computed(() => !narrow.value && view.value === "graph");
 
 function open(node: SkillNode) {
   if (node.kind === "topic") location.hash = topicUrl(node.name);
-  else selected.value = node;
+  else if (!props.contactId) selected.value = node;
 }
 
 const css = (name: string, fallback: string) => (root.value ? getComputedStyle(root.value).getPropertyValue(name).trim() : "") || fallback;
@@ -130,7 +132,7 @@ async function draw() {
 }
 watch([shown, showGraph], () => { if (!showGraph.value) { chart?.dispose(); chart = undefined; chartReady.value = false; } else void Promise.resolve().then(draw); }, { flush: "post" });
 onMounted(async () => {
-  observer = new ResizeObserver(entries => { narrow.value = (entries[0]?.contentRect.width ?? 1000) < 680; chart?.resize(); });
+  observer = new ResizeObserver(entries => { narrow.value = !props.contactId && (entries[0]?.contentRect.width ?? 1000) < 680; chart?.resize(); });
   if (root.value) observer.observe(root.value);
   await load();
   void draw();
@@ -140,9 +142,10 @@ const views = computed(() => [{ value: "graph", label: t.skills.viewGraph, icon:
 </script>
 
 <template>
-  <section ref="root" class="skill-graph tags-ui" :aria-label="t.skills.graphTitle" :aria-busy="loading" data-skill-graph>
+  <section v-if="!contactId || loading || error || rows.length" ref="root" class="skill-graph tags-ui" :class="{ 'is-person': contactId }" :aria-label="t.skills.graphTitle"
+    :aria-busy="loading" data-skill-graph :data-person="contactId">
     <span ref="probe" data-tone="violet" hidden />
-    <div class="skill-graph-toolbar">
+    <div v-if="!contactId" class="skill-graph-toolbar">
       <SearchField v-model="topicText" :label="t.skills.filterTopic" :placeholder="t.skills.filterTopicPlaceholder" />
       <FilterMenu v-model="organization" :label="t.skills.filterOrganization" :options="organizationOptions" icon="users" />
       <FilterMenu v-if="spaceOptions.length" v-model="space" :label="t.skills.filterSpace" :options="spaceOptions" icon="book" />
@@ -151,7 +154,7 @@ const views = computed(() => [{ value: "graph", label: t.skills.viewGraph, icon:
     <ErrorState v-if="error && !graph" :title="t.skills.graphTitle" :text="error" :retry-label="t.overviewView.reload" :busy="loading" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !graph" :rows="6" :label="t.skills.graphLoading" />
     <EmptyState v-else-if="graph && !rows.length" icon="users" :title="t.skills.graphEmpty" />
-    <template v-else-if="graph">
+    <template v-else-if="graph && rows.length">
       <div v-show="showGraph" class="skill-graph-frame">
         <div ref="host" class="skill-graph-canvas" role="img" :aria-label="t.skills.graphLabel(counts.people, counts.topics)" />
         <LoadingSkeleton v-if="!chartReady" class="skill-graph-pending" :rows="6" :label="t.skills.graphLoading" />
@@ -182,6 +185,7 @@ const views = computed(() => [{ value: "graph", label: t.skills.viewGraph, icon:
 .skill-graph-toolbar :deep(.search-field) { flex: 1 1 220px; }
 .skill-graph-frame { position: relative; }
 .skill-graph-canvas { height: min(560px, 70vh); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.is-person .skill-graph-canvas { height: 240px; }
 .skill-graph-pending { position: absolute; inset: 1px; padding: 8px 14px; overflow: hidden; border-radius: 14px; pointer-events: none; }
 .skill-graph-list { display: grid; margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; }
 .skill-graph-list > li { display: grid; gap: 6px; padding: 10px 14px; content-visibility: auto; contain-intrinsic-size: auto 64px; }
