@@ -175,7 +175,6 @@ const cs = {
     openFailed: (reason: string) => `Dokument se nepodařilo otevřít: ${reason} Uložený obsah nebyl změněn.`,
     pageView: "Zobrazení stránky",
     pageContent: "Obsah stránky",
-    draftChanges: "Rozpracované změny zdroje",
     sourceUnsaved: "Zdroj stránky obsahuje neuložené změny.",
     sourceUnsavedExcluded: "Zdroj stránky obsahuje neuložené změny. Tato akce je nezahrne; návrh můžete zahodit, nebo se k němu vrátit.",
     applyAndClose: "Použít a zavřít",

@@ -175,7 +175,6 @@ const en: ShellMoreMessages = {
     openFailed: (reason) => `The document could not be opened: ${reason} The saved content was not changed.`,
     pageView: "Page view",
     pageContent: "Page content",
-    draftChanges: "Source changes in progress",
     sourceUnsaved: "The page source has unsaved changes.",
     sourceUnsavedExcluded: "The page source has unsaved changes. This action does not include them; you can discard the draft or go back to it.",
     applyAndClose: "Apply and close",

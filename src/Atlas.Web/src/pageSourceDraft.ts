@@ -2,7 +2,6 @@ import type { Component, ComputedRef, Ref } from "vue";
 import type { MarkdownPlugin, MarkdownRichValue } from "@atlas/markdown/core";
 import { createMarkdownEditorController } from "@atlas/markdown/core";
 import {
-  MarkdownDraftConfirmation as EditorDraftConfirmation,
   MarkdownSourcePanel as EditorSourcePanel,
   useMarkdownSourceDraft,
 } from "@atlas/markdown/vue";
@@ -26,9 +25,8 @@ export interface PageSourceDraftOptions {
 
 // Through `unknown`: in source mode the editor's own declarations carry a second copy of Vue's ref and component
 // types, which Atlas's copy does not accept. The runtime objects are the same.
-/** Editor components; the panel is async, so its chunk (and through it Monaco) loads only when the „Zdroj“ tab renders. */
+/** The editor's source panel; it is async, so its chunk (and through it Monaco) loads only when the „Zdroj“ tab renders. */
 export const MarkdownSourcePanel = EditorSourcePanel as unknown as Component;
-export const MarkdownDraftConfirmation = EditorDraftConfirmation as unknown as Component;
 
 /** The draft for the „Zdroj“ tab. Call during setup; the draft logic loads on the first `open()`. */
 export function usePageSourceDraft(options: PageSourceDraftOptions): PageSourceDraft {
