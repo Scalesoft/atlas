@@ -23,7 +23,7 @@ public sealed class RecentChangesMcpTools(IMessageBus bus)
     [McpToolScope(ApiScopes.Read)]
     [Description("Vypíše stránky změněné za posledních 30 dní, které vlastník tokenu smí číst, nejnovější změna první, jedna řádka na stránku: pageId, název, " +
         "prostor, kdo a kdy, kanál (web, mcp, api, assistant), zda šlo o změnu s AI a kolik dalších verzí. Neuveřejněné změny jen u stránek, které smí upravovat. " +
-        "S authorId jen změny jednoho člověka (co dělal a kdy), se spaceId jen v jednom prostoru. Historii stránky čte atlas_get_history. " + McpText.TrustNotice)]
+        "S authorId jen změny jednoho člověka (co dělal a kdy), bez omezení na 30 dní, se spaceId jen v jednom prostoru. Historii stránky čte atlas_get_history. " + McpText.TrustNotice)]
     public async Task<CallToolResult> ListAsync(
         [Description("Volitelně all (výchozí), ai (jen změny s AI) nebo mine (stránky, které vlastní, upravoval nebo má v oblíbených).")] string? filter = null,
         [Description("Volitelně next z předchozí stránky výpisu.")] string? cursor = null,

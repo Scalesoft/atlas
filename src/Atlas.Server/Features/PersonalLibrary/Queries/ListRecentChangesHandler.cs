@@ -17,7 +17,8 @@ namespace Atlas.Server.Features.PersonalLibrary.Queries;
 /// </summary>
 public sealed class ListRecentChangesHandler(ISession session, IContentAccess access, RelationNodes nodes)
 {
-    /// <summary>How far back the dashboard looks: the query reads only revisions of this window (IX_PageRevision_Activity).</summary>
+    /// <summary>How far back the dashboard looks: the query reads only revisions of this window (IX_PageRevision_Activity). A person's
+    /// activity has none: their revisions come by IX_PageRevision_AuthorActivity, page by page of the cursor.</summary>
     public static readonly TimeSpan Window = TimeSpan.FromDays(30);
 
     private const string Candidates = """SELECT DISTINCT r."PageId" FROM "PageRevision" r WHERE r."ActiveFrom">=:since AND (NOT :byAuthor OR r."AuthorId"=:author)""";
@@ -64,7 +65,7 @@ public sealed class ListRecentChangesHandler(ISession session, IContentAccess ac
         var before = Cursor(query.Cursor);
         var actor = await access.LockActorAsync(null, ct);
         var parameters = nodes.Parameters(actor, null, [], [PagesAtlasModule.ContentType]);
-        parameters["since"] = DateTime.UtcNow - Window;
+        parameters["since"] = query.Author is null ? DateTime.UtcNow - Window : DateTime.UnixEpoch;
         parameters["aiOnly"] = query.Filter == "ai";
         parameters["aiChannels"] = string.Join(',', Pages.Domain.RevisionVersions.AiChannels);
         parameters["mineOnly"] = query.Filter == "mine";

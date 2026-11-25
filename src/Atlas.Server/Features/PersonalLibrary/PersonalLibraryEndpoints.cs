@@ -40,7 +40,7 @@ public static class PersonalLibraryEndpoints
             .Produces<RecentChangeList>().ProducesProblem(400)
             .WithSummary("Co se změnilo: the pages the caller may read changed in the last 30 days, newest change first, one row per page with its newest " +
                 "version (author, channel, AI, token for its owner) and how many further versions. filter: all, ai or mine; author: only the changes of this account " +
-                "(a person's activity; a contact's directoryId); space: only the pages of this space; limit 1–50; cursor: next of the previous page.");
+                "(a person's activity, a contact's directoryId; no 30-day window); space: only the pages of this space; limit 1–50; cursor: next of the previous page.");
         list.Produces<PersonalLibraryList>().ProducesProblem(400)
             .WithSummary("List the owner's accessible library. kind: favorites, recent, drafts, updates or changes; offset 0–1000, limit 1–50.");
         state.Produces<PersonalPageState>().ProducesProblem(404).WithSummary("Read the owner's favorite and visit state for an accessible page.");

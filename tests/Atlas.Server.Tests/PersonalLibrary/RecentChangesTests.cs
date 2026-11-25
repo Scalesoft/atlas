@@ -145,6 +145,21 @@ public sealed class RecentChangesTests
         f.Host.Channel.Current = RequestChannel.Web;
     }
 
+    [PostgreSqlFact]
+    public async Task A_persons_activity_reaches_past_the_window_newest_first_by_cursor_and_the_plain_list_keeps_its_window()
+    {
+        await using var f = await PersonalLibraryFixture.CreateAsync();
+        var old = await Published(f, "Old plan");
+        await f.Execute("""UPDATE "PageRevision" SET "ActiveFrom"=now()-interval '90 days' WHERE "PageId"=:id""", old.Id);
+        await Published(f, "New plan");
+
+        var first = await f.As<RecentChangeList>(f.Reader, new ListRecentChanges("all", null, 1, f.Writer.Id));
+        var second = await f.As<RecentChangeList>(f.Reader, new ListRecentChanges("all", first.Next, 1, f.Writer.Id));
+        Assert.Equal(["New plan", "Old plan"], first.Items.Concat(second.Items).Select(x => x.Title));
+        Assert.Null(second.Next);
+        Assert.DoesNotContain(await List(f, f.Reader), x => x.PageId == old.Id);
+    }
+
     private static async Task<PageDto> Published(PersonalLibraryFixture f, string title, Guid? spaceId = null, UserAccount? owner = null)
     {
         var author = owner ?? f.Writer;

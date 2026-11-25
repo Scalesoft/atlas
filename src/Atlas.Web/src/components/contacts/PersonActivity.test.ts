@@ -46,6 +46,6 @@ describe("person activity", () => {
     await flushPromises();
     expect(changes).toHaveBeenLastCalledWith("all", null, expect.any(AbortSignal), 10, { author: "acc-1", space: "s2" });
     expect(wrapper.find("[data-change-row]").exists()).toBe(false);
-    expect(wrapper.text()).toContain("Za posledních 30 dní");
+    expect(wrapper.text()).toContain("Žádné změny stránek, které smíte číst");
   });
 });
