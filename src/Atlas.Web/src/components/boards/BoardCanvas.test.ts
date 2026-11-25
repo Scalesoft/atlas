@@ -10,6 +10,7 @@ import { toFlowEdges, toFlowNodes } from "../../boards/boardFlow";
 import { registerBoardIntentions } from "../../boards/boardIntentions";
 import type { BoardViewItem } from "../../boards/boardSession";
 import { editedPage } from "../../boards/pageEditing";
+import { contactCardShare } from "../../boards/contactCardShare";
 import { liveObjects } from "../../objects/liveObjects";
 import BoardCanvas from "./BoardCanvas.vue";
 import { loadActionsMenu } from "./canvas/actionsMenuChunk";
@@ -38,6 +39,9 @@ const { EditorStub } = stubs;
 // The preheat and the load are no-ops: the real ones load the real editor chunk and raise textEditorReady, which a test sets by hand.
 vi.mock("./text/textEditorChunk", async importOriginal => ({ ...await importOriginal<typeof import("./text/textEditorChunk")>(), BoardTextEditor: stubs.EditorStub, BoardMarkdown: stubs.MarkdownStub, preheatTextEditor: () => {}, loadTextEditor: async () => ({}) }));
 vi.mock("vue-sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), dismiss: vi.fn() } }));
+// The dock of an object (ContentDetail) has its own tests: here only what the canvas asks of it.
+const objectDetail = vi.hoisted(() => ({ showObjectDetail: vi.fn() }));
+vi.mock("../../objects/objectDetail", () => objectDetail);
 // The derivations as they are, watched: what a selection or a drag frame derives anew.
 vi.mock("../../boards/boardFlow", async importOriginal => {
   const original = await importOriginal<typeof import("../../boards/boardFlow")>();
@@ -1358,6 +1362,42 @@ describe("BoardCanvas: „Co s tím jde dělat“ (P2)", () => {
     // One editing, one step.
     expect(new Set(sent.map(([, coalesce]) => coalesce)).size).toBe(1);
     expect(sent[0]![1]).toBeTruthy();
+  });
+});
+
+describe("BoardCanvas: a contact as in a page (2B)", () => {
+  const contact = (): BoardViewItem => ({ id: "o", kind: "object", x: 0, y: 0, width: 340, height: 80, z: 1, targetResourceId: "c-2b", props: { typeId: "atlas.contact", objectId: "c-2b" } });
+  const seed = () => liveObjects.seed({ id: "c-2b", typeId: "atlas.contact", version: 1, title: "Jana Nováková", data: { name: "Jana Nováková" }, canEdit: false, available: true });
+  const shown = () => expect(objectDetail.showObjectDetail).toHaveBeenLastCalledWith({ id: "c-2b", typeId: "atlas.contact", title: "Jana Nováková", spaceId: "space-1" }, { onOpen: expect.any(Function) });
+
+  it("opens a contact card's detail in the dock (ContentDetail) on a reader's Enter and on Ctrl+Enter, and gives a reader its business card and QR code", async () => {
+    seed();
+    objectDetail.showObjectDetail.mockClear();
+    const board = canvas({ canEdit: false, items: [contact()], blockHost: { links: { spaceId: () => "space-1" } } });
+    await select("o");
+    key(node("o").element, { key: "Enter" });
+    await vi.waitFor(shown);
+    expect(board.find("[data-board-contact-vcf]").exists()).toBe(true);
+    objectDetail.showObjectDetail.mockClear();
+    await board.setProps({ canEdit: true });
+    key(node("o").element, { key: "Enter", ctrlKey: true });
+    await vi.waitFor(shown);
+  });
+
+  it("runs „QR kód vizitky“ from the card's actions menu, and Ctrl+F opens the board's find", async () => {
+    seed();
+    await loadActionsMenu();
+    const board = canvas({ items: [contact()] });
+    await select("o");
+    key(node("o").element, { key: " ", code: "Space", ctrlKey: true });
+    expect(menuRows()).toEqual(expect.arrayContaining(["Otevřít detail", "Stáhnout vizitku (.vcf)", "QR kód vizitky"]));
+    for (const letter of "qr") key(node("o").element, { key: letter });
+    key(node("o").element, { key: "Enter" });
+    expect(contactCardShare.isOpen("o")).toBe(true);
+    contactCardShare.set("o", false);
+    key(board.get("[data-board-surface]").element, { key: "f", ctrlKey: true });
+    await flushPromises();
+    expect(board.find("[data-board-command-panel]").exists()).toBe(true);
   });
 });
 
