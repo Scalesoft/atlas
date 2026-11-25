@@ -166,3 +166,12 @@ it("paints a person's mention chip in the colour of their caret and avatars (one
   try { expect(contactPluginOptions().userColor!(id)).toBe(themedCollaboratorColor(userColor(id))); expect(contactPluginOptions().userColor!(id)).not.toBe(userColor(id)); }
   finally { delete document.documentElement.dataset.mode; }
 });
+
+it("gives the editor a contact linked to an account as that internal person, so its avatar takes the user's colour as ContactCard's does", async () => {
+  const { withAccount } = await import("./contactLinking");
+  expect(withAccount({ state: "ok", contact: { name: "Jana", directoryId: "u1" } })).toEqual({ state: "ok", contact: { name: "Jana", directoryId: "u1", internalUser: { id: "u1", name: "Jana" } } });
+  const own = { state: "ok" as const, contact: { name: "Jana", directoryId: "u1", internalUser: { id: "u2", name: "J." } } };
+  expect(withAccount(own)).toBe(own);
+  expect(withAccount({ state: "ok", contact: { name: "Petr" } })).toEqual({ state: "ok", contact: { name: "Petr" } });
+  expect(withAccount({ state: "hidden" })).toEqual({ state: "hidden" });
+});

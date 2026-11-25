@@ -68,6 +68,12 @@ function avatar(doc: Document, name: string, photo?: string): HTMLElement {
   if (photo) { const img = doc.createElement('img'); img.src = photo; img.alt = ''; img.loading = 'lazy'; img.decoding = 'async'; img.className = 'md-contact-photo'; element.append(img); img.onerror = () => img.remove() }
   return element
 }
+/** An internal person (an account behind the contact, the page not saying external): their avatar on the user's colour, as their caret. */
+const isInternal = (contact: MarkdownContact, identity: MarkdownInternalContactUser | undefined) => !contact.unresolved && (contact.kind === 'internal' || (contact.kind !== 'external' && !!identity))
+function tint(picture: HTMLElement, contact: MarkdownContact, identity: MarkdownInternalContactUser | undefined, options: ContactsPluginOptions): HTMLElement {
+  if (isInternal(contact, identity)) { picture.style.backgroundColor = (options.userColor ?? markdownUserColor)(identity?.id ?? contact.name); picture.style.color = '#fff' }
+  return picture
+}
 /** P8 (same names told apart): the names of the document that more than one person (objectId) has, folded; once per document snapshot. */
 const twinsByDocument = new WeakMap<object, Set<string>>()
 function twinNames(document: object): Set<string> {
@@ -102,7 +108,8 @@ function appendUsername(details: HTMLElement, contact: MarkdownContact): void {
 /** What is shown for a snapshot: the live directory fields (the page keeps its own role, kind and internal identity), the snapshot when hidden, or just the name when the contact is gone. */
 function shown(snapshot: MarkdownContact, live: LiveContact): { contact: MarkdownContact; unavailable: boolean } {
   const local = { role: snapshot.role, kind: snapshot.kind, internalUser: snapshot.internalUser, objectId: snapshot.objectId }
-  if (live.state === 'ok') return { contact: { ...live.contact, username: live.contact.username ?? snapshot.username, directoryId: snapshot.directoryId, ...local }, unavailable: false }
+  // The account behind the contact (the host's `internalUser`) when the page has none: the person shows as internal everywhere.
+  if (live.state === 'ok') return { contact: { ...live.contact, username: live.contact.username ?? snapshot.username, directoryId: snapshot.directoryId, ...local, internalUser: snapshot.internalUser ?? live.contact.internalUser }, unavailable: false }
   if (live.state === 'hidden') return { contact: snapshot, unavailable: false }
   return { contact: { name: snapshot.name, ...local }, unavailable: true }
 }
@@ -140,8 +147,9 @@ function appendRole(parent: HTMLElement, contact: MarkdownContact, unavailable: 
  */
 function fillContactReader(panel: HTMLElement, contact: MarkdownContact, identity: MarkdownInternalContactUser | undefined, unavailable: boolean, options: ContactsPluginOptions, download: (contacts: readonly MarkdownContact[]) => void, signal: AbortSignal, rate?: () => void): void {
   const doc = panel.ownerDocument
+  identity ??= contact.internalUser
   const header = doc.createElement('div'); header.className = 'md-contact-reader-profile'
-  header.append(avatar(doc, contact.name, contact.photo ?? identity?.photo))
+  header.append(tint(avatar(doc, contact.name, contact.photo ?? identity?.photo), contact, identity, options))
   const info = doc.createElement('div'), name = doc.createElement('strong'); name.textContent = contact.name; info.append(name)
   const line = (text: string | undefined, className: string) => { if (!text) return; const element = doc.createElement('p'); element.className = className; element.textContent = text; info.append(element) }
   line(contact.title, 'md-contact-reader-title'); line([contact.organization, contact.department].filter(Boolean).join(' · '), 'md-contact-reader-org')
@@ -302,12 +310,11 @@ function renderInlineContact(context: Context, snapshot: MarkdownContact, parent
   const paint = () => {
     if (contact.objectId) { card.dataset.objectId = contact.objectId; card.dataset.contactName = contact.name }
     const unresolved = !!contact.unresolved, place = isContactPlace(contact)
-    const internal = !unresolved && (contact.kind === 'internal' || (contact.kind !== 'external' && !!identity))
+    const internal = isInternal(contact, identity)
     card.classList.toggle('md-contact-internal', internal || unresolved)
     card.dataset.contactKind = unresolved ? 'unresolved' : internal ? 'internal' : 'external'
     const displayedName = internal ? identity?.name ?? contact.name : contact.name
-    const picture = avatar(doc, displayedName, internal ? identity?.photo ?? contact.photo : contact.photo)
-    if (internal) picture.style.backgroundColor = (options.userColor ?? markdownUserColor)(identity?.id ?? contact.name)
+    const picture = tint(avatar(doc, displayedName, internal ? identity?.photo ?? contact.photo : contact.photo), contact, identity, options)
     // Every person is the core chip in its mention look (chip.css takes its values from it): internal on the user's colour, external
     // on the plain initials or photo, unresolved dashed with „?“.
     const look = { variant: 'mention' as const, tag: 'button' as const, media: picture, label: displayedName, className: 'md-contact-name', editable: !!context.editor?.isEditable,
@@ -324,7 +331,7 @@ function renderInlineContact(context: Context, snapshot: MarkdownContact, parent
   context.signal.addEventListener('abort', stop, { once: true })
   if (context.signal.aborted) stop()
   else {
-    fetchLive(context, options, snapshot, abort.signal, view => { if (!stopped && card.isConnected) { ({ contact, unavailable } = view); paint() } })
+    fetchLive(context, options, snapshot, abort.signal, view => { if (!stopped && card.isConnected) { ({ contact, unavailable } = view); identity ??= contact.internalUser; paint() } })
     // An unresolved chip says who it most likely is, from the page's context (editors only: readers see the name and „?“).
     if (contact.unresolved && !isContactPlace(contact) && editable(context) && context.editor) void unresolvedPeople(options, context.editor, context.getPos?.() ?? 0, contact.name, abort.signal).then(ranked => {
       if (stopped || !card.isConnected || !ranked.length) return
@@ -488,7 +495,7 @@ export function createContactsRuntime(options: ContactsPluginOptions, inline = f
         // The host drags a card by its contact also where no editor holds the document (a read view).
         if (contact.objectId) { card.dataset.objectId = contact.objectId; card.dataset.contactName = contact.name }
         card.classList.toggle('md-contact-gone', unavailable)
-        card.replaceChildren(avatar(doc, contact.name, contact.photo))
+        card.replaceChildren(tint(avatar(doc, contact.name, contact.photo), contact, contact.internalUser, options))
         const body = doc.createElement('span'); body.className = 'md-contact-body'; card.append(body)
         const name = doc.createElement('strong'); name.textContent = contact.name; body.append(name)
         appendRole(body, contact, unavailable)
