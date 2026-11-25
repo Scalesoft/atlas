@@ -3,12 +3,12 @@ using ISession = NHibernate.ISession;
 
 namespace Atlas.Server.Features.PageVerifications.Commands;
 
-/// <summary>5.2 (plan §2.3) for pages that come into a space other than by creating them (<see cref="PageVerificationStart"/>): an import,
-/// a wiki restore or a move from another space.</summary>
+/// <summary>5.2 (plan §2.3) for every page that comes into a space: a new page or a page of a content import (its author is the steward),
+/// a page of a wiki restore or a move from another space (the actor is).</summary>
 public static class PageVerificationArrival
 {
     /// <summary>Each page of a space that verifies its pages and without a verification row starts unverified with
-    /// <paramref name="stewardId"/> (the actor, who may write in the space) as its steward; templates and existing rows stay as they are.</summary>
+    /// <paramref name="stewardId"/> (the author or the actor, who may write in the space) as its steward; templates and existing rows stay as they are.</summary>
     public static async Task StartAsync(ISession session, IEnumerable<Page> pages, Guid stewardId, CancellationToken ct)
     {
         var candidates = new List<Page>();

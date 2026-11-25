@@ -298,16 +298,3 @@ public static class PageVerificationStewards
         }
     }
 }
-
-/// <summary>5.2 (plan §2.3): a new page of a space that verifies its pages starts with its author as the steward, unverified.</summary>
-public static class PageVerificationStart
-{
-    public static async Task StartAsync(ISession session, Page page, CancellationToken ct)
-    {
-        if (page.IsTemplate || (await session.GetAsync<Space>(page.SpaceId, ct))?.VerificationIntervalMonths is null)
-        {
-            return;
-        }
-        await session.SaveAsync(new PageVerification { PageId = page.Id, StewardId = page.OwnerId }, ct);
-    }
-}

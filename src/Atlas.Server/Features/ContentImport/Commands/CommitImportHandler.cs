@@ -132,7 +132,7 @@ public sealed class CommitImportHandler
                     map = new WikiImportPage { Id = Guid.NewGuid(), SourceId = batch.SourceId, SourcePath = plan.Source.Path, PageId = page.Id };
                     await m_session.SaveAsync(map, ct);
                     await TagAsync(page, plan.Source.Tags.Select(name => tagIds[name.ToLowerInvariant()]), actor, ct);
-                    await PageVerifications.Commands.PageVerificationStart.StartAsync(m_session, page, ct);
+                    await PageVerifications.Commands.PageVerificationArrival.StartAsync(m_session, [page], page.OwnerId, ct);
                 }
                 else
                 {

@@ -105,7 +105,7 @@ public sealed class CreatePageHandler
             : null;
         if (decoration is not null)
             await m_session.SaveAsync(decoration, ct);
-        await PageVerifications.Commands.PageVerificationStart.StartAsync(m_session, page, ct);
+        await PageVerifications.Commands.PageVerificationArrival.StartAsync(m_session, [page], page.OwnerId, ct);
         // The insert gets its SortOrder and writes the organization revision with the actor set by LockActorAsync (ContentRowEffects).
         await m_session.FlushAsync(ct);
         if (parent is not null)
