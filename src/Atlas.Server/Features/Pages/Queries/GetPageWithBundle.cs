@@ -36,7 +36,7 @@ public sealed record PageLiveStateRead(PageLiveState? Live);
 /// </summary>
 public sealed class GetPageWithBundleHandler(PageReader reader, PersonalPageGuard personal, PageTagStore tags,
     GetPageConnectionsHandler connections, ContactDirectory contacts, ResolvePageReferencesHandler references, ISession session,
-    WatchCollaborationHandler watch, PageGate gate)
+    WatchCollaborationHandler watch, PageGate gate, PageVerifications.PageVerificationReader verifications)
 {
     private const int MaxStateBytes = 4 * 1024 * 1024;
 
@@ -47,6 +47,7 @@ public sealed class GetPageWithBundleHandler(PageReader reader, PersonalPageGuar
         var shown = PersonalPageGuard.HasPersonalState(opened);
         var (contactIds, pageIds) = PageBundle.ReferencedIds(page.ContentJson);
         pageIds.Remove(page.Id);
+        var verification = await Part(() => verifications.ReadAsync(page.Id, page.PublishedVersion, ct));
         return PageView.From(page) with
         {
             Bundle = new PageBundle(
@@ -56,6 +57,11 @@ public sealed class GetPageWithBundleHandler(PageReader reader, PersonalPageGuar
                 contactIds.Count is 0 or > 200 ? null : await Part(async () => new LiveContactsResult(await contacts.LiveAsync(actor, contactIds, ct))),
                 pageIds.Count is 0 or > ResolvePageReferencesHandler.MaxIds ? null : await Part(() => references.ResolveAsync(actor, pageIds, ct)),
                 await Part(() => CollaborationAsync(opened, ct)))
+            {
+                Verification = verification,
+                Readers = verification is null || verification.State == PageVerifications.Domain.PageVerificationStates.Off
+                    ? null : await verifications.ReadersAsync(page.Id, ct)
+            }
         };
     }
 

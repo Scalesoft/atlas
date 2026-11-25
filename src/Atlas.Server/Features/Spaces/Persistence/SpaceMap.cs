@@ -26,5 +26,6 @@ public sealed class SpaceMap : ClassMapping<Space>
         Property(x => x.PurgedAt, m => m.Type(NHibernateUtil.UtcDateTime));
         Property(x => x.CommentsEnabled);
         Property(x => x.PublicationMode, m => m.Type<EnumStringType<Features.Pages.Domain.PublicationMode>>());
+        Property(x => x.VerificationIntervalMonths);
     }
 }

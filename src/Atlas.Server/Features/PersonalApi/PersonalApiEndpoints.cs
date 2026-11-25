@@ -1,3 +1,5 @@
+using Atlas.Server.Features.PageVerifications;
+using Atlas.Server.Features.PageVerifications.Queries;
 using Atlas.Server.Features.ApiActivity;
 using Atlas.Server.Features.Collaboration;
 using Atlas.Server.Features.PageHistory.Commands;
@@ -103,7 +105,10 @@ public static class PersonalApiEndpoints
                 {
                     throw new ApiException(400, "format je \"markdown\", nebo chybí.", "invalid_argument");
                 }
-                var page = await bus.InvokeAsync<PageDto>(new GetPage(id), ct);
+                var page = await bus.InvokeAsync<PageDto>(new GetPage(id), ct) with
+                {
+                    Verification = await bus.InvokeAsync<PageVerificationView>(new GetPageVerification(id), ct)
+                };
                 return Results.Ok(format == "markdown" ? page with { Source = PageMarkdownSource.From(page) } : page);
             })
             .WithName("GetPage").WithSummary("Get a page according to the owner's current access. With format=markdown the answer adds source: the page as " +

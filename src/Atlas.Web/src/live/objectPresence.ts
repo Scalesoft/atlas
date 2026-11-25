@@ -1,3 +1,4 @@
+import { userColor } from "./collaboratorColors";
 import type { ObjectPresence } from "./viewSession";
 import t from "../i18n/shell";
 
@@ -53,10 +54,7 @@ export function presenceActivity(name: string, viewTitle: string | null) {
   return viewTitle ? t.presence.via(name, viewTitle) : t.presence.elsewhere(name);
 }
 
-// Mirrors ViewSessions on the server (palette and the first four bytes of the Guid, which are the id's first group), so a
-// person has one colour in pages (their caret), on boards and on the cards of objects, also where no presence message comes.
-const palette = ["#c34e62", "#228175", "#457b9d", "#9c683e", "#8556e7", "#ae5f05", "#027cbb", "#b63bc9", "#12863d", "#dc2626"];
-export function userColor(userId: string) {
-  const first = Number.parseInt(userId.slice(0, 8), 16);
-  return palette[(Number.isFinite(first) ? first : 0) % palette.length]!;
-}
+// The colour of an account where no presence message comes (history, cards of objects): "Automaticky" of the one palette, the server's
+// starting point (CollaboratorPalette.Auto) before it moves a colour aside for someone present, or the person's own choice, which
+// only a live page or board knows (the stamped colour of the presence message wins there).
+export { userColor };

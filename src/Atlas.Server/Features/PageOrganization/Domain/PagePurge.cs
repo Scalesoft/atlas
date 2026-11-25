@@ -49,6 +49,7 @@ public static class PagePurge
             DELETE FROM "PagePdfExport" WHERE "PageId" = {GuidList.Any(":pages")};
             DELETE FROM "PageTag" WHERE "PageId" = {GuidList.Any(":pages")};
             DELETE FROM "PageDecoration" WHERE "PageId" = {GuidList.Any(":pages")};
+            DELETE FROM "PageVerification" WHERE "PageId" = {GuidList.Any(":pages")};
             DELETE FROM "PageView" WHERE "PageId" = {GuidList.Any(":pages")};
             DELETE FROM "CollaborationUpdate" WHERE "PageId" = {GuidList.Any(":pages")};
             DELETE FROM "CollaborationSecretReference" WHERE "PageId" = {GuidList.Any(":pages")};

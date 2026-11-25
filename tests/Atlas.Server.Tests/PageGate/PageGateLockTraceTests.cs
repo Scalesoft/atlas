@@ -172,10 +172,11 @@ public sealed class PageGateLockTraceTests
             Page FOR SHARE
             Space FOR UPDATE
             insert Page
+            read Space
             Page FOR SHARE
             read Page
-            """, 24); // 26 + the read of the parent decoration, which the new page inherits (plan 3.5 E), which takes no lock; - 3: the
-            // read-back keeps the locked account
+            """, 25); // 26 + the read of the parent decoration, which the new page inherits (plan 3.5 E), which takes no lock; - 3: the
+            // read-back keeps the locked account; + 1 (5.2): the space's verification interval, whether the new page is verified
         Expect("AuthorizeAttachmentUpload", await f.RecordAsync(f.Writer, new AuthorizeAttachmentUpload(page.Id)), """
             advisory shared
             read Page
@@ -221,12 +222,14 @@ public sealed class PageGateLockTraceTests
             UserAccount FOR SHARE
             Page FOR UPDATE
             """);
+        // 5.2: the tree also reads the verification states of the space's pages (read Page), without a lock.
         Expect("GetPageTree", await f.RecordAsync<PageTreeDto>(f.Reader, new GetPageTree(f.SpaceId)), """
             advisory shared
             read Space
             Space FOR SHARE
             UserAccount FOR SHARE
             set actor
+            read Page
             """);
 
         Assert.True(m_differences.Count == 0, string.Join(Environment.NewLine + Environment.NewLine, m_differences));
@@ -323,12 +326,17 @@ public sealed class PageGateLockTraceTests
 
             read Space
             """;
+        // 5.2: the MCP page also carries its verification, one statement over the page, its space and the verification row.
+        const string readAndVerification = readAndSpace + """
+
+            read Page
+            """;
 
         // The working revision is the published one: its version is the publication's, without a statement.
         Expect("GetPage by an editor", await f.RecordAsync<PageDto>(f.Writer, new GetPage(page.Id)), readLadder, 12);
-        Expect("GetMcpPage, the working revision", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndSpace, 15);
-        Expect("GetMcpPage, the publication by an editor", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, false)), readAndSpace, 15);
-        Expect("GetMcpPage, the publication by a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, false)), readAndSpace, 15);
+        Expect("GetMcpPage, the working revision", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndVerification, 16);
+        Expect("GetMcpPage, the publication by an editor", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, false)), readAndVerification, 16);
+        Expect("GetMcpPage, the publication by a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, false)), readAndVerification, 16);
         // A reader is decided and then refused the working revision, before any revision is read; the space lock tells whether the page is live (3.6-I).
         Expect("GetMcpPage, the working revision refused to a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, true), 404), readLadder, 9);
         Expect("GetMcpEditBase", await OverMcpAsync<McpEditBase>(f, f.Writer, agent, new GetMcpEditBase(page.Id, 1, MarkdownLinkRequest.None)), readLadder, 12);
@@ -342,7 +350,7 @@ public sealed class PageGateLockTraceTests
         await f.As<PageDto>(f.Writer, saved);
         // The working revision is ahead of the publication now: the version of the publication is one statement more.
         Expect("GetPage by an editor, with unpublished changes", await f.RecordAsync<PageDto>(f.Writer, new GetPage(page.Id)), readLadder, 13);
-        Expect("GetMcpPage, the working revision with unpublished changes", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndSpace, 16);
+        Expect("GetMcpPage, the working revision with unpublished changes", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndVerification, 17);
         // The assistant's preview of a publication reads the working revision.
         Expect("PreviewMcpPublish", await OverMcpAsync<McpPublishSummary>(f, f.Writer, agent, new PreviewMcpPublish(page.Id, 2, null)), readAndSpace, 18);
         Expect("SavePage without a change", await f.RecordAsync<PageDto>(f.Writer, saved with { Request = saved.Request with { ExpectedVersion = 2 } }), """

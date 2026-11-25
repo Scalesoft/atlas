@@ -5,6 +5,26 @@ while it is below 1.0.0, a minor release may contain breaking changes, which are
 
 ## Unreleased
 
+### y-tiptap 3.3 bez patche (Atlas 5.2)
+
+- **Breaking:** `@tiptap/y-tiptap` 3.3.1 a bez pnpm patche. Kurzory spolupracovníků kreslí a vlastní kurzor publikuje
+  `CollaborationCarets` (`@atlas/markdown/collaboration/signalr`, jméno rozšíření `collaborationCaret` a volba `provider` zůstaly):
+  kurzor, který předběhne svou editaci, zůstane na posledním místě, kam šel vyhodnotit; překreslují jen cizí změny, nejvýš jednou za
+  snímek, a nejdřív se přečte výběr, který prohlížeč ještě nenahlásil; vlastní kurzor se zveřejní až po první klávese nebo kliknutí.
+  Peer `@tiptap/extension-collaboration-caret` odpadl.
+- Vzdálená změna nahrazuje jen bloky, které změnila (upstream). `KeepingCollaboration` (místo `Collaboration` v `useCollab`) zajistí,
+  že plugin registrovaný později (bublinové menu, úchyt, živý zápis agenta) dokument znovu nepostaví z Yjs.
+- `CollaborationRemoteSelection` odstraněno: pád „Position N out of range“ opravil y-tiptap 3.3; nahrané stavy zůstaly jako regresní test.
+- Materializer corpus: hook, Y.Map a holá hodnota mezi potomky odstavce y-tiptap 3.3 přeskočí; editor je nikdy nezapíše a server je dál
+  odmítá (`refused`).
+
+### Tiptap 3.35 a ProseMirror (Atlas 5.2)
+
+- Tiptap 3.35.0 (peer `^3.35.0`), `prosemirror-model` 1.25.13 a `prosemirror-view` 1.43.1 přes `@tiptap/pm`.
+- Pravidla psaní (input rules) vkládají napsaný znak do dokumentu dřív, než pravidlo běží: `range` pravidla sahá až za něj. Ctrl+Z po automatické konverzi (`:smile:`, `$x$ `) vrací text tak, jak byl napsán, včetně spouštěcího znaku.
+- Manifest schématu: atribut s vlastním validátorem nese `validated: true`. ProseMirror 1.25.12 ho spouští při každém vytvoření uzlu s explicitní hodnotou, takže editor takový uzel z neplatné hodnoty nepostaví a y-tiptap ho smaže ze sdíleného dokumentu; `YjsDocumentMaterializer` ji odmítne stejně (`InvalidAttributeValue`).
+- První Enter v hledání vybere zvýrazněný první výsledek, přeskakovat ho přestalo (Tiptap 3.33).
+
 ### Neutrální názvy (Atlas 5.0)
 
 - **Breaking:** formát rich dokumentu je `atlas-rich` (`RICH_FORMAT` z `./core`); vše, co píše, ho zapisuje. Čtení, validace, migrace a koncepty dál přijímají `scalesoft-rich` (`LEGACY_RICH_FORMAT`, `isRichFormat`, vstupní typy `MarkdownRichInput` a `MarkdownValueInput`).

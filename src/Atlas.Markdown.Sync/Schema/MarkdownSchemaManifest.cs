@@ -43,7 +43,8 @@ public sealed class MarkdownSchemaManifest
             .Select(item => new SchemaAttribute(item.attribute.GetProperty("name").GetString()!, item.owner,
                 item.attribute.TryGetProperty("default", out var fallback) ? fallback.Clone() : null,
                 ValueConstraint.Parse(item.attribute.GetProperty("constraint")),
-                item.attribute.GetProperty("enforcement").GetString() == "server"))
+                item.attribute.GetProperty("enforcement").GetString() == "server",
+                item.attribute.TryGetProperty("validated", out var validated) && validated.GetBoolean()))
             .ToArray();
         string? OwnerOf(JsonElement element) => element.TryGetProperty("owner", out var owner) ? owner.GetString() : null;
 
@@ -177,7 +178,8 @@ public sealed record MarkdownSchemaPluginInfo(string Id, int Version, IReadOnlyL
 
 /// <param name="Default">The default value, or null when the attribute is required (no default).</param>
 /// <param name="ServerRule">True where the editor stores the value unvalidated and only servers enforce the constraint.</param>
-internal sealed record SchemaAttribute(string Name, string? Owner, JsonElement? Default, ValueConstraint Constraint, bool ServerRule);
+/// <param name="Validated">True where the attribute declares its own validator, which ProseMirror (1.25.12 and later) runs whenever it creates a node or mark with an explicit value: the editor builds no such node from an invalid value, and y-tiptap deletes the element from the shared document.</param>
+internal sealed record SchemaAttribute(string Name, string? Owner, JsonElement? Default, ValueConstraint Constraint, bool ServerRule, bool Validated = false);
 
 internal sealed record SchemaNode(string Name, string? Owner, bool IsText, bool IsInline, string ContentExpression, Regex? Content,
     FrozenSet<string> AllowedMarks, FrozenDictionary<string, SchemaAttribute> Attributes)

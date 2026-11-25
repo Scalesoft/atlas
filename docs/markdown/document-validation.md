@@ -72,6 +72,11 @@ attributes the editor stores unvalidated: their JSON type (lists' `tight` and `s
 names its data validator with `dataValidator` (`defineMarkdownBlockModule`); without one the name is
 `<id>:<name>`, which a server must register.
 
+An attribute that declares its own validator is marked `"validated": true` in the manifest: ProseMirror (1.25.12 and later)
+runs that validator whenever it creates a node or mark with an explicit value, so the editor builds no such node from an invalid
+value, and y-tiptap deletes the element from the shared document. `YjsDocumentMaterializer` refuses such a value for the same
+reason (it sees the value alone, as the editor's validator does).
+
 The manifest test fails on an attribute without a declaration. Agreement of the declarations with the editor is proven
 by the verdict corpus: the same test generates about 1,500 variants of every node, mark, attribute and data field
 (boundaries, wrong types, URL kinds, plugin versions, table geometry, depth), opens each through the real editor

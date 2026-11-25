@@ -69,7 +69,12 @@ describe('image source policy', () => {
   it('rejects a direct image transaction even when commands bypass JSON conversion', () => {
     const { editor } = setup({ imageSources: { allowedOrigins: [] } })
     const before = editor.state.doc
-    editor.view.dispatch(editor.state.tr.setNodeMarkup(0, undefined, { ...before.firstChild!.attrs, src: 'https://evil.test/image' }))
+    // ProseMirror validates the attributes when it creates a node (prosemirror-model 1.25.12), before any transaction exists...
+    expect(() => editor.state.tr.setNodeMarkup(0, undefined, { ...before.firstChild!.attrs, src: 'https://evil.test/image' })).toThrow()
+    // ...and the transaction filter still refuses a node whose attributes were changed after that check.
+    const tr = editor.state.tr.setNodeMarkup(0, undefined, { ...before.firstChild!.attrs })
+    ;(tr.doc.firstChild!.attrs as Record<string, unknown>).src = 'https://evil.test/image'
+    editor.view.dispatch(tr)
     expect(editor.state.doc).toBe(before)
   })
   it('checks only the top-level blocks a transaction makes', () => {
@@ -81,7 +86,10 @@ describe('image source policy', () => {
     expect(editor.state.doc.lastChild!.textContent).toBe('typed')
     // ...while a block the transaction makes is checked.
     const before = editor.state.doc
-    editor.view.dispatch(editor.state.tr.insert(0, editor.schema.nodes.image.create({ src: 'https://evil.test/new' })))
+    expect(() => editor.schema.nodes.image.create({ src: 'https://evil.test/new' })).toThrow()
+    const created = editor.schema.nodes.image.create({ src: '/new' })
+    ;(created.attrs as Record<string, unknown>).src = 'https://evil.test/new'
+    editor.view.dispatch(editor.state.tr.insert(0, created))
     expect(editor.state.doc).toBe(before)
   })
   it('revalidates mutable image attrs after an earlier valid transaction', () => {

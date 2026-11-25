@@ -274,6 +274,10 @@ public sealed class ApiTokenRightsTests : IClassFixture<ApiTokenRightsTests.Toke
             "PUT /api/v1/contacts/{id:guid}/skills",
             "POST /api/v1/skills/topics/{id:guid}/merge",
             "PUT /api/v1/skills/topics/{id:guid}/parents",
+            // 5.2 Ověřený obsah: verify / steward / interval of a page, „Nahlásit neaktuální“, the bulk actions of Stav obsahu.
+            "PUT /api/v1/pages/{id:guid}/verification",
+            "POST /api/v1/pages/{id:guid}/verification/report",
+            "POST /api/v1/spaces/{spaceId:guid}/content-health/bulk",
         }.Order(StringComparer.Ordinal), mutations.Select(e => e.Metadata.GetMetadata<HttpMethodMetadata>()!.HttpMethods.Single() + " " + e.RoutePattern.RawText).Order(StringComparer.Ordinal));
         Assert.All(mutations, endpoint => Assert.Contains(endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>(),
             data => data.Policy == PersonalApiEndpoints.WritePolicy));

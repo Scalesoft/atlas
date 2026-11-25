@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
@@ -65,15 +64,12 @@ function installed(name: string, from: string, entry = name) {
   return { version: JSON.parse(readFileSync(resolve(dir, "package.json"), "utf8")).version as string, file: resolve(dir, "package.json") };
 }
 
-/** The packages Atlas.Yjs ports (src/Atlas.Yjs/README.md), as installed here, and the hash of Atlas's y-tiptap patch. */
+/** The packages Atlas.Yjs ports (src/Atlas.Yjs/README.md), as installed here. */
 function installedVersions() {
   const here = resolve(__dirname, "liveWrite.ts");
   const yjs = installed("yjs", here), yTiptap = installed("@tiptap/y-tiptap", here), pm = installed("@tiptap/pm", here, "@tiptap/pm/tables");
-  const patches = resolve(__dirname, "../../patches");
-  const patch = readdirSync(patches).filter(file => file.startsWith("@tiptap__y-tiptap@"));
   return {
     yjs: yjs.version, lib0: installed("lib0", yjs.file).version, "@tiptap/y-tiptap": yTiptap.version,
-    "@tiptap/y-tiptap patch sha256": patch.map(file => createHash("sha256").update(readFileSync(resolve(patches, file))).digest("hex")).join(","),
     "prosemirror-model": installed("prosemirror-model", yTiptap.file).version, "prosemirror-tables": installed("prosemirror-tables", pm.file).version,
   };
 }
@@ -361,7 +357,7 @@ function writeCases({ cases, skipped }: Built, base: Base) {
 }
 
 describe("Atlas.Yjs writer fixtures", () => {
-  it.skipIf(run)("were recorded with the installed Yjs, y-tiptap (and its patch) and ProseMirror (else regenerate them)", () => {
+  it.skipIf(run)("were recorded with the installed Yjs, y-tiptap and ProseMirror (else regenerate them)", () => {
     expect(installedVersions()).toEqual(committed().versions);
   });
 

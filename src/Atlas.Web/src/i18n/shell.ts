@@ -7,6 +7,8 @@ import { translate, plural } from ".";
  */
 const cs = {
   common: {
+    verifiedPage: "Ověřená stránka",
+    verificationExpired: "Ověření stránky vypršelo",
     back: "Zpět",
     close: "Zavřít",
     open: "Otevřít",
@@ -16,6 +18,8 @@ const cs = {
     copyLink: "Kopírovat odkaz",
     notifications: "Oznámení",
     comments: "Komentáře",
+    discussion: "Diskuse",
+    discussionCount: (count: number, unread = 0) => count ? `Diskuse, komentářů: ${count}${unread ? `, nepřečtených: ${unread}` : ""}` : "Diskuse",
     pages: "Stránky",
     settings: "Nastavení",
     wikiAdmin: "Správa wiki",
@@ -467,6 +471,7 @@ const cs = {
       treeFilter: "Najít ve stromu prostoru",
       newPage: "Nová stránka v tomto prostoru",
       edit: "Upravit / zamknout stránku",
+      discussion: "Diskuse stránky (označený text se ocituje v novém komentáři)",
       findInPage: "Hledat ve stránce (boční panel; F3 a Shift F3 další a předchozí)",
     },
     w: {

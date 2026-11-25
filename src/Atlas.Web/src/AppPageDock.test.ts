@@ -8,7 +8,7 @@ import { useAiCapabilities } from "./composables/useAiCapabilities";
 import { useAssistant } from "./assistant/useAssistant";
 import { jsonResponse as response, memoryStorage, mountApp, quietRoutes, resetBrowser, routedFetch, sessionRoutes, type Route } from "./testing/appHarness";
 
-// The page dock of refresh 2.5 (board 03): Obsah · Hledat (3.5 J) · Historie · Přístup beside the article, remembered per account.
+// The page dock of refresh 2.5 (board 03): Obsah · Hledat (3.5 J) · Historie · Diskuse · Přístup beside the article, remembered per account.
 vi.mock("./components/DocumentEditor.vue", () => ({ __esModule: true, default: defineComponent({
   props: ["value", "readonly"], emits: ["ready", "collaborationStatus"],
   setup(_props, { emit, expose }) {
@@ -56,7 +56,7 @@ describe("page dock", () => {
   it("opens with Obsah beside the article on a wide screen, without taking the focus, and lists the page headings", async () => {
     await start();
     expect(dock()).not.toBeNull();
-    expect([...document.querySelectorAll("[role=tab]")].map((button) => button.textContent?.trim())).toEqual(["Obsah", "Hledat", "Historie", "Přístup"]);
+    expect([...document.querySelectorAll("[role=tab]")].map((button) => button.textContent?.trim())).toEqual(["Obsah", "Hledat", "Historie", "Diskuse", "Přístup"]);
     expect(tab("Obsah")!.getAttribute("aria-selected")).toBe("true");
     expect(dock()!.contains(document.activeElement)).toBe(false);
     await vi.waitFor(() => expect([...dock()!.querySelectorAll(".page-outline-entry")].map((entry) => entry.textContent)).toEqual(["Úvod", "Postup"]), { timeout: 4000 });
@@ -130,9 +130,19 @@ describe("page dock", () => {
     expect(dock()!.querySelector(".page-search-place")?.textContent).toBe("Postup");
   });
 
+  it("opens the page's Diskuse in the dock with Alt C, also with the focus in the page, and closes it with Alt C again", async () => {
+    await start();
+    const press = () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", code: "KeyC", altKey: true, bubbles: true, cancelable: true }));
+    press();
+    await vi.waitFor(() => expect(tab("Diskuse")!.getAttribute("aria-selected")).toBe("true"), { timeout: 4000 });
+    await vi.waitFor(() => expect(dock()!.querySelector("[data-comment-thread]")).not.toBeNull(), { timeout: 4000 });
+    press();
+    await vi.waitFor(() => expect(dock()).toBeNull(), { timeout: 4000 });
+  });
+
   it("offers no history tab to a reader and does not open by itself on a narrow screen", async () => {
     await start("Reader");
-    expect([...document.querySelectorAll("[role=tab]")].map((button) => button.textContent?.trim())).toEqual(["Obsah", "Hledat", "Přístup"]);
+    expect([...document.querySelectorAll("[role=tab]")].map((button) => button.textContent?.trim())).toEqual(["Obsah", "Hledat", "Diskuse", "Přístup"]);
     wrapper!.unmount(); wrapper = undefined; useWorkspacePanel().reset(); document.body.innerHTML = "";
     await start("Writer", 1100);
     expect(dock()).toBeNull();

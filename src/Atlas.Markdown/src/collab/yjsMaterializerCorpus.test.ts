@@ -23,7 +23,6 @@ import { createPagesPlugin } from '../plugins/pages'
 import { createSecretsPlugin } from '../plugins/secrets'
 import { createTocPlugin } from '../plugins/toc'
 import { createYouTrackPlugin } from '../plugins/youtrack'
-import { CollaborationRemoteSelection } from './remoteSelection'
 import { CollaborationTableRepair } from './tableRepair'
 // Loaded up front: the secret and concealed views import it lazily, which would outlive the test.
 import '../concealment'
@@ -95,7 +94,7 @@ function open(clientID: number, payloads: readonly Uint8Array[] = []): Client {
   const client: Client = { doc, editor: null as unknown as Editor, local: [] }
   doc.on('update', (payload: Uint8Array, origin: unknown) => { if (origin !== REMOTE) client.local.push(payload) })
   const adapter = registerCollaborationAdapter(publish => ({
-    extensions: [Collaboration.configure({ document: doc, field: 'default' }), CollaborationRemoteSelection, CollaborationTableRepair],
+    extensions: [Collaboration.configure({ document: doc, field: 'default' }), CollaborationTableRepair],
     isRemoteTransaction: () => false,
     attachEditor: () => publish({ hydrated: true, writable: true }),
     detachEditor() {}, destroy() {},
@@ -505,9 +504,12 @@ async function drafts(): Promise<Draft[]> {
   refusedRaw('text-in-list', 'text directly in a bullet list', fragment => fragment.insert(0, [element('bulletList', [text(['x'])])]))
   refusedRaw('top-level-list-item', 'a list item at the top level', fragment => fragment.insert(0, [element('listItem', [element('paragraph', [text(['x'])])])]))
   refusedRaw('text-at-root', 'a text directly in the fragment', fragment => fragment.insert(0, [text(['x'])]))
-  refusedRaw('hook', 'an XmlHook inside a paragraph', fragment => fragment.insert(0, [element('paragraph', [new Y.XmlHook('hook')])]))
-  refusedRaw('map-child', 'a Y.Map inside a paragraph', fragment => fragment.insert(0, [element('paragraph', [new Y.Map()])]))
-  refusedRaw('any-child', 'a plain value inside a paragraph', fragment => fragment.insert(0, [element('paragraph', ['loose'])]))
+  refusedRaw('hook', 'an XmlHook inside a paragraph', fragment => fragment.insert(0, [element('paragraph', [new Y.XmlHook('hook')])]),
+    'a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)')
+  refusedRaw('map-child', 'a Y.Map inside a paragraph', fragment => fragment.insert(0, [element('paragraph', [new Y.Map()])]),
+    'a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)')
+  refusedRaw('any-child', 'a plain value inside a paragraph', fragment => fragment.insert(0, [element('paragraph', ['loose'])]),
+    'a child the editor never writes (y-tiptap 3.3 skips it and shows the paragraph without it)')
   refusedRaw('embed', 'an embed inside a text', fragment => {
     const ytext = text(['ab'])
     fragment.insert(0, [element('paragraph', [ytext])])

@@ -2,7 +2,12 @@
 import { ref } from "vue";
 import type { CommentApi, CommentPage, ObjectComment } from "../../comments/commentApi";
 import type { ObjectListener, ViewSessions } from "../../live/viewSession";
+import { quoteMarkdown, requestedQuote } from "../../comments/commentFocus";
 import CommentThread from "../comments/CommentThread.vue";
+import PageSidePanel from "../PageSidePanel.vue";
+import PageDiscussionPeek from "../comments/PageDiscussionPeek.vue";
+import type { DiscussionBubble } from "../../comments/pageDiscussionFeed";
+import AtlasIcon from "../AtlasIcon.vue";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 import { Button } from "../ui/button";
@@ -70,6 +75,30 @@ const emptyApi: CommentApi = {
 };
 const thread = ref(0);
 const anchorShown = ref("");
+// The page's Diskuse in its dock: the selected text of the sample paragraph is what App's Alt C hands over (`requestedQuote`).
+const article = ref<HTMLElement>();
+const dock = ref(0);
+// The peek under the avatars and the dock take turns: a bubble flies in for a colleague's comment while the discussion is closed;
+// opening the discussion sends the bubbles toward the panel, which slides in from the right.
+const dockOpen = ref(false);
+const bubbles = ref<DiscussionBubble[]>([]);
+const unread = ref(0);
+function peekWrites() {
+  colleagueWrites();
+  if (dockOpen.value) return;
+  unread.value++;
+  bubbles.value = [...bubbles.value, { id: `peek-${next++}`, authorId: "00000000-0000-0000-0000-0000000000b2", authorName: "Petr Svoboda", text: "Souhlasím, čtvrtek je lepší" }].slice(-5);
+}
+async function peekReply(markdown: string) { await api.post("gallery-page", markdown); }
+function toggleDock() {
+  dockOpen.value = !dockOpen.value;
+  if (dockOpen.value) { bubbles.value = []; unread.value = 0; }
+}
+function quoteSelection() {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || !article.value?.contains(selection.anchorNode)) return;
+  requestedQuote.value = quoteMarkdown(selection.toString());
+}
 </script>
 
 <template>
@@ -92,6 +121,26 @@ const anchorShown = ref("");
         <CommentThread object-id="gallery-empty-page" title="Komentáře" :api="emptyApi" :lazy="false" />
       </div>
     </SettingsSection>
+    <SettingsSection title="Diskuse stránky v doku"
+      description="Stránka má tu samou diskusi jako tabule: záložka „Diskuse“ v doku stránky (PageSidePanel, tab comments) je stejné CommentThread nad stejným objektem a stejnou relací pohledu, žádný druhý chat. Otevře ji bublina u avatarů s počtem komentářů (zvýrazněným, dokud nepřečtete kolegův nový) a Alt C; kurzor jde rovnou do pole, Escape zavře dok a vrátí kurzor do textu. Pole odpovědi (v panelu i v bublině nahoře) je jedno: odesílá Enter, Shift+Enter píše nový řádek a papírové letadélko vedle pole to říká těm, kdo to nevědí (tlumené u prázdného pole, akcentové s textem, při odeslání popojede). Je-li ve stránce označený text, nový komentář začne jeho citací (Markdown „> …“), v galerii tlačítkem pod odstavcem. Oproti sekci pod obsahem nezabírá místo článku a zůstane otevřená při čtení.">
+      <div class="comments-example-tools">
+        <Button variant="outline" size="sm" type="button" @click="quoteSelection">Citovat označený text</Button>
+        <Button variant="ghost" size="sm" type="button" @click="dock++">Znovu otevřít</Button>
+        <Button variant="outline" size="sm" type="button" data-gallery-peek-write @click="peekWrites">Kolega napíše (bublina nahoře)</Button>
+        <span class="comments-example-anchor">
+          <Button variant="ghost" size="icon-sm" type="button" class="comments-example-bubble-button" :aria-pressed="dockOpen" :aria-label="'Diskuse'" @click="toggleDock"><AtlasIcon name="quote" />
+            <span v-if="unread" class="comments-example-unread">{{ unread }}</span></Button>
+          <PageDiscussionPeek :bubbles="bubbles" :docked="dockOpen" :ttl="8000" :reply="peekReply" @open="toggleDock" @dismiss="bubbles = bubbles.filter(item => item.id !== $event)" />
+        </span>
+      </div>
+      <p ref="article" class="comments-example-article">Zálohy běží každou noc ve dvě hodiny a obnova z nich se zkouší jednou za čtvrtletí. Označte část věty a použijte tlačítko výše.</p>
+      <Transition name="comments-example-dock">
+      <div v-if="dockOpen" class="comments-example-frame comments-example-dock">
+        <PageSidePanel :key="dock" tab="comments" page-id="gallery-page" space-id="gallery-space" page-title="Provozní příručka" :document-root="null" :version="3" :is-published="true"
+          :published-version="3" :comment-api="api" :views="views" />
+      </div>
+      </Transition>
+    </SettingsSection>
   </SettingsPage>
 </template>
 
@@ -100,4 +149,14 @@ const anchorShown = ref("");
 .comments-example-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
 .comments-example-anchor { color: var(--muted); font-size: 13px; }
 .comments-example-frame { max-width: 720px; }
+.comments-example-article { max-width: 720px; margin: 0 0 12px; font-size: 14px; line-height: 1.6; }
+/* The dock's own width, as WorkspaceSidePanel gives it. */
+.comments-example-anchor { position: relative; display: inline-flex; margin-left: auto; }
+.comments-example-bubble-button { position: relative; }
+.comments-example-bubble-button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.comments-example-unread { position: absolute; top: -3px; right: -3px; min-width: 16px; padding: 0 4px; border-radius: 999px; background: var(--accent); color: var(--on-accent, #fff); font-size: 10.5px; font-weight: 650; line-height: 16px; text-align: center; }
+/* The panel slides in from its edge (st-slide-in); reduced motion: the distance is 0, only the fade stays. */
+.comments-example-dock-enter-active { animation: st-slide-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
+.comments-example-dock-leave-active { animation: st-slide-in var(--atlas-motion-base) var(--atlas-ease-in) reverse both; }
+.comments-example-dock { max-width: 400px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 </style>

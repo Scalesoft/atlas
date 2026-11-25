@@ -18,8 +18,8 @@ const author = (type: unknown) => type instanceof Y.XmlElement ? type._item?.id.
 
 /**
  * The Yjs element of the table at `pos`, by its path of child indexes (tables sit in block containers, whose Yjs children are
- * their blocks one to one). Not by the binding's node identity: a remote change replaces only what changed (the y-tiptap
- * patch), so an untouched table keeps its node and a plugin's local addition to a new one (cell ids) gives it another.
+ * their blocks one to one). Not by the binding's node identity: a remote change replaces only the blocks it changed (y-tiptap
+ * 3.3), so an untouched table keeps its node and a plugin's local addition to a new one (cell ids) gives it another.
  */
 function tableElementAt(binding: SyncBinding, doc: ProseMirrorNode, pos: number, table: ProseMirrorNode): Y.XmlElement | undefined {
   const $pos = doc.resolve(pos)

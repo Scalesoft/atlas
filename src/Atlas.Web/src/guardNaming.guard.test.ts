@@ -10,7 +10,6 @@ const NOT_GUARDS: Record<string, string> = {
   "components/dev/AiGalleryPage.test.ts": "mounts every example one by one; too slow for every change, runs with the gallery",
   "components/dev/RefreshGalleryPage.test.ts": "mounts every example one by one; too slow for every change, runs with the gallery",
   "wikiImportGolden.test.ts": "reads fixtures, not sources",
-  "server/yjsWriterFixtures.test.ts": "lists patches/ for the y-tiptap patch's hash, not sources; package drift is the full suite's to catch",
 };
 
 describe("test files that scan directories", () => {

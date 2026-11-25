@@ -72,6 +72,15 @@ function announce(note = pear, release = note.version, since?: string) {
     </p>
     <WhatsNewPage :key="`t${run}`" current="5.1.0" since="5.0.0" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" />
 
+    <h3>Živé ukázky v kartách: Atlas 5.2 Unerring Ume</h3>
+    <p class="whats-new-example-note">
+      Ověřený obsah a čtenost (<code>demos: verify health discussion color - -</code>). Švestka jako přesný drátěný model: tři body
+      stoupají po loxodromách do jamky u stopky a řezy se rozvinou z bodu, kudy první z nich prošel. Ukázky: čip ověření u titulku
+      přejde z Ověřeno přes připomínku garantovi do Ověření vypršelo a garantka ho znovu ověří; Stav obsahu napočítá stavy, doplní čtenost
+      a seřadí stránky (nahoře čtené a k ověření); nový komentář v diskusi stránky s rychlou odpovědí, která odletí k doku; Moje barva.
+    </p>
+    <WhatsNewPage :key="`u${run}`" current="5.2.0" since="5.1.1" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" />
+
     <h3>Vymyšlená budoucí verze: Atlas 4.2 Witty Watermelon</h3>
     <p class="whats-new-example-note">Stejné komponenty nad jiným popisem verze: jiné kódové jméno, značka, datum, zvýraznění i dvě opravné verze.</p>
     <WhatsNewPage :key="`q${run}`" :notes="[...futurePatches, watermelon]" current="4.2.2" since="4.1.0" :dark="dark" @close="log = 'Pokračovat do Atlasu.'" />

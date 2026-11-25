@@ -131,7 +131,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -232,7 +233,8 @@
             "nullable": true,
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "aliases",
@@ -244,7 +246,8 @@
             "singleLine": true,
             "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,127}(?:,[A-Za-z0-9][A-Za-z0-9._-]{0,127})*)?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "textAlign",
@@ -276,7 +279,8 @@
             ],
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "stateLabel",
@@ -287,7 +291,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "direction",
@@ -301,7 +306,8 @@
               "outbound"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "system",
@@ -312,7 +318,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "party",
@@ -323,7 +330,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "partyContactId",
@@ -335,7 +343,8 @@
             "singleLine": true,
             "pattern": "^(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "from",
@@ -347,7 +356,8 @@
             "singleLine": true,
             "pattern": "^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}#[A-Za-z0-9][A-Za-z0-9._-]{0,127})?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "level",
@@ -451,7 +461,8 @@
             "nullable": true,
             "imageSources": {}
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "alt",
@@ -494,7 +505,8 @@
             "kind": "structured",
             "validator": "imagePresentation"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -517,7 +529,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -549,7 +562,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -599,7 +613,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "colspan",
@@ -695,7 +710,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "colspan",
@@ -796,7 +812,8 @@
               "caution"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -850,7 +867,8 @@
             "kind": "structured",
             "validator": "attachment"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -878,7 +896,8 @@
             "kind": "structured",
             "validator": "contacts"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -906,7 +925,8 @@
             "kind": "structured",
             "validator": "contact"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -947,7 +967,8 @@
             "kind": "structured",
             "validator": "chart"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -971,7 +992,8 @@
               "button"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "reconcealAfterMs",
@@ -982,7 +1004,8 @@
             "maximum": 600000,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "completeAtPercent",
@@ -993,7 +1016,8 @@
             "maximum": 100,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1018,7 +1042,8 @@
             "kind": "structured",
             "validator": "diagram"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1042,7 +1067,8 @@
             "kind": "structured",
             "validator": "math"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1066,7 +1092,8 @@
             "kind": "structured",
             "validator": "math"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1092,7 +1119,8 @@
             "kind": "structured",
             "validator": "tableOfContents"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1138,7 +1166,8 @@
             "kind": "structured",
             "validator": "openapi"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1161,7 +1190,8 @@
             "singleLine": true,
             "maxLength": 4096
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "title",
@@ -1172,7 +1202,8 @@
             "singleLine": true,
             "maxLength": 4096
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "url",
@@ -1182,7 +1213,8 @@
             "policy": "http",
             "maxLength": 4096
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1203,7 +1235,8 @@
             "kind": "text",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "field",
@@ -1219,7 +1252,8 @@
               "notes"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "fields",
@@ -1228,7 +1262,8 @@
             "kind": "structured",
             "validator": "secretFields"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showCopy",
@@ -1236,7 +1271,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showDetails",
@@ -1244,7 +1280,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "autoHideSeconds",
@@ -1255,7 +1292,8 @@
             "maximum": 3600,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1276,7 +1314,8 @@
             "kind": "text",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "field",
@@ -1292,7 +1331,8 @@
               "notes"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "fields",
@@ -1301,7 +1341,8 @@
             "kind": "structured",
             "validator": "secretFields"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showCopy",
@@ -1309,7 +1350,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showDetails",
@@ -1317,7 +1359,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "autoHideSeconds",
@@ -1328,7 +1371,8 @@
             "maximum": 3600,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1350,7 +1394,8 @@
             "nullable": true,
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "key",
@@ -1361,7 +1406,8 @@
             "singleLine": true,
             "pattern": "^(?:[a-z0-9][a-z0-9.-]{0,95})?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "direction",
@@ -1374,7 +1420,8 @@
               "outbound"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "state",
@@ -1390,7 +1437,8 @@
               "not_applicable"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "stateLabel",
@@ -1400,7 +1448,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "date",
@@ -1411,7 +1460,8 @@
             "singleLine": true,
             "pattern": "^(?:[0-9]{4}-[0-9]{2}-[0-9]{2})?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "party",
@@ -1421,7 +1471,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "partyContactId",
@@ -1432,7 +1483,8 @@
             "singleLine": true,
             "pattern": "^(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "where",
@@ -1442,7 +1494,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "system",
@@ -1452,7 +1505,8 @@
             "maxLength": 200,
             "singleLine": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "requires",
@@ -1463,7 +1517,8 @@
             "singleLine": true,
             "pattern": "^(?:[a-z0-9][a-z0-9.-]{0,95}(?:@[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?(?:,[a-z0-9][a-z0-9.-]{0,95}(?:@[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?)*)?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1485,7 +1540,8 @@
             "nullable": true,
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "kind",
@@ -1496,7 +1552,8 @@
             "singleLine": true,
             "pattern": "^(?:[a-z][a-z0-9-]{0,39})?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1518,7 +1575,8 @@
             "nullable": true,
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1541,7 +1599,8 @@
             "singleLine": true,
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "key",
@@ -1552,7 +1611,8 @@
             "singleLine": true,
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "title",
@@ -1563,7 +1623,8 @@
             "singleLine": true,
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "url",
@@ -1573,7 +1634,8 @@
             "policy": "absolute-http",
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "state",
@@ -1585,7 +1647,8 @@
             "maxLength": 2000,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     }

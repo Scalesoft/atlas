@@ -20,3 +20,6 @@ public sealed record PageReadership(long Views, long Readers, long Secrets, IRea
     bool HasMore);
 public sealed record PopularPage(Guid PageId, string Title, long Views, long Readers);
 public sealed record PopularPages(IReadOnlyList<PopularPage> Items);
+/// <summary>5.2 (plan §5.2): the readership of the space's published pages the caller may read, over the period, for its editors and
+/// admins. Filter all or unread (no view in the period); cursor: NextCursor of the previous page.</summary>
+public sealed record GetSpaceReadership(Guid SpaceId, DateOnly From, DateOnly To, string? Filter = null, string? Cursor = null);

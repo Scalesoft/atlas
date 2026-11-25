@@ -59,6 +59,8 @@ import { liveAccount } from "./live/accountChannel";
 import { liveConnection } from "./live/liveConnection";
 import { pageTopic } from "./live/liveFeed";
 import { draftWording, pagePublicationApi, type PagePublication } from "./publishing/pagePublication";
+import type { PageVerification as PageVerificationState } from "./verification/pageVerification";
+import { verificationMark } from "./verification/verificationMark";
 import { isSpacePinned, pinnedFirst, setSpacePinned, SPACE_PIN_REQUIRED } from "./spacePins";
 import { downloadContentExport, rememberCoverDetails, rememberedCoverDetails, type PdfCoverDetail } from "./contentExport";
 import { plainTitle } from "./objects/relationsApi";
@@ -137,7 +139,7 @@ import UnsavedChangesDialog from "./components/UnsavedChangesDialog.vue";
 const KeyboardHelpDialog = lazyComponent(() => import("./components/KeyboardHelpDialog.vue"), { loading: dialogSkeleton(t.common.keyboardShortcuts, "wide") });
 import { appShortcuts, createShortcutMatcher, type AppShortcutId } from "./keyboard/shortcuts";
 import { matchCommands } from "./keyboard/commandMatch";
-import { landFocusWhenRendered, listKeys, tablistKeys } from "./keyboard/navigation";
+import { focusWhenPresent, landFocusWhenRendered, listKeys, tablistKeys } from "./keyboard/navigation";
 import ActionDisclosureGroup from "./components/ActionDisclosureGroup.vue";
 import { holdsRequirements, useProjectorPage } from "./projector/useProjectorPage";
 import type { DeploymentDocument } from "./projector/deploymentMap";
@@ -273,9 +275,12 @@ const PagePdfExportDialog = lazyComponent(() => import("./components/PagePdfExpo
 const PagePdfExportStatus = lazyComponent(() => import("./components/PagePdfExportStatus.vue"));
 const PagePdfDownloadDialog = lazyComponent(() => import("./components/PagePdfDownloadDialog.vue"));
 const PageHistoryPanel = lazyComponent(() => import("./components/PageHistoryPanel.vue"), { loading: dialogSkeleton(t.common.pageHistory, "side") });
+// Ověřený obsah (5.2): the chip at the title; it draws from the bundle, so its chunk is the only wait.
+const PageVerification = lazyComponent(() => import("./components/PageVerification.vue"));
 const PageReadership = lazyComponent(() => import("./components/PageReadership.vue"), { loading: dialogSkeleton(t.common.readership, "side", "min(880px, calc(100vw - 64px))") });
 const PageConnections = lazyComponent(pageChrome.connections);
 // Comments are secondary data: their component loads after the article and reads only near the viewport (Fast first).
+const PageDiscussionButton = lazyComponent(() => import("./components/comments/PageDiscussionButton.vue"));
 const CommentThread = lazyComponent(pageChrome.comments, { loading: skeletonOf({ rows: 1, rowHeight: "41px" }) });
 // The page dock (refresh 2.5): Obsah, Historie and Přístup beside the article, and the outline row without it.
 const PageSidePanel = lazyComponent(pageChrome.dock, { loading: skeletonOf({ rows: 3, rowHeight: "44px" }) });
@@ -284,7 +289,7 @@ const PageMobileBar = lazyComponent(() => import("./components/PageMobileBar.vue
 const PageUndoWedge = lazyComponent(() => import("./components/PageUndoWedge.vue"));
 import type { PageSideTab } from "./components/PageSidePanel.vue";
 import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearch";
-import { requestedComment } from "./comments/commentFocus";
+import { quoteMarkdown, requestedComment, requestedQuote } from "./comments/commentFocus";
 import { articleArrives } from "./editor/articleMotion";
 import { useStageHeight } from "./components/library/stageHeight";
 import { useTabIndicator } from "./components/library/tabIndicator";
@@ -604,6 +609,11 @@ const canSaveEditor = computed(() => browserOnline.value && editorReady.value &&
 const shownVersion = computed(() => !page.value ? 0 : pageCanWrite.value || page.value.live ? page.value.version : page.value.publishedVersion ?? page.value.version);
 /** A writer's page's publication (mode, when it was published), read for a published page; undefined until it arrives. */
 const publication = shallowRef<PagePublication>();
+/** Ověření stránky (5.2): from the page's bundle, replaced by the answer of every change made in the chip or the dock. */
+const verification = shallowRef<PageVerificationState | null>(null);
+const verificationOpen = ref(false);
+watch(() => page.value?.bundle?.verification, (value) => { if (value) verification.value = value; });
+watch(() => page.value?.id, () => { verification.value = page.value?.bundle?.verification ?? null; verificationOpen.value = false; }, { immediate: true });
 /** A writer's page published live (Publikace Živě, `PagePublication.effective`): readers already read its saved state. */
 const publishedLive = computed(() => publication.value?.effective === "Live");
 /** Neither a reader nor a live page's writer has anything waiting for Publikovat (a reader never sees unpublished state). */
@@ -897,6 +907,7 @@ const canEditSource = computed(() => !!page.value
 const appearanceDirty = computed(() => !!user.value && (appearance.layout !== user.value.appearance.layout || appearance.accent !== user.value.appearance.accent || appearance.mode !== user.value.appearance.mode
   || appearance.motion !== (user.value.appearance.motion ?? "system") || !!appearance.openLocked !== !!user.value.appearance.openLocked
   || (appearance.dragPages !== false) !== (user.value.appearance.dragPages !== false) || (appearance.language ?? "auto") !== (user.value.appearance.language ?? "auto")
+  || (appearance.collaboratorColor ?? "auto") !== (user.value.appearance.collaboratorColor ?? "auto")
   || readingWidth.value !== savedReadingWidth.value));
 const searchIsOpen = ref(false);
 /** The same search as a dialog or as the whole page (Ctrl+Shift+Enter, `searchView=page` in its address; 2026-10-28). */
@@ -3017,10 +3028,15 @@ const pageDockTabs = computed(() => documentOpen.value && page.value ? [
   { id: "search", label: t.common.search },
   ...(assistantReachable.value ? [{ id: "assistant", label: t.common.assistant, icon: "ai" }] : []),
   ...(pageCanWrite.value ? [{ id: "history", label: t.common.history }] : []),
+  { id: "comments", label: t.common.discussion },
   { id: "access", label: t.common.access },
 ] : undefined);
 const pageDockActive = computed(() => pageDockShown.value ? pageDockTab.value : assistant.open.value ? "assistant" : undefined);
 const pageDockOpen = computed(() => workspacePanel.open.value && !!pageDockTabs.value && (pageDockShown.value || assistant.open.value));
+// The discussion is open while the dock shows its Diskuse: then the peek under the avatars hands over to it (never both).
+const discussionOpen = computed(() => pageDockOpen.value && pageDockShown.value && pageDockTab.value === "comments");
+// The discussion button's count and the peek's bubbles are PageDiscussionButton's (lazy, read after the page's text); the open thread tells it its count.
+const discussionButton = ref<InstanceType<typeof PageDiscussionButton>>();
 function pageDockRemembered() {
   return !user.value || readStored(`atlas:reading:${user.value.id}:dock`) !== "closed";
 }
@@ -3032,7 +3048,30 @@ function showPageDock(tab: PageSideTab, focus = true) {
   pageDockTab.value = tab;
   workspacePanel.show({ label: t.common.sidePanel, content: PageSidePanel, focus });
 }
+/**
+ * The page's Diskuse (the button beside the avatars, a bubble of the peek, Alt C): the dock's tab with the same thread a board has; the text
+ * selected in the page becomes the quote of a new comment, and the caret goes into the field (Escape closes the dock and returns to the text).
+ * The peek under the avatars hands over to it: its bubbles fly out while the dock slides in. The button and Alt C toggle it.
+ */
+async function openDiscussion() {
+  if (!documentOpen.value || !pageDockTabs.value) return false;
+  const selection = window.getSelection();
+  const picked = selection && !selection.isCollapsed && documentBody.value?.contains(selection.anchorNode) ? quoteMarkdown(selection.toString()) : "";
+  // The thread's editor services (people, pages) come first, so the first Alt C already has `@`.
+  await pageChrome.comments().catch(() => undefined);
+  if (picked) requestedQuote.value = picked;
+  showPageDock("comments");
+  rememberPageDock(true);
+  if (!picked) { await nextTick(); const side = document.querySelector("[data-page-side=comments]"); if (side) void focusWhenPresent(side, '.comment-composer [contenteditable="true"]', 90); }
+  return true;
+}
+function toggleDiscussion() {
+  if (!discussionOpen.value) return void openDiscussion();
+  workspacePanel.hide();
+  rememberPageDock(false);
+}
 function selectPageDockTab(id: string) {
+  if (id === "comments") { void openDiscussion(); return; }
   if (id === "assistant") launchAssistant(true);
   else showPageDock(id as PageSideTab);
 }
@@ -4226,6 +4265,10 @@ function runShortcut(id: AppShortcutId, event: KeyboardEvent): boolean {
       pageSearchFocus.value++;
       return true;
     }
+    case "discussion":
+      if (modal || !documentOpen.value || !pageDockTabs.value) return false;
+      toggleDiscussion();
+      return true;
     case "treeFilter": return !modal && treeFilterShortcut();
     case "goLibrary": return go(() => openLibrary("spaces"));
     case "goRecent": return go(() => openLibrary("recent"));
@@ -4722,6 +4765,8 @@ onUnmounted(() => {
           <div v-if="!profileOpen" class="bar-actions">
             <div v-if="page && documentValue && !pageAccessTab && !libraryTab && !administrationOpen" class="document-actions">
                 <CollaboratorAvatars v-if="collaborationEnabled && browserOnline" :peers="pagePeers" @navigate="editor?.navigateToPeer($event)" />
+                <!-- The page's Diskuse like a board's: the count is the comments', accented while a colleague's new one is unseen (Alt C opens it too). -->
+                <span v-if="pageDockTabs" class="page-discussion-anchor"><PageDiscussionButton v-if="afterContent" ref="discussionButton" :page-id="page.id" :self-id="user?.id" :open="discussionOpen" :host="commentHost?.(page.id, page.spaceId)" @toggle="toggleDiscussion" @open="openDiscussion" /></span>
                 <div class="document-secondary-actions">
                 <CopyPageLink ref="copyPageLink" :page-id="page.id" />
                 <!-- Icon-only like „Kopírovat odkaz“ beside them, so they say what they do the same way when pointed at or focused. -->
@@ -4827,7 +4872,7 @@ onUnmounted(() => {
         <!-- The workspace row under the top bar: the view, and beside it the one side panel (boards 03, 18). -->
         <div class="workspace-body">
         <ProfilePage v-if="profileOpen" :key="user.id" :tab="profileTab" :appearance="appearance"
-          :username="user.username" :is-wiki-admin="user.isWikiAdmin" :version="status?.version"
+          :username="user.username" :user-id="user.id" :is-wiki-admin="user.isWikiAdmin" :version="status?.version"
           :appearance-dirty="appearanceDirty" :appearance-pending="profilePending" :appearance-error="profileError" :back-label="settingsBackLabel"
           :reading-width="readingWidth" @preview-reading-width="readingWidth = $event"
           @navigate="openProfile($event)" @back="cancelProfile" @preview="Object.assign(appearance, $event)"
@@ -4904,6 +4949,7 @@ onUnmounted(() => {
             <div class="document-meta" :data-writable="(pageCanWrite && browserOnline) || undefined">
               <AssistantLauncher variant="page" :page-reading="assistantPageReading" :can-ask="canAsk" @launch="launchAssistant(true)" />
               <StatusBadge v-if="catalogPage" tone="info" icon="book-open" size="sm" :label="t.nav.catalogBadge" data-page-catalog />
+              <PageVerification v-if="verification && !page.isTemplate" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite && browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
               <Button v-if="page.isTemplate && canManageTemplates" variant="ghost" size="sm" @click="openSpaceTemplates(currentSpace!.id)">{{ t.nav.templateManage }}</Button>
               <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" :data-transient="documentStatusTransient || undefined" role="status" aria-live="polite" aria-atomic="true">
                 <StatusBadge v-if="documentStatusTransient" :key="documentStatusText" tone="success" :label="documentStatusText" confirmed />
@@ -5057,7 +5103,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" @publication="value => { publication = value; }" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" :host="commentHost?.(page.id, page.spaceId)" @comments="discussionButton?.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :verification="page.isTemplate ? null : verification" :readers="page.bundle?.readers" :can-edit="pageCanWrite && browserOnline" @verification="value => { verification = value; }" @open-readership="readershipOpen = true" @open-verification="verificationOpen = true" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>
@@ -5265,7 +5311,7 @@ onUnmounted(() => {
               <span class="space-icon" :data-color="item.color"><AtlasIcon :name="item.icon" :size="18" /></span>
               <span class="search-result-main"><span class="search-result-head"><strong class="search-result-title"><span v-if="item.widget?.key" class="search-issue-key">{{ item.widget.key }}</span><SearchHighlight :text="item.title" :query="query" /></strong>
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
-                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><SemanticBadge v-if="item.semantic" />
+                <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="verificationMark(item.result.verification?.state)" :name="verificationMark(item.result.verification?.state)!.icon" :size="13" class="search-verification" :data-warn="verificationMark(item.result.verification?.state)!.warn || undefined" role="img" :aria-label="verificationMark(item.result.verification?.state)!.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="verificationMark(item.result.verification?.state)!.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
                   <span v-if="item.board" class="search-live-label" data-search-type>{{ t.common.board }}</span>
                   <span v-else-if="item.widget">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
                 </small>

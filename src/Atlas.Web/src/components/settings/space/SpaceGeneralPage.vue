@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import t from "../../../i18n/settings-space";
+import tv from "../../../i18n/verification";
 import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { ApiError, errorMessage, type SpacePinPolicy } from "../../../api";
 import { spaceSettingsApi, spaceTrashApi, type SpaceSettings } from "../../../spaceSettings";
@@ -37,11 +38,16 @@ const loadError = ref("");
 const saveError = ref("");
 const nameError = ref("");
 const conflict = ref("");
-const draft = reactive({ name: "", icon: "book-open", color: "blue", description: "", pinPolicy: "None" as SpacePinPolicy, commentsEnabled: true, publicationMode: "Manual" as PublicationMode });
-const fields = ["name", "icon", "color", "description", "pinPolicy", "commentsEnabled", "publicationMode"] as const;
+const draft = reactive({ name: "", icon: "book-open", color: "blue", description: "", pinPolicy: "None" as SpacePinPolicy, commentsEnabled: true, publicationMode: "Manual" as PublicationMode, verificationIntervalMonths: null as number | null });
+const fields = ["name", "icon", "color", "description", "pinPolicy", "commentsEnabled", "publicationMode", "verificationIntervalMonths"] as const;
+// Ověřování obsahu (5.2): Vypnuto (the default) or the interval of the space's pages; the pills carry strings, the draft the months.
+const verificationOptions = [{ value: "0", label: tv.general.off }, ...[3, 6, 12].map((months) => ({ value: String(months), label: tv.months(months) }))];
+const verificationChoice = computed({ get: () => String(draft.verificationIntervalMonths ?? 0), set: (value: string) => { draft.verificationIntervalMonths = Number(value) || null; } });
+/** The server keeps the interval when the key is null or missing: off is sent as 0. */
+const savedInterval = () => draft.verificationIntervalMonths ?? 0;
 const publicationOptions = (Object.keys(publicationLabels) as PublicationMode[]).map((value) => ({ value, label: publicationLabels[value] }));
 /** An older server leaves the comments switch out: comments are on. */
-const baselineOf = (value: SpaceSettings) => ({ ...value, commentsEnabled: value.commentsEnabled ?? true, publicationMode: value.publicationMode ?? "Manual" });
+const baselineOf = (value: SpaceSettings) => ({ ...value, commentsEnabled: value.commentsEnabled ?? true, publicationMode: value.publicationMode ?? "Manual", verificationIntervalMonths: value.verificationIntervalMonths ?? null });
 const dirty = computed(() => !!baseline.value && fields.some((key) => draft[key] !== baselineOf(baseline.value!)[key]));
 /** The image is no part of the draft: it is saved on its own and only reported to the shell. */
 const cover = ref<SpaceCover>();
@@ -56,7 +62,7 @@ let abort: AbortController | undefined;
 function apply(value: SpaceSettings) {
   baseline.value = value;
   cover.value = value.cover ?? undefined;
-  Object.assign(draft, { name: value.name, icon: value.icon, color: value.color, description: value.description, pinPolicy: value.pinPolicy, commentsEnabled: value.commentsEnabled ?? true, publicationMode: value.publicationMode ?? "Manual" });
+  Object.assign(draft, { name: value.name, icon: value.icon, color: value.color, description: value.description, pinPolicy: value.pinPolicy, commentsEnabled: value.commentsEnabled ?? true, publicationMode: value.publicationMode ?? "Manual", verificationIntervalMonths: value.verificationIntervalMonths ?? null });
   nameError.value = "";
   saveError.value = "";
 }
@@ -96,7 +102,7 @@ async function save() {
   saveError.value = "";
   conflict.value = "";
   try {
-    const value = await spaceSettingsApi.save(props.spaceId, { ...draft, name: draft.name.trim(), expectedVersion: baseline.value.version });
+    const value = await spaceSettingsApi.save(props.spaceId, { ...draft, verificationIntervalMonths: savedInterval(), name: draft.name.trim(), expectedVersion: baseline.value.version });
     if (current !== attempt) return;
     // The form never sends the image; keep the one saved meanwhile if the answer leaves it out.
     const saved = { ...value, cover: value.cover ?? cover.value };
@@ -175,6 +181,9 @@ onBeforeUnmount(() => {
         </SettingsRow>
         <SettingsRow :label="t.general.publication" :help="t.general.publicationHelp" :label-for="false">
           <OptionPills v-model="draft.publicationMode" :label="t.general.publication" hide-label :options="publicationOptions" data-space-publication />
+        </SettingsRow>
+        <SettingsRow :label="tv.general.row" :help="tv.general.help" :label-for="false">
+          <OptionPills v-model="verificationChoice" :label="tv.general.row" hide-label :options="verificationOptions" :disabled="saving" data-space-verification />
         </SettingsRow>
       </SettingsSection>
 

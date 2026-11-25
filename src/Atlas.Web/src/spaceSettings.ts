@@ -1,8 +1,8 @@
 import type { SpaceCover } from "./spaceCover";
 import { api, post, put, type SpacePinPolicy } from './api';
 import type { PublicationMode } from './publishing/pagePublication';
-export interface SpaceSettings { id: string; name: string; icon: string; color: string; description: string; pinPolicy: SpacePinPolicy; version: string; /** „Komentáře“: whether readers may post comments; an older server leaves it out (on). */ commentsEnabled?: boolean; /** „Publikace nových stránek“: the default of the pages of the space; an older server leaves it out (Manual). */ publicationMode?: PublicationMode; /** The image of the space, saved on its own (spaceCover.ts), not with the form; an older server may leave it out. */ cover?: SpaceCover | null }
-export type SaveSpaceSettings = Pick<SpaceSettings, 'name' | 'icon' | 'color' | 'description' | 'pinPolicy' | 'commentsEnabled' | 'publicationMode'> & { expectedVersion: string };
+export interface SpaceSettings { id: string; name: string; icon: string; color: string; description: string; pinPolicy: SpacePinPolicy; version: string; /** „Komentáře“: whether readers may post comments; an older server leaves it out (on). */ commentsEnabled?: boolean; /** „Publikace nových stránek“: the default of the pages of the space; an older server leaves it out (Manual). */ publicationMode?: PublicationMode; /** The image of the space, saved on its own (spaceCover.ts), not with the form; an older server may leave it out. */ cover?: SpaceCover | null; /** „Ověřování obsahu“ (5.2): the default interval of its pages in months (3, 6, 12); null or absent = off. */ verificationIntervalMonths?: number | null }
+export type SaveSpaceSettings = Pick<SpaceSettings, 'name' | 'icon' | 'color' | 'description' | 'pinPolicy' | 'commentsEnabled' | 'publicationMode' | 'verificationIntervalMonths'> & { expectedVersion: string };
 export const spaceSettingsApi = {
   get: (id: string, signal?: AbortSignal) => api<SpaceSettings>(`/spaces/${encodeURIComponent(id)}/settings`, { signal }),
   save: (id: string, value: SaveSpaceSettings) => put<SpaceSettings>(`/spaces/${encodeURIComponent(id)}/settings`, value),

@@ -149,6 +149,7 @@ public static class AtlasServices
         builder.Services.AddSkills();
         builder.Services.AddPageLinks();
         builder.Services.AddPageDecorations();
+        Atlas.Server.Features.PageVerifications.PageVerificationsModule.AddPageVerifications(builder.Services);
         builder.Services.AddRelations();
         builder.Services.AddYouTrack();
         builder.Services.AddVaults(builder.Configuration);

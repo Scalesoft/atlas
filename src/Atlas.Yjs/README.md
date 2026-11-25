@@ -2,7 +2,9 @@
 
 A faithful managed port of the parts of **yjs 13.6.33** (with **lib0 0.2.117**) and of the y-prosemirror binding as
 **@tiptap/y-tiptap 3.0.9** ships it that the Atlas server runs, so the server never starts `node` for them. No ASP.NET or
-Atlas dependency; `Atlas.Markdown.Sync` builds on it and passes it the schema it needs (`PmSchema`).
+Atlas dependency; `Atlas.Markdown.Sync` builds on it and passes it the schema it needs (`PmSchema`). The editor runs
+@tiptap/y-tiptap 3.3.1, whose rewritten `updateYFragment` writes the same bytes as the port for every recorded case
+(`yjsWriterFixtures.test.ts`, 857 cases); a change there shows as a fixture difference and is ported then.
 
 | File | Ports |
 | --- | --- |

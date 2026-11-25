@@ -4,6 +4,7 @@ import type { Editor } from "@tiptap/core";
 import type { CommentApi, CommentPage, ObjectComment } from "../../comments/commentApi";
 import type { ObjectListener, ViewSessions } from "../../live/viewSession";
 import { drafts, forgetUnsavedWork, hasUnsavedWork } from "../../lib/unsavedWork";
+import { requestedQuote } from "../../comments/commentFocus";
 import CommentComposer from "./CommentComposer.vue";
 import CommentThread from "./CommentThread.vue";
 
@@ -150,6 +151,61 @@ describe("CommentThread", () => {
     expect(view.find("[data-comment-start]").exists()).toBe(false);
     expect(view.find("[data-comment-composer]").exists()).toBe(true);
     expect(view.find("[data-comments-empty]").exists()).toBe(true);
+  });
+});
+
+describe("CommentThread quote", () => {
+  const editor = () => document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor;
+  afterEach(() => { requestedQuote.value = undefined; });
+
+  it("starts a new comment with the text the page had selected as a Markdown quote, in the field, once (the page's Diskuse, Alt C)", async () => {
+    const api = fakeApi(page([]));
+    requestedQuote.value = "> Záloha běží každou noc\n\n";
+    await mounted(api, { quotes: true });
+    await vi.waitFor(() => expect(editor()?.getText()).toContain("Záloha běží každou noc"));
+    expect(requestedQuote.value).toBeUndefined();
+    expect(editor()!.state.doc.firstChild!.type.name).toBe("blockquote");
+    wrapper!.findComponent(CommentComposer).vm.submit();
+    await flushPromises();
+    expect(vi.mocked(api.post).mock.calls[0]![1]).toBe("> Záloha běží každou noc");
+  });
+
+  it("leaves the selection alone in a thread that does not quote (a board's, the page's section)", async () => {
+    requestedQuote.value = "> Něco\n\n";
+    await mounted(fakeApi(page([comment("a")])));
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    expect(editor()!.getText()).toBe("");
+    expect(requestedQuote.value).toBe("> Něco\n\n");
+  });
+});
+
+describe("CommentThread quick reply", () => {
+  const editor = () => document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor;
+  const enter = (init: KeyboardEventInit = {}) => document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, ...init }));
+
+  it("has the paper plane (Odeslat (Enter)), dim while empty and accent with text, and Enter sends while Shift+Enter writes a line", async () => {
+    const api = fakeApi(page([]));
+    await mounted(api, { quick: true });
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    const send = wrapper!.get(".comment-send");
+    expect(send.attributes("aria-label")).toBe("Odeslat (Enter)");
+    expect(send.attributes("aria-disabled")).toBe("true");
+    expect(wrapper!.find(".comment-composer-actions [data-comment-submit]").exists()).toBe(false);
+    editor()!.commands.insertContent("Hotovo");
+    await flushPromises();
+    expect(send.attributes("data-ready")).toBeDefined();
+    enter({ shiftKey: true });
+    await flushPromises();
+    expect(api.post).not.toHaveBeenCalled();
+    enter();
+    await flushPromises();
+    expect(api.post).toHaveBeenCalledWith("obj-1", "Hotovo", null);
+  });
+
+  it("keeps the text button and Ctrl+Enter in a thread that is not quick (a board's)", async () => {
+    await mounted(fakeApi(page([])));
+    expect(wrapper!.find(".comment-send").exists()).toBe(false);
+    expect(wrapper!.get("[data-comment-submit]").text()).toBe("Odeslat");
   });
 });
 

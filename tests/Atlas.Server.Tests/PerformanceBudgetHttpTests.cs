@@ -22,7 +22,8 @@ public sealed class PerformanceBudgetHttpTests(ITestOutputHelper output)
     [
         ("spaces", (_, _) => "/api/spaces", 9),
         // The pages, and one query per other content type in the tree (the site runs with Boards on: its boards; reference nodes).
-        ("tree", (space, _) => $"/api/spaces/{space}/tree", 13),
+        // 5.2: +1, the verification states of the space's pages for the link chips that resolve from the tree.
+        ("tree", (space, _) => $"/api/spaces/{space}/tree", 14),
         ("page", (_, page) => $"/api/pages/{page}", 13),
         // The read that opens a page records the visit in it (3.6-G N7): the page's statements and the visit's own, not a second request.
         ("page-visit", (_, page) => $"/api/pages/{page}?visit=true", 32),
@@ -40,7 +41,8 @@ public sealed class PerformanceBudgetHttpTests(ITestOutputHelper output)
         // The actor lock and one statement for the readable occurrences, the count and the page (PERF1-1), however many there are.
         ("entities", (_, _) => "/api/entities/contact", 5),
         // The omnisearch's one request per query (UX SE3-1): the search, its spaces and each content type's own search.
-        ("search", (_, _) => "/api/search?q=budget&limit=50", 14),
+        // 5.2: +1, the verification state of the results' pages for their icon (one statement for the page of results).
+        ("search", (_, _) => "/api/search?q=budget&limit=50", 15),
         // The reads of 3.0 (PERF1-4): today's count +1 where the read has headroom. A note in the trash is in the object trash.
         ("entities-export", (_, _) => "/api/entities/contact/export?format=csv", 6),
         ("notifications", (_, _) => "/api/notifications", 7),

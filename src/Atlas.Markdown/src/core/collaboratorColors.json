@@ -1,0 +1,14 @@
+[
+  { "id": "red", "light": "#b6322d", "dark": "#cc473f" },
+  { "id": "blue", "light": "#1863b6", "dark": "#2e76cb" },
+  { "id": "amber", "light": "#835c00", "dark": "#9a6d04" },
+  { "id": "violet", "light": "#7a4bb3", "dark": "#8c5ec7" },
+  { "id": "green", "light": "#057339", "dark": "#068744" },
+  { "id": "pink", "light": "#a93772", "dark": "#be4b85" },
+  { "id": "cyan", "light": "#026c82", "dark": "#088099" },
+  { "id": "orange", "light": "#9b4e01", "dark": "#b65d00" },
+  { "id": "indigo", "light": "#5457bf", "dark": "#646ad4" },
+  { "id": "lime", "light": "#4b6d00", "dark": "#598101" },
+  { "id": "slate", "light": "#596471", "dark": "#6b7684" },
+  { "id": "teal", "light": "#066f63", "dark": "#038476" }
+]

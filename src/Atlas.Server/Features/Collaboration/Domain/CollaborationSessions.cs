@@ -19,7 +19,7 @@ public sealed class CollaborationSessions
 
     public CollabUser Register(CollaboratorIdentity identity)
     {
-        var user = new CollabUser(identity.Id.ToString(), identity.DisplayName);
+        var user = new CollabUser(identity.Id.ToString(), identity.DisplayName, identity.Color);
         m_proofs.Add(user, new Proof(identity.SecurityStamp, identity.SessionId));
         return user;
     }

@@ -13,6 +13,13 @@ const en: ProfileMessages = {
       cs: "Čeština",
       en: "English",
     },
+    collaboratorColor: {
+      label: "My colour",
+      help: "The colour of your caret, avatar and pointer when others work on the page or board with you. If your colour is taken by someone present, Atlas gives you the nearest free one; whoever came first keeps theirs.",
+      auto: "Automatic",
+      custom: "Custom",
+      swatches: "Caret and avatar colour",
+    },
     mode: { label: "Theme", help: "Applies to you only, on all your devices.", light: "Light", dark: "Dark", system: "Automatic" },
     accent: { label: "Accent color", help: "The dark theme is gently tinted towards it. In the light theme it colors buttons, links and selection.", default: "default" },
     layout: {

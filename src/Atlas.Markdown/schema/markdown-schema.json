@@ -214,7 +214,8 @@
             "nullable": true,
             "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "aliases",
@@ -226,7 +227,8 @@
             "singleLine": true,
             "pattern": "^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,127}(?:,[A-Za-z0-9][A-Za-z0-9._-]{0,127})*)?$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "textAlign",
@@ -344,7 +346,8 @@
             "nullable": true,
             "imageSources": {}
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "alt",
@@ -387,7 +390,8 @@
             "kind": "structured",
             "validator": "imagePresentation"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -410,7 +414,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -442,7 +447,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -492,7 +498,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "colspan",
@@ -588,7 +595,8 @@
             "minLength": 1,
             "maxLength": 100
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "colspan",
@@ -689,7 +697,8 @@
               "caution"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -743,7 +752,8 @@
             "kind": "structured",
             "validator": "attachment"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -784,7 +794,8 @@
             "kind": "structured",
             "validator": "chart"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -808,7 +819,8 @@
               "button"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "reconcealAfterMs",
@@ -819,7 +831,8 @@
             "maximum": 600000,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "completeAtPercent",
@@ -830,7 +843,8 @@
             "maximum": 100,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -858,7 +872,8 @@
             "kind": "structured",
             "validator": "contacts"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -886,7 +901,8 @@
             "kind": "structured",
             "validator": "contact"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -911,7 +927,8 @@
             "kind": "structured",
             "validator": "diagram"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -956,7 +973,8 @@
             "kind": "structured",
             "validator": "math"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -980,7 +998,8 @@
             "kind": "structured",
             "validator": "math"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1005,7 +1024,8 @@
             "kind": "structured",
             "validator": "openapi"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1028,7 +1048,8 @@
             "singleLine": true,
             "maxLength": 4096
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "title",
@@ -1039,7 +1060,8 @@
             "singleLine": true,
             "maxLength": 4096
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "url",
@@ -1049,7 +1071,8 @@
             "policy": "http",
             "maxLength": 4096
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1070,7 +1093,8 @@
             "kind": "text",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "field",
@@ -1086,7 +1110,8 @@
               "notes"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "fields",
@@ -1095,7 +1120,8 @@
             "kind": "structured",
             "validator": "secretFields"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showCopy",
@@ -1103,7 +1129,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showDetails",
@@ -1111,7 +1138,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "autoHideSeconds",
@@ -1122,7 +1150,8 @@
             "maximum": 3600,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1143,7 +1172,8 @@
             "kind": "text",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "field",
@@ -1159,7 +1189,8 @@
               "notes"
             ]
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "fields",
@@ -1168,7 +1199,8 @@
             "kind": "structured",
             "validator": "secretFields"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showCopy",
@@ -1176,7 +1208,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "showDetails",
@@ -1184,7 +1217,8 @@
           "constraint": {
             "kind": "boolean"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "autoHideSeconds",
@@ -1195,7 +1229,8 @@
             "maximum": 3600,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1221,7 +1256,8 @@
             "kind": "structured",
             "validator": "tableOfContents"
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     },
@@ -1244,7 +1280,8 @@
             "singleLine": true,
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "key",
@@ -1255,7 +1292,8 @@
             "singleLine": true,
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "title",
@@ -1266,7 +1304,8 @@
             "singleLine": true,
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "url",
@@ -1276,7 +1315,8 @@
             "policy": "absolute-http",
             "maxLength": 2000
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         },
         {
           "name": "state",
@@ -1288,7 +1328,8 @@
             "maxLength": 2000,
             "nullable": true
           },
-          "enforcement": "editor"
+          "enforcement": "editor",
+          "validated": true
         }
       ]
     }
