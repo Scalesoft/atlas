@@ -299,6 +299,7 @@ import { revealInRow, vScrollEdges } from "./lib/scrollEdges";
 import { installScrollMemory } from "./lib/scrollMemory";
 import { truncatedTitle } from "./lib/truncatedTitle";
 import { clearOnEscape } from "./lib/searchKeys";
+import { forgetUnsavedWork, hasUnsavedWork } from "./lib/unsavedWork";
 import { createCheckpointScheduler, untilQuiet } from "./editor/pageAutosave";
 import { contactApi } from "./contacts/contactApi";
 import { forgetPageReferences, seedPageReferences } from "./linking/pageReferenceAnswers";
@@ -1600,6 +1601,8 @@ function askComponentDraft(fromHistory: boolean, resume?: () => void) {
  */
 function resetSessionState() {
   sessionGeneration++;
+  // Drafts typed outside the page's editor (a comment, a note) belong to the account, never to the next one in the tab.
+  forgetUnsavedWork();
   useAiCapabilities().stop();
   modules.stop();
   assistant.reset(); searchAnswer.resetSession(); workspacePanel.reset();
@@ -4347,7 +4350,7 @@ function globalKeys(event: KeyboardEvent) {
 }
 function beforeUnload(event: BeforeUnloadEvent) {
   // Live edits the server has not acknowledged yet (reconnecting, offline or refused) exist only in this tab.
-  if ((collaborationStatus.value?.pendingChanges ?? 0) > 0 || (!!writeRevoked.value?.unsaved && !writeRevoked.value.copied) || documentDraft() ||titleDirty() || settingsDirty.value || pdfExportDirty.value || pdfExportBusy.value || profileDirty.value || appearanceDirty.value || profilePending.value || profileBusy.value || templateDirty.value || templateBusy.value) {
+  if ((collaborationStatus.value?.pendingChanges ?? 0) > 0 || (!!writeRevoked.value?.unsaved && !writeRevoked.value.copied) || documentDraft() || hasUnsavedWork() || titleDirty() || settingsDirty.value || pdfExportDirty.value || pdfExportBusy.value || profileDirty.value || appearanceDirty.value || profilePending.value || profileBusy.value || templateDirty.value || templateBusy.value) {
     event.preventDefault();
     event.returnValue = "";
   }
