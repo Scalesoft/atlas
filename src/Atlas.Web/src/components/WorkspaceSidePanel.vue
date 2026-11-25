@@ -453,5 +453,5 @@ function resetWidth() { width.value = fallback.value; persist(); }
 @media (hover: hover) and (pointer: fine) { .workspace-panel-resizer:hover::before { background: var(--accent); } }
 /* Reduced motion: the pill moves at once; the content still fades through animateAtlas. */
 @media (prefers-reduced-motion: reduce) { .workspace-panel-tab-pill { transition-property: opacity; } }
-:global([data-atlas-reduced-motion]) .workspace-panel-tab-pill { transition-property: opacity; }
+:global([data-atlas-reduced-motion] .workspace-panel-tab-pill) { transition-property: opacity; }
 </style>

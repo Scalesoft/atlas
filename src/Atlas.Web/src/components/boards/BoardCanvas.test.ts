@@ -484,6 +484,14 @@ describe("BoardCanvas: connector preview (A3, A9)", () => {
     key(surface, { key: "l" });
     await nextTick();
     expect(board.get("[data-board-announcement]").text()).toContain("Přepojit konec spojnice na Poznámka: b");
+    // Shift+L moves the start, and says so.
+    key(surface, { key: "Escape" });
+    key(surface, { key: "L", shiftKey: true });
+    await nextTick();
+    expect(board.get("[data-board-announcement]").text()).toContain("Přepojit začátek spojnice na Poznámka: a");
+    key(surface, { key: "Escape" });
+    key(surface, { key: "l" });
+    await nextTick();
     key(surface, { key: "ArrowLeft" });
     key(surface, { key: "Enter" });
     await nextTick();

@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { userColor } from "../../../live/collaboratorColors";
+import { computed, ref } from "vue";
+import { themedUserColor } from "../../../live/collaboratorColors";
 import t from "../../../i18n/components-release";
 import { typeText, useDemoLoop } from "./demoClock";
 
 // The page's discussion (5.2): a colleague's new comment drops in under the co-editors' avatars, a quick reply is written under it and
 // sent with the paper plane, and the bubble flies off to the right, where the dock's Diskuse holds the whole thread.
 const d = t.demos.discussion;
-const people = [{ initials: "JN", color: userColor("00000004") }, { initials: "AK", color: userColor("00000007") }, { initials: "PS", color: userColor("00000002") }];
+// Their colours as the surface draws them (the dark variant in the dark theme), as the real avatars.
+const people = computed(() => [{ initials: "JN", color: themedUserColor("00000004") }, { initials: "AK", color: themedUserColor("00000007") }, { initials: "PS", color: themedUserColor("00000002") }]);
 const root = ref<HTMLElement>();
 const shown = ref(false), replying = ref(false), answer = ref(""), sending = ref(false), docked = ref(false), dock = ref(false);
 
@@ -72,7 +73,7 @@ useDemoLoop(root, (at) => {
 .demo-discussion-answer { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demo-discussion-answer i { display: inline-block; width: 1.5px; height: 1.1em; margin-left: 1px; vertical-align: -.2em; background: var(--accent); }
 .demo-discussion-send {
-  display: grid; flex: none; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--accent-contrast, #fff);
+  display: grid; flex: none; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: var(--on-accent);
   transition: scale var(--atlas-motion-fast) var(--atlas-ease-out);
 }
 .demo-discussion-send svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

@@ -65,9 +65,9 @@ watch(() => props.pulse, () => { if (!pulsing.value) pulsing.value = true; });
   .edit-unlock.is-pulsing { outline: 2px solid var(--accent); outline-offset: 2px; }
   .edit-lock-ring { inset: -2px; border: 0; opacity: 1; animation: atlas-edit-lock-flash var(--atlas-motion-slow) linear 1; background: transparent; }
 }
-:global([data-atlas-reduced-motion]) .edit-lock-shackle { transition: none; }
-:global([data-atlas-reduced-motion]) .edit-lock.is-pulsing { animation: none; }
-:global([data-atlas-reduced-motion]) .edit-unlock.is-pulsing { animation: none; }
-:global([data-atlas-reduced-motion]) .edit-unlock.is-pulsing { outline: 2px solid var(--accent); outline-offset: 2px; }
-:global([data-atlas-reduced-motion]) .edit-lock-ring { inset: -2px; border: 0; opacity: 1; animation: atlas-edit-lock-flash var(--atlas-motion-slow) linear 1; }
+:global([data-atlas-reduced-motion] .edit-lock-shackle) { transition: none; }
+:global([data-atlas-reduced-motion] .edit-lock.is-pulsing) { animation: none; }
+:global([data-atlas-reduced-motion] .edit-unlock.is-pulsing) { animation: none; }
+:global([data-atlas-reduced-motion] .edit-unlock.is-pulsing) { outline: 2px solid var(--accent); outline-offset: 2px; }
+:global([data-atlas-reduced-motion] .edit-lock-ring) { inset: -2px; border: 0; opacity: 1; animation: atlas-edit-lock-flash var(--atlas-motion-slow) linear 1; }
 </style>

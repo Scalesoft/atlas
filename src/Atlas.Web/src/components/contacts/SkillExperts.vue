@@ -269,7 +269,7 @@ const pageUrl = (page: TaggedPage) => buildShellHashEncoded({ view: "page", page
 .skill-spread-bar { align-self: end; width: 100%; height: calc(var(--share) * 100%); min-height: 2px; border-radius: 4px 4px 2px 2px; background: var(--accent); transform-origin: bottom;
   animation: atlas-bar-rise var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 @media (prefers-reduced-motion: reduce) { .skill-spread-bar { animation: none; } }
-:global([data-atlas-reduced-motion]) .skill-spread-bar { animation: none; }
+:global([data-atlas-reduced-motion] .skill-spread-bar) { animation: none; }
 .skill-experts-relations { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; font-size: 12.5px; }
 .skill-experts-relation-title { width: 100%; color: var(--muted); font-size: 11.5px; }
 .skill-experts-relation a { display: inline-flex; align-items: center; gap: 4px; color: inherit; text-decoration: none; }

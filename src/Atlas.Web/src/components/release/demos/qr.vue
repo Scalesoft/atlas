@@ -83,5 +83,5 @@ useDemoLoop(root, (at) => {
 .demo-qr-svg :deep(.atlas-qr-band) { animation-duration: calc(var(--atlas-motion-base) * var(--demo-ring-slow));
   animation-delay: calc(var(--qr-band) * var(--atlas-motion-fast) * var(--demo-step-slow) / 5); }
 @media (prefers-reduced-motion: reduce) { .demo-qr-svg :deep(.atlas-qr-band) { animation-delay: initial; } }
-:global([data-atlas-reduced-motion]) .demo-qr-svg .atlas-qr-band { animation-delay: initial; }
+:global([data-atlas-reduced-motion] .demo-qr-svg .atlas-qr-band) { animation-delay: initial; }
 </style>

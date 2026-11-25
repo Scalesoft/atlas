@@ -39,5 +39,5 @@ function fadeIn(el: Element, done: () => void) { el.classList.add("save-state-in
 .save-state :deep([data-tone="neutral"] svg) { animation: atlas-spin var(--atlas-motion-spin) linear infinite; }
 .save-state-in { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
 @media (prefers-reduced-motion: reduce) { .save-state :deep([data-tone="neutral"] svg) { animation: none; } }
-:global([data-atlas-reduced-motion]) .save-state [data-tone="neutral"] svg { animation: none; }
+:global([data-atlas-reduced-motion] .save-state [data-tone="neutral"] svg) { animation: none; }
 </style>

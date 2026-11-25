@@ -1665,7 +1665,7 @@ const announcement = computed(() => {
   const state = linking.value;
   if (state) {
     const from = byId.value.get(state.from), to = state.to ? byId.value.get(state.to) : undefined;
-    if (state.edge) return t.canvas.reconnecting(to ? itemLabel(to) : undefined);
+    if (state.edge) return t.canvas.reconnecting(state.end ?? "target", to ? itemLabel(to) : undefined);
     return t.canvas.connecting(from ? itemLabel(from) : undefined, to ? itemLabel(to) : undefined);
   }
   return selectedItems.value.length === 1 ? itemLabel(selectedItems.value[0]!) : selectedItems.value.length ? t.canvas.selected(selectedItems.value.length) : "";
@@ -1931,8 +1931,9 @@ const toolbarAt = computed(() => {
   // The observed size, not rect(): read while the nodes patch, rect() forced a layout of the whole canvas mid-update (UX SB4-3).
   const b = boundsOf(linked), v = viewport.value, box = size.value;
   const left = (b.x + b.width / 2) * v.zoom + v.x, top = b.y * v.zoom + v.y, bottom = (b.y + b.height) * v.zoom + v.y;
-  const above = top > 64, half = Math.min(toolbarWidth.value, box.width - 16) / 2;
-  return { x: Math.min(Math.max(left, half + 8), Math.max(half + 8, box.width - half - 8)), y: above ? top - 12 : Math.min(bottom + 12, box.height - 48), above };
+  // The gap clears the selected item's connector handle (BoardNode: 12 px and its border, centred on the edge), which grows with the zoom.
+  const gap = Math.max(12, 7 * v.zoom + 5), above = top > 52 + gap, half = Math.min(toolbarWidth.value, box.width - 16) / 2;
+  return { x: Math.min(Math.max(left, half + 8), Math.max(half + 8, box.width - half - 8)), y: above ? top - gap : Math.min(bottom + gap, box.height - 48), above };
 });
 /** The toolbar's own width, so that it stays inside the canvas. */
 const toolbarWidth = ref(320);
@@ -2067,7 +2068,7 @@ defineExpose({ fit, zoomTo, centreOn, focusSurface, focusSelection });
 .board-canvas.is-readonly :deep(.vue-flow__edgeupdater) { display: none; }
 /* How far the rest fades under the neighbour highlighting and a filter (U4-12): dark mode needs more of it to stay legible. */
 .board-canvas { --board-dim-node: .3; --board-dim-edge: .18; }
-:global([data-mode="dark"]) .board-canvas { --board-dim-node: .5; --board-dim-edge: .4; }
+:global([data-mode="dark"] .board-canvas) { --board-dim-node: .5; --board-dim-edge: .4; }
 .board-canvas { --board-surface: var(--canvas, var(--surface)); container: board-canvas / inline-size; position: relative; min-width: 0; height: 100%; min-height: 420px; overflow: hidden;
   border: 1px solid var(--line); border-radius: var(--atlas-radius-lg); background: var(--board-surface); }
 .board-surface { position: absolute; inset: 0; outline: none; touch-action: none; }
@@ -2080,7 +2081,8 @@ defineExpose({ fit, zoomTo, centreOn, focusSurface, focusSelection });
 .board-canvas-corner { position: absolute; right: 12px; bottom: 12px; z-index: 6; display: flex; align-items: center; gap: 6px; }
 .board-canvas-settings { border: 1px solid var(--line); background: var(--surface); box-shadow: var(--refresh-card-shadow); }
 .board-canvas-toolbar { position: absolute; top: 0; left: 0; z-index: 7; max-width: calc(100cqi - 16px); translate: -50% -100%; transition: transform var(--atlas-motion-base) var(--atlas-ease-travel); }
-.board-canvas-toolbar :deep(.board-toolbar) { flex-wrap: wrap; }
+/* Capped by the canvas, not the viewport (contextToolbar.css): on a narrow canvas its buttons wrap instead of being clipped. */
+.board-canvas-toolbar :deep(.board-toolbar) { flex-wrap: wrap; max-width: 100%; }
 .board-canvas-toolbar.is-below { translate: -50% 0; }
 .board-command-leave-active { animation: st-fade-out var(--atlas-motion-surface) var(--atlas-ease-out) both; }
 .board-minimap { margin: 0 12px 64px 0; border: 1px solid var(--line); border-radius: var(--atlas-radius-md); background: var(--surface); box-shadow: var(--refresh-card-shadow); }

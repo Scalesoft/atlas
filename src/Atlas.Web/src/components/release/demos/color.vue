@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { collaboratorChoices, themedCollaboratorColor } from "../../../live/collaboratorColors";
 import t from "../../../i18n/components-release";
 import { useDemoLoop } from "./demoClock";
 
 // Moje barva (5.2): one palette of twelve colours for carets, avatars and pointers. The choice moves from Automaticky to a colour and
 // your caret and avatar take it; a colleague who joins the page keeps a colour of their own, as two people at one page never share one.
 const d = t.demos.color;
-// The collaborator palette's light variants (sample colours for the illustration).
-const palette = ["#b6322d", "#1863b6", "#835c00", "#7a4bb3", "#057339", "#a93772", "#026c82", "#9b4e01", "#5457bf", "#4b6d00", "#596471", "#066f63"];
+// The collaborator palette itself, in the variant the surface draws (dark in the dark theme), as Moje barva shows it.
+const palette = computed(() => collaboratorChoices.map(choice => themedCollaboratorColor(choice.swatch.light)));
 const root = ref<HTMLElement>();
 const pick = ref(-1), other = ref(false);
-const mine = computed(() => palette[pick.value < 0 ? 1 : pick.value]!);
-const theirs = palette[6]!;
+const mine = computed(() => palette.value[pick.value < 0 ? 1 : pick.value]!);
+const theirs = computed(() => palette.value[6]!);
 
 useDemoLoop(root, (at) => {
   at(0, () => { pick.value = -1; other.value = false; });

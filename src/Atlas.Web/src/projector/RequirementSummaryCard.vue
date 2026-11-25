@@ -522,7 +522,7 @@ const share = (value: number) => `${value * 100}%`;
 .summary:not(.is-grown) .summary-fill { transform: scaleX(0); }
 /* Reduced motion: the segments stand at their length at once, only their colour fades. */
 @media (prefers-reduced-motion: reduce) { .summary-fill { transition-property: background-color; } }
-:global([data-atlas-reduced-motion]) .summary-fill { transition-property: background-color; }
+:global([data-atlas-reduced-motion] .summary-fill) { transition-property: background-color; }
 /* Each item: its name, its count big in its tone and its share; a state's own word says what it counts as; a click opens its blocks. */
 .summary-counts { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .25rem .5rem; font-size: .8125rem; color: var(--muted, var(--text-dim)); }
 .summary-counts > [data-go] { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: .375rem; padding: .375rem .625rem .4375rem; border: 0;

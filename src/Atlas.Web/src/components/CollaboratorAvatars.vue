@@ -152,7 +152,7 @@ function navigate(peer: CollaborationPeer) {
   animation: atlas-edit-lock-ring var(--atlas-motion-pop) var(--atlas-ease-out);
 }
 @media (prefers-reduced-motion: reduce) { .collaborator-avatar.is-agent .collaborator-avatar-face::after { animation-name: st-fade-out; } }
-:global([data-atlas-reduced-motion]) .collaborator-avatar.is-agent .collaborator-avatar-face::after { animation-name: st-fade-out; }
+:global([data-atlas-reduced-motion] .collaborator-avatar.is-agent .collaborator-avatar-face::after) { animation-name: st-fade-out; }
 .collaborator-avatar.is-unavailable .collaborator-avatar-face { opacity: .7; }
 .collaborator-menu-item.is-unavailable { cursor: default; opacity: .7; }
 .collaborator-overflow {

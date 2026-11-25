@@ -332,6 +332,8 @@ watch(() => props.data.motion?.key, play, { flush: "post" });
 /* While a text or block is edited, nothing clips: the editor's selection bubble and the plugin's panel live inside it. */
 .board-node.is-editing :is(.board-note, .board-free-text, .board-shape-text, .board-card-frame) { overflow: visible; }
 .board-node-editors { position: absolute; top: -14px; right: 8px; z-index: 1; }
+/* A contact card's drag grip stands in the top right corner (ContactObjectCard): the avatars keep left of it. */
+.board-node:has([data-board-contact-drag]) > .board-node-editors { right: 34px; }
 .board-node.is-missing .board-card-frame { border-style: dashed; background: var(--hover); box-shadow: none; }
 @media (hover: hover) and (pointer: fine) { .board-node:hover .board-card-frame { box-shadow: var(--refresh-card-shadow-hover); } }
 </style>
@@ -340,8 +342,6 @@ watch(() => props.data.motion?.key, play, { flush: "post" });
 /* Vue Flow's own elements inside a board node: handles that fade in on hover in room they already have, resize handles. */
 .board-node .board-handle { width: 12px; height: 12px; border: 2px solid var(--accent); border-radius: 999px; background: var(--surface); opacity: 0;
   transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), scale var(--atlas-motion-fast) var(--atlas-ease-out); }
-/* Read only (a reader, the lock: one class on the canvas, nothing changes on the cards): a handle is only an anchor of the connectors. */
-:global(.board-canvas.is-readonly) .board-node .board-handle { min-width: 0; min-height: 0; width: 1px; height: 1px; border: 0; opacity: 0; pointer-events: none; }
 .board-node .board-handle-auto { inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; transform: none; border: 0; border-radius: inherit; background: transparent; opacity: 0; cursor: crosshair; }
 @media (hover: hover) and (pointer: fine) {
   .vue-flow__node:hover .board-node .board-handle { opacity: 1; }
@@ -353,6 +353,8 @@ watch(() => props.data.motion?.key, play, { flush: "post" });
 /* Nor on a card the neighbour highlighting dims: its handles sticking out of its box kept its opacity from flattening into the
    board's layer, as a group's name did (one compositing layer per card). A dimmed card is not the one under the pointer. */
 .board-canvas[data-highlighting] .board-node:not([data-highlight], .is-single) .board-handle { visibility: hidden; }
+/* Read only (a reader, the lock: one class on the canvas, nothing changes on the cards): a handle is only an anchor of the connectors. Placed after the hover and the selection: same weight, it wins. */
+.board-canvas.is-readonly .board-node .board-handle { min-width: 0; min-height: 0; width: 1px; height: 1px; border: 0; opacity: 0; pointer-events: none; }
 /* A finger needs 44 px: the handle keeps its look, an invisible area takes the touch, reaching into the card and not out of it, where a
    connector's end is grabbed (its circle lies outside the card, BoardCanvas's edge-updater-radius). */
 @media (pointer: coarse) {
