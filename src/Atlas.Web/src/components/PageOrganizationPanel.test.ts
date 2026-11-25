@@ -51,7 +51,7 @@ describe("page organization", () => {
     try {
       await open();
       await frame(); await frame(); await flushPromises();
-      const track = wrapper!.get(".organization-tabs");
+      const track = wrapper!.get(".organization-tabs .option-pills-group");
       expect(track.attributes("data-segmented")).toBeDefined();
       expect(track.attributes("style")).toContain("--thumb-x: 4px");
       expect(track.attributes("style")).toContain("--thumb-w: 348px");

@@ -1,25 +1,31 @@
 <script setup lang="ts">
-import { useId } from "vue";
+import { shallowRef, useId } from "vue";
 import { RadioGroupItem, RadioGroupRoot } from "reka-ui";
 import AtlasIcon from "../AtlasIcon.vue";
+import { useSegmentedThumb } from "../library/segmentedThumb";
 import type { ChoiceOption } from "./types";
 
 /**
  * A compact row of clickable pills for short choices (filters, periods, a mode switch). Always a
  * radiogroup: one Tab stop, arrows move and select. Each pill has an icon and a word.
+ * `segmented` is the quiet look of a view switch (Karty | Seznam, Náhled | Markdown): one raised chip under the options
+ * glides to the chosen one (segmentedThumb.ts). The behaviour is the same.
  */
-withDefaults(defineProps<{ options: ChoiceOption[]; label: string; hideLabel?: boolean; disabled?: boolean }>(), {
+const props = withDefaults(defineProps<{ options: ChoiceOption[]; label: string; hideLabel?: boolean; disabled?: boolean; segmented?: boolean }>(), {
   hideLabel: false,
 });
 const model = defineModel<string>({ default: "" });
 const uid = useId();
+const track = shallowRef<HTMLElement | null>(null);
+const bindTrack = (instance: unknown) => { track.value = props.segmented ? ((instance as { $el?: HTMLElement } | null)?.$el ?? null) : null; };
+const thumb = useSegmentedThumb(track, '[data-state="checked"]', model);
 </script>
 
 <template>
-  <div class="option-pills">
+  <div class="option-pills" :class="{ 'is-segmented': segmented }">
     <span :id="`${uid}-label`" class="option-pills-label" :class="{ 'st-sr-only': hideLabel }">{{ label }}</span>
     <div class="option-pills-row">
-      <RadioGroupRoot :model-value="model" :disabled="disabled" loop class="option-pills-group" :aria-labelledby="`${uid}-label`" @update:model-value="!disabled && (model = String($event))">
+      <RadioGroupRoot :ref="bindTrack" v-bind="segmented ? thumb : {}" :model-value="model" :disabled="disabled" loop class="option-pills-group" :aria-labelledby="`${uid}-label`" @update:model-value="!disabled && (model = String($event))">
           <RadioGroupItem v-for="option in options" :key="option.value || '__all'" :value="option.value" :disabled="disabled || option.disabled" class="option-pill" :data-tone="option.tone" :data-value="option.value || 'all'">
             <AtlasIcon v-if="option.icon" :name="option.icon" :size="14" />
             <span>{{ option.label }}</span>
@@ -66,4 +72,11 @@ const uid = useId();
 .option-pill[data-disabled] { opacity: .5; cursor: not-allowed; }
 .option-pill-badge { padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 650; background: var(--hover); color: var(--muted); }
 .option-pill[data-state="checked"] .option-pill-badge { background: color-mix(in srgb, var(--on-accent) 20%, transparent); color: var(--on-accent); }
+/* Segmented: the raised chip is the thumb of the group (segmentedThumb.css); without it (reduced motion) the chosen option draws its own. */
+.is-segmented .option-pills-group { --thumb-inset: 2px; --thumb-radius: 7px; flex-wrap: nowrap; gap: 2px; padding: 2px; border-radius: 9px; background: color-mix(in srgb, var(--line) 50%, var(--surface)); }
+.is-segmented .option-pill { height: 30px; padding: 0 10px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-weight: 500; }
+@media (hover: hover) and (pointer: fine) { .is-segmented .option-pill:hover:not([data-disabled]) { color: var(--text); } }
+.is-segmented .option-pill > svg { color: currentColor; animation: none; }
+.is-segmented .option-pill[data-state="checked"] { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 8%, transparent); }
+.is-segmented .option-pills-group[data-thumb] .option-pill[data-state="checked"] { background: transparent; box-shadow: none; }
 </style>

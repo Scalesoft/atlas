@@ -155,7 +155,7 @@ test.describe("shell consistency", () => {
     await first.waitForLoadState("networkidle");
     expect(urgent(/\/(DocumentEditor|documentWidgets|RelationsGraph|cytoscape)/), "editor or graph chunks on Obsah").toEqual([]);
     // The graph itself is read-only cards: showing it brings the graph and canvas chunks, still none of the editor (editor blocks, text editor, widgets).
-    await first.locator('[data-content-view="graph"]').click();
+    await first.locator('.content-view-switch [data-value="graph"]').click();
     await first.waitForLoadState("networkidle");
     expect(urgent(/\/(DocumentEditor|documentWidgets|editorBlocks|BoardBlock|BoardTextEditor|BoardMarkdown)-/), "editor chunks for the relations graph").toEqual([]);
     await first.goto(`/#/pages/${id}`);

@@ -13,8 +13,8 @@ import HistoryRevisionPreview from './HistoryRevisionPreview.vue';
 import AppDialog from './AppDialog.vue';
 import LoadingRegion from './LoadingRegion.vue';
 import LoadingSkeleton from './LoadingSkeleton.vue';
-import { useSegmentedThumb } from './library/segmentedThumb';
 import LoadingNote from './settings/LoadingNote.vue';
+import OptionPills from './settings/OptionPills.vue';
 import t from '../i18n/components-spaces';
 import { Button } from './ui/button';
 import ChangeSummaryField from './publishing/ChangeSummaryField.vue';
@@ -58,9 +58,7 @@ const preview = shallowRef<PageRevision>();
 const previous = shallowRef<PageRevision | null>(null);
 const previewLoading = ref(false), previewError = ref('');
 const previewMode = ref<'version' | 'changes'>('version');
-// The raised segment of Celá verze | Porovnat změny is one thumb that glides to the chosen one (segmentedThumb.ts).
-const previewTrack = ref<HTMLElement>();
-const previewThumb = useSegmentedThumb(previewTrack, '[aria-pressed="true"]', previewMode);
+const previewOptions = (): ChoiceOption[] => [{ value: 'version', label: t.approval.wholeVersion }, { value: 'changes', label: t.approval.compareChanges }];
 // 3.6 autosave saves a revision every few seconds, so an approval can meet a newer draft (409 draft_changed). The row is read again and
 // its newer revision approved only from its preview, compared with the revision the admin saw; never on its own.
 const renewed = ref<Record<string, { seen: string; summary: string | null }>>({});
@@ -324,7 +322,7 @@ void load();
       <LoadingSkeleton v-if="previewLoading" :rows="6" row-height="44px" :label="t.approval.loadingPreview" />
       <p v-else-if="previewError" role="alert" class="notice error">{{ previewError }}</p>
       <template v-else-if="preview">
-        <div ref="previewTrack" v-bind="previewThumb" class="approval-preview-tabs"><button type="button" :aria-pressed="previewMode === 'version'" @click="previewMode = 'version'">{{ t.approval.wholeVersion }}</button><button type="button" :aria-pressed="previewMode === 'changes'" @click="previewMode = 'changes'">{{ t.approval.compareChanges }}</button></div>
+        <OptionPills segmented class="approval-preview-tabs" :model-value="previewMode" :options="previewOptions()" :label="t.approval.previewTitle" hide-label @update:model-value="previewMode = $event as typeof previewMode" />
         <HistoryRevisionPreview v-if="previewMode === 'version'" :key="preview.id" :content-json="preview.contentJson" :markdown="preview.markdown" :page-id="preview.pageId" :dark="dark" :accent="accent" />
         <HistoryChanges v-else :revision="preview" :previous="previous" :dark="dark" :accent="accent" />
       </template>
@@ -365,13 +363,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
 .approval-confirm ul { max-height: min(40vh, 320px); overflow: auto; padding-left: 20px; font-size: 13px; }
 .approval-actions { position: sticky; bottom: 0; z-index: 2; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
 .approval-preview { min-width: 0; max-height: min(75vh, 760px); overflow: auto; }
-/* The same segmented switch as „Změny | Celá verze“ in Historie stránky (PageHistoryPanel); the chosen view is visible. */
-.approval-preview-tabs { --thumb-inset: 3px; --thumb-radius: calc(6px - 1px - 3px); --thumb-shadow: var(--shadow); display: inline-flex; gap: 2px; padding: 3px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--sidebar); }
-.approval-preview-tabs button { border: 0; border-radius: calc(6px - 1px - 3px); background: transparent; color: var(--muted); padding: 3px 9px; font: inherit; font-size: 12px; cursor: pointer; transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out), box-shadow var(--atlas-motion-fast) var(--atlas-ease-out); }
-.approval-preview-tabs button[aria-pressed="true"] { color: var(--text); background: var(--surface); box-shadow: var(--shadow); }
-/* While the thumb is drawn it carries the raised segment; without it (reduced motion) the chosen view fades its own. */
-.approval-preview-tabs[data-thumb] button[aria-pressed="true"] { background: transparent; box-shadow: none; }
-@media (hover: hover) and (pointer: fine) { .approval-preview-tabs button:hover:not([aria-pressed="true"]) { color: var(--text); } }
-.approval-preview-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.approval-preview-tabs { margin-bottom: 12px; }
 @media (max-width: 640px) { .approval-search { flex-basis: 100%; } .approval-row { gap: 8px; } }
 </style>

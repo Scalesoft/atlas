@@ -150,7 +150,7 @@ test("Obsah's tab counts what its tiles count, and the graph draws a contact as 
   await expect(page.locator(`[data-space-tab="pages"] .space-tab-count`)).toHaveText("3");
   await page.locator(`[data-content-tile="type:atlas.contact"]`).click();
   await expect(page.locator(".content-row")).toHaveCount(1);
-  await page.getByRole("button", { name: "Vazby", exact: true }).click();
+  await page.getByRole("radio", { name: "Vazby", exact: true }).click();
   const graph = page.locator("[data-relations-graph]");
   await expect(graph.locator(`.vue-flow__node[data-id="${contact.id}"] .bcard-icon svg`)).toHaveAttribute("data-icon", "user");
   // „je na tabuli“ leaves the contact's right side level, not from its bottom in a loop (read-only nodes had no sides to attach to).
@@ -176,7 +176,7 @@ test("a plain wheel over the relations graph in Obsah scrolls the page and leave
   await page.locator(`[data-content-tile="type:atlas.contact"]`).click();
   await expect(page.locator(".content-row")).toHaveCount(1);
   await expect(page.locator(".content-row").filter({ hasText: "Karel Kolečko" })).toBeVisible();
-  await page.getByRole("button", { name: "Vazby", exact: true }).click();
+  await page.getByRole("radio", { name: "Vazby", exact: true }).click();
   const graph = page.locator("[data-relations-graph]");
   await expect(graph.locator(".vue-flow__node")).toHaveCount(2);
   const pane = graph.locator(".vue-flow__transformationpane");

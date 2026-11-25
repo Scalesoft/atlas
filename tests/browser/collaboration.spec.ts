@@ -196,7 +196,7 @@ test("two writers → convergence → reload before save → publish → restore
     await expect(first.or(steps).first()).toBeVisible();
     if (!(await first.isVisible())) await steps.last().click();
     await first.click();
-    await history.getByRole("button", { name: "Celá verze", exact: true }).click();
+    await history.getByRole("radio", { name: "Celá verze", exact: true }).click();
     await expect(history.locator(".md-renderer")).toContainText(seed);
     await history
       .getByRole("button", { name: "Obnovit tuto verzi…", exact: true })

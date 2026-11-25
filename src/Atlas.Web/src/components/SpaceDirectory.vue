@@ -20,7 +20,6 @@ import SpaceCard from "./library/SpaceCard.vue";
 import SpacePinToggle from "./library/SpacePinToggle.vue";
 import { leaveInPlace } from "./library/leaveInPlace";
 import { useStageHeight } from "./library/stageHeight";
-import { useTabIndicator } from "./library/tabIndicator";
 import { cardKeys, rowKeys } from "../keyboard/navigation";
 // A workspace view outside the settings shell: it brings the design system's card and motion rules itself.
 import "./settings/settings.css";
@@ -123,13 +122,6 @@ watch(view, (value) => {
   if (props.storageKey) writeStored(props.storageKey, value);
 });
 const viewModel = computed({ get: () => view.value, set: (value: string) => { view.value = value === "list" ? "list" : "cards"; } });
-/* The chip behind the choice made is one thumb that glides to the new one, as the underline of the tabs above does
-   (tabIndicator.ts); the choice itself keeps its own chip where the thumb is not drawn (reduced motion). */
-const viewGroup = shallowRef<HTMLElement | null>(null);
-function bindViewSwitch(instance: unknown) {
-  viewGroup.value = (instance as { $el?: Element } | null)?.$el?.querySelector<HTMLElement>(".option-pills-group") ?? null;
-}
-const viewThumb = useTabIndicator(viewGroup, '[data-state="checked"]', () => view.value);
 
 /* A phone shows compact rows (board 14): the pinned spaces, the rest one tap away. */
 const phone = typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 680px)") : undefined;
@@ -195,7 +187,7 @@ function leaving(element: Element) {
         <SearchField v-model="query" :label="t.directory.search" :placeholder="t.directory.searchPlaceholder" data-space-search />
         <FilterMenu v-model="show" :options="showOptions" :label="t.directory.show" data-space-filter />
         <span class="space-directory-count" role="status">{{ countText }}</span>
-        <OptionPills v-if="!narrow" :ref="bindViewSwitch" v-model="viewModel" class="space-directory-view" :options="viewOptions()" :label="t.directory.view" hide-label data-library-view :style="{ '--thumb-x': `${viewThumb.left}px`, '--thumb-w': `${viewThumb.width}px` }" :data-thumb="viewThumb.ready ? 'ready' : undefined" />
+        <OptionPills v-if="!narrow" segmented v-model="viewModel" class="space-directory-view" :options="viewOptions()" :label="t.directory.view" hide-label data-library-view />
       </div>
 
       <p v-if="collapsed" class="space-directory-section">{{ t.directory.pinned }}</p>
@@ -279,43 +271,6 @@ function leaving(element: Element) {
 .space-directory-toolbar :deep(.search-field-input) { min-height: 36px; border-radius: 10px; font-size: 14px; }
 .space-directory-toolbar :deep(.filter-menu-trigger) { min-height: 36px; padding: 0 12px; border-radius: 10px; font-size: 14px; }
 .space-directory-count { margin-left: auto; color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
-
-/* Karty / Seznam: a quiet segmented switch, not the accent pills of a filter. */
-.space-directory-view :deep(.option-pills-group) { flex-wrap: nowrap; gap: 2px; padding: 2px; border-radius: 9px; background: color-mix(in srgb, var(--line) 50%, var(--surface)); }
-.space-directory-view :deep(.option-pill) { height: 30px; padding: 0 10px; gap: 6px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; }
-@media (hover: hover) and (pointer: fine) {
-  .space-directory-view :deep(.option-pill:hover:not(:disabled)) { transform: none; color: var(--text); }
-}
-.space-directory-view :deep(.option-pill > svg) { color: currentColor; }
-.space-directory-view :deep(.option-pill[data-state="checked"]) { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 8%, transparent); }
-.space-directory-view :deep(.option-pill[data-state="checked"] > svg) { color: currentColor; animation: none; }
-/* The thumb: one chip under the choices, placed without motion first and gliding afterwards (200 ms, the move curve, as
-   the underline of the tabs). It is placed by the script (--thumb-x, --thumb-w); the choices lie above it. */
-.space-directory-view :deep(.option-pills-group) { position: relative; }
-.space-directory-view :deep(.option-pill) { position: relative; z-index: 1; }
-.space-directory-view :deep(.option-pills-group)::before {
-  content: "";
-  position: absolute;
-  top: 2px;
-  left: 0;
-  z-index: 0;
-  width: var(--thumb-w, 0px);
-  height: 30px;
-  border-radius: 7px;
-  background: var(--surface);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 8%, transparent);
-  transform: translateX(var(--thumb-x, 0px));
-  pointer-events: none;
-}
-.space-directory-view[data-thumb] :deep(.option-pills-group)::before { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout), width var(--atlas-motion-base) var(--atlas-ease-inout); }
-.space-directory-view[data-thumb] :deep(.option-pill[data-state="checked"]) { background: transparent; box-shadow: none; }
-/* Reduced motion: the thumb does not travel; the choice made draws its own chip, which fades in. */
-@media (prefers-reduced-motion: reduce) {
-  .space-directory-view :deep(.option-pills-group)::before { display: none; }
-  .space-directory-view[data-thumb] :deep(.option-pill[data-state="checked"]) { background: var(--surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 8%, transparent); }
-}
-:global([data-atlas-reduced-motion] .space-directory-view .option-pills-group::before) { display: none; }
-:global([data-atlas-reduced-motion] .space-directory-view[data-thumb] .option-pill[data-state="checked"]) { background: var(--surface); box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 8%, transparent); }
 
 /* Karty and Seznam share one grid cell while they cross-fade (board 16: the content is only blended, no shift). */
 .space-directory-stage { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; }

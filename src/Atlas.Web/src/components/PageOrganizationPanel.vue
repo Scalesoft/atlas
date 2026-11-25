@@ -18,7 +18,8 @@ import LoadingNote from "./settings/LoadingNote.vue";
 import TrashList from "./settings/TrashList.vue";
 import InlineReveal from "./settings/InlineReveal.vue";
 import SearchableChoiceList from "./settings/SearchableChoiceList.vue";
-import { useSegmentedThumb } from "./library/segmentedThumb";
+import OptionPills from "./settings/OptionPills.vue";
+import type { ChoiceOption } from "./settings/types";
 
 const props = defineProps<{
   spaceId: string;
@@ -44,9 +45,7 @@ const spaceOptions = computed(() => writableSpaces.value.map(space => ({ value: 
 const targetSpaceId = ref(""), targetParentId = ref(""), targetSubtree = ref(false), acknowledgeAccess = ref(false);
 const targetTree = shallowRef<OrganizationTree>();
 const section = ref<'general' | 'location'>(props.board ? 'location' : 'general'), confirmTrash = ref(!!props.startWithTrash && !!props.page);
-// The raised tab is one thumb that glides to the chosen one (segmentedThumb.ts).
-const tabTrack = ref<HTMLElement>();
-const tabThumb = useSegmentedThumb(tabTrack, '[aria-pressed="true"]', section);
+const sectionOptions = (): ChoiceOption[] => [{ value: 'general', label: t.org.general, icon: 'page' }, { value: 'location', label: t.org.location, icon: 'organize' }];
 const body = ref<HTMLElement>();
 watch(confirmTrash, async value => {
   await nextTick();
@@ -305,10 +304,7 @@ onBeforeUnmount(() => {
           </InlineReveal>
         </div>
         <div v-if="(page || board) && !confirmTrash" class="organization-context"><span class="organization-page-icon"><AtlasIcon :name="board ? 'layout-dashboard' : 'page'" :size="22" /></span><div><strong>{{ (page ?? board)!.title }}</strong><small>{{ sourceName }}</small></div></div>
-        <nav v-if="page && !confirmTrash" ref="tabTrack" v-bind="tabThumb" class="organization-tabs" :aria-label="t.org.pageSettings">
-          <Button variant="ghost" type="button" :aria-pressed="section === 'general'" @click="section = 'general'"><AtlasIcon name="page" />{{ t.org.general }}</Button>
-          <Button variant="ghost" type="button" :aria-pressed="section === 'location'" @click="section = 'location'"><AtlasIcon name="organize" />{{ t.org.location }}</Button>
-        </nav>
+        <OptionPills v-if="page && !confirmTrash" segmented :model-value="section" @update:model-value="section = $event as typeof section" class="organization-tabs" :options="sectionOptions()" :label="t.org.pageSettings" hide-label />
         <fieldset v-if="page || board" :disabled="mutationsDisabled" class="organization-fields">
           <form v-if="page" v-show="section === 'general' && !confirmTrash" class="organization-section" :aria-label="t.org.renamePage" @submit.prevent="rename">
             <h3>{{ t.org.pageName }}</h3>
@@ -404,12 +400,8 @@ onBeforeUnmount(() => {
 .organization-context strong { font-size: 17px; overflow-wrap: anywhere; }
 .organization-context small { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
 .organization-page-icon { display: grid; place-items: center; width: 46px; height: 46px; flex-shrink: 0; border-radius: 12px; background: var(--accent-soft); color: var(--accent); }
-.organization-tabs { --thumb-inset: 4px; --thumb-radius: calc(10px - 1px - 4px); --thumb-shadow: var(--shadow); display: flex; gap: 4px; padding: 4px; border-radius: 10px; background: var(--canvas); border: 1px solid var(--line); }
-/* The pill is concentric with its track: 10 px radius − 1 px border − 4 px padding. */
-.organization-tabs button { flex: 1; border-radius: calc(10px - 1px - 4px); }
-.organization-tabs button[aria-pressed=true] { background: var(--surface); color: var(--accent); box-shadow: var(--shadow); }
-/* While the thumb is drawn it carries the raised tab; without it (reduced motion) the chosen tab fades its own. */
-.organization-tabs[data-thumb] button[aria-pressed=true] { background: transparent; box-shadow: none; }
+.organization-tabs :deep(.option-pills-group) { display: flex; }
+.organization-tabs :deep(.option-pill) { flex: 1; justify-content: center; }
 .organization-position { margin-top: 14px; font-size: 13px; }
 .organization-disclosure { display: block; width: 100%; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; color: var(--muted); padding: 10px 0; }
 .organization-disclosure[aria-expanded="true"] { color: var(--accent); }

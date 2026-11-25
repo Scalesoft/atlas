@@ -244,7 +244,7 @@ describe("Obsah Vazby", () => {
     const inner = memoryRelations(objects, edges);
     const api: RelationsApi = { contents: inner.contents, relations: (id, depth, signal) => { calls.push(depth); return inner.relations(id, depth, signal); } };
     const app = await show(api);
-    await app.get('[data-content-view="graph"]').trigger("click"); await flushPromises();
+    await app.get('.content-view-switch [data-value="graph"]').trigger("click"); await flushPromises();
     // Not the first row (the contact, placed nowhere: „Bez vazeb“) but the one with the most links.
     expect(app.get(".content-graph-subject").text()).toContain("Postup vydání");
     expect(calls).toEqual([1]);
@@ -257,7 +257,7 @@ describe("Obsah Vazby", () => {
   it("draws the neighbourhood of the object whose dock is open, and a click in the graph does not move the graph", async () => {
     const app = await show();
     await app.get(`[data-content-id="${ids.jana}"] [data-content-detail]`).trigger("click"); await flushPromises();
-    await app.get('[data-content-view="graph"]').trigger("click"); await flushPromises();
+    await app.get('.content-view-switch [data-value="graph"]').trigger("click"); await flushPromises();
     expect(app.get(".content-graph-subject").text()).toContain("Jana Nováková");
     app.findComponent(RelationsGraph).vm.$emit("select", ids.board, "atlas.board"); await flushPromises();
     expect(app.get(".content-graph-subject").text()).toContain("Jana Nováková");
@@ -271,7 +271,7 @@ describe("Obsah Vazby", () => {
   it("keeps a node the list has no row for as the subject instead of falling back to the first row", async () => {
     const app = await show();
     await app.get('[data-content-tile="type:atlas.page"]').trigger("click"); await flushPromises();
-    await app.get('[data-content-view="graph"]').trigger("click"); await flushPromises();
+    await app.get('.content-view-switch [data-value="graph"]').trigger("click"); await flushPromises();
     expect(app.get(".content-graph-subject").text()).toContain("Postup vydání");
     app.findComponent(RelationsGraph).vm.$emit("select", ids.board, "atlas.board"); await flushPromises();
     (panel.contentProps.value as { onFocus: (id: string) => void }).onFocus(ids.board); await flushPromises();

@@ -4,6 +4,7 @@ import "@fontsource-variable/dm-sans";
 import App from "./App.vue";
 import "./styles/tailwind.css";
 import "./shell.css";
+import "./components/library/segmentedThumb.css";
 import "./styles/palettes.css";
 import "./styles/appearance.css";
 import "@atlas/markdown/styles/states.css";

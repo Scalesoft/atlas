@@ -16,7 +16,7 @@ it("gives Náhled | Markdown one thumb that is placed first and then follows the
   try {
     const wrapper = mount(HistoryFormatSwitch, { attachTo: document.body });
     await flushPromises(); await frame(); await frame(); await flushPromises();
-    const track = wrapper.get(".history-format");
+    const track = wrapper.get(".history-format .option-pills-group");
     // Placed without motion first, then ready for the glide.
     expect(track.attributes("data-segmented")).toBeDefined();
     expect(track.attributes("style")).toContain("--thumb-x: 3px");
@@ -27,8 +27,8 @@ it("gives Náhled | Markdown one thumb that is placed first and then follows the
     expect(track.attributes("style")).toContain("--thumb-x: 61px");
     expect(track.attributes("style")).toContain("--thumb-w: 75px");
     // The choice itself, its roles and its labels are those of before.
-    expect(wrapper.findAll("button").map(button => [button.text(), button.attributes("aria-pressed")])).toEqual([["Náhled", "false"], ["Markdown", "true"]]);
-    expect(track.attributes("role")).toBe("group");
+    expect(wrapper.findAll("button").map(button => [button.text(), button.attributes("aria-checked")])).toEqual([["Náhled", "false"], ["Markdown", "true"]]);
+    expect(track.attributes("role")).toBe("radiogroup");
     wrapper.unmount();
   } finally {
     if (left) Object.defineProperty(HTMLElement.prototype, "offsetLeft", left); else delete (HTMLElement.prototype as { offsetLeft?: number }).offsetLeft;

@@ -1,7 +1,7 @@
 import { computed, ref, watch, type Ref, type WatchSource } from "vue";
 import { prefersReducedMotion } from "../../motion/aiMotion";
 import { useTabIndicator } from "./tabIndicator";
-import "./segmentedThumb.css";
+
 
 /** What `v-bind` puts on the track: nothing under reduced motion, only `data-segmented` while there is no box to draw. */
 export interface SegmentedThumbAttributes { "data-segmented"?: string; "data-thumb"?: "placed" | "ready"; style?: Record<string, string> }
