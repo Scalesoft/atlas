@@ -28,8 +28,7 @@ public sealed class PageActivityTests
         // The guard enters through the page gate, which locks the actor through the same access.
         var guard = new PersonalPageGuard(session, scope.ServiceProvider.GetRequiredService<ICurrentActor>(),
             access, locks, new Atlas.Server.Platform.Identity.PageGate(session, access, locks), new Atlas.Server.Platform.Resources.ContentParticipants(scope.ServiceProvider));
-        var handler = new AnalyticsHandler(session, guard, scope.ServiceProvider.GetRequiredService<Atlas.Server.Features.Vaults.VaultGrantSnapshots>(),
-            scope.ServiceProvider.GetRequiredService<IContentAccess>());
+        var handler = new AnalyticsHandler(session, guard, scope.ServiceProvider.GetRequiredService<Atlas.Server.Features.Vaults.VaultGrantSnapshots>());
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         Assert.Equal(404, (await Assert.ThrowsAsync<ApiException>(() =>
             handler.Handle(new GetPageReadership(page.Id, today, today), default))).Status);

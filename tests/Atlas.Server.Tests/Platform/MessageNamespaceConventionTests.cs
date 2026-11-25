@@ -176,7 +176,6 @@ public sealed class MessageNamespaceConventionTests
         ["Atlas.Server.Features.PersonalLibrary.GetActivityChanges"] = DurableAndLogged,
         ["Atlas.Server.Features.PersonalLibrary.GetPageReadership"] = DurableAndLogged,
         ["Atlas.Server.Features.PersonalLibrary.GetPopularPages"] = DurableAndLogged,
-        ["Atlas.Server.Features.PersonalLibrary.GetSpaceReadership"] = DurableAndLogged,
         ["Atlas.Server.Features.StorageProfiles.RequireStorageProfileAdministrator"] = DurableAndLogged,
         ["Atlas.Server.Features.Vaults.References.GetSecretReference"] = DurableAndLogged,
         ["Atlas.Server.Features.Vaults.References.SearchSecretReferences"] = DurableAndLogged,

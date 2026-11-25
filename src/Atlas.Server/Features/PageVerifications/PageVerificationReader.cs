@@ -70,12 +70,4 @@ public sealed class PageVerificationReader(ISession session, TimeProvider clock)
         return rows.Select(row => (Id: (Guid)row[0], State: PageVerificationStates.Of((short?)row[1], (DateTime?)row[2], now)))
             .Where(x => x.State != PageVerificationStates.Off).ToDictionary(x => x.Id, x => x.State);
     }
-
-    /// <summary>Distinct readers of the page in the last <see cref="ReaderDays"/> days (the panel's „Čtenost“): views on the web only.</summary>
-    public async Task<long> ReadersAsync(Guid pageId, CancellationToken ct)
-        => await session.CreateSQLQuery("""
-                SELECT count(DISTINCT v."UserId") AS "Readers" FROM "PageView" v WHERE v."PageId"=:page AND v."ViewedAt">=:since
-                """).AddScalar("Readers", NHibernate.NHibernateUtil.Int64)
-            .SetParameter("page", pageId).SetParameter("since", clock.GetUtcNow().UtcDateTime.AddDays(-ReaderDays), NHibernate.NHibernateUtil.UtcDateTime)
-            .UniqueResultAsync<long>(ct);
 }

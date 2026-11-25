@@ -275,6 +275,28 @@ public sealed class ContentImportHandlerTests
         Assert.Equal("skip", repeated.Items.Single(x => x.Path == "en/a.md").Action);
     }
 
+    /// <summary>5.2: a page imported into a space that verifies its pages starts as a created one, with the importing admin as its steward.</summary>
+    [PostgreSqlFact]
+    public async Task A_page_imported_into_a_verifying_space_gets_the_importer_as_its_steward()
+    {
+        await using var f = await ContentImportFixture.CreateAsync();
+        using var first = ContentImportTests.Zip(("a.md", "A"));
+        var preview = await f.PreviewAsync(f.Admin, first, new WikiImportOptions(f.Source, "Import"));
+        var spaceId = (await f.As<WikiImportReport>(f.Admin, new CommitImport(preview.Id, new ConfirmWikiImport(preview.ReviewToken, true, true)))).SpaceId!.Value;
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", spaceId);
+        using var second = ContentImportTests.Zip(("a.md", "A"), ("b.md", "B"));
+        var again = await f.PreviewAsync(f.Admin, second, new WikiImportOptions(f.Source, "Import"));
+        await f.As<WikiImportReport>(f.Admin, new CommitImport(again.Id, new ConfirmWikiImport(again.ReviewToken, true, true)));
+        using var s = f.Host.OpenSession();
+        var stewards = (await s.CreateSQLQuery("""
+                SELECT p."Id" AS "PageId", v."StewardId" AS "StewardId" FROM "Page" p LEFT JOIN "PageVerification" v ON v."PageId"=p."Id" WHERE p."SpaceId"=:space
+                """).AddScalar("PageId", NHibernate.NHibernateUtil.Guid).AddScalar("StewardId", NHibernate.NHibernateUtil.Guid)
+            .SetParameter("space", spaceId).ListAsync<object[]>()).ToDictionary(row => (Guid)row[0], row => (Guid?)row[1]);
+        // The page from before verification was on keeps none; the new one has the importer.
+        Assert.Null(stewards[preview.Items.Single(x => x.Path == "a.md").PageId!.Value]);
+        Assert.Equal(f.Admin.Id, stewards[again.Items.Single(x => x.Path == "b.md").PageId!.Value]);
+    }
+
     private static async Task<Stream> SourceAsync(ContentImportFixture f, UserAccount actor, Guid id)
     {
         await f.As<WikiImportReport>(actor, new GetImportReport(id));

@@ -2,7 +2,6 @@ using Atlas.Server.Features.ApiActivity;
 using Atlas.Server.Features.PageVerifications.Commands;
 using Atlas.Server.Features.PageVerifications.Queries;
 using Atlas.Server.Features.PersonalApi;
-using Atlas.Server.Features.PersonalLibrary;
 using Atlas.Server.Platform.Jobs;
 using FluentMigrator;
 using Wolverine;
@@ -19,6 +18,7 @@ public static class PageVerificationsModule
     public static IServiceCollection AddPageVerifications(this IServiceCollection services)
         // The MCP tools run the shared handlers behind G5 (PageVerificationMcpHandler).
         => services.AddScoped<PageVerificationReader>().AddScoped<Commands.PageVerificationHandler>().AddScoped<Queries.PageVerificationQueryHandler>()
+            .AddScoped<Queries.SpaceReadershipHandler>()
             .AddJob<ContentVerificationJob>();
 
     public static void MapPageVerifications(this WebApplication app)

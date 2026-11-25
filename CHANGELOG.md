@@ -15,11 +15,12 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 
 ### Čtenost a Stav obsahu
 - Nastavení prostoru → Stav obsahu: počty podle stavu ověření a seznam publikovaných stránek se stavem, garantem a čteností (zobrazení a různí čtenáři za 30, 90 nebo 365 dní, bez jmen), výchozí řazení nejdřív čtené a neověřené.
-- Panel stránky ukazuje počet čtenářů za 90 dní.
+- Panel stránky ukazuje počet čtenářů za 90 dní, stejných kalendářních dní jako Stav obsahu.
 
 ### AI a API
-- MCP `atlas_set_verification`, `atlas_list_content_health` a `atlas_report_outdated`; `atlas_get_page` a `atlas_search` nesou stav ověření a vypršelé ověření AI v odpovědi zmíní. Ověření přes MCP nebo API je označené „přes AI“.
+- MCP `atlas_set_verification`, `atlas_list_content_health`, `atlas_list_readership` a `atlas_report_outdated`; `atlas_get_page` a `atlas_search` nesou stav ověření a vypršelé ověření AI v odpovědi zmíní. Ověření přes MCP nebo API je označené „přes AI“.
 - `/api/v1`: `GET|PUT /pages/{id}/verification`, `POST /pages/{id}/verification/report`, `GET /spaces/{id}/content-health`, `POST /spaces/{id}/content-health/bulk`, `GET /spaces/{id}/readership`; `GET /pages/{id}` nese blok `verification`.
+- Diskuse pro AI: MCP `atlas_list_comments` a `atlas_post_comment` (odpověď a zmínka jako na webu), `/api/v1`: `GET|POST /objects/{id}/comments`.
 
 ### Provoz
 - Migrace 2026112400: tabulka `PageVerification` a sloupec `Space.VerificationIntervalMonths`; žádná konverze dat. Instalační záloha (Git, ZIP) ověření nese, wiki archiv ne.

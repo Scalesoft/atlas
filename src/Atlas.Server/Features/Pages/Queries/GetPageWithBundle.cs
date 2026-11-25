@@ -36,7 +36,7 @@ public sealed record PageLiveStateRead(PageLiveState? Live);
 /// </summary>
 public sealed class GetPageWithBundleHandler(PageReader reader, PersonalPageGuard personal, PageTagStore tags,
     GetPageConnectionsHandler connections, ContactDirectory contacts, ResolvePageReferencesHandler references, ISession session,
-    WatchCollaborationHandler watch, PageGate gate, PageVerifications.PageVerificationReader verifications)
+    WatchCollaborationHandler watch, PageGate gate, PageVerifications.PageVerificationReader verifications, TimeProvider clock)
 {
     private const int MaxStateBytes = 4 * 1024 * 1024;
 
@@ -60,7 +60,8 @@ public sealed class GetPageWithBundleHandler(PageReader reader, PersonalPageGuar
             {
                 Verification = verification,
                 Readers = verification is null || verification.State == PageVerifications.Domain.PageVerificationStates.Off
-                    ? null : await verifications.ReadersAsync(page.Id, ct)
+                    ? null : await PageVerifications.Queries.SpaceReadershipHandler.PageReadersAsync(session, page.Id,
+                        PageVerifications.PageVerificationReader.ReaderDays, clock.GetUtcNow().UtcDateTime, ct)
             }
         };
     }
