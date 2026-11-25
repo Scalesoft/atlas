@@ -142,6 +142,27 @@ public sealed class BoardEditingTests
         Assert.Empty(restored.Changed);
     }
 
+    /// <summary>A4: a <c>set</c> moves a connector's ends to other items and keeps the connector (its id, label and style); the new
+    /// ends follow the rule of a create's, and only a connector has ends to move.</summary>
+    [Fact]
+    public void A_set_moves_a_connectors_ends_and_keeps_the_connector()
+    {
+        var moved = new BoardChange("set", ItemId: s_link, To: s_new, Props: System.Text.Json.Nodes.JsonNode.Parse("""{"toSide":"left"}""")!.AsObject());
+        var result = Apply(State(), 5, Create(Note(s_new)), moved);
+        Assert.Null(result.Rejection);
+        var link = result.Changed.Single(item => item.Id == s_link);
+        Assert.Equal((s_note, s_new, 5L, """{"toSide":"left"}"""), (link.FromItemId, link.ToItemId, link.Version, link.Props));
+        var normalized = Assert.Single(BoardEditing.Normalize([moved]));
+        Assert.Equal((s_link, (Guid?)null, s_new), (normalized.ItemId!.Value, normalized.From, normalized.To!.Value));
+        Assert.Equal(new[] { s_link, s_new }.Order(), BoardEditing.TouchedIds([moved]).Order());
+
+        Assert.Equal(BoardRejection.ItemDeleted, Apply(State(), 2, new BoardChange("set", ItemId: s_link, From: s_deleted)).Rejection);
+        Assert.Equal(BoardRejection.ItemMissing, Apply(State(), 2, new BoardChange("set", ItemId: s_link, To: s_foreign)).Rejection);
+        Assert.Equal(BoardRejection.Invalid, Apply(State(), 2, new BoardChange("set", ItemId: s_link, To: s_note)).Rejection);
+        Assert.Equal(BoardRejection.Invalid, Apply(State(), 2, Connector(s_note, s_other), new BoardChange("set", ItemId: s_link, To: s_new2)).Rejection);
+        Assert.Equal(BoardRejection.Invalid, Apply(State(), 2, new BoardChange("set", ItemId: s_note, To: s_other)).Rejection);
+    }
+
     [Fact]
     public void A_connector_joins_two_different_live_items_of_the_board_that_are_not_connectors()
     {

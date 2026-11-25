@@ -6,7 +6,7 @@ import { createPresenceRoster, presenceActivity } from "../live/objectPresence";
 import { throttleLatest } from "../live/throttleLatest";
 import { viewSessions, type ObjectListener, type ViewHandle, type ViewSessions } from "../live/viewSession";
 import { liveObjects, type LiveObjects } from "../objects/liveObjects";
-import { boardApi, defaultBoardSettings, isObjectEdit, maxBatchChanges, type BoardApi, type BoardBatch, type BoardEdit, type BoardSettings, type Geometry } from "./boardApi";
+import { boardApi, defaultBoardSettings, isObjectEdit, maxBatchChanges, type BoardApi, type BoardBatch, type BoardEdit, type BoardSettings, type BoardSide, type Geometry } from "./boardApi";
 import t from "../i18n/boards";
 import { createBoardModel, fromBoardDto, type BoardItem, type BoardModel, type UndoStep } from "./boardModel";
 
@@ -31,8 +31,10 @@ export interface PageTargetInfo { title: string | null; available: boolean; spac
 export type BoardViewItem = BoardItem & { target?: PageTargetInfo; editors?: CollaborationPeer[] };
 export interface DraggedItem extends Geometry { itemId: string }
 /** Another user on the board: their pointer (board coordinates) and what they drag right now. */
-export interface RemoteDrag { userId: string; displayName: string; color: string; dragging: DraggedItem[]; cursor?: { x: number; y: number } }
-export interface PresencePayload { cursor?: { x: number; y: number }; dragging?: DraggedItem[] }
+/** A connector someone is drawing: its fixed end (and side), the item its free end would land at, and where that end is. */
+export interface ConnectingPresence { from: string; side?: BoardSide; to?: string; x: number; y: number }
+export interface RemoteDrag { userId: string; displayName: string; color: string; dragging: DraggedItem[]; cursor?: { x: number; y: number }; connecting?: ConnectingPresence }
+export interface PresencePayload { cursor?: { x: number; y: number }; dragging?: DraggedItem[]; connecting?: ConnectingPresence }
 
 export interface BoardSessionState {
   status: "loading" | "ready" | "missing" | "failed" | "revoked";
@@ -92,11 +94,13 @@ const maxRetryAfterMs = 300_000;
 // send the dragged selection's bounds instead if large drags need a faithful preview.
 const maxPreviewed = 18;
 
+const sides: readonly (BoardSide | undefined)[] = ["top", "right", "bottom", "left"];
 /** Presence within the server's size: whole board pixels and the first dragged items. */
-function compact({ cursor, dragging }: PresencePayload): Record<string, unknown> {
+function compact({ cursor, dragging, connecting }: PresencePayload): Record<string, unknown> {
   const round = Math.round;
   return {
     ...(cursor && { cursor: { x: round(cursor.x), y: round(cursor.y) } }),
+    ...(connecting && { connecting: { ...connecting, x: round(connecting.x), y: round(connecting.y) } }),
     ...(dragging && { dragging: dragging.slice(0, maxPreviewed).map(({ itemId, x, y, width, height }) => ({ itemId, x: round(x), y: round(y), width: round(width), height: round(height) })) }),
   };
 }
@@ -420,8 +424,12 @@ export function createBoardSession(boardId: string, changed: () => void, deps: B
     const dragging = Array.isArray(payload?.dragging) ? payload.dragging : [];
     const point = payload?.cursor;
     const cursor = point && Number.isFinite(point.x) && Number.isFinite(point.y) ? { x: point.x, y: point.y } : undefined;
-    if (!dragging.length && !cursor) remote.delete(userId);
-    else remote.set(userId, { userId, displayName, color, dragging, ...(cursor && { cursor }), timer: setTimeout(() => { remote.delete(userId); emitSoon(); }, presenceTtl) });
+    const line = payload?.connecting;
+    const connecting: ConnectingPresence | undefined = line && typeof line.from === "string" && Number.isFinite(line.x) && Number.isFinite(line.y) ? {
+      from: line.from, x: line.x, y: line.y, ...(typeof line.to === "string" && { to: line.to }), ...(sides.includes(line.side!) && { side: line.side }),
+    } : undefined;
+    if (!dragging.length && !cursor && !connecting) remote.delete(userId);
+    else remote.set(userId, { userId, displayName, color, dragging, ...(cursor && { cursor }), ...(connecting && { connecting }), timer: setTimeout(() => { remote.delete(userId); emitSoon(); }, presenceTtl) });
     emitSoon();
   }
 

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, defineComponent, h, onBeforeUnmount, ref, shallowRef, watch, watchEffect, type PropType, type VNode } from "vue";
+import type { Geometry } from "../../../boards/boardApi";
+import { previewSides, sideMiddle } from "../../../boards/boardFlow";
 import type { RemoteDrag } from "../../../boards/boardSession";
 import type { Viewport } from "../../../boards/boardViewport";
 import { motionMs } from "../../../motion/aiMotion";
@@ -18,7 +20,7 @@ import CollaborationPointer from "../../CollaborationPointer.vue";
  * and per start or stop on 300 cards, COL2-1). A mark fades in by its CSS animation, and out (at its last place) for
  * --atlas-motion-surface after its person stops; each mark follows its person on its own, the list changes only when one starts or stops.
  */
-const props = defineProps<{ remote: readonly RemoteDrag[]; viewport: Viewport }>();
+const props = defineProps<{ remote: readonly RemoteDrag[]; viewport: Viewport; boxOf?: (id: string) => Geometry | undefined }>();
 interface Mark { key: string; userId: string; itemId?: string }
 const root = ref<HTMLElement>();
 const screen = (x: number, y: number) => ({ x: x * props.viewport.zoom + props.viewport.x, y: y * props.viewport.zoom + props.viewport.y });
@@ -53,6 +55,17 @@ watch(() => [props.viewport.x, props.viewport.y, props.viewport.zoom], () => gli
 onBeforeUnmount(() => { timers.forEach(clearTimeout); glide.stop(); });
 const shown = computed(() => [...live.value.map(mark => ({ mark, out: false })), ...[...leaving.value.values()].map(mark => ({ mark, out: true }))]);
 
+/** The connectors others are drawing (A8): a dashed line in their colour from the side of the fixed end to the side it would land at,
+ * or to their pointer; one whose start is not on this board is not drawn. */
+const lines = computed(() => props.remote.flatMap(user => {
+  const line = user.connecting, from = line && props.boxOf?.(line.from);
+  if (!line || !from) return [];
+  const to = line.to ? props.boxOf?.(line.to) : undefined;
+  const [start, end] = previewSides(from, line.side, line, to && { box: to });
+  const a = sideMiddle(from, start), b = to ? sideMiddle(to, end) : line;
+  const p = screen(a.x, a.y), q = screen(b.x, b.y);
+  return [{ key: user.userId, x1: p.x, y1: p.y, x2: q.x, y2: q.y, style: { "--collaboration-color": themedCollaboratorColor(user.color) } }];
+}));
 interface Look { name?: string; agent?: boolean; style: Record<string, string>; at?: { x: number; y: number } }
 /** What a mark draws now, read by the mark itself (props are reactive): a ghost box, or a pointer with the name; null once gone. */
 function lookOf(mark: Mark): Look | null {
@@ -93,6 +106,9 @@ const PresenceMark = defineComponent({
 
 <template>
   <div ref="root" class="board-presence" aria-hidden="true">
+    <svg v-if="lines.length" class="board-presence-lines">
+      <line v-for="line in lines" :key="line.key" :x1="line.x1" :y1="line.y1" :x2="line.x2" :y2="line.y2" :style="line.style" class="board-presence-line" data-board-remote-connector />
+    </svg>
     <PresenceMark v-for="entry in shown" :key="entry.mark.key" :mark="entry.mark" :out="entry.out" />
   </div>
 </template>
@@ -103,5 +119,7 @@ const PresenceMark = defineComponent({
 .board-presence :deep(.board-ghost) { position: absolute; top: 0; left: 0; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out);
   transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out); }
 .board-presence :deep(.is-leaving) { opacity: 0; }
+.board-presence-lines { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.board-presence-line { stroke: var(--collaboration-color); stroke-width: 2; stroke-dasharray: 6 5; stroke-linecap: round; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); }
 .board-presence :deep(.board-ghost) { transition: border-color var(--atlas-motion-base) var(--atlas-ease-out), background-color var(--atlas-motion-base) var(--atlas-ease-out); border: 2px dashed var(--collaboration-color); border-radius: var(--atlas-radius-md); background: color-mix(in oklab, var(--collaboration-color) 10%, transparent); }
 </style>

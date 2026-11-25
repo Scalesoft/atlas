@@ -4,7 +4,7 @@ import { COLLAPSED_GROUP } from "./boardGroups";
 import type { BoardItem } from "./boardModel";
 import {
   alignChanges, autoSides, blockLayoutOf, spokenText, blockSizeOf, connectChanges, connectToNewNoteChanges, createChange, defaultProps, deleteChanges, distributeChanges,
-  duplicateChanges, insertChanges, minSizeOf, moveChanges, noteToPageChanges, nearestSide, reconnectChanges, reorderChanges, reuseUnchanged, styleChanges, textChanges, toFlowEdges, toFlowNodes,
+  duplicateChanges, insertChanges, minSizeOf, moveChanges, noteToPageChanges, nearestSide, previewSides, reconnectChanges, reorderChanges, reuseUnchanged, sideMiddle, styleChanges, textChanges, toFlowEdges, toFlowNodes,
 } from "./boardFlow";
 
 const note = (id: string, extra: Partial<BoardItem> = {}): BoardItem => ({ id, kind: "note", x: 0, y: 0, width: 200, height: 200, z: 1, text: "Ahoj", color: "yellow", ...extra });
@@ -216,16 +216,24 @@ describe("gestures → one batch each", () => {
     expect(changes[1]).toMatchObject({ type: "create", item: { id: "k", kind: "connector", from: "a", to: "n", props: { fromSide: "bottom" } } });
   });
 
-  it("reconnects to another side of the same item by props, and to another item by replacing the connector", () => {
+  it("reconnects as one set of the same connector: its sides, or its ends and sides, keeping its id, label and style (A4)", () => {
     const items = [note("a"), note("b"), note("d"), link("c", "a", "b", { text: "ano", color: "red", props: { route: "curved", arrowStart: "none", arrowEnd: "arrow", dash: "solid", toSide: "left" } })];
     const connector = items[3]!;
-    expect(reconnectChanges(connector, { from: "a", to: "b", fromSide: "bottom", toSide: "left" }, "new")).toEqual([{ type: "set", itemId: "c", props: { fromSide: "bottom" } }]);
-    expect(reconnectChanges(connector, { from: "a", to: "d", toSide: "top" }, "new")).toEqual([
-      { type: "delete", itemId: "c" },
-      { type: "create", item: { id: "new", kind: "connector", x: 0, y: 0, width: 8, height: 8, z: 0, from: "a", to: "d", text: "ano", color: "red",
-        props: { route: "curved", arrowStart: "none", arrowEnd: "arrow", dash: "solid", toSide: "top" } } },
-    ]);
-    expect(reconnectChanges(connector, { from: "a", to: "b", toSide: "left" }, "new")).toEqual([]);
+    expect(reconnectChanges(connector, { from: "a", to: "b", fromSide: "bottom", toSide: "left" })).toEqual([{ type: "set", itemId: "c", props: { fromSide: "bottom" } }]);
+    expect(reconnectChanges(connector, { from: "a", to: "d", toSide: "top" })).toEqual([{ type: "set", itemId: "c", to: "d", props: { toSide: "top" } }]);
+    expect(reconnectChanges(connector, { from: "d", to: "b", toSide: "left" })).toEqual([{ type: "set", itemId: "c", from: "d" }]);
+    expect(reconnectChanges(connector, { from: "a", to: "b", toSide: "left" })).toEqual([]);
+    expect(reconnectChanges(connector, { from: "b", to: "b" })).toEqual([]);
+  });
+
+  it("previews a connector with the sides the connector it becomes takes (A3)", () => {
+    const fixed = { x: 0, y: 0, width: 100, height: 100 }, card = { x: 300, y: 0, width: 100, height: 100 };
+    // Over a card: an unset side faces the other end, a chosen one (handle, nearest side) stays.
+    expect(previewSides(fixed, undefined, { x: 350, y: 50 }, { box: card })).toEqual(["right", "left"]);
+    expect(previewSides(fixed, "bottom", { x: 350, y: 50 }, { box: card, side: "top" })).toEqual(["bottom", "top"]);
+    // Over empty board it faces the pointer.
+    expect(previewSides(fixed, undefined, { x: 50, y: 400 })).toEqual(["bottom", "top"]);
+    expect(sideMiddle(card, "left")).toEqual({ x: 300, y: 50 });
   });
 
   it("deletes the selection", () => {
@@ -363,7 +371,8 @@ describe("a note becomes a page (objects spec §5.2)", () => {
       { type: "create", item: { id: "c1", kind: "page", x: 10, y: 20, width: 200, height: 200, z: 3, targetResourceId: "page-1", props: { display: "card" } } },
       { type: "parent", itemId: "c1", parentId: "g" },
     ]);
-    expect(changes.slice(3).filter(change => change.type === "create").map(change => change.type === "create" && [change.item.from, change.item.to])).toEqual([["o", "c1"], ["c1", "o"]]);
+    // Its connectors stay the same ones, their ends moved to the page card (A4).
+    expect(changes.slice(3).map(change => change.type === "set" && [change.itemId, change.from, change.to])).toEqual([["in", undefined, "c1"], ["out", "c1", undefined]]);
     expect(noteToPageChanges(items, "o2", "page-1", () => "x")).toEqual([]);
   });
 });

@@ -112,8 +112,8 @@ export interface Geometry { x: number; y: number; width: number; height: number 
 export type BoardChange =
   | { type: "create"; item: NewBoardItem }
   | ({ type: "move"; itemId: string } & Geometry)
-  /** `color: ""` removes the colour. */
-  | { type: "set"; itemId: string; text?: string; color?: BoardColor | ""; props?: BoardPropsPatch }
+  /** `color: ""` removes the colour; `from`/`to` move a connector's ends to other items (it keeps its id). */
+  | { type: "set"; itemId: string; text?: string; color?: BoardColor | ""; props?: BoardPropsPatch; from?: string; to?: string }
   | { type: "reorder"; itemId: string; z: number }
   | { type: "delete"; itemId: string }
   | { type: "restore"; itemId: string }

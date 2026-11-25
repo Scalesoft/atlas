@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
 import type { Geometry } from "./boardApi";
-import { boxesIn, parallelOffsets, pointAtHalf, roundedPath, routeElbow, shiftPort, type Port } from "./boardRoute";
+import { boxesIn, cardsNear, connectorPath, parallelOffsets, pointAtHalf, roundedPath, routeElbow, shiftPort, type Port } from "./boardRoute";
 
 type Point = { x: number; y: number };
 /** Whether a segment runs through the inside of a box (touching its outline is not crossing it). */
@@ -118,5 +118,19 @@ describe("boxesIn", () => {
     }
     expect(boxesIn(boxes, { x: 1024, y: -1024, right: 1034, bottom: -1014 })).not.toContainEqual(expect.objectContaining({ id: "border" }));
     expect(boxesIn(boxes, { x: 1014, y: -1024, right: 1024, bottom: -1014 })).toContainEqual(expect.objectContaining({ id: "border" }));
+  });
+});
+
+describe("connector path (shared by an edge and the preview of one being drawn, A3)", () => {
+  it("routes the elbow around the cards near it and draws curved and straight lines between the ports", () => {
+    const source: Port = { x: 0, y: 50, side: "right" }, target: Port = { x: 400, y: 50, side: "left" };
+    const card = { id: "k", x: 150, y: 0, width: 100, height: 100 };
+    const near = cardsNear([card, { id: "far", x: 5000, y: 5000, width: 10, height: 10 }, { id: "end", x: 400, y: 0, width: 100, height: 100 }], source, target, ["end"]);
+    expect(near).toEqual([card]);
+    const [path, x, y] = connectorPath("elbow", source, target, near);
+    const points = routeElbow(source, target, near);
+    expect([path, x, y]).toEqual([roundedPath(points, 12), pointAtHalf(points).x, pointAtHalf(points).y]);
+    expect(connectorPath("straight", source, target, near)[0]).toBe("M 0,50L 400,50");
+    expect(connectorPath("curved", source, target, [])[0]).toMatch(/^M0,50 C/);
   });
 });

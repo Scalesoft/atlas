@@ -374,6 +374,27 @@ public sealed class BoardHandlerTests
         await Refused(400, () => f.ApplyAsync(f.Writer, boardId, new BoardChange("settings", Settings: Json("""{"gridSize":7}"""))), BoardRejection.Invalid);
     }
 
+    /// <summary>A4: an end moved elsewhere is a <c>set</c> of the same connector: stored, read back and broadcast with its id, label
+    /// and style kept; a loop is refused.</summary>
+    [PostgreSqlFact]
+    public async Task A_connectors_end_moves_to_another_item_as_the_same_connector()
+    {
+        await using var f = await BoardsFixture.SharedAsync();
+        var boardId = await f.CreateBoardAsync();
+        Guid a = Guid.NewGuid(), b = Guid.NewGuid(), c = Guid.NewGuid(), link = Guid.NewGuid();
+        await f.ApplyAsync(f.Writer, boardId, Note(a), Note(b), Note(c),
+            new BoardChange("create", Item: new BoardItemInput(link, "connector", 0, 0, 8, 8, 3, Text: "vede", From: a, To: b, Props: Elbow())));
+        f.Subscribe(f.Reader, boardId);
+
+        await f.ApplyAsync(f.Writer, boardId, new BoardChange("set", ItemId: link, To: c, Props: Json("""{"toSide":"left"}""")));
+        var read = (await f.As<BoardDto>(f.Reader, new GetBoard(boardId))).Items.Single(item => item.Id == link);
+        Assert.Equal((a, c, "vede"), (read.From, read.To, read.Text));
+        Assert.Contains("\"toSide\":\"left\"", read.Props.GetRawText());
+        var sent = Assert.Single(Assert.IsType<BoardChangedMessage>(Assert.Single(f.Hub.Sent).Payload).Changes);
+        Assert.Equal(("set", link, (Guid?)null, c), (sent.Type, sent.ItemId!.Value, sent.From, sent.To!.Value));
+        await Refused(400, () => f.ApplyAsync(f.Writer, boardId, new BoardChange("set", ItemId: link, From: c)), BoardRejection.Invalid);
+    }
+
     private static JsonObject Json(string json) => JsonNode.Parse(json)!.AsObject();
 
     /// <summary>Membership is stored (objects spec §5.4): a reader sees each member's parent, the log and the broadcast carry the

@@ -30,7 +30,7 @@ export type AckResult = "confirmed" | "gap" | "reload";
 interface State { title: string; items: Map<string, BoardItem>; settings: BoardSettings }
 /** `prop:<key>` is one key of `props`, undone on its own (spec §4: `set` changes props key by key, null removes a key); `object:<key>`
  * a field of a card's object (an ObjectEdit). */
-type Property = "alive" | "geometry" | "text" | "color" | "z" | "title" | "parent" | `prop:${string}` | `setting:${string}` | `object:${string}`;
+type Property = "alive" | "geometry" | "text" | "color" | "z" | "title" | "parent" | "ends" | `prop:${string}` | `setting:${string}` | `object:${string}`;
 /** One property a gesture changed, with its value before and after. Undo and redo write it back only where it still holds. */
 interface Step { property: Property; itemId: string; before: unknown; after: unknown; /** The object of an `object:` step. */ objectId?: string }
 /** `coalesce`: the editing it belongs to; the saves of one editing (each pause in typing) are one step (W4-4). */
@@ -81,6 +81,8 @@ function applyChange(state: State, change: BoardChange): boolean {
       if (change.text !== undefined) next.text = change.text;
       // An empty colour removes it (the server takes "" so).
       if (change.color) next.color = change.color; else if (change.color === "") delete next.color;
+      if (change.from) next.from = change.from;
+      if (change.to) next.to = change.to;
       if (change.props) {
         const props: Record<string, unknown> = { ...next.props };
         for (const [key, value] of Object.entries(change.props)) if (value === null) delete props[key]; else if (value !== undefined) props[key] = value;
@@ -111,6 +113,7 @@ function read(state: State, step: Step): unknown {
     case "color": return item.color ?? null;
     case "z": return item.z;
     case "parent": return item.parent ?? null;
+    case "ends": return { from: item.from, to: item.to };
     default: return undefined;
   }
 }
@@ -125,6 +128,7 @@ function write(step: Step, value: unknown): BoardChange {
     case "color": return { type: "set", itemId, color: (value as BoardColor | null) ?? "" };
     case "z": return { type: "reorder", itemId, z: value as number };
     case "parent": return value ? { type: "parent", itemId, parentId: value as string } : { type: "parent", itemId };
+    case "ends": return { type: "set", itemId, ...(value as { from: string; to: string }) };
     default: return step.property.startsWith("setting:")
       ? { type: "settings", settings: { [step.property.slice(8)]: value } }
       : { type: "set", itemId, props: { [step.property.slice(5)]: value } };
@@ -153,6 +157,7 @@ function stepsOf(view: State, changes: readonly BoardEdit[]): Step[] {
       : change.type === "parent" ? ["parent"]
       : [
         ...(change.text !== undefined ? ["text" as const] : []), ...(change.color !== undefined ? ["color" as const] : []),
+        ...(change.from !== undefined || change.to !== undefined ? ["ends" as const] : []),
         ...Object.keys(change.props ?? {}).map(key => `prop:${key}` as const),
       ];
     const before = properties.map(property => read(scratch, { property, itemId, before: null, after: null }));

@@ -194,6 +194,14 @@ describe("board model: undo and redo", () => {
     expect(board.canRedo).toBe(false);
   });
 
+  it("moves a connector's end as the same item, and undoes it back to its old ends (A4)", () => {
+    const board = model([note("a"), note("b", { x: 300, z: 2 }), note("d", { x: 600, z: 3 }), connector("c", "a", "b")]);
+    board.apply([{ type: "set", itemId: "c", to: "d", props: { toSide: "left" } }]);
+    expect(itemOf(board, "c")).toMatchObject({ from: "a", to: "d", props: { toSide: "left" } });
+    expect(board.undo()!.changes).toEqual([{ type: "set", itemId: "c", props: { toSide: null } }, { type: "set", itemId: "c", from: "a", to: "b" }]);
+    expect(itemOf(board, "c")).toMatchObject({ from: "a", to: "b" });
+  });
+
   it("holds a card's object edit as one step among the board's own, never in a batch, and skips it once the object changed since (P6)", () => {
     let name: unknown = "Jana Novák";
     const board = createBoardModel({ title: "Plán", sequence: 1, items: [note("a"), { ...note("o"), kind: "object", targetResourceId: "c1" }] },

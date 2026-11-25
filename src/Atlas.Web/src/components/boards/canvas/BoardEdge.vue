@@ -12,11 +12,11 @@ function firstEdgeOf(flow: VueFlowStore): ComputedRef<string | undefined> {
 
 <script setup lang="ts">
 import t from "../../../i18n/boards";
-import { getBezierPath, getStraightPath, useVueFlow, type GraphNode, type Position } from "@vue-flow/core";
+import { useVueFlow, type GraphNode, type Position } from "@vue-flow/core";
 import { computed, inject, onMounted, ref, watch } from "vue";
 import type { BoardEdgeState, BoardSide, Geometry } from "../../../boards/boardApi";
 import type { BoardEdgeData } from "../../../boards/boardFlow";
-import { boxesIn, pointAtHalf, roundedPath, routeElbow, shiftPort } from "../../../boards/boardRoute";
+import { cardsNear, connectorPath, shiftPort } from "../../../boards/boardRoute";
 import { BoardMarkdown } from "../text/textEditorChunk";
 import BoardText from "../text/BoardText.vue";
 import type { TextBinding } from "../text/textBinding";
@@ -40,7 +40,7 @@ defineOptions({ inheritAttrs: false });
 const props = defineProps<{
   id: string; data: BoardEdgeData & { motion?: PlayedMotion }; selected?: boolean;
   sourceX: number; sourceY: number; targetX: number; targetY: number; sourcePosition: Position; targetPosition: Position;
-  sourceNode?: GraphNode; targetNode?: GraphNode;
+  sourceNode?: GraphNode; targetNode?: GraphNode; updatable?: boolean | "source" | "target";
 }>();
 const ctx = inject(boardCanvasKey)!;
 const group = ref<SVGGElement>();
@@ -66,22 +66,24 @@ const ports = computed(() => {
 const nearby = computed<Geometry[]>(previous => {
   if (props.data.route === "curved" || props.data.route === "straight") return previous ?? [];
   const [source, target] = ports.value;
-  const near = { x: Math.min(source.x, target.x) - 320, y: Math.min(source.y, target.y) - 320, right: Math.max(source.x, target.x) + 320, bottom: Math.max(source.y, target.y) + 320 };
   // The ends' ids read once: a reactive read per card was most of a remote change's cost on a large board.
-  const from = props.sourceNode?.id, to = props.targetNode?.id;
-  const next = boxesIn(ctx.obstacles.value, near).filter(box => box.id !== from && box.id !== to).slice(0, 60);
+  const next = cardsNear(ctx.obstacles.value, source, target, [props.sourceNode?.id, props.targetNode?.id]);
   return previous && previous.length === next.length && next.every((box, index) => sameBox(box, previous[index])) ? previous : next;
 });
 /** The path and the label's point: the elbow routed around the cards near it (boardRoute.ts), parallel ones spread apart. */
 const geometry = computed<[string, number, number]>(() => {
   const [source, target] = ports.value;
-  const ends = { sourceX: source.x, sourceY: source.y, targetX: target.x, targetY: target.y, sourcePosition: props.sourcePosition, targetPosition: props.targetPosition };
-  if (props.data.route === "curved") { const [path, x, y] = getBezierPath(ends); return [path, x, y]; }
-  if (props.data.route === "straight") { const [path, x, y] = getStraightPath(ends); return [path, x, y]; }
+  if (props.data.route === "curved" || props.data.route === "straight") return connectorPath(props.data.route, source, target, []);
   const own = [sourceBox.value, targetBox.value].filter((box): box is Geometry => !!box);
-  const points = routeElbow(source, target, [...own, ...nearby.value]);
-  const middle = pointAtHalf(points);
-  return [roundedPath(points, 12), middle.x, middle.y];
+  return connectorPath(props.data.route, source, target, [...own, ...nearby.value]);
+});
+/** The middles of Vue Flow's grab circles of the ends (each its radius out of the card, as Vue Flow places them): a dot shows each. */
+const out = { top: [0, -1], right: [1, 0], bottom: [0, 1], left: [-1, 0] } as const;
+const endDots = computed(() => {
+  if (!props.updatable) return [];
+  const r = ctx.endRadius.value;
+  return ([[props.sourceX, props.sourceY, props.sourcePosition], [props.targetX, props.targetY, props.targetPosition]] as const)
+    .map(([x, y, side]) => ({ x: x + out[side as BoardSide][0] * r, y: y + out[side as BoardSide][1] * r }));
 });
 // One arrowhead marker for all connectors (its fill is the line's own stroke): the first connector drawn carries it.
 const marker = `${ctx.flowId}-arrow`;
@@ -125,6 +127,7 @@ watch(() => props.data.motion?.key, play, { flush: "post" });
     <path ref="line" :d="geometry[0]" class="vue-flow__edge-path board-edge-line"
       :marker-start="data.arrowStart === 'arrow' ? `url(#${marker})` : undefined" :marker-end="data.arrowEnd === 'arrow' ? `url(#${marker})` : undefined" />
     <path v-if="flowing" :d="geometry[0]" class="board-edge-flow" aria-hidden="true" />
+    <circle v-for="(dot, index) in endDots" :key="index" :cx="dot.x" :cy="dot.y" r="5" class="board-edge-end" aria-hidden="true" data-board-edge-end />
   </g>
   <!-- One layer for what sits over the line, only while there is any: an SVG of its own whose HTML goes to the board's label layer, as
        Vue Flow's EdgeLabelRenderer does (which looked that layer up in the page on each of its renders: 200 ms of a select all). -->
@@ -206,6 +209,10 @@ watch(() => props.data.motion?.key, play, { flush: "post" });
   transition: border-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 .board-edge-label.is-selected { border-color: var(--accent); }
 .board-edge-field { min-width: 120px; }
-.vue-flow__edge .vue-flow__edgeupdater { fill: transparent; stroke: transparent; transition: fill var(--atlas-motion-fast) var(--atlas-ease-out), stroke var(--atlas-motion-fast) var(--atlas-ease-out); }
-.vue-flow__edge.selected .vue-flow__edgeupdater { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+/* Vue Flow's grab circle of an end takes the pointer in its whole radius (the canvas's edge-updater-radius); the dot in its middle shows it. */
+.vue-flow__edge .vue-flow__edgeupdater { fill: transparent; stroke: transparent; cursor: grab; }
+.board-edge-end { fill: var(--surface); stroke: var(--accent); stroke-width: 2; pointer-events: none; transform-box: fill-box; transform-origin: center;
+  animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out); transition: scale var(--atlas-motion-fast) var(--atlas-ease-out); }
+.vue-flow__edge.updating .board-edge-end { scale: 1.3; }
+.board-canvas.is-readonly .board-edge-end { display: none; }
 </style>

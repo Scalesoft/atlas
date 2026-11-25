@@ -20,7 +20,6 @@ import { lazyComponent } from "../../lazyComponent";
 import { holdUnsavedWork } from "../../lib/unsavedWork";
 import type { CollaborationPeer } from "../../collaborationPresence";
 import DocumentTitle from "../DocumentTitle.vue";
-import LoadingSkeleton from "../LoadingSkeleton.vue";
 import ConflictNote from "../settings/ConflictNote.vue";
 import EmptyState from "../settings/EmptyState.vue";
 import ErrorState from "../settings/ErrorState.vue";
@@ -330,7 +329,11 @@ function redo() { steps++; session.redo(); }
 
 <template>
   <section ref="root" class="board-view settings-ui" data-board-view>
-    <LoadingSkeleton v-if="state!.status === 'loading' || !dialectSettled" :rows="3" :label="t.view.loading" />
+    <!-- The loaded board's own frame (A10): the title's row and the canvas's room, so nothing jumps when the board comes. -->
+    <template v-if="state!.status === 'loading' || !dialectSettled">
+      <div class="board-view-header board-view-placeholder-title" aria-hidden="true"><span /></div>
+      <div class="board-view-canvas board-view-placeholder" role="status" data-board-placeholder><span class="visually-hidden">{{ t.view.loading }}</span></div>
+    </template>
     <!-- As an unavailable page (App.vue data-page-unavailable): the same frame, way back and way home, the focus on the message. -->
     <div v-else-if="state!.status === 'missing'" class="page-unavailable">
       <EmptyState data-focus-landing icon="lock" :title="t.view.missingTitle" :text="t.view.missingText">
@@ -412,4 +415,8 @@ function redo() { steps++; session.redo(); }
 .board-view .board-view-canvas { --board-surface: var(--surface); flex: 1 1 auto; min-height: 420px; margin: 0 calc(-1 * var(--atlas-page-gutter, 24px)) -16px;
   border: 0; border-radius: 0; }
 @container workspace-content (max-width: 680px) { .board-view .board-view-canvas { margin-inline: -16px; } }
+/* Loading: a title bar and the empty canvas in the skeleton's grey, shown after the skeleton's short delay. */
+.board-view-placeholder-title > span { display: block; width: min(320px, 60%); height: 22px; border-radius: 6px; background: var(--hover); }
+.board-view-placeholder-title, .board-view-placeholder { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) var(--atlas-motion-defer) both; }
+.board-view .board-view-placeholder { background: color-mix(in oklab, var(--hover) 45%, var(--surface)); }
 </style>
