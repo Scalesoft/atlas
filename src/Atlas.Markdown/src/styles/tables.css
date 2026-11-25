@@ -473,11 +473,7 @@ body.tt-row-resizing {
 .md-editor .bb-table-actions > button svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); }
 
 
-/* V25 Phase 5b — cell-toolbar bg palette popover */
-.md-editor .bb-bg-palette {
-  display: grid; grid-template-columns: repeat(5, auto); gap: 4px;
-  padding: 6px;
-}
+/* The cell background swatches (TableCellMenu.vue, .tt-cell-colors). */
 .md-editor .bb-bg-swatch {
   width: 22px; height: 22px;
   border-radius: 50%;
@@ -532,4 +528,4 @@ body.tt-row-resizing {
   font: 500 11px/18px var(--font-sans, sans-serif); white-space: nowrap;
 }
 .md-editor .tt-row-drop-guide .tt-axis-drop-label { left: 36px; top: 4px; }
-.md-editor .tt-column-drop-guide, .md-editor .tt-row-drop-guide { border-style: solid; animation: md-block-drop-enter var(--md-motion-base); }
+.md-editor .tt-column-drop-guide, .md-editor .tt-row-drop-guide { border-style: solid; animation: md-fade-in var(--md-motion-base); }

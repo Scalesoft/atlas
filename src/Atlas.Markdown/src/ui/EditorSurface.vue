@@ -23,8 +23,6 @@ import { markdownStrings } from './strings'
 import { surfaceStrings } from './strings/surface'
 import { acquireFullscreenLock, hasActiveEditorOverlay, hasActiveModalDialog } from './fullscreen'
 import '../styles/editor.css'
-import '../styles/motion.css'
-import '../styles/layers.css'
 
 defineOptions({ inheritAttrs: false })
 const props = withDefaults(defineProps<{

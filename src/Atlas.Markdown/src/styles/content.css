@@ -166,7 +166,6 @@
 }
 .md-code-block:focus-within .md-code-copy, .md-code-copy[data-state] { opacity: 1; }
 @media (hover: hover) and (pointer: fine) { .md-code-block:hover .md-code-copy { opacity: 1; } }
-@media (hover: none) { .md-code-copy { opacity: 1; } }
 .md-code-copy:hover { color: var(--text, #233044); }
 .md-code-copy[data-state=copied] { color: var(--accent, #2f7f90); }
 @media (hover: none) { .md-code-copy { opacity: 1; width: 44px; height: 44px; } }

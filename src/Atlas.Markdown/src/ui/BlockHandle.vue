@@ -20,7 +20,6 @@ import { flushDomSelection } from '../core/internal'
 import { PlusIcon, GripVerticalIcon } from './icons'
 import { insertBlockAt } from '../features/drag/blockInsertion'
 import { dragStrings } from './strings/drag'
-import '../styles/motion.css'
 
 const props = withDefaults(defineProps<{ editor: Editor; showAddButton?: boolean; controller?: MarkdownEditorController }>(), { showAddButton: true })
 const row = ref<HTMLElement | null>(null)

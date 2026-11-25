@@ -19,6 +19,8 @@
 }
 /* An alias resolves where a host may remap the token it points to. */
 :where(:root, .md-editor) { --md-motion-surface: var(--md-motion-target); }
+/* The one plain fade-in the editor's surfaces share (stubs, drop guides, the picker backdrop, the history's loading note, the secrets under reduced motion). */
+@keyframes md-fade-in { from { opacity: 0; } }
 /*
  * Reduced motion never switches feedback off (prototype): durations at most 160 ms, linear, no travel, a pop
  * without scale, loops stand still (0 s). The afterglow keeps its length, as a background fade only; the `--md-conceal-*`

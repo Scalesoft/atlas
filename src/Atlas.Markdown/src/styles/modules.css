@@ -75,7 +75,6 @@ span.md-module > * { min-width: 0; }
 .md-read-actions { position: absolute; top: 0; right: 0; display: flex; gap: 4px; opacity: 0; transition: opacity var(--md-motion-fast) var(--md-motion-ease); }
 .md-module:focus-within .md-read-actions, .md-module.ProseMirror-selectednode .md-read-actions { opacity: 1; }
 @media (hover: hover) and (pointer: fine) { .md-module:hover .md-read-actions { opacity: 1; } }
-@media (hover: none) { .md-read-actions { opacity: 1; } }
 .md-read-action {
   display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 1px solid var(--line, #d4e4e7); border-radius: 6px;
   background: var(--bg-2, #fff); color: var(--text-dim, #667085); cursor: pointer; transition: color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease);
@@ -94,19 +93,18 @@ span.md-module > * { min-width: 0; }
 .md-module-stub > *, .md-module-stub-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .md-module-stub::before {
   content: ''; position: absolute; inset: 0; border-radius: inherit; background: color-mix(in oklab, var(--line, #d4e4e7) 45%, transparent);
-  animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards;
+  animation: md-fade-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards;
 }
 /* The pulse only while it is being drawn (nothing moves outside the view or once it waits for the viewport). */
 .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before {
-  animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards,
+  animation: md-fade-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards,
     md-module-stub-pulse var(--md-motion-loop) ease-in-out calc(var(--atlas-motion-defer, var(--md-motion-fast)) + var(--atlas-motion-fast, var(--md-motion-fast))) infinite;
 }
 .md-module-stub ~ [data-module-runtime] { opacity: 0; }
 [data-module-runtime] { transition: opacity var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out); }
-@keyframes md-module-stub-in { from { opacity: 0; } }
 @keyframes md-module-stub-pulse { 50% { opacity: .55; } }
 /* Reduced motion keeps the defer (nothing flashes for a fast load) and drops the pulse. */
-@media (prefers-reduced-motion: reduce) { .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before { animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) linear var(--atlas-motion-defer, var(--md-motion-fast)) backwards; } [data-module-runtime] { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before { animation: md-fade-in var(--atlas-motion-fast, var(--md-motion-fast)) linear var(--atlas-motion-defer, var(--md-motion-fast)) backwards; } [data-module-runtime] { transition: none; } }
 /* The user's own reduced-motion switch (Atlas's appearance setting) acts like the system's. */
-[data-atlas-reduced-motion] .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before { animation: md-module-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) linear var(--atlas-motion-defer, var(--md-motion-fast)) backwards; }
+[data-atlas-reduced-motion] .md-module:is([data-md-render-state=queued], [data-md-render-state=loading]) .md-module-stub::before { animation: md-fade-in var(--atlas-motion-fast, var(--md-motion-fast)) linear var(--atlas-motion-defer, var(--md-motion-fast)) backwards; }
 [data-atlas-reduced-motion] [data-module-runtime] { transition: none; }

@@ -37,10 +37,9 @@
 /* Stub of a popover whose editor is still loading (stubbedPopover.ts): rows of the final size that fade in only after the defer. */
 .md-stub { display: grid; gap: 8px; min-height: 96px; outline: none; }
 .md-stub > i { display: block; height: var(--md-stub-row, 30px); border-radius: var(--radius-sm, 6px); background: color-mix(in oklab, var(--line, #d4e4e7) 55%, transparent);
-  animation: md-stub-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards; }
+  animation: md-fade-in var(--atlas-motion-fast, var(--md-motion-fast)) var(--atlas-ease-out, ease-out) var(--atlas-motion-defer, var(--md-motion-fast)) backwards; }
 .md-stub > i:nth-child(2) { animation-delay: calc(var(--atlas-motion-defer, var(--md-motion-fast)) + var(--atlas-motion-fast, var(--md-motion-fast)) / 3); }
 .md-stub > i:nth-child(n+3) { animation-delay: calc(var(--atlas-motion-defer, var(--md-motion-fast)) + var(--atlas-motion-fast, var(--md-motion-fast)) * 2 / 3); }
-@keyframes md-stub-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .md-stub > i { animation: none; } }
 [data-atlas-reduced-motion] .md-stub > i { animation: none; }
 
