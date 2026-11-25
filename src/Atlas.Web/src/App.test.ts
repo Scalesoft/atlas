@@ -2511,7 +2511,9 @@ describe('a colleague from the directory in wiki search', () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const fetchMock = requestMock(path => path.startsWith('/api/search?') ? Promise.resolve(response({ items: [
       { ...page, id: 'page-a', title: 'Tým', spaceName: space.name, snippet: '', widgets: [
-        { kind: 'contact', title: 'Eva Dvořáková', detail: 'Vývoj', headingId: null, contact: { objectId: 'c-eva', directoryId: 'acc-eva' } }] },
+        { kind: 'contact', title: 'Eva Dvořáková', detail: 'Vývoj', headingId: null, contact: { objectId: 'c-eva', directoryId: 'acc-eva' } },
+        // An older entry of a colleague, linked to their contact before it knew the account.
+        { kind: 'contact', title: 'Ema Dvorská', detail: '', headingId: null, contact: { objectId: 'c-ema' } }] },
     ], hasMore: false }))
       : path.startsWith('/api/objects?type=atlas.contact&scope=wiki&q=') ? Promise.resolve(response({ items: [
         { id: 'c-eva', typeId: 'atlas.contact', scope: 'wiki', spaceId: null, title: 'Eva Dvořáková', version: 1, updatedAt: '', data: { name: 'Eva Dvořáková', title: 'Vývojářka', directoryId: 'acc-eva' } },
@@ -2525,6 +2527,8 @@ describe('a colleague from the directory in wiki search', () => {
     const people = app.get('[role=group][aria-label="Kontakty"]').findAll('a');
     expect(people.map(person => person.attributes('href'))).toEqual(['#/library/contacts?contact=c-eva', '#/library/contacts?contact=c-ema']);
     expect(people[0]!.text()).toContain('Vývojářka');
+    // A person from the directory is in no page or space.
+    expect(people[0]!.text()).not.toContain(' · ');
   });
 });
 

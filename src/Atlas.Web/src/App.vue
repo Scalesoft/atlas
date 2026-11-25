@@ -3907,9 +3907,11 @@ async function findSearchPeople(text: string, version: number, signal: AbortSign
       contact: { objectId: item.id, directoryId: item.data!.directoryId as string } }));
   } catch { if (version === searchVersion && !signal.aborted) searchPeople.value = []; /* The people are a courtesy beside the pages. */ }
 }
-/** The directory contact of a colleague's contact hit, or undefined for anyone else. */
+/** The directory contact of a colleague's contact hit, or undefined for anyone else; an older entry linked to a colleague the directory
+ *  named for this query (no account on it yet) is that colleague too. */
 function searchPerson(widget: SearchWidget | undefined) {
-  return widget?.kind === 'contact' && widget.contact?.directoryId ? widget.contact.objectId : undefined;
+  const id = widget?.kind === 'contact' ? widget.contact?.objectId : undefined;
+  return id && (widget!.contact!.directoryId || searchPeople.value.some(person => person.contact?.objectId === id)) ? id : undefined;
 }
 function openSearchPerson(event: MouseEvent, contact: string) {
   if (!isPlainNavigationClick(event)) return;
@@ -5353,7 +5355,7 @@ onUnmounted(() => {
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
                 <small class="search-result-meta"><span class="search-result-context"><i class="search-space-dot" :data-color="spaces.find(s => s.id === item.result.spaceId)?.color" aria-hidden="true" /><SearchHighlight :text="item.detail" :query="query" /></span><PageStatusBadge v-if="item.result.isDraft" :is-published="false" :version="1" :published-version="null" /><AtlasIcon v-if="'mark' in item && item.mark" :name="item.mark.icon" :size="13" class="search-verification" :data-warn="item.mark.warn || undefined" role="img" :aria-label="item.mark.warn ? t.common.verificationExpired : t.common.verifiedPage" :title="item.mark.warn ? t.common.verificationExpired : t.common.verifiedPage" data-search-verification /><SemanticBadge v-if="item.semantic" />
                   <span v-if="item.board" class="search-live-label" data-search-type>{{ t.common.board }}</span>
-                  <span v-else-if="item.widget">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
+                  <span v-else-if="item.widget && item.result.spaceName">{{ item.result.title }} · {{ item.result.spaceName }}<span v-if="item.widget.state"> · {{ item.widget.state }} {{ t.search.savedState }}</span></span>
                 </small>
                 <small v-if="item.result.matchedAlias" class="search-alias">{{ t.search.alsoFound }} <SearchHighlight :text="item.result.matchedAlias" :query="query" /></small>
                 <ResultPassage v-if="item.passage" :text="item.passage.text" :heading-title="item.passage.headingTitle" :query="query" />
