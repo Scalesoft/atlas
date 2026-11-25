@@ -426,7 +426,7 @@ onUnmounted(() => {
           </div>
           <p v-if="!catalog.canIssueTokens" class="st-note" role="note"><AtlasIcon name="lock" :size="15" />{{ t.tokens.mustAllow }}</p>
           <SettingsList v-if="active.length" :label="t.tokens.active">
-            <SettingsListRow v-for="token in active" :key="token.id" :title="token.name" icon="key-round" :highlighted="highlighted(token, 'active')" :data-token="token.id">
+            <SettingsListRow v-for="token in active" :key="token.id" :title="token.name" icon="key-round" :highlighted="highlighted(token, 'active')" :data-token="token.id" :menu="busy ? undefined : [{ id: 'revoke', label: t.tokens.revoke, icon: 'ban', shortcut: 'Delete', destructive: true }]" :menu-label="t.tokens.revokeLabel(token.name)" @select="askRevoke(token)">
               <template #description><code class="st-mono">{{ token.prefix }}…</code> · {{ t.tokens.validTo }} {{ formatDateTime(token.expiresAt) }} · {{ rightsText(token.scopes, token.channels) }}<template v-if="unusableReason(token) || restriction(token)"><br /><span class="token-note" :data-token-state="unusableReason(token) ? 'unusable' : 'restricted'">{{ unusableReason(token) ?? restriction(token) }}</span></template></template>
               <template #meta>
                 <StatusBadge v-bind="scopeBadge(token)" size="sm" data-token-scope />

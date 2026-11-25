@@ -59,7 +59,7 @@ onUnmounted(() => { mounted = false; request++; });
             <Button type="button" variant="outline" @click="emit('create')"><AtlasIcon name="plus" :size="16" />{{ t.templates.new }}</Button>
           </EmptyState>
           <SettingsList v-else :label="t.templates.spaceTemplates">
-            <SettingsListRow v-for="item in items" :key="item.id" :title="item.title" icon="page">
+            <SettingsListRow v-for="item in items" :key="item.id" :title="item.title" icon="page" :menu="[{ id: 'open', label: t.templates.open, icon: 'arrow-right' }]" @select="emit('select', item.id)">
               <template #meta><PageStatusBadge :is-published="item.isPublished" :version="item.version" :published-version="item.isPublished ? item.version : null" /></template>
               <template #actions><Button type="button" variant="outline" size="sm" :data-select-template="item.id" @click="emit('select', item.id)">{{ t.templates.open }}<AtlasIcon name="arrow-right" :size="15" /></Button></template>
               <UsagePanel collapsible :object-id="item.id" @open="id => emit('select', id)" />

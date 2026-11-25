@@ -39,6 +39,7 @@ async function load() {
   finally { if (request === current) loading.value = false; }
 }
 function openOther(pair: DuplicatePair) { window.open(`#/pages/${encodeURIComponent(pair.otherPageId)}`, "_blank", "noopener"); }
+function openBoth(pair: DuplicatePair) { window.open(`#/pages/${encodeURIComponent(pair.pageId)}`, "_blank", "noopener"); openOther(pair); }
 async function dismiss(pair: DuplicatePair) {
   if (busy.value) return;
   const generation = decisionGeneration;
@@ -71,7 +72,7 @@ onBeforeUnmount(() => { disposed = true; request?.abort(); });
           <p v-if="decisionError" role="alert" class="st-muted">{{ decisionError }} {{ t.duplicates.decisionFailed }}</p>
         </Transition>
         <SettingsList v-if="rows.length" :label="t.duplicates.pairs">
-          <SettingsListRow v-for="pair in rows" :key="key(pair)" :title="pair.title" icon="copy" :data-duplicate-pair="key(pair)">
+          <SettingsListRow v-for="pair in rows" :key="key(pair)" :title="pair.title" icon="copy" :data-duplicate-pair="key(pair)" :menu="[{ id: 'both', label: t.duplicates.openBoth, icon: 'external-link' }, { id: 'dismiss', label: t.duplicates.notDuplicate, icon: 'circle-check', disabled: !!busy }]" @select="$event === 'dismiss' ? dismiss(pair) : openBoth(pair)">
             <template #title><a :href="`#/pages/${pair.pageId}`" target="_blank" rel="noopener" data-duplicate-page-link>{{ pair.title }}</a><span class="duplicate-between" aria-hidden="true">↔</span><a :href="`#/pages/${pair.otherPageId}`" target="_blank" rel="noopener" data-duplicate-page-link>{{ pair.otherTitle }}</a></template>
             <template #description>{{ t.duplicates.similarity(Math.round(pair.similarity * 100)) }}</template>
             <template #actions><Button as-child variant="ghost" size="sm"><a :href="`#/pages/${pair.pageId}`" target="_blank" rel="noopener" @click="openOther(pair)">{{ t.duplicates.openBoth }}</a></Button><Button type="button" variant="outline" size="sm" :disabled="!!busy" data-dismiss-duplicate @click="dismiss(pair)">{{ t.duplicates.notDuplicate }}</Button></template>

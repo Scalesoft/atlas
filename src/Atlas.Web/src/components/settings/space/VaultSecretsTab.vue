@@ -82,7 +82,7 @@ onBeforeUnmount(() => (disposed = true));
         <span v-if="query || folder" class="vault-secrets-count" aria-live="polite">{{ t.secrets.shown(shown.length, current.length) }}</span>
       </div>
       <SettingsList v-if="shown.length" :label="t.secrets.list">
-        <SettingsListRow v-for="secret in shown" :key="secret.secretId" :title="secret.title || t.secrets.untitled" :description="`${folderOf(secret)} · ${fields(secret)}`" icon="key-round" icon-tone="neutral" :data-secret="secret.secretId">
+        <SettingsListRow v-for="secret in shown" :key="secret.secretId" :title="secret.title || t.secrets.untitled" :description="`${folderOf(secret)} · ${fields(secret)}`" icon="key-round" icon-tone="neutral" :data-secret="secret.secretId" :menu="[{ id: 'access', label: t.secrets.access, icon: 'users' }, { id: 'protection', label: t.secrets.protection, icon: 'fingerprint' }]" @select="toggle(secret.secretId, $event as 'access' | 'protection')">
           <template v-if="ownLevel(secret)" #meta>
             <AccessLevelBadge :options="levelOptions()" :value="secret.level!" tone="neutral" />
           </template>

@@ -2,10 +2,12 @@
 import { computed, nextTick, onUnmounted, ref } from "vue";
 import AtlasIcon from "../AtlasIcon.vue";
 import LoadingRegion from "../LoadingRegion.vue";
+import LoadingNote from "../settings/LoadingNote.vue";
 import { Button } from "../ui/button";
 import ConfirmDialog from "../settings/ConfirmDialog.vue";
 import { disclosureHooks } from "../settings/disclosure";
 import EmptyState from "../settings/EmptyState.vue";
+import FormField from "../FormField.vue";
 import ErrorState from "../settings/ErrorState.vue";
 import InlineReveal from "../settings/InlineReveal.vue";
 import OneTimeSecret from "../settings/OneTimeSecret.vue";
@@ -194,17 +196,16 @@ onUnmounted(() => { disposed = true; issued.value = undefined; });
             <template #validity>
               <OptionPills v-model="days" :options="validityOptions" :label="t.links.validityLabel" hide-label />
               <InlineReveal :open="days === 'custom'">
-                <label class="page-link-date">
-                  <span><AtlasIcon name="calendar" :size="14" />{{ t.links.validUntilField }} <small data-link-limit>{{ maxDaysText }}</small></span>
-                  <input v-model="customExpiry" class="st-input" type="datetime-local" name="expiresAt" :min="expiryMinimum" :max="expiryMaximum" :aria-invalid="expiryError ? true : undefined" :aria-describedby="expiryError ? 'page-link-expiry-error' : undefined" />
-                </label>
+                <FormField class="page-link-date" :error="expiryError">
+                  <template #label><span class="page-link-date-label"><AtlasIcon name="calendar" :size="14" />{{ t.links.validUntilField }} <small data-link-limit>{{ maxDaysText }}</small></span></template>
+                  <template #default="{ describedBy }"><input v-model="customExpiry" class="st-input" type="datetime-local" name="expiresAt" :min="expiryMinimum" :max="expiryMaximum" :aria-invalid="expiryError ? true : undefined" :aria-describedby="describedBy" /></template>
+                </FormField>
               </InlineReveal>
-              <Transition :css="false" v-bind="disclosureHooks"><p v-if="expiryError" id="page-link-expiry-error" class="page-link-error" role="alert"><AtlasIcon name="triangle-alert" :size="14" />{{ expiryError }}</p></Transition>
               <p class="st-note"><AtlasIcon name="info" :size="15" />{{ t.links.timezone }}</p>
             </template>
             <template #summary>
               <SummaryList :items="summary" :label="t.links.summaryLabel" />
-              <Transition :css="false" v-bind="disclosureHooks"><p v-if="createBusy" class="st-note" role="status"><AtlasIcon name="loader-circle" :size="15" class="atlas-spinner" />{{ t.links.creating }}</p></Transition>
+              <Transition :css="false" v-bind="disclosureHooks"><LoadingNote v-if="createBusy" :label="t.links.creating" /></Transition>
               <Transition :css="false" v-bind="disclosureHooks"><p v-if="createError" class="page-link-error" role="alert"><AtlasIcon name="triangle-alert" :size="14" />{{ createError }}</p></Transition>
             </template>
             <template #link>
@@ -234,6 +235,9 @@ onUnmounted(() => { disposed = true; issued.value = undefined; });
           :icon-tone="link.status === 'active' ? undefined : 'neutral'"
           :highlighted="highlight === link.id"
           :data-share-link="link.id"
+          :menu="link.status === 'active' && !busy ? [{ id: 'revoke', label: t.links.revoke, icon: 'unlink', shortcut: 'Delete', destructive: true }] : undefined"
+          :menu-label="t.links.revokeLabel(link.name)"
+          @select="revoking = link; revokeError = ''"
         >
           <template #meta>
             <Transition name="page-state" mode="out-in">
@@ -262,8 +266,8 @@ onUnmounted(() => { disposed = true; issued.value = undefined; });
 .page-links { display: grid; gap: 18px; min-width: 0; }
 .page-links-count { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .page-links-create { padding: 2px 0 16px; border-bottom: 1px solid var(--line); }
-.page-link-date { display: grid; gap: 5px; max-width: 320px; padding-top: 4px; font-size: 13px; font-weight: 600; }
-.page-link-date > span { display: inline-flex; align-items: center; gap: 6px; }
+.page-link-date { max-width: 320px; margin: 0; padding-top: 4px; font-size: 13px; }
+.page-link-date-label { display: inline-flex; align-items: center; gap: 6px; }
 .page-link-date small { color: var(--muted); font-size: 12px; font-weight: 500; }
 .page-link-error { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--error); font-size: 13px; font-weight: 550; }
 /* A link that stops being valid changes its state badge in place. */
