@@ -9,6 +9,7 @@ import { spaceCoverDrawingUrl } from "../../spaceCoverDrawings";
 import { focusFirst } from "../../lib/pickEnter";
 import { useSearchKeys } from "../../lib/searchKeys";
 import AtlasIcon from "../AtlasIcon.vue";
+import EmptyState from "../settings/EmptyState.vue";
 import OptionPills from "../settings/OptionPills.vue";
 import SearchField from "../settings/SearchField.vue";
 import SpaceCoverImage from "./SpaceCoverImage.vue";
@@ -116,7 +117,7 @@ function focusLeft(event: FocusEvent) {
         <SpaceCoverImage class="space-cover-thumbnail" :space="thumbnailSpace" :src="spaceCoverDrawingUrl(entry.id)" instant :mark-size="72" />
         <span class="space-cover-option-name">{{ entry.name }}</span>
       </RadioGroupItem>
-      <p v-if="!found.length" class="space-cover-empty" role="status"><AtlasIcon name="search" :size="15" />{{ t.gallery.empty }}</p>
+      <EmptyState v-if="!found.length" inline icon="search" class="space-cover-empty" :title="t.gallery.empty" />
     </RadioGroupRoot>
   </div>
 </template>
@@ -171,5 +172,5 @@ function focusLeft(event: FocusEvent) {
 .space-cover-gallery:has([data-space-cover-search]:focus) .space-cover-option[data-first]:not([data-state="checked"]) { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
 .space-cover-thumbnail { aspect-ratio: 32 / 11; border-radius: 7px; }
 .space-cover-option-name { overflow: hidden; padding: 0 2px 2px; text-overflow: ellipsis; white-space: nowrap; }
-.space-cover-empty { display: flex; grid-column: 1 / -1; align-items: center; gap: 8px; margin: 8px 0; color: var(--muted); font-size: 13px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.space-cover-empty { grid-column: 1 / -1; margin: 8px 0; }
 </style>

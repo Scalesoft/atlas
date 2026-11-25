@@ -42,3 +42,24 @@ it("says the all-label with nothing ticked and keeps the single choice as it was
   wrapper = mount(FilterMenu, { props: { label: "Stav", options: [{ value: "", label: "Všechny" }, ...options], modelValue: "p2" } });
   expect(wrapper.get("button").text()).toBe("Stav:IT KBN");
 });
+
+it("empties the search on the first Esc (the menu stays), takes nothing on Enter in the empty field, and tells equal names apart", async () => {
+  const twins = [...options, { value: "x", label: "Vedení", badge: "10" }];
+  wrapper = mount(FilterMenu, { attachTo: document.body, props: { label: "Kdo", options: twins, searchLabel: "Hledat", "onUpdate:modelValue": (value: string) => wrapper!.setProps({ modelValue: value }) } });
+  await wrapper.get("button").trigger("click");
+  await new Promise(resolve => setTimeout(resolve, 40));
+  await flushPromises();
+  expect(document.querySelectorAll(".filter-menu-twin")).toHaveLength(2);
+  const search = document.querySelector<HTMLInputElement>(".filter-menu-panel .filter-menu-search")!;
+  search.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  await flushPromises();
+  expect((wrapper.props() as { modelValue: string }).modelValue ?? "").toBe("");
+  search.value = "zzz";
+  search.dispatchEvent(new Event("input"));
+  await flushPromises();
+  expect(document.querySelectorAll(".filter-menu-panel [data-filter-option]")).toHaveLength(0);
+  search.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  await flushPromises();
+  expect(search.value).toBe("");
+  expect(document.querySelector(".filter-menu-panel")).not.toBeNull();
+});

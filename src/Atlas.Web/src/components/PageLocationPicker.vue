@@ -5,6 +5,8 @@ import { focusFirst } from '../lib/pickEnter';
 import { useSearchKeys } from '../lib/searchKeys';
 import AtlasIcon from './AtlasIcon.vue';
 import { Input } from './ui/input';
+import EmptyState from './settings/EmptyState.vue';
+import { foldText } from '../lib/foldText';
 import { Button } from './ui/button';
 
 type Location = { id: string; parentId: string | null; title: string; canEdit: boolean; sortOrder?: number };
@@ -12,7 +14,6 @@ const props = defineProps<{ modelValue: string; items: Location[]; label: string
 const emit = defineEmits<{ 'update:modelValue': [id: string] }>();
 const search = ref(''), expanded = ref(new Set<string>()), limit = ref(80), focused = ref('');
 const id = useId(), treeElement = ref<HTMLElement>();
-const normalize = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase();
 const byId = computed(() => new Map(props.items.map(item => [item.id, item])));
 const children = computed(() => {
   const map = new Map<string, Location[]>();
@@ -34,8 +35,8 @@ function path(item: Location) {
 }
 const selectedPath = computed(() => byId.value.has(props.modelValue) ? path(byId.value.get(props.modelValue)!) : props.rootLabel ?? t.loc.rootLevel);
 const rows = computed(() => {
-  const query = normalize(search.value.trim());
-  if (query) return props.items.filter(item => !props.excluded?.has(item.id) && normalize(item.title).includes(query)).map(item => ({ ...item, depth: 0 }));
+  const query = foldText(search.value.trim());
+  if (query) return props.items.filter(item => !props.excluded?.has(item.id) && foldText(item.title).includes(query)).map(item => ({ ...item, depth: 0 }));
   const result: (Location & { depth: number })[] = [], seen = new Set<string>();
   const pending = (children.value.get('') ?? []).map(item => ({ ...item, depth: 0 })).reverse();
   while (pending.length) {
@@ -107,7 +108,7 @@ watch([() => props.modelValue, byId], () => {
         <AtlasIcon v-else name="page" :size="15" class="location-leaf" />
         <span>{{ item.title }}<small v-if="search">{{ path(item) }}</small></span><AtlasIcon v-if="modelValue === item.id" name="check" :size="16" />
       </div>
-      <p v-if="search && !rows.length" class="location-empty" role="status">{{ t.loc.noMatch }}</p>
+      <EmptyState v-if="search && !rows.length" inline icon="search" class="location-empty" :title="t.loc.noMatch" />
       <Button v-if="rows.length > limit" type="button" variant="ghost" class="location-more" :disabled="disabled" @click="limit += 80">{{ t.loc.showMore(rows.length - limit) }}</Button>
     </div>
     <p class="location-selection"><AtlasIcon name="organize" :size="14" /><span><small>{{ t.loc.selected }}</small><span data-location-value>{{ selectedPath }}</span></span></p>
@@ -146,7 +147,7 @@ watch([() => props.modelValue, byId], () => {
 .location-root { border-bottom: 1px solid var(--line); margin-bottom: 4px; }
 .location-selection { margin: 0; padding: 12px 14px; background: var(--canvas); display: flex; gap: 10px; align-items: center; font-size: 12px; overflow-wrap: anywhere; border-top: 1px solid var(--line); }
 .location-selection small { display: block; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
-.location-empty { padding: 16px; color: var(--muted); font-size: 13px; }
+.location-empty { padding: 16px; }
 .location-more { width: 100%; }
 .disabled { opacity: .6; }
 </style>
