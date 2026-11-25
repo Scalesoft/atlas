@@ -144,7 +144,7 @@ public sealed class AssistantToolSession : IAsyncDisposable
     }
 
     /// <summary>The tool's declared scope; null (never offered) for none or an unknown one.</summary>
-    private static string? ScopeOf(McpServerTool tool)
+    internal static string? ScopeOf(McpServerTool tool)
         => tool.Metadata.OfType<McpToolScopeAttribute>().FirstOrDefault()?.Scope is { } scope && ApiScopes.All.Contains(scope) ? scope : null;
 
     /// <summary>

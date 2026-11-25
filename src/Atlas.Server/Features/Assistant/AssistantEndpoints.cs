@@ -26,6 +26,7 @@ public static class AssistantEndpoints
             .RequireAuthorization().RequireRateLimiting(AnswerRateLimit).Produces<AiTurnPrepared>();
         app.MapConversations();
         app.MapFeedback();
+        app.MapGet(AssistantToolCatalog.Route, AssistantToolCatalog.HandleAsync).RequireAuthorization();
     }
 
     /// <summary>

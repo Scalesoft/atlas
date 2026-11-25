@@ -73,6 +73,9 @@ public static class AssistantToolGroups
             "projector_get_requirement_history"], []),
     ];
 
+    /// <summary>Every group with its tools in priority order: what the panel lists as what the assistant can do (the router picks among them per question).</summary>
+    public static IEnumerable<(string Name, IReadOnlyList<string> Tools, bool Projector)> Catalog => Defs.Select(def => (def.Name, (IReadOnlyList<string>)def.Tools, def.Projector));
+
     private static readonly Regex[] StemRegexes = Defs.Select(d => Compile(d.Stems)).ToArray();
     private static readonly Regex[] VerbRegexes = Defs.Select(d => Compile(d.NeedsVerb ?? [])).ToArray();
     private static readonly Regex LabelNoun = Compile(["tag", "stitk", "stitek", "ikon", "barv", "otaguj", "ostitkuj"]);
