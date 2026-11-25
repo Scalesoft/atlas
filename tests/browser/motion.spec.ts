@@ -38,18 +38,19 @@ for (const reducedMotion of ['no-preference', 'reduce'] as const) {
     for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
       await page.setViewportSize(viewport);
       const trigger = page.getByRole('button', { name: 'Další akce stránky', exact: true });
-      const menu = page.getByRole('group', { name: 'Další akce stránky', exact: true });
+      const menu = page.getByRole('menu', { name: 'Další akce stránky', exact: true });
       for (let attempt = 0; attempt < 2; attempt++) {
         await trigger.press('ArrowDown');
         await expect(menu).toBeVisible();
-        await expect(menu).toHaveCSS('animation-name', 'atlas-reveal');
-        await expect(menu.locator('button:enabled').first()).toBeFocused();
+        await expect(menu).toHaveCSS('animation-name', reducedMotion === 'reduce' ? 'atlas-backdrop-in' : /^atlas-menu-in/); // rises from its side, fades under reduced motion (motion.css)
+        await expect(menu.locator('[role=menuitem]:not([data-disabled]):visible').first()).toBeFocused();
         const bounds = (await menu.boundingBox())!;
         expect(bounds.x).toBeGreaterThanOrEqual(0);
         expect(bounds.x + bounds.width).toBeLessThanOrEqual(viewport.width);
         expect(bounds.y + bounds.height).toBeLessThanOrEqual(viewport.height);
         expect(await menu.evaluate(element => {
-          const button = element.querySelector('button:not(:disabled)')!;
+          // The first shown row: on a wide page the actions the bar already shows stay in the menu, hidden.
+          const button = [...element.querySelectorAll<HTMLElement>('[role=menuitem]:not([data-disabled])')].find(row => row.offsetParent)!;
           const bounds = button.getBoundingClientRect();
           return element.contains(document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2));
         }), 'The animated menu stays above the document and receives pointer input.').toBe(true);

@@ -38,6 +38,7 @@ beforeEach(() => {
     const path = String(input);
     if (path.includes("ai-settings")) return Response.json({ included: true, version: "v1" });
     if (path.includes("search-gaps")) return Response.json({ items: [], minimumUsers: 3, retentionDays: 90 });
+    if (path.includes("content-health")) return Response.json({ summary: { verified: 0, expiring: 0, expired: 0, unverified: 0, withoutSteward: 0 }, items: [], nextCursor: null, enabled: true });
     return Response.json([]);
   }));
 });

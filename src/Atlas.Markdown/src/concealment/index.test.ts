@@ -109,6 +109,8 @@ describe('concealed content', () => {
     expect(document.activeElement).toBe(outside)
   })
   it('lets hosts that ask for a second factor wait longer than the default release deadline', async () => {
+    // No frame is drawn: two minutes of faked animation frames would time the particle drawing, not the deadline.
+    vi.stubGlobal('requestAnimationFrame', () => 0)
     let signal!: AbortSignal
     const instance = create({ kind: 'secret', revealTimeoutMs: 120000, reveal: context => { signal = context.signal; return new Promise(() => {}) } })
     button(instance.element, 'Reveal')!.click(); await flush()

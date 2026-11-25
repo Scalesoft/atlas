@@ -313,7 +313,7 @@ public sealed class ProjectorPerformanceTests(ProjectorPerformanceSeed seed, ITe
         Assert.True(refresh < 50, $"refresh {refresh:F2} ms");
     }
 
-    /// <summary>The freshness check across every page, which „Co to blokuje“ (CrossPageRequirements.DependentsAsync) makes before it reads:
+    /// <summary>The freshness check across every page, which „Co to blokuje“ (GetRequirementDependentsHandler) makes before it reads:
     /// over the seeded instance (300 pages of 40 blocks, 10 catalogs, a 500-block page), all indexed, it is one statement within 50 ms.</summary>
     [PostgreSqlFact]
     public async Task The_freshness_check_of_every_page_is_one_statement_within_50_ms()

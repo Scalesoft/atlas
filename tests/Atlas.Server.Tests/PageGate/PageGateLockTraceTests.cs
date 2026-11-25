@@ -334,12 +334,13 @@ public sealed class PageGateLockTraceTests
 
         // The working revision is the published one: its version is the publication's, without a statement.
         Expect("GetPage by an editor", await f.RecordAsync<PageDto>(f.Writer, new GetPage(page.Id)), readLadder, 12);
-        Expect("GetMcpPage, the working revision", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndVerification, 16);
-        Expect("GetMcpPage, the publication by an editor", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, false)), readAndVerification, 16);
-        Expect("GetMcpPage, the publication by a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, false)), readAndVerification, 16);
+        // G5: every MCP read and write asks once whether its space takes part in AI (SpaceRoles.InAiAsync, one statement per request).
+        Expect("GetMcpPage, the working revision", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndVerification, 17);
+        Expect("GetMcpPage, the publication by an editor", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, false)), readAndVerification, 17);
+        Expect("GetMcpPage, the publication by a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, false)), readAndVerification, 17);
         // A reader is decided and then refused the working revision, before any revision is read; the space lock tells whether the page is live (3.6-I).
-        Expect("GetMcpPage, the working revision refused to a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, true), 404), readLadder, 9);
-        Expect("GetMcpEditBase", await OverMcpAsync<McpEditBase>(f, f.Writer, agent, new GetMcpEditBase(page.Id, 1, MarkdownLinkRequest.None)), readLadder, 12);
+        Expect("GetMcpPage, the working revision refused to a reader", await OverMcpAsync<McpPageRead>(f, f.Reader, readingAgent, new GetMcpPage(page.Id, true), 404), readLadder, 10);
+        Expect("GetMcpEditBase", await OverMcpAsync<McpEditBase>(f, f.Writer, agent, new GetMcpEditBase(page.Id, 1, MarkdownLinkRequest.None)), readLadder, 13);
         // The access tab and the people directory read the page first, as the content endpoint does.
         Expect("GetPageAccess by a reader", await f.RecordAsync<PageAccessState>(f.Reader, new GetPageAccess(page.Id)), readAndSpace, 14);
         // 13: the first page of the history also reads the Projector catalog marks (review A2-4).
@@ -350,9 +351,9 @@ public sealed class PageGateLockTraceTests
         await f.As<PageDto>(f.Writer, saved);
         // The working revision is ahead of the publication now: the version of the publication is one statement more.
         Expect("GetPage by an editor, with unpublished changes", await f.RecordAsync<PageDto>(f.Writer, new GetPage(page.Id)), readLadder, 13);
-        Expect("GetMcpPage, the working revision with unpublished changes", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndVerification, 17);
+        Expect("GetMcpPage, the working revision with unpublished changes", await OverMcpAsync<McpPageRead>(f, f.Writer, agent, new GetMcpPage(page.Id, true)), readAndVerification, 18);
         // The assistant's preview of a publication reads the working revision.
-        Expect("PreviewMcpPublish", await OverMcpAsync<McpPublishSummary>(f, f.Writer, agent, new PreviewMcpPublish(page.Id, 2, null)), readAndSpace, 18);
+        Expect("PreviewMcpPublish", await OverMcpAsync<McpPublishSummary>(f, f.Writer, agent, new PreviewMcpPublish(page.Id, 2, null)), readAndSpace, 19);
         Expect("SavePage without a change", await f.RecordAsync<PageDto>(f.Writer, saved with { Request = saved.Request with { ExpectedVersion = 2 } }), """
             advisory shared
             read Page.SpaceId
@@ -474,7 +475,7 @@ public sealed class PageGateLockTraceTests
         // accounts, page titles, uses: four statements, shown as "read Page"); the lexicon is cached, so the later writes read none.
         Expect("CreateMcpDraft", await OverMcpAsync<McpWriteResult>(f, f.Writer, agent,
                 new CreateMcpDraft(new(f.SpaceId, null, "Draft", McpSite.Rich(McpSite.Paragraph("Text")), "Text"))),
-            mcpCreateLadder + "\nread Space\nread Page\nSpace FOR UPDATE\ninsert Page" + readBack, 28);
+            mcpCreateLadder + "\nread Space\nread Page\nSpace FOR UPDATE\ninsert Page" + readBack, 29);
         // Text appended to a template is merged before the write, into the template as the read before it saw it: the create
         // copies the template, compares it with what was read, and saves the merged copy as its one revision. No save after it.
         var fromTemplate = new CreatePageRequest(f.SpaceId, null, "Draft 2", "", "", false, template.Id);
@@ -488,14 +489,14 @@ public sealed class PageGateLockTraceTests
                 appended = await f.As<McpWriteResult>(f.Writer, new CreateMcpDraft(create.Request, create.TemplateContentJson));
                 return recording.Statements;
             }),
-            mcpCreateLadder + "\nread Page" + readBack + "\nread Space\nSpace FOR UPDATE\ninsert Page" + readBack, 31); // 39 + the read of the template decoration, inherited by the new page (plan 3.5 E); - 9: the MCP ladder and two read-backs keep the locked account
+            mcpCreateLadder + "\nread Page" + readBack + "\nread Space\nSpace FOR UPDATE\ninsert Page" + readBack, 32); // 39 + the read of the template decoration, inherited by the new page (plan 3.5 E); - 9: the MCP ladder and two read-backs keep the locked account
         Assert.Equal([$"page {template.Id} FOR SHARE", $"page {appended.PageId} FOR SHARE"], locks.Calls.Where(call => call.StartsWith("page ", StringComparison.Ordinal)));
         // The MCP save decides G5 under the space lock (content shared, space FOR SHARE, the visibility read), then the shared save
         // runs its ladder and finds both held; the publication still looks at the page before the shared handler's locks.
         Expect("SaveMcpDraft", await OverMcpAsync<McpWriteResult>(f, f.Writer, agent,
                 new SaveMcpDraft(page.Id, new SavePageRequest("Trace", PageGateFixture.Rich("Agent"), "Agent", 2))),
             "advisory shared\nread Page.SpaceId\nSpace FOR SHARE\nread Page\nread Page.SpaceId\nUserAccount FOR SHARE\nset actor\nPage FOR UPDATE" +
-            "\nupdate Page\nPageCollaboration FOR UPDATE" + readBack, 24);
+            "\nupdate Page\nPageCollaboration FOR UPDATE" + readBack, 25);
 
         Assert.True(m_differences.Count == 0, string.Join(Environment.NewLine + Environment.NewLine, m_differences));
         // No message of this test upgrades a row. (A create from a template with appended text used to save the merged text after

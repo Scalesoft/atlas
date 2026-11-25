@@ -483,6 +483,7 @@ public sealed class SqlTextConventionTests
         ["Atlas.Server.Platform.Identity.ShareRevocation.IssuerKeepsShareAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Platform.Identity.ShareRevocation.RecordAsync"] = Kind.AtomicWrite,
         ["Atlas.Server.Platform.Identity.ShareRevocation.SpaceAsync"] = Kind.AtomicWrite,
+        ["Atlas.Server.Platform.Identity.SpaceRoles.InAiAsync"] = Kind.ReadProjection,
         // Job requests merge on the partial unique indexes and change a run only from the state they expect, each in one statement.
         ["Atlas.Server.Platform.Jobs.JobRequests.CancelAsync"] = Kind.AtomicWrite,
         ["Atlas.Server.Platform.Jobs.JobRequests.LockJobAsync"] = Kind.AtomicWrite,

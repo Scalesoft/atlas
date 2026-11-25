@@ -127,12 +127,16 @@ public sealed class LiveSeedsTests
     {
         await using var f = await McpSite.CreateAsync(services: services => services.AddSingleton<ILiveWriteAuthority>(Authority()));
         // The conversion's jobs (headings, and the systems that take the same key) are not run here: holding the key during the open, they
-        // would leave the page as stored (repair on open). Their queued runs go; a run already taken (slow on a loaded host) is waited for.
+        // would leave the page as stored (repair on open). Their queued runs go; a run already taken (slow on a loaded host) is waited for,
+        // and so is the follow-up run it may request as it ends (ConvertRequirementsHeadings), until neither a queued nor a running one is left.
         var conversions = $"'{RequirementsHeadingsJob.JobId}','{RequirementSystemsJob.JobId}'";
-        await f.Site.ExecuteAsync($"""DELETE FROM "JobRun" WHERE "JobId" IN ({conversions}) AND "State"='{JobStates.Queued}'""");
-        for (var watch = System.Diagnostics.Stopwatch.StartNew();
-             (long)(await f.Site.ScalarAsync($"""SELECT count(*) FROM "JobRun" WHERE "JobId" IN ({conversions}) AND "State"='{JobStates.Running}'"""))! > 0;)
+        for (var watch = System.Diagnostics.Stopwatch.StartNew(); ;)
         {
+            await f.Site.ExecuteAsync($"""DELETE FROM "JobRun" WHERE "JobId" IN ({conversions}) AND "State"='{JobStates.Queued}'""");
+            if ((long)(await f.Site.ScalarAsync($"""SELECT count(*) FROM "JobRun" WHERE "JobId" IN ({conversions}) AND "State" IN ('{JobStates.Running}','{JobStates.Queued}')"""))! == 0)
+            {
+                break;
+            }
             Assert.True(watch.Elapsed < TimeSpan.FromMinutes(1), "A conversion job did not end within a minute.");
             await Task.Delay(50);
         }

@@ -56,14 +56,18 @@ test('settings rows keep labels, switches and actions visible from phone to desk
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.setViewportSize({ width: 1280, height: 900 });
 
+  // A click on the name shows the person in the dock; the full card opens from there, on Přístupy; the switches are on its Účet tab.
   await ownRow.locator('[data-open-account]').click();
-  // The person's card opens on Přístupy; the switches are on its Účet tab.
+  await page.locator('[data-person-peek-open]').click();
   await page.locator('.settings-tabs [data-tab="account"]').click();
-  for (const label of ['Účet je aktivní', 'Správce wiki', 'Povolit osobní API tokeny'])
+  for (const label of ['Účet je aktivní', 'Správce wiki'])
     await expectSwitchRow(page.getByRole('switch', { name: label, exact: true }));
+  // Personal API tokens are a level (OptionPills), not a switch.
+  await expect(page.locator('[data-api-access]')).toBeVisible();
 
-  await page.getByRole('navigation', { name: 'Správa wiki', exact: true }).getByRole('link', { name: 'Moduly a integrace', exact: true }).click();
-  await page.locator('[data-module="oidc"]').click();
+  // Every module has its own entry in the left panel (no Moduly a integrace hub): the providers are under Přihlašování.
+  const sections = page.getByRole('navigation', { name: 'Správa wiki', exact: true });
+  await sections.getByRole('link', { name: 'Přihlašování', exact: true }).click();
   // The section header and the empty state both offer the action.
   await page.getByRole('button', { name: 'Přidat poskytovatele', exact: true }).first().click();
   // A progressive flow: its confirmation appears only once the fields are filled, the first field at once.
@@ -72,8 +76,7 @@ test('settings rows keep labels, switches and actions visible from phone to desk
   const reset = page.locator('[data-save-bar-cancel]');
   if (await reset.isVisible()) await reset.click();
 
-  await page.getByRole('link', { name: 'Všechny moduly' }).click();
-  await page.locator('[data-module="youtrack"]').click();
+  await sections.getByRole('link', { name: /^YouTrack(\s|$)/ }).click();
   await expectSwitchRow(page.getByRole('switch', { name: 'Používat spojení s YouTrack', exact: true }));
 });
 

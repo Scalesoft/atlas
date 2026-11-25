@@ -129,8 +129,8 @@ it("offers a row's actions in its „Co s tím jde dělat“, ticking a draft am
   await show();
   const row = wrapper.get('[data-content-id="first"]');
   row.element.dispatchEvent(new KeyboardEvent('keydown', { key: '.', ctrlKey: true, bubbles: true }));
-  await flushPromises();
-  const items = () => [...document.querySelectorAll<HTMLElement>('[data-row-action]')];
+  await vi.waitFor(() => expect(document.querySelector('[data-testid=intentions]')).not.toBeNull());
+  const items = () => [...document.querySelectorAll<HTMLElement>('[data-testid=intentions] [role=option]')];
   expect(items().map(item => item.textContent?.trim())).toEqual(['Otevřít', 'Detail', 'Kde je použito', 'Přidat do stromu…', 'Vybrat']);
   items().find(item => item.textContent?.trim() === 'Vybrat')!.click();
   await flushPromises();

@@ -3,11 +3,17 @@ import { reactive, ref } from "vue";
 import AtlasIcon from "../../AtlasIcon.vue";
 import { Button } from "../../ui/button";
 import AiGlyph, { AI_GLYPH_SIZES, type AiGlyphSize, type AiGlyphState } from "../../ai/AiGlyph.vue";
-import { AI_GLYPH_MOVES } from "../../ai/aiGlyphBusy";
 import SettingsSection from "../../settings/SettingsSection.vue";
 import SettingsNav from "../../settings/SettingsNav.vue";
 import SettingsPage from "../../settings/SettingsPage.vue";
 import SuggestionChip from "../../settings/SuggestionChip.vue";
+
+// The busy variants of styles/aiBusy.css, `data-move` 1…24 in this order (the glyph itself needs only their count).
+const AI_GLYPH_MOVES = [
+  "Poskok", "Otočka", "Oběžnice", "Oběžnice pozpátku", "Mrknutí", "Zamrkání", "Třpyt po řadě", "Tep",
+  "Houpačka", "Výdech", "Nádech", "Výměna míst", "Skok s otočkou", "Vrtění", "Pružina", "Rozlet",
+  "Schovávaná", "Kolotoč", "Nakouknutí", "Tanec", "Kouzlo", "Vlnka", "Cvak", "Kometa",
+];
 
 // Board „AI znak – velikosti, stavy a průběh“: one drawing, six sizes, eight states. The cards are buttons, so a click
 // plays a one-off state again and pointing at „Připraveno“ shows what a launcher does on hover or focus.

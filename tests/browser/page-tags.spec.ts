@@ -54,7 +54,7 @@ test.afterEach(async ({ context }) => {
 // Tags save as they go (P5): every change is its own PUT, and Esc only closes the dialog.
 const tagsSaved = (page: Page) => page.waitForResponse(r => r.url().endsWith(`/api/pages/${fixture!.id}/tags`) && r.request().method() === 'PUT');
 async function addTag(page: Page, name: string) {
-  const dialog = page.getByRole('dialog', { name: 'Tagy stránky', exact: true });
+  const dialog = page.getByRole('dialog', { name: /^(Přidat|Upravit) tagy$/ });
   const input = dialog.getByRole('combobox');
   const saved = tagsSaved(page);
   await input.fill(name); await input.press('Enter');
@@ -63,7 +63,7 @@ async function addTag(page: Page, name: string) {
 }
 async function closeTags(page: Page) {
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Tagy stránky', exact: true })).toBeHidden();
+  await expect(page.getByRole('dialog', { name: /^(Přidat|Upravit) tagy$/ })).toBeHidden();
 }
 test('multiple tags persist, can be searched and removed, and fit desktop and mobile', async ({ page, context }, info) => {
   const first = `Integrace ${fixture!.id.slice(0, 8)}`, second = `Návody ${fixture!.id.slice(0, 8)}`;
@@ -102,7 +102,7 @@ test('multiple tags persist, can be searched and removed, and fit desktop and mo
   // A phone offers the tag editor only while editing (board 13); the lock in the bottom bar unlocks the page.
   await setLocked(page, false);
   await page.getByRole('button', { name: 'Upravit tagy', exact: true }).click();
-  const editor = page.getByRole('dialog', { name: 'Tagy stránky', exact: true });
+  const editor = page.getByRole('dialog', { name: /^(Přidat|Upravit) tagy$/ });
   const box = await editor.boundingBox(); expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.x + box!.width).toBeLessThanOrEqual(390);
   await page.screenshot({ path: info.outputPath('page-tags-editor-mobile.png'), animations: 'disabled' });
   const removed = tagsSaved(page);
@@ -114,7 +114,7 @@ test('multiple tags persist, can be searched and removed, and fit desktop and mo
 });
 test('a stale tag editor reports the conflict, keeps the other saved update and shows the current tags', async ({ page, context }) => {
   await page.getByRole('button', { name: 'Přidat tagy', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Tagy stránky', exact: true });
+  const dialog = page.getByRole('dialog', { name: /^(Přidat|Upravit) tagy$/ });
   // A colleague saves while this editor is open on the old tags.
   const other = await context.request.put(`/api/pages/${fixture!.id}/tags`, { headers, data: { names: ['Úprava kolegy'], expectedTagIds: [] } });
   expect(other.ok()).toBe(true);

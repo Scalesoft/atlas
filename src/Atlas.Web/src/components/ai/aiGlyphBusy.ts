@@ -3,12 +3,8 @@ import css from "../../styles/aiBusy.css?inline";
 // Injected here, not imported as a stylesheet: the eager glyph's import() then carries no list of preloads (first-load budget).
 document.head.append(Object.assign(document.createElement("style"), { textContent: css }));
 
-/** The busy variants of styles/aiBusy.css, `data-move` 1…24 in this order (names for the gallery). */
-export const AI_GLYPH_MOVES = [
-  "Poskok", "Otočka", "Oběžnice", "Oběžnice pozpátku", "Mrknutí", "Zamrkání", "Třpyt po řadě", "Tep",
-  "Houpačka", "Výdech", "Nádech", "Výměna míst", "Skok s otočkou", "Vrtění", "Pružina", "Rozlet",
-  "Schovávaná", "Kolotoč", "Nakouknutí", "Tanec", "Kouzlo", "Vlnka", "Cvak", "Kometa",
-] as const;
+/** The busy variants of styles/aiBusy.css, `data-move` 1…24 (their names are the gallery's, AiGlyphExample.vue). */
+export const AI_GLYPH_MOVE_COUNT = 24;
 
 /**
  * While the glyph works, every time its big star finishes a loop the glyph tosses in another variant at random, never
@@ -21,7 +17,7 @@ export function cycleBusy(element: HTMLElement, random: () => number = Math.rand
     const target = event.target as Element;
     if (!target.parentElement?.classList.contains("ai-glyph-mark") || target.previousElementSibling) return;
     let next = current;
-    while (next === current) next = Math.floor(random() * (AI_GLYPH_MOVES.length + 1));
+    while (next === current) next = Math.floor(random() * (AI_GLYPH_MOVE_COUNT + 1));
     current = next;
     if (next) element.dataset.move = String(next);
     else delete element.dataset.move;

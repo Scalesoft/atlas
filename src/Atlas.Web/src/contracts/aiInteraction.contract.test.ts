@@ -335,13 +335,16 @@ describe("interaction contract: AI, the hand-over", () => {
     await settle();
     expect(askAssistant).toHaveBeenCalledWith("explain", "Schůzka", "Prvek tabule");
   });
-  it("keeps the browser's menu on a reader's board item the AI has no rows for (P2), and opens the board's on one it has", async () => {
+  it("gives a reader's board item the AI has no rows for only its Diskuse (D13), and adds the AI's rows on one it has", async () => {
     const rightClick = (element: HTMLElement) => { const event = new MouseEvent("contextmenu", { bubbles: true, cancelable: true }); element.dispatchEvent(event); return event.defaultPrevented; };
+    const rows = () => [...document.querySelectorAll("[data-testid=intentions] [role=option] .t")].map(row => row.textContent);
     const empty = await openBoard(true, false, [note("")]);
-    expect(rightClick(empty.element)).toBe(false);
+    expect(rightClick(empty.element)).toBe(true);
+    await vi.waitFor(() => expect(rows()).toEqual(["Diskuse"]));
     board!.unmount(); board = undefined; document.body.replaceChildren();
     const text = await openBoard(true, false);
     expect(rightClick(text.element)).toBe(true);
+    await vi.waitFor(() => expect(rows()).toEqual(expect.arrayContaining([...reading, "Diskuse"])));
   });
 });
 

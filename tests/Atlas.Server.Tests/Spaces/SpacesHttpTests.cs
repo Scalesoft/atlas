@@ -16,7 +16,7 @@ public sealed class SpacesHttpTests
         var spaceId = await AtlasHttpSite.OwnSpaceAsync(admin);
         using var member = await MemberAsync(site, admin, spaceId, "Admin");
         var space = await ListedAsync(member, spaceId);
-        Assert.Equal(new[] { "id", "name", "icon", "color", "role", "description", "itemAccessOnly", "pinPolicy", "pinned", "pageCount", "lastChangedAt", "cover" }, space.AsObject().Select(property => property.Key).ToArray());
+        Assert.Equal(new[] { "id", "name", "icon", "color", "role", "description", "itemAccessOnly", "pinPolicy", "pinned", "pageCount", "lastChangedAt", "verificationOn", "cover" }, space.AsObject().Select(property => property.Key).ToArray());
         Assert.Equal("Admin", space["role"]!.GetValue<string>());
         Assert.Equal("", space["description"]!.GetValue<string>());
         const string rich = """{"format":"atlas-rich","version":1,"document":{"type":"doc","content":[{"type":"paragraph"}]}}""";

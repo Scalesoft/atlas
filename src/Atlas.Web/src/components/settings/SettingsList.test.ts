@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
 import { defineComponent, h } from "vue";
 import SettingsList from "./SettingsList.vue";
+import { loadActionsMenu } from "../boards/canvas/actionsMenuChunk";
 
 enableAutoUnmount(afterEach);
 
@@ -98,6 +99,8 @@ describe("SettingsList", () => {
 });
 
 describe("SettingsList keys and the row menu", () => {
+  // The row menu is the editor's, a lazy chunk: loaded before the test, so a busy machine does not spend the test's time importing it.
+  beforeAll(async () => { await loadActionsMenu(); });
   it("walks the rows with the arrows and opens a row's menu from its ⋯", async () => {
     const { default: SettingsListRow } = await import("./SettingsListRow.vue");
     const picked: string[] = [];
