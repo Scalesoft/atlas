@@ -161,8 +161,6 @@ const cs = {
     failedTitle: "Tabuli se nepodařilo načíst",
     titleLabel: "Název tabule",
     deploymentPage: "Stránka nasazení",
-    discussion: "Diskuse",
-    commentsAria: (count: number) => `, komentáře: ${count}`,
     revokedText: (pending: number) => `Přístup k tabuli vám byl odebrán. Změny se už neukládají a živé úpravy ostatních se nezobrazují.${pending ? ` Čekající změny: ${pending}.` : ""}`,
     signedOutText: (pending: number) => `Vaše přihlášení skončilo, změny se zatím neukládají. Čekající změny: ${pending}.`,
     blockedText: (blocked: number) => `Server odmítá změny uložit. Čekající změny: ${blocked}. „Zkusit znovu“ je pošle znovu, načtení tabule je zahodí.`,

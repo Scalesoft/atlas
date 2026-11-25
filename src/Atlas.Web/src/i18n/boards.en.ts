@@ -161,8 +161,6 @@ const en: BoardsMessages = {
     failedTitle: "Couldn't load the board",
     titleLabel: "Board title",
     deploymentPage: "Deployment page",
-    discussion: "Discussion",
-    commentsAria: (count: number) => `, comments: ${count}`,
     revokedText: (pending: number) => `Your access to the board was removed. Changes are no longer saved and others' live edits are not shown.${pending ? ` Pending changes: ${pending}.` : ""}`,
     signedOutText: (pending: number) => `Your session has ended, changes are not saved for now. Pending changes: ${pending}.`,
     blockedText: (blocked: number) => `The server refuses to save changes. Pending changes: ${blocked}. “Retry” sends them again, reloading the board discards them.`,
