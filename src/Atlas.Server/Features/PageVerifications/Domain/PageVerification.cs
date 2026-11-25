@@ -23,7 +23,8 @@ public class PageVerification
     public virtual short NoticeStage { get; set; }
 }
 
-/// <summary>The derived state of a page's verification (plan §2.2): computed here, in one place, never stored and never in SQL.</summary>
+/// <summary>The derived state of a page's verification (plan §2.2): computed here, in one place, never stored and never in SQL; the
+/// interval in effect has its one SQL copy beside it (<see cref="IntervalSql"/>) for the statements that must filter by it.</summary>
 public static class PageVerificationStates
 {
     public const string Off = "off";
@@ -42,6 +43,10 @@ public static class PageVerificationStates
 
     /// <summary>The interval in effect: the page's own, else the space's; null or 0 = off. A template is never verified.</summary>
     public static int? Interval(short? own, short? space, bool isTemplate) => isTemplate ? null : own ?? space;
+
+    /// <summary><see cref="Interval"/> in SQL over the aliases p ("Page"), v ("PageVerification", left-joined) and s ("Space");
+    /// <c>{IntervalSql}&gt;0</c> = verification on. PageVerificationTests pins it to the C# rule.</summary>
+    public const string IntervalSql = """(CASE WHEN p."IsTemplate" THEN NULL ELSE coalesce(v."IntervalMonths",s."VerificationIntervalMonths") END)""";
 
     public static string Of(int? interval, DateTime? until, DateTime now) =>
         interval is null or 0 ? Off

@@ -14,6 +14,8 @@ const en: ComponentsSearchMessages = {
     verificationExpired: "Page verification expired",
     outdatedReports: "Pages reported as outdated",
     reportedOutdated: "reported the page as outdated",
+    stewardDeactivated: "Deactivated page owner",
+    stewardDeactivatedAction: "is no longer an owner (the account was deactivated); their pages have no owner",
     mentionedInComment: "mentioned you in a comment",
     mentionedInPage: "mentioned you in a page",
     sharedWithYou: "shared with you",

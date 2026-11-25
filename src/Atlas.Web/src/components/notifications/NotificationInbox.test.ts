@@ -116,6 +116,8 @@ describe("notification helpers", () => {
     expect(notificationLink({ subjectId: "n", subjectType: null, anchor: null })).toBeUndefined();
     // A failed job opens its page in Správa wiki; its id is the anchor.
     expect(notificationLink({ subjectId: "j", subjectType: "atlas.job", anchor: "backups.zip" })).toBe("#/settings/general/jobs/backups.zip");
+    // A space whose steward was deactivated opens its Stav obsahu.
+    expect(notificationLink({ subjectId: "s", subjectType: "atlas.space", anchor: null })).toBe("#/spaces/s/settings/content-health");
   });
 
   it("groups consecutive items by day", () => {

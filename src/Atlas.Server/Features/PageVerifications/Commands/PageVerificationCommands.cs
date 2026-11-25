@@ -10,7 +10,8 @@ namespace Atlas.Server.Features.PageVerifications.Commands;
 /// <summary>Ověřit, Nastavit garanta, interval of one page (plan §2.3): anyone who may edit the page (an editor or the space's admin).</summary>
 public sealed record SetPageVerification(Guid PageId, SetPageVerificationRequest Request);
 
-/// <summary>The bulk actions of Stav obsahu over pages of one space; each page is decided as <see cref="SetPageVerification"/>.</summary>
+/// <summary>The bulk actions of Stav obsahu over pages of one space; each page is decided as <see cref="SetPageVerification"/>, except that
+/// stewardFromLastAuthor skips a page that has an active steward.</summary>
 public sealed record SetSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
 
 /// <summary>„Nahlásit neaktuální“: any reader of the page tells its steward; nothing on the page changes.</summary>
@@ -25,11 +26,12 @@ public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationR
 /// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
 public sealed record ReportMcpOutdated(ReportPageOutdated Command);
 
-public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, PageGate gate, PageVerificationReader reader,
-    IRequestChannel channel, Outbox outbox, TimeProvider clock)
+public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, IContentAccess access, PageGate gate,
+    PageVerificationReader reader, IRequestChannel channel, Outbox outbox, TimeProvider clock)
 {
     public const int MaxBulk = 500;
     public const int MaxNote = 500;
+    private static readonly TimeZoneInfo Zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Prague");
 
     public async Task<PageVerificationView> Handle(SetPageVerification command, CancellationToken ct)
     {
@@ -48,6 +50,9 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             throw new ApiException(404, "Prostor nebyl nalezen nebo k němu nemáte přístup.");
         }
+        // Stav obsahu's writers only, decided before any page is selected or locked (the space row first: the lock order of every write).
+        var actor = await locks.LockForWriteAsync(space.Id, ct);
+        await access.RequireSpaceAsync(space.Id, SpaceRole.Writer, ct);
         List<Guid> ids;
         if (request.PageIds is null)
         {
@@ -55,7 +60,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             {
                 throw new ApiException(400, "Bez výběru stránek lze jen nastavit garanta podle posledního autora.");
             }
-            ids = await WithoutStewardAsync(space, ct);
+            ids = await WithoutStewardAsync(space, actor, ct);
         }
         else
         {
@@ -65,6 +70,9 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             throw new ApiException(400, "Najednou lze změnit nejvýše {max} stránek.", args: new Dictionary<string, object?> { ["max"] = MaxBulk });
         }
+        // A page of another space is missing here: skipped before anything locks it or its space.
+        var inSpace = ids.Count == 0 ? [] : (await session.QueryOver<Page>().Where(x => x.SpaceId == space.Id).WhereRestrictionOn(x => x.Id).IsIn(ids)
+            .Select(x => x.Id).ListAsync<Guid>(ct)).ToHashSet();
         var single = request.Action switch
         {
             "verify" => new SetPageVerificationRequest(Verify: true),
@@ -76,12 +84,23 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         var skipped = new List<SkippedPage>();
         foreach (var id in ids)
         {
+            if (!inSpace.Contains(id))
+            {
+                skipped.Add(new SkippedPage(id, "404"));
+                continue;
+            }
             try
             {
-                var (page, actor) = await locks.LockPageAsync(id, false, AccessOperation.EditContent, ct);
+                var (page, _) = await locks.LockPageAsync(id, false, AccessOperation.EditContent, ct);
                 if (page.SpaceId != command.SpaceId)
                 {
                     skipped.Add(new SkippedPage(id, "404"));
+                    continue;
+                }
+                // „Garant podle posledního autora“ fills in a missing steward, it never replaces one.
+                if (request.Action == "stewardFromLastAuthor" && await HasStewardAsync(page.Id, ct))
+                {
+                    skipped.Add(new SkippedPage(id, "has_steward"));
                     continue;
                 }
                 await ApplyAsync(page, actor, single, ct);
@@ -139,6 +158,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         var row = await session.GetAsync<PageVerification>(page.Id, ct);
         var isNew = row is null;
         row ??= new PageVerification { PageId = page.Id };
+        var steward = row.StewardId;
         if (request.InheritInterval == true)
         {
             row.IntervalMonths = null;
@@ -160,6 +180,11 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
         {
             row.StewardId = await RequireStewardAsync(page, stewardId, ct);
         }
+        if (row.StewardId != steward)
+        {
+            // A new steward has had no reminder yet: the job tells them the stage the previous one got.
+            row.NoticeStage = PageVerificationStates.NoticeNone;
+        }
         if (request.Verify == true)
         {
             var space = await session.GetAsync<Space>(page.SpaceId, ct);
@@ -170,7 +195,7 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             var published = await PublishedVersionAsync(page, ct)
                 ?? throw new ApiException(400, "Ověřit lze jen publikovanou stránku. Nejdřív ji publikujte.", "not_published");
             var now = clock.GetUtcNow().UtcDateTime;
-            var until = request.Until?.ToUniversalTime() ?? now.AddMonths(interval);
+            var until = request.Until is { } chosen ? Until(chosen) : now.AddMonths(interval);
             if (until <= now || until > now.AddYears(5))
             {
                 throw new ApiException(400, "Ověřit lze do data v budoucnosti, nejvýše za pět let.");
@@ -195,8 +220,17 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 SELECT EXISTS (SELECT 1 FROM "EffectivePageAccess" e JOIN "UserAccount" u ON u."Id"=e."UserId"
                   WHERE e."UserId"=:user AND e."PageId"=:page AND e."Role">=1 AND u."IsActive") AS "Reads"
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", stewardId).SetParameter("page", page.Id).UniqueResultAsync<bool>(ct);
-        return reads ? stewardId : throw new ApiException(400, "Garantem může být jen aktivní uživatel, který smí stránku číst.");
+        return reads ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
     }
+
+    /// <summary>„Ověřit do“: a time with a zone (Z or an offset) as it is; one without a zone in Europe/Prague, whatever the server's own
+    /// zone, and a bare date (the web's date field, „2027-03-01“ over MCP) valid through the end of that day.</summary>
+    public static DateTime Until(DateTime chosen) => chosen.Kind != DateTimeKind.Unspecified
+        ? chosen.ToUniversalTime()
+        : TimeZoneInfo.ConvertTimeToUtc(chosen.TimeOfDay == TimeSpan.Zero ? chosen.AddDays(1).AddTicks(-10) : chosen, Zone);
+
+    private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)
+        => (await session.GetAsync<PageVerification>(pageId, ct))?.StewardId is { } steward && (await session.GetAsync<UserAccount>(steward, ct))?.IsActive == true;
 
     /// <summary>The author of the last published version (PageRevision.AuthorId), null when never published.</summary>
     private async Task<Guid?> LastAuthorAsync(Page page, CancellationToken ct)
@@ -209,19 +243,41 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
             ? await session.QueryOver<PageRevision>().Where(x => x.Id == revision).Select(x => x.Version).SingleOrDefaultAsync<int?>(ct)
             : null;
 
-    /// <summary>The space's published pages that are verified (own or inherited interval) and have no active steward, at most
-    /// <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
-    private async Task<List<Guid>> WithoutStewardAsync(Space space, CancellationToken ct)
-        => (await session.CreateSQLQuery("""
-                SELECT p."Id" AS "Id" FROM "Page" p
+    /// <summary>The space's published pages that are verified (own or inherited interval), have no active steward and the actor may edit
+    /// (EffectivePageAccess), at most <see cref="MaxBulk"/>; each is checked again under its lock.</summary>
+    private async Task<List<Guid>> WithoutStewardAsync(Space space, UserAccount actor, CancellationToken ct)
+        => (await session.CreateSQLQuery($"""
+                SELECT p."Id" AS "Id" FROM "Page" p JOIN "Space" s ON s."Id"=p."SpaceId"
+                JOIN "EffectivePageAccess" e ON e."PageId"=p."Id" AND e."UserId"=:actor AND e."Role">=2
                 LEFT JOIN "PageVerification" v ON v."PageId"=p."Id"
-                LEFT JOIN "UserAccount" s ON s."Id"=v."StewardId" AND s."IsActive"
-                WHERE p."SpaceId"=:space AND NOT p."IsTrashed" AND NOT p."IsTemplate" AND p."PublishedRevisionId" IS NOT NULL
-                  AND coalesce(v."IntervalMonths",:spaceInterval,0)>0 AND s."Id" IS NULL
+                LEFT JOIN "UserAccount" st ON st."Id"=v."StewardId" AND st."IsActive"
+                WHERE p."SpaceId"=:space AND NOT p."IsTrashed" AND p."PublishedRevisionId" IS NOT NULL
+                  AND {PageVerificationStates.IntervalSql}>0 AND st."Id" IS NULL
                 ORDER BY p."Id" LIMIT :limit
-                """).AddScalar("Id", NHibernateUtil.Guid).SetParameter("space", space.Id)
-            .SetParameter("spaceInterval", (int?)space.VerificationIntervalMonths, NHibernateUtil.Int32).SetParameter("limit", MaxBulk)
-            .ListAsync<Guid>(ct)).ToList();
+                """).AddScalar("Id", NHibernateUtil.Guid).SetParameter("space", space.Id).SetParameter("actor", actor.Id)
+            .SetParameter("limit", MaxBulk).ListAsync<Guid>(ct)).ToList();
+}
+
+/// <summary>5.2 (plan §2.3): a deactivated account is nobody's steward any more („bez garanta“); the administrators of each space where it
+/// was the steward of a verified page get one summary item, from that account. SaveUserHandler calls it in its transaction.</summary>
+public static class PageVerificationStewards
+{
+    public static async Task DeactivatedAsync(ISession session, Outbox outbox, Guid stewardId, CancellationToken ct)
+    {
+        var admins = await session.ReadRowsAsync($"""
+                SELECT DISTINCT x."SpaceId" AS "SpaceId", u."Id" AS "AdminId" FROM (
+                  SELECT DISTINCT p."SpaceId" AS "SpaceId" FROM "PageVerification" v JOIN "Page" p ON p."Id"=v."PageId" JOIN "Space" s ON s."Id"=p."SpaceId"
+                  WHERE v."StewardId"=:steward AND NOT p."IsTrashed" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL
+                    AND {PageVerificationStates.IntervalSql}>0) x
+                JOIN "EffectiveSpaceGrant" g ON g."SpaceId"=x."SpaceId" AND g."Role"=3
+                LEFT JOIN "EffectiveGroupMember" m ON m."GroupId"=g."GroupId"
+                JOIN "UserAccount" u ON u."Id"=coalesce(g."UserId",m."UserId") AND u."IsActive"
+                """, new Dictionary<string, object> { ["steward"] = stewardId }, row => (Space: row.GetGuid(0), Admin: row.GetGuid(1)), ct);
+        foreach (var space in admins.GroupBy(x => x.Space))
+        {
+            outbox.Notify(new NotificationRequested(NotificationKinds.StewardDeactivated, space.Key, stewardId, space.Select(x => x.Admin).ToList()));
+        }
+    }
 }
 
 /// <summary>5.2 (plan §2.3): a new page of a space that verifies its pages starts with its author as the steward, unverified.</summary>
