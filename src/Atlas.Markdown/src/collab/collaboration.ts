@@ -11,6 +11,9 @@ import { ySyncPluginKey } from '@tiptap/y-tiptap'
  * The document the view shows is still the one the binding rendered and kept in sync, so that rebuild is skipped. The first view, a
  * new view and a binding that knows no block yet render as before. (Tiptap wraps the undo plugin's view the same way.)
  */
+// shortcut: overrides y-tiptap's private `ProsemirrorBinding._forceRerender` (3.3.1) for one sync view creation; collaboration.test.ts
+// fails if it disappears or is no longer called. Remove when y-tiptap skips the rerender itself for a view whose document the binding
+// already rendered (or offers an option for it).
 export const KeepingCollaboration = Collaboration.extend({
   addProseMirrorPlugins() {
     const plugins = (this.parent?.() ?? []) as Plugin[]
