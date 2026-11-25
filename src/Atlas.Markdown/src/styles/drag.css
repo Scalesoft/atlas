@@ -28,7 +28,7 @@
   position: fixed; left: 0; top: 0; height: 40px; pointer-events: none; z-index: var(--md-layer-drag, 1200); will-change: translate;
   display: flex; align-items: center; justify-content: center;
   border-radius: 6px; background: color-mix(in srgb, var(--accent, #58a9b9) 8%, transparent);
-  animation: md-block-drop-enter var(--md-motion-base) var(--md-motion-ease);
+  animation: md-fade-in var(--md-motion-base) var(--md-motion-ease);
 }
 .md-block-drop-guide::before {
   content: ''; position: absolute; left: 0; right: 0; top: 19px; height: 2px;
@@ -43,7 +43,6 @@
 }
 @keyframes md-block-drop-line { from { opacity: 0; transform: scaleX(calc(.925 + var(--md-motion-pop-from) * .075)); } to { opacity: 1; transform: scaleX(1); } }
 @keyframes md-block-drop-label { from { opacity: 0; transform: translateY(calc(var(--md-motion-rise) / 4)); } to { opacity: 1; transform: translateY(0); } }
-@keyframes md-block-drop-enter { from { opacity: 0; } to { opacity: 1; } }
 /* Same accent and quiet line as the block drop guide; no space in document flow. */
 .md-block-inserter {
   position: absolute; z-index: 5; height: 24px; transform: translateY(-50%);

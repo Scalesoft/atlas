@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import t from "../../i18n/settings-shell";
+// The shell's eager texts: the search palette shows ErrorState on the first screen, so it must not pull in the settings dictionary.
+import shell from "../../i18n/shell";
 import AtlasIcon from "../AtlasIcon.vue";
 import { Button } from "../ui/button";
 
@@ -16,7 +17,7 @@ const emit = defineEmits<{ retry: [] }>();
       <p v-if="text">{{ text }}</p>
       <slot />
     </div>
-    <Button variant="outline" size="sm" type="button" :disabled="busy" @click="emit('retry')"><AtlasIcon name="refresh" :size="15" />{{ retryLabel ?? t.retry }}</Button>
+    <Button variant="outline" size="sm" type="button" :disabled="busy" @click="emit('retry')"><AtlasIcon name="refresh" :size="15" />{{ retryLabel ?? shell.common.retry }}</Button>
   </div>
 </template>
 
