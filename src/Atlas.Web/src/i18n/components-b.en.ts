@@ -203,7 +203,6 @@ const en: ComponentsBMessages = {
     unlock: "Unlock",
     lock: "Lock",
     discussion: "Discussion",
-    discussionCount: (count: number) => (count ? `Discussion, comments: ${count}` : "Discussion"),
   },
   outline: {
     onThisPage: "On this page",

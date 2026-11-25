@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import t from "../i18n/components-b";
+import shell from "../i18n/shell";
 import AtlasIcon from "./AtlasIcon.vue";
 import CommandIcon from "./CommandIcon.vue";
 
 /**
  * The page's actions at the thumb on a phone (refresh 2.5, board 13): Číst · Diskuse · Asistent · Oblíbené · Zámek. Diskuse carries the count of
- * the page's comments (the top bar's discussion button is hidden on a phone) and leads to the section under the content. It only
+ * the page's comments as the top bar's discussion button does (hidden on a phone): the unread ones, accented, while a colleague's are new; it
+ * leads to the section under the content. It only
  * gathers actions that also exist elsewhere (the top bar on wider screens, the ⋯ menu, the AI entries), so hiding it
  * never removes one. Shown below 681 px. The lock is the page's (3.6-F): a touch screen opens pages locked, so scrolling
  * never opens the keyboard; unlocking attaches the editor.
  */
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   /** The assistant is available (AI capability); otherwise its entry is not drawn at all. */
   canAsk?: boolean;
   /** The reader may write the page: the lock shows. */
@@ -20,15 +22,18 @@ withDefaults(defineProps<{
   favoriteBusy?: boolean;
   /** The page's comment count; null: the page has no discussion and the entry is not drawn. */
   discussion?: number | null;
-}>(), { canAsk: false, lockable: false, locked: false, favorite: false, favoriteBusy: false, discussion: null });
+  /** A colleague's new comments not seen yet: the count shows them, accented. */
+  unread?: number;
+}>(), { canAsk: false, lockable: false, locked: false, favorite: false, favoriteBusy: false, discussion: null, unread: 0 });
 const emit = defineEmits<{ read: []; ask: []; favorite: []; lock: []; discussion: [] }>();
+const badge = () => props.unread || props.discussion || 0;
 </script>
 
 <template>
   <nav class="page-mobile-bar" :aria-label="t.mobile.actions">
     <button type="button" class="page-mobile-action" aria-current="page" @click="emit('read')"><AtlasIcon name="book" :size="20" /><span>{{ t.mobile.read }}</span></button>
-    <button v-if="discussion !== null" type="button" class="page-mobile-action" :aria-label="t.mobile.discussionCount(discussion)" data-page-mobile-discussion @click="emit('discussion')">
-      <span class="page-mobile-icon"><AtlasIcon name="quote" :size="20" /><Transition name="page-mobile-count" mode="out-in"><span v-if="discussion" :key="discussion" class="page-mobile-count" aria-hidden="true">{{ discussion }}</span></Transition></span><span>{{ t.mobile.discussion }}</span></button>
+    <button v-if="discussion !== null" type="button" class="page-mobile-action" :aria-label="shell.common.discussionCount(discussion, unread)" data-page-mobile-discussion @click="emit('discussion')">
+      <span class="page-mobile-icon"><AtlasIcon name="quote" :size="20" /><Transition name="page-mobile-count" mode="out-in"><span v-if="badge()" :key="badge()" class="page-mobile-count discussion-count" :data-fresh="unread > 0 || undefined" aria-hidden="true">{{ badge() }}</span></Transition></span><span>{{ t.mobile.discussion }}</span></button>
     <button v-if="canAsk" type="button" class="page-mobile-action" @click="emit('ask')"><CommandIcon name="ai" :size="20" /><span>{{ t.mobile.assistant }}</span></button>
     <button type="button" class="page-mobile-action" :aria-pressed="favorite" :disabled="favoriteBusy" @click="emit('favorite')"><AtlasIcon name="star" :size="20" /><span>{{ t.mobile.favorites }}</span></button>
     <button v-if="lockable" type="button" class="page-mobile-action" :aria-pressed="locked" :aria-label="locked ? t.mobile.unlockEditing : t.mobile.lockEditing" data-page-mobile-lock @click="emit('lock')"><AtlasIcon :name="locked ? 'lock' : 'lock-open'" :size="20" /><span>{{ locked ? t.mobile.unlock : t.mobile.lock }}</span></button>
@@ -64,7 +69,7 @@ const emit = defineEmits<{ read: []; ask: []; favorite: []; lock: []; discussion
 .page-mobile-action:disabled { opacity: .55; cursor: default; }
 /* The count sits over the icon's corner (as on the top bar's discussion button), so a new number never moves the label. */
 .page-mobile-icon { position: relative; display: inline-flex; }
-.page-mobile-count { position: absolute; top: -5px; left: calc(100% - 7px); min-width: 16px; padding: 0 4px; border-radius: 999px; background: var(--hover); color: var(--muted); font-size: 10.5px; font-weight: 650; line-height: 16px; text-align: center; }
+.page-mobile-count { position: absolute; top: -5px; left: calc(100% - 7px); }
 .page-mobile-count-enter-active { animation: st-rise-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
 .page-mobile-count-leave-active { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-out) both; }
 </style>

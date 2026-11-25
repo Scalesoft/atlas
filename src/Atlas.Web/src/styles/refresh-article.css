@@ -297,6 +297,12 @@
 .atlas .document-actions .page-dock-toggle[aria-pressed="true"]:not(.md-editor *) { background: var(--accent-soft); color: var(--accent); }
 /* The anchor is the peek's positioning box: its bubbles hang under the button, over the page. The button's own rules are PageDiscussionButton's (lazy). */
 .atlas .document-actions .page-discussion-anchor:not(.md-editor *) { position: relative; display: inline-flex; min-width: 32px; min-height: 32px; }
+/* The page's discussion count, one signal wherever it shows (the top bar's button, the phone bar, the ⋯ menu): a quiet pill, accented while a
+   colleague's new comment is unseen (`data-fresh`). Each place only positions it. */
+.atlas .discussion-count:not(.md-editor *) { min-width: 16px; padding: 0 4px; border-radius: 999px; background: var(--hover); color: var(--muted); font-size: 10.5px; font-weight: 650; line-height: 16px; text-align: center;
+  transition: background-color var(--atlas-motion-base) var(--atlas-ease-out), color var(--atlas-motion-base) var(--atlas-ease-out); }
+.atlas .discussion-count[data-fresh]:not(.md-editor *) { background: var(--accent); color: var(--on-accent, #fff); }
+.atlas .action-disclosure-panel button > .discussion-count:not(.md-editor *) { margin-left: auto; }
 
 /* ---------- G. Narrow and phone (board 13) ---------- */
 @media (max-width: 760px) {

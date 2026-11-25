@@ -203,7 +203,6 @@ const cs = {
     unlock: "Odemknout",
     lock: "Zamknout",
     discussion: "Diskuse",
-    discussionCount: (count: number) => (count ? `Diskuse, komentářů: ${count}` : "Diskuse"),
   },
   outline: {
     onThisPage: "Na této stránce",
