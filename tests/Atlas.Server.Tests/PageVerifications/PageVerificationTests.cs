@@ -149,6 +149,20 @@ public sealed class PageVerificationTests
         Assert.Equal(PageVerificationStates.Verified,
             Structured(await CallAsync(reading, "atlas_get_page", new { pageId = page.Id }))["verification"]!["state"]!.GetValue<string>());
         Assert.Equal(1, Structured(await CallAsync(reading, "atlas_list_content_health", new { spaceId = space }))["summary"]!["verified"]!.GetValue<int>());
+        // The reader's report reached the steward of then (the admin); over MCP it carries its note as on the web.
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        while (true)
+        {
+            var listed = await CallAsync(reading, "atlas_list_notifications");
+            if (Structured(listed)["items"]!.AsArray().FirstOrDefault(x => x!["kind"]!.GetValue<string>() == NotificationKinds.ReportedOutdated) is { } reported)
+            {
+                Assert.Equal("Staré číslo.", reported["excerpt"]!.GetValue<string>());
+                Assert.Contains("„Staré číslo.“", Text(listed), StringComparison.Ordinal);
+                break;
+            }
+            Assert.True(watch.Elapsed < TimeSpan.FromSeconds(30), "the report was not delivered");
+            await Task.Delay(50);
+        }
     }
 
     [PostgreSqlFact]
