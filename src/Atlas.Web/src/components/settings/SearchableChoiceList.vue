@@ -7,6 +7,7 @@ import { foldText } from "../../lib/foldText";
 import { ownEscape, useSearchKeys } from "../../lib/searchKeys";
 import { twinHints } from "../../lib/twinHints";
 import AtlasIcon from "../AtlasIcon.vue";
+import EmptyState from "./EmptyState.vue";
 import type { ChoiceOption } from "./types";
 
 /**
@@ -103,7 +104,7 @@ function choose(value: unknown) {
           <span class="searchable-check" aria-hidden="true"><AtlasIcon name="check" :size="13" /></span>
         </RadioGroupItem>
       </RadioGroupRoot>
-      <p v-else class="searchable-empty" role="status"><AtlasIcon name="search" :size="16" />{{ emptyText ?? t.choiceList.empty }}</p>
+      <EmptyState v-else inline icon="search" class="searchable-empty" :title="emptyText ?? t.choiceList.empty" />
     </div>
   </div>
 </template>
@@ -167,5 +168,5 @@ function choose(value: unknown) {
   transition: opacity var(--atlas-motion-base) var(--atlas-ease-out), transform var(--atlas-motion-base) var(--atlas-ease-out);
 }
 .searchable-item[data-state="checked"] .searchable-check { opacity: 1; transform: none; }
-.searchable-empty { display: flex; align-items: center; gap: 8px; margin: 0; padding: 18px; color: var(--muted); font-size: 13px; }
+.searchable-empty { padding: 18px; }
 </style>

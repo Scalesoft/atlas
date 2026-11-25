@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import AtlasIcon from "../AtlasIcon.vue";
 
-// Nothing here yet: what this place is for and the next possible step (slot).
-withDefaults(defineProps<{ title: string; text?: string; icon?: string; compact?: boolean }>(), { text: undefined, icon: "info", compact: false });
+// Nothing here yet: what this place is for and the next possible step (slot). `inline`: one muted line with an icon and no frame, the
+// "no match" note inside a picker or a small card (title only; the owner sets its padding by class).
+withDefaults(defineProps<{ title: string; text?: string; icon?: string; compact?: boolean; inline?: boolean }>(), { text: undefined, icon: "info", compact: false, inline: false });
 </script>
 
 <template>
-  <div class="st-empty" :class="{ 'is-compact': compact }" role="status">
+  <p v-if="inline" class="st-empty-inline" role="status"><AtlasIcon :name="icon" :size="16" />{{ title }}</p>
+  <div v-else class="st-empty" :class="{ 'is-compact': compact }" role="status">
     <span class="st-icon-tile st-empty-icon" data-tone="neutral"><AtlasIcon :name="icon" :size="compact ? 18 : 22" /></span>
     <strong>{{ title }}</strong>
     <p v-if="text">{{ text }}</p>
@@ -15,6 +17,8 @@ withDefaults(defineProps<{ title: string; text?: string; icon?: string; compact?
 </template>
 
 <style scoped>
+/* :where keeps the specificity low, so the owner's padding or margin by class wins. */
+:where(.st-empty-inline) { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .st-empty { display: grid; justify-items: center; gap: 8px; padding: 30px 18px; text-align: center; border: 1px dashed var(--line); border-radius: var(--st-radius, var(--atlas-radius-lg)); animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 .st-empty.is-compact { padding: 18px 14px; }
 /* The dashed frame is half ink, and the line token of the dark schemes is only 1.36:1 against the page (35,44,56 on 11,15,20),

@@ -32,6 +32,7 @@ function iconLists(catalog: IconPackCatalog) {
 import t from "../../i18n/settings-appearance";
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import AtlasIcon from "../AtlasIcon.vue";
+import EmptyState from "./EmptyState.vue";
 import { Button } from "../ui/button";
 import OptionPills from "./OptionPills.vue";
 import SearchField from "./SearchField.vue";
@@ -274,7 +275,7 @@ function onShowAllKeydown(event: KeyboardEvent) {
         {{ t.browser.showAll(matched) }}
       </Button>
     </div>
-    <p v-else class="appearance-browser-empty"><AtlasIcon name="search" :size="15" />{{ t.browser.empty }}</p>
+    <EmptyState v-else inline icon="search" class="appearance-browser-empty" :title="t.browser.empty" />
     <Button v-if="elsewhere" type="button" variant="outline" size="sm" class="appearance-browser-everywhere" :disabled="disabled" data-appearance-search-all @click="searchEverywhere">{{ t.browser.everywhere }}</Button>
   </div>
 </template>
@@ -313,7 +314,7 @@ function onShowAllKeydown(event: KeyboardEvent) {
 [data-variant="ink"] .appearance-browser-option[aria-selected="true"] { color: var(--appearance-ink); background: color-mix(in srgb, var(--appearance-ink) 12%, var(--surface)); }
 .appearance-browser-option:disabled { cursor: not-allowed; }
 /* The answer to a search that found nothing, and the way out of a category, fade in rather than pop over the vanished grid. */
-.appearance-browser-empty { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: var(--muted); font-size: 13px; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
+.appearance-browser-empty { margin: 8px 0; }
 .appearance-browser-everywhere { justify-self: start; animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out); }
 
 /* In a narrow panel the pills stay one line that scrolls sideways instead of wrapping into five. */

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { foldText } from "../../lib/foldText";
+import { ownEscape, useSearchKeys } from "../../lib/searchKeys";
+import { twinHints } from "../../lib/twinHints";
 import { DropdownMenuCheckboxItem, DropdownMenuItemIndicator, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "reka-ui";
 import AtlasIcon from "../AtlasIcon.vue";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu";
@@ -13,8 +16,9 @@ import type { ChoiceOption } from "./types";
  * here; one prominent choice in a form stays ChoiceCards or OptionPills.
  *
  * `multiple`: several values at once (`v-model:values`, none ticked = no filter, `allLabel` on the trigger then), as checkboxes that
- * keep the menu open. With `searchLabel` and more than eight options (either mode) a search field above them filters the list, its
- * first item preselected, Enter ticks or picks it (a single choice then closes the menu), ↓ walks the list.
+ * keep the menu open. With `searchLabel` and more than eight options (either mode) a search field above them filters the list with the
+ * shared keys (P3, P8): the first Esc empties it, a typed text preselects the first match, Enter ticks or picks it (a single choice then
+ * closes the menu), ↓ walks the list; options of one name are told apart.
  */
 // The menu root renders no element; attributes (data-*) belong on the trigger.
 defineOptions({ inheritAttrs: false });
@@ -33,19 +37,20 @@ const open = ref(false);
 const query = ref("");
 const search = ref<HTMLInputElement>();
 const searchable = computed(() => !!props.searchLabel && props.options.length > 8);
-const plain = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
-const shown = computed(() => props.options.filter((option) => !query.value.trim() || plain(option.label).includes(plain(query.value.trim()))));
-/** In the search field: Enter ticks the first item (preselected), ↓ goes into the list; typing stays in the field (no menu typeahead). */
+const shown = computed(() => props.options.filter((option) => !query.value.trim() || foldText(option.label).includes(foldText(query.value.trim()))));
+const first = computed(() => shown.value.find((option) => !option.disabled));
+const hints = computed(() => { const found = twinHints(props.options, false); return new Map(props.options.map((option, index) => [option, found[index]] as const)); });
+const keys = useSearchKeys({ text: () => query.value, clear: () => { query.value = ""; }, tab: false,
+  take: () => {
+    if (!first.value) return false;
+    if (props.multiple) toggle(first.value.value);
+    else { model.value = first.value.value; open.value = false; }
+  } });
+/** In the search field: the shared keys first, ↓ goes into the list; other typing stays in the field (no menu typeahead). */
 function searchKey(event: KeyboardEvent) {
+  if (keys.onKeydown(event)) return event.stopPropagation();
   if (event.key === "Escape" || event.key === "Tab") return;
   event.stopPropagation();
-  if (event.key === "Enter") {
-    event.preventDefault();
-    const first = shown.value.find((option) => !option.disabled);
-    if (!first) return;
-    if (props.multiple) toggle(first.value);
-    else { model.value = first.value; open.value = false; }
-  }
   if (event.key === "ArrowDown") { event.preventDefault(); search.value?.parentElement?.querySelector<HTMLElement>("[data-filter-option]")?.focus(); }
 }
 function opened(event: Event) {
@@ -67,23 +72,23 @@ function opened(event: Event) {
         <AtlasIcon name="down" :size="14" class="filter-menu-chevron" />
       </button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent class="filter-menu-panel settings-ui" align="start" :side-offset="6" :collision-padding="12" :aria-label="label" @open-auto-focus="opened">
+    <DropdownMenuContent class="filter-menu-panel settings-ui" align="start" :side-offset="6" :collision-padding="12" :aria-label="label" @open-auto-focus="opened" @escape-key-down="event => { if (query) event.preventDefault(); }">
       <template v-if="multiple">
-        <input v-if="searchable" ref="search" v-model="query" class="filter-menu-search" type="search" :placeholder="searchLabel" :aria-label="searchLabel" @keydown="searchKey">
-        <DropdownMenuCheckboxItem v-for="(option, index) in shown" :key="option.value || '__none'" :model-value="values.includes(option.value)" class="filter-menu-item"
-          :data-tone="option.tone" :data-value="option.value" :data-preselected="(searchable && index === 0) || undefined" data-filter-option :disabled="option.disabled"
+        <input v-if="searchable" ref="search" v-model="query" class="filter-menu-search" type="search" autocomplete="off" :placeholder="searchLabel" :aria-label="searchLabel" :data-md-own-escape="ownEscape(query)" @keydown="searchKey">
+        <DropdownMenuCheckboxItem v-for="option in shown" :key="option.value || '__none'" :model-value="values.includes(option.value)" class="filter-menu-item"
+          :data-tone="option.tone" :data-value="option.value" :data-preselected="(searchable && keys.lit.value && option === first) || undefined" data-filter-option :disabled="option.disabled"
           @update:model-value="toggle(option.value)" @select="event => event.preventDefault()">
           <span class="filter-menu-box" aria-hidden="true"><DropdownMenuItemIndicator class="filter-menu-check"><AtlasIcon name="check" :size="13" /></DropdownMenuItemIndicator></span>
           <AtlasIcon v-if="option.icon" :name="option.icon" :size="16" />
-          <span class="filter-menu-item-label">{{ option.label }}</span>
+          <span class="filter-menu-item-label">{{ option.label }}<small v-if="hints.get(option)" class="filter-menu-twin">{{ hints.get(option) }}</small></span>
           <span v-if="option.badge" class="filter-menu-badge">{{ option.badge }}</span>
         </DropdownMenuCheckboxItem>
       </template>
-      <input v-if="!multiple && searchable" ref="search" v-model="query" class="filter-menu-search" type="search" :placeholder="searchLabel" :aria-label="searchLabel" @keydown="searchKey">
+      <input v-if="!multiple && searchable" ref="search" v-model="query" class="filter-menu-search" type="search" autocomplete="off" :placeholder="searchLabel" :aria-label="searchLabel" :data-md-own-escape="ownEscape(query)" @keydown="searchKey">
       <DropdownMenuRadioGroup v-if="!multiple" v-model="model">
-        <DropdownMenuRadioItem v-for="(option, index) in shown" :key="option.value || '__all'" :value="option.value" class="filter-menu-item" :data-tone="option.tone" :data-value="option.value || 'all'" :data-preselected="(searchable && index === 0) || undefined" data-filter-option :disabled="option.disabled">
+        <DropdownMenuRadioItem v-for="option in shown" :key="option.value || '__all'" :value="option.value" class="filter-menu-item" :data-tone="option.tone" :data-value="option.value || 'all'" :data-preselected="(searchable && keys.lit.value && option === first) || undefined" data-filter-option :disabled="option.disabled">
           <AtlasIcon :name="option.icon ?? 'filter'" :size="16" />
-          <span class="filter-menu-item-label">{{ option.label }}</span>
+          <span class="filter-menu-item-label">{{ option.label }}<small v-if="hints.get(option)" class="filter-menu-twin">{{ hints.get(option) }}</small></span>
           <span v-if="option.badge" class="filter-menu-badge">{{ option.badge }}</span>
           <DropdownMenuItemIndicator class="filter-menu-check"><AtlasIcon name="check" :size="15" /></DropdownMenuItemIndicator>
         </DropdownMenuRadioItem>
@@ -126,6 +131,7 @@ function opened(event: Event) {
 .filter-menu-item[data-disabled] { opacity: .5; cursor: not-allowed; }
 .filter-menu-item-label { flex: 1; }
 .filter-menu-search { margin: 0 0 6px; padding: 7px 10px; border: 1px solid var(--input-line, var(--line)); border-radius: var(--atlas-radius-sm); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; }
+.filter-menu-twin { margin-left: 6px; color: var(--muted); font-size: 11.5px; }
 .filter-menu-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* Ticked or not, a box; the first item a search preselected shows that Enter ticks it. */
 .filter-menu-box { display: inline-grid; place-items: center; flex: none; width: 16px; height: 16px; border: 1px solid var(--input-line, var(--line)); border-radius: 4px; }

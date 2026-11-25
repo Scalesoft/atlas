@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { useSearchKeys } from "../../../lib/searchKeys";
 import { twinHints } from "../../../lib/twinHints";
 import AtlasIcon from "../../AtlasIcon.vue";
+import EmptyState from "../../settings/EmptyState.vue";
 import type { ChoiceOption } from "../../settings/types";
 import { maxPicked } from "./useMultiPick";
 
@@ -75,7 +76,7 @@ function move(event: KeyboardEvent, step: 1 | -1) {
         </label>
       </li>
     </ul>
-    <p v-else class="pick-empty" role="status"><AtlasIcon name="search" :size="16" />{{ emptyText }}</p>
+    <EmptyState v-else inline icon="search" class="pick-empty" :title="emptyText" />
     <div v-if="picked.length" class="pick-basket" role="group" :aria-label="t.pickList.picked">
       <span class="pick-count" data-pick-count>{{ t.pickList.chosen(picked.length, limit) }}</span>
       <button v-for="option in picked" :key="option.value" type="button" class="pick-tag" :aria-label="t.pickList.removeOption(option.label)" :data-tag="option.value" @click="emit('toggle', option)">
@@ -109,7 +110,7 @@ function move(event: KeyboardEvent, step: 1 | -1) {
 .pick-text { display: grid; min-width: 0; }
 .pick-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pick-text small { overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.pick-empty { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 4px; color: var(--muted); font-size: 13px; }
+.pick-empty { padding: 10px 4px; }
 .pick-basket { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .pick-count { margin-right: 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
 .pick-tag { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; min-height: 0; padding: 2px 8px; border: 0; border-radius: 999px; color: var(--accent-ink, var(--accent)); background: var(--accent-soft); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color var(--atlas-motion-fast), transform var(--atlas-motion-fast) var(--atlas-ease-out); }
