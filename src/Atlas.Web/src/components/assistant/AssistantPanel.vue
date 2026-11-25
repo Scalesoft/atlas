@@ -12,6 +12,7 @@ import AtlasIcon from "../AtlasIcon.vue";
 import AiGlyph from "../ai/AiGlyph.vue";
 import LoadingNote from "../settings/LoadingNote.vue";
 import OptionPills from "../settings/OptionPills.vue";
+import AssistantToolsInfo, { type ToolGroup } from "./AssistantToolsInfo.vue";
 import AiEffortPicker from "../ai/AiEffortPicker.vue";
 import { EFFORT_STEPS } from "../../ai/answerEffort";
 import { Button } from "../ui/button";
@@ -31,8 +32,8 @@ import { vScrollEdges } from "../../lib/scrollEdges";
  * - Outage (AI-25): with an exchange in flight the panel stays, the answer place holds the neutral sentence and the composer
  *   is gone. Without one the panel is closed by the state, not here.
  */
-/** `agent` and `arrange` override the capabilities of the same names: the gallery shows the panel with and without the right (no server there). */
-const props = withDefaults(defineProps<{ agent?: boolean; arrange?: boolean }>(), { agent: undefined, arrange: undefined });
+/** `agent` and `arrange` override the capabilities of the same names: the gallery shows the panel with and without the right (no server there); `toolGroups` is the sample list of „Co umí“ then. */
+const props = withDefaults(defineProps<{ agent?: boolean; arrange?: boolean; toolGroups?: ToolGroup[] }>(), { agent: undefined, arrange: undefined, toolGroups: undefined });
 const assistant = useAssistant();
 const { capabilities } = useAiCapabilities();
 const hasAgent = computed(() => props.agent ?? capabilities.value.agent);
@@ -181,6 +182,7 @@ function onOpenConversation(id: string) { void assistant.continueFrom(id); }
         <AssistantComposer v-else-if="assistant.canCompose.value" ref="composer" v-model="assistant.draft.value" :busy="assistant.pending.value" :notice="assistant.notice.value" :recall="assistant.lastQuestions.value" :maxlength="assistant.questionLimit.value" :placeholder="assistant.selection.value ? t.panel.selectionPlaceholder : undefined" @send="assistant.ask(assistant.draft.value)">
           <template #actions>
             <label v-if="hasAgent" class="assistant-tools" data-assistant-tools :title="t.panel.toolsHint"><Switch v-model="assistant.tools.value" />{{ t.panel.tools }}</label>
+            <AssistantToolsInfo v-if="hasAgent" :groups="props.toolGroups" />
             <span :title="agentOn ? t.panel.toolsOn : undefined" data-assistant-effort><AiEffortPicker v-model="assistant.effort.value" :disabled="agentOn" /></span>
           </template>
         </AssistantComposer>
