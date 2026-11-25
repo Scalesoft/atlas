@@ -1,5 +1,7 @@
 # Pravidla ovládání Atlasu
 
+Přehled „koncept → jediná komponenta“: [ux-concepts.md](ux-concepts.md).
+
 Stav: odsouhlaseno vlastníkem 2026-10-30 (D1–D3 podle doporučení; P17 doplněno týž den na jeho požadavek; D4–D8
 2026-10-31 podle doporučení). Platí pro editor stránky, tabule, celou aplikaci i AI. Každá nová
 komponenta je musí dodržet; odchylka musí mít v galerii napsaný důvod. Soupis dnešního stavu, ze kterého pravidla vznikla,
@@ -59,7 +61,7 @@ Tři zásady nad vším:
 
 - **Ctrl+Z / Ctrl+Y** vrací poslední změnu odkudkoli: z pole, z čipu, ze štítku nebo tlačítka komponenty, na tabuli, v panelu.
 - Jedna akce = jeden krok zpět (převod na čip, výběr rozsahu, výměna hesla, přejmenování).
-- Každé smazání, přesun do koše, přejmenování, přesun a převod ukáže oznámení s **„Zpět“**. Jeden systém oznámení.
+- Každé smazání objektu nebo položky, přesun do koše, přejmenování, přesun a převod ukáže oznámení s **„Zpět“**. Jeden systém oznámení. Smazání bloku ve stránce oznámení nemá (je to text, Zpět je u kurzoru).
 
 ## P7 Fokus
 
@@ -147,6 +149,7 @@ Cíl: podklad, který člověk napíše normálně, je provázaný bez další p
 
 ## P16 Konzistence vynucená
 
+- Koncepty a jejich komponenty: [ux-concepts.md](ux-concepts.md).
 - Komponenty se skládají jen ze sdílených dílů: čip v textu, pole na místě, panel u prvku, nabídka akcí, výběr se
   seznamem návrhů, oznámení se Zpět, kostra načítání. Vlastní varianta potřebuje důvod v galerii.
 - **Kontraktní test v CI** projde každý blok, čip, položku tabule a pole a ověří P1–P7 (klik/Enter/Esc/odchod/Ctrl+Z/fokus,
@@ -226,12 +229,14 @@ Editor stránky
   kontraktního testu).
 
 Tabule
+- Diskuse tabule je na telefonu v doku, diskuse stránky pod obsahem (P14, přijatá odchylka).
 - Karta kontaktu přejde do úprav už fokusem a má vlastní obsluhu Esc (ContactCard, P1, P3).
 - Obrázky a soubory nejdou přetáhnout na tabuli (P14).
 - Výběr kontaktů na tabuli se nenaučí napsanou zkratku jako ostatní výběry osob (P8).
 - Komponenty a karty kontaktu a stránky nemají pro AI čitelný text, takže AI nad nimi nic nenabízí (P11).
 
 Aplikace
+- Komentář se upravuje tužkou (upravuje se zpráva, ne obsah; Notionův model, P1, přijatá odchylka).
 - Oznámení o přesunu stránky nebo tabule do koše a o přesunu do jiného prostoru nemají „Zpět“ (P6; obnovu z koše smí jen správce).
 - Výběr strany požadavku (PartyInput) má ještě vlastní obsluhu Esc, Enter a Tab místo sdíleného useSearchKeys (P16).
 - Smazání komentáře se potvrzuje dialogem a nemá „Zpět“; chybí obnova komentáře na serveru (P6).

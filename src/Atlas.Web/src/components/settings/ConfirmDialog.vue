@@ -9,7 +9,8 @@ import { Button } from "../ui/button";
  * One confirmation for an irreversible or destructive settings action (archive a vault, remove a
  * location, revoke access): what happens, what stays, and two buttons. Built on AppDialog, so Escape
  * and the close button only ask; the owner closes it. Use UnsavedChangesDialog for leaving a dirty
- * form and ConfirmWithReauth when the change needs a fresh sign-in.
+ * form and ConfirmWithReauth when the change needs a fresh sign-in. It may also carry a non-destructive
+ * question (`destructive=false`). Where the user can restore what is deleted, prefer a toast with "Zpět" (useToast).
  */
 withDefaults(
   defineProps<{
