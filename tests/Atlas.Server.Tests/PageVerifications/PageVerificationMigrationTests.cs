@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Npgsql;
 using Atlas.Server.Features.PageVerifications.Domain;
-using Atlas.Server.Features.PersonalLibrary;
+using Atlas.Server.Features.PageVerifications.Queries;
 using Atlas.Server.Tests.Platform;
 using Xunit;
 
@@ -62,7 +62,7 @@ public sealed class PageVerificationMigrationTests
         {
             await using var connection = new NpgsqlConnection(schema.ConnectionString);
             await connection.OpenAsync();
-            await using var command = new NpgsqlCommand(AnalyticsHandler.SpaceReadsSql, connection);
+            await using var command = new NpgsqlCommand(SpaceReadershipHandler.SpaceReadsSql, connection);
             command.Parameters.AddWithValue("actor", admin);
             command.Parameters.AddWithValue("space", Guid.Parse(Space));
             command.Parameters.AddWithValue("start", DateTime.UtcNow.AddDays(-365));

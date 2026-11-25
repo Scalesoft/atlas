@@ -403,7 +403,7 @@ public sealed class SqlTextConventionTests
         ["Atlas.Server.Features.PersonalItems.Queries.PersonalItemsQueryHandler.Handle"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.ManagedReleaseVaultsAsync"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.Readership"] = Kind.ReadProjection,
-        ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.SpaceReadsAsync"] = Kind.ReadRows,
+        ["Atlas.Server.Features.PageVerifications.Queries.SpaceReadershipHandler.SpaceReadsAsync"] = Kind.ReadRows,
         ["Atlas.Server.Features.PersonalLibrary.AnalyticsHandler.Visible"] = Kind.ReadProjection,
         ["Atlas.Server.Features.PersonalLibrary.Commands.RecordPageVisitHandler.Handle"] = Kind.AtomicWrite,
         ["Atlas.Server.Features.Projector.Commands.SetCatalogPageHandler.Handle"] = Kind.AtomicWrite,

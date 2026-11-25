@@ -2,7 +2,6 @@ using Atlas.Server.Features.ApiActivity;
 using Atlas.Server.Features.PageVerifications.Commands;
 using Atlas.Server.Features.PageVerifications.Queries;
 using Atlas.Server.Features.PersonalApi;
-using Atlas.Server.Features.PersonalLibrary;
 using Atlas.Server.Platform.Jobs;
 using FluentMigrator;
 using Wolverine;
