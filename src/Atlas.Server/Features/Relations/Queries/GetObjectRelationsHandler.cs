@@ -6,10 +6,10 @@ using Atlas.Server.Platform.Resources;
 namespace Atlas.Server.Features.Relations.Queries;
 
 /// <summary>
-/// An object's relations and "Kde je použito" (spec §4.1, §13.3), for a reader of the object (404 otherwise, as a missing one). Every
-/// edge of the object is kept, an end the reader may not read (or one trashed or gone) as a node with <c>readable=false</c> and
-/// nothing else, so deleting never lies about the impact while nothing of the hidden end shows (spec §6). Depth 2 continues only
-/// from readable neighbours. Constant statements per depth: one per relation source and one for the nodes.
+/// An object's relations and "Kde je použito" (spec §4.1, §13.3), for a reader of the object (404 otherwise, as a missing one). The
+/// edges the reader sees (RelationGraph.Visible) and the broken ones, whose trashed or gone end is a node with <c>readable=false</c> and
+/// nothing else; an edge to an end the reader may not read is left out altogether, neither a lock nor a number, as „Použito na“ does
+/// (ObjectUsage). Depth 2 continues only from readable neighbours. Constant statements per depth: one per relation source and one for the nodes.
 /// </summary>
 // shortcut: depth 2 is not capped; collapse or cap it when a graph view needs objects with thousands of neighbours.
 public sealed class GetObjectRelationsHandler(IContentAccess access, RelationReader reader, UsageReasons reasons)
@@ -40,11 +40,9 @@ public sealed class GetObjectRelationsHandler(IContentAccess access, RelationRea
         }
         // A draft's use is told only to whoever may edit the page that holds it (PageReader shows the working revision to editors).
         bool Told(ObjectEdge edge) => !edge.Draft || graph.Nodes.TryGetValue(edge.SourceId, out var page) && page.Visible && page.CanEdit;
-        var own = edges.Distinct().Where(edge => edge.SourceId == root || edge.TargetId == root).ToArray();
-        // A trashed end the reader could read is broken, not hidden (RelationGraph.Broken).
-        bool Hidden(Guid end) => !graph.IsVisible(end) && !(graph.Nodes.TryGetValue(end, out var node) && node.Readable);
-        var hidden = own.Count(edge => !Told(edge) || Hidden(edge.SourceId == root ? edge.TargetId : edge.SourceId));
-        var kept = edges.Distinct().Where(edge => Told(edge) && (graph.IsVisible(edge.SourceId) || graph.IsVisible(edge.TargetId))).ToArray();
+        // A trashed end the reader could read is broken, not hidden (RelationGraph.Broken): it stays, a lock without a name.
+        var seen = graph.Visible.Concat(graph.Broken.Select(broken => broken.Edge)).ToHashSet();
+        var kept = edges.Distinct().Where(edge => Told(edge) && seen.Contains(edge)).ToArray();
         var why = query.Reasons
             ? await reasons.ReadAsync(root, kept.Where(edge => RelationKinds.UsedEnd(edge) == root && graph.IsVisible(RelationKinds.PlaceOf(edge))).Take(50).ToArray(), ct)
             : new Dictionary<ObjectEdge, UsageReasons.Reason>();
@@ -57,7 +55,7 @@ public sealed class GetObjectRelationsHandler(IContentAccess access, RelationRea
         var shown = query.Depth == 2 ? kept.Where(why.ContainsKey).Concat(Merged(kept.Where(edge => !why.ContainsKey(edge)))) : kept;
         return new ObjectRelations(nodes, shown.OrderBy(edge => edge.Kind, StringComparer.Ordinal).ThenBy(edge => edge.SourceId).ThenBy(edge => edge.TargetId)
             .Select(edge => new RelationEdgeDto(edge.SourceId, edge.TargetId, edge.Kind, edge.Count, edge.Anchor, edge.Draft, why.GetValueOrDefault(edge)?.PartId,
-                why.GetValueOrDefault(edge)?.Excerpt, why.GetValueOrDefault(edge)?.Card ?? false)).ToArray(), hidden);
+                why.GetValueOrDefault(edge)?.Excerpt, why.GetValueOrDefault(edge)?.Card ?? false)).ToArray());
     }
 
     private async Task<IReadOnlyList<ObjectEdge>> EdgesAsync(IReadOnlyCollection<Guid> around, IReadOnlySet<string>? kinds, bool drafts, CancellationToken ct)

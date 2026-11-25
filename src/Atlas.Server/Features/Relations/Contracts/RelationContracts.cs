@@ -17,10 +17,9 @@ public sealed record ContentSummary(IReadOnlyDictionary<string, int> Types, Rela
 
 public sealed record RelationCounts(int Unused, int NoIncoming, int Broken, int Attached);
 
-/// <summary>An object's neighbourhood (spec §13.3): an end the reader may not read, or one in the trash or gone, is a node with
-/// <c>readable=false</c> and nothing else about it.</summary>
-/// <param name="Hidden">The object's own edges whose other end the reader may not see (a lock among the nodes, or a draft's use they may not read).</param>
-public sealed record ObjectRelations(IReadOnlyList<RelationNodeDto> Nodes, IReadOnlyList<RelationEdgeDto> Edges, int Hidden);
+/// <summary>An object's neighbourhood (spec §13.3): an end in the trash or gone is a node with <c>readable=false</c> and nothing else
+/// about it; an edge to an end the reader may not read is not there at all, nor counted.</summary>
+public sealed record ObjectRelations(IReadOnlyList<RelationNodeDto> Nodes, IReadOnlyList<RelationEdgeDto> Edges);
 
 public sealed record RelationNodeDto(Guid Id, string? TypeId, string? Title, Guid? SpaceId, string? SpaceName, bool Readable);
 

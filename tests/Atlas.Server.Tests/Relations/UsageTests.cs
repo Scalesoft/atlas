@@ -46,7 +46,7 @@ public sealed class UsageTests
 
         // atlas_get_relations reads the same: drafts to an editor of the page, why each use is there, the rest hidden.
         var asReader = await f.As<ObjectRelations>(f.Reader, new GetObjectRelations(jana, Drafts: true, Reasons: true));
-        Assert.Equal(1, asReader.Hidden);
+        Assert.DoesNotContain(asReader.Nodes, node => node.Id == navrh.Id);
         Assert.DoesNotContain(asReader.Edges, edge => edge.Draft || edge.SourceId == navrh.Id);
         Assert.Equal("Za VPN odpovídá Jana", asReader.Edges.Single(edge => edge.SourceId == provoz.Id && edge.Kind == RelationKinds.Mention).Excerpt);
         Assert.Contains((await f.As<ObjectRelations>(f.Writer, new GetObjectRelations(jana, Drafts: true))).Edges, edge => edge.Draft && edge.SourceId == navrh.Id);
