@@ -5,9 +5,9 @@ import { ApiError } from "../../api";
 import { createLiveObjects } from "../../objects/liveObjects";
 import type { ObjectDto, ObjectList, ObjectSummary, TrashedObject } from "../../objects/objectApi";
 import ContactDirectory from "./ContactDirectory.vue";
-import { showObjectDetail } from "../../objects/objectDetail";
+import { showContactDetail } from "../../contacts/contactDock";
 
-vi.mock("../../objects/objectDetail", () => ({ showObjectDetail: vi.fn() }));
+vi.mock("../../contacts/contactDock", () => ({ showContactDetail: vi.fn() }));
 
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.innerHTML = ""; });
@@ -16,7 +16,7 @@ const summary = (id: string, name: string, emails: string[] = []): ObjectSummary
   ({ id, typeId: "atlas.contact", scope: "wiki", spaceId: null, title: name, version: 1, updatedAt: "2026-10-26T10:00:00Z", data: { name, emails } });
 const listOf = (items: ObjectSummary[], canCreate = true): ObjectList => ({ items, total: items.length, page: 1, pageSize: 50, canCreate });
 
-function show(items: ObjectSummary[], canCreate = true, overrides: Record<string, unknown> = {}, uses = 2, hidden = false, initialContact?: string) {
+function show(items: ObjectSummary[], canCreate = true, overrides: Record<string, unknown> = {}, uses = 2, hidden = false) {
   const source = {
     list: vi.fn(async () => listOf(items, canCreate)),
     create: vi.fn(async (): Promise<ObjectDto> => { throw new ApiError(409, "Duplicita", "duplicate_contact", { contactId: "c2" }); }),
@@ -28,7 +28,7 @@ function show(items: ObjectSummary[], canCreate = true, overrides: Record<string
   };
   const get = vi.fn(async (id: string) => ({ ...summary(id, "Karel", ["karel@example.cz"]), canEdit: true }) as unknown as ObjectDto);
   const store = createLiveObjects({ get, change: vi.fn() });
-  wrapper = mount(ContactDirectory, { attachTo: document.body, props: { source, store, initialContact, usage: { count: vi.fn(async (id: string) => ({ objectId: id, total: uses, hidden })) } } });
+  wrapper = mount(ContactDirectory, { attachTo: document.body, props: { source, store, usage: { count: vi.fn(async (id: string) => ({ objectId: id, total: uses, hidden })) } } });
   return { source, get };
 }
 const names = () => wrapper!.findAll("[data-contact-row]").map(row => row.get('[data-contact-field="name"]').text());
@@ -215,18 +215,12 @@ it("opens the trash, restores a contact into the directory and purges one only a
   expect(document.activeElement?.hasAttribute("data-contact-trash-open")).toBe(true);
 });
 
-it("opens an internal person's activity in the dock, from the row and from the address", async () => {
+it("opens an internal person's activity in the dock from their row", async () => {
   const colleague = { ...summary("c1", "Eva"), data: { name: "Eva", directoryId: "acc-1" } };
   show([colleague, summary("c2", "Karel")], false);
   await flushPromises();
   // Only a colleague (the contact of an account) has an activity; anybody may open it.
   expect(wrapper!.findAll("[data-contact-activity]")).toHaveLength(1);
   await wrapper!.get('[data-contact-row="c1"] [data-contact-activity]').trigger("click");
-  expect(vi.mocked(showObjectDetail).mock.calls[0]![0]).toMatchObject({ id: "c1", typeId: "atlas.contact", title: "Eva" });
-  wrapper!.unmount();
-  vi.mocked(showObjectDetail).mockClear();
-
-  show([], false, {}, 2, false, "c9");
-  await flushPromises();
-  expect(vi.mocked(showObjectDetail).mock.calls[0]![0]).toMatchObject({ id: "c9", typeId: "atlas.contact", title: "Karel" });
+  expect(vi.mocked(showContactDetail).mock.calls[0]![0]).toBe("c1");
 });

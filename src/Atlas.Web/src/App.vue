@@ -202,8 +202,6 @@ const ModuleSettingsHost = lazyComponent(() => import("./components/admin/Module
 const libraryTab = ref<LibraryView>();
 /** The search a Knihovna address carries (`#/library/contacts?q=C%23`: who knows a topic). */
 const libraryQuery = ref("");
-/** The contact whose dock the address opens over Kontakty (`#/library/contacts?contact=<id>`: a person's card and activity). */
-const libraryContact = ref("");
 const whatsNewOpen = ref(false);
 /** After an update: the last release the account had seen, until Co je nového has opened once (its splash); and how to close the notice. */
 let releaseSince: string | undefined;
@@ -1063,11 +1061,13 @@ const searchGroups = computed(() => {
     detail: heading ? `${result.title} · ${result.spaceName}` : result.spaceName,
     href: pageLink(result.id, headingId ?? undefined), icon: heading ? 'hash' : 'page', color: heading ? 'green' : 'blue',
   }; });
+  // A colleague (a contact of an account) is one person, not one hit per page: their row opens their card and activity.
   const widgetItems = (kind: SearchWidget['kind']) => results.value.flatMap(result => (result.widgets ?? [])
     .map((widget, index) => ({ widget, index })).filter(item => item.widget.kind === kind)
-    .map(({ widget, index }) => ({ board: false, passage: undefined, semantic: undefined, key: kind === 'youtrack' && widget.url ? `issue-${widget.url}` : `widget-${result.id}-${kind}-${index}`, widget, live: false,
+    .map(({ widget, index }) => ({ board: false, passage: undefined, semantic: undefined, key: kind === 'youtrack' && widget.url ? `issue-${widget.url}` : searchPerson(widget) ? `person-${searchPerson(widget)}` : `widget-${result.id}-${kind}-${index}`, widget, live: false,
       result: { ...result, headingId: widget.headingId }, mark: verificationMark(result.verificationState), title: widget.title,
-      detail: widget.detail, href: kind === 'youtrack' && widget.url ? widget.url : pageLink(result.id, widget.headingId ?? undefined),
+      detail: widget.detail, href: kind === 'youtrack' && widget.url ? widget.url : searchPerson(widget) ? buildShellHash({ view: 'library', tab: 'contacts', contact: searchPerson(widget) })
+        : pageLink(result.id, widget.headingId ?? undefined),
       icon: kind === 'contact' ? 'users' : 'check', color: kind === 'contact' ? 'green' : 'blue',
     })));
   const boards = searchResources.value.filter(hit => hit.type === 'board').map(hit => ({ board: true, passage: undefined, semantic: undefined, key: `board-${hit.id}`, live: false,
@@ -1084,7 +1084,8 @@ const searchGroups = computed(() => {
   });
   // Only issues placed on pages the reader can read (the server's widget index), never a free search of YouTrack; always after the content.
   const known = new Set<string>();
-  const issues = widgetItems('youtrack').filter(item => { if (known.has(item.key)) return false; known.add(item.key); return true; });
+  const once = (item: { key: string }) => { if (known.has(item.key)) return false; known.add(item.key); return true; };
+  const issues = widgetItems('youtrack').filter(once);
   // UX SB4-5: spaces are one more group under the same title-first rule, so a space named as the query leads and Enter opens it.
   const spaceItems = searchSpaces.value.map(space => ({ board: false, passage: undefined, semantic: undefined, key: `space-${space.id}`, live: false,
     widget: undefined as SearchWidget | undefined, result: { id: space.id, spaceId: space.id, spaceName: space.name, title: space.name, snippet: '' } as SearchResult,
@@ -1095,7 +1096,7 @@ const searchGroups = computed(() => {
     { title: t.common.headings, kind: 'headings', rankFloor: 1, items: pageItems(true) },
     { title: t.search.boards, kind: 'boards', items: boards },
     { title: t.common.comments, kind: 'comments', items: comments },
-    { title: t.cmd.contacts, kind: 'contacts', items: widgetItems('contact') },
+    { title: t.cmd.contacts, kind: 'contacts', items: widgetItems('contact').filter(once) },
     { title: 'YouTrack', kind: 'youtrack', rankFloor: 3, items: issues },
     { title: t.common.spaces, kind: 'spaces', items: spaceItems },
   ].filter(group => group.items.length), searchQuestion.value).map((group, groupIndex, groups) => ({ ...group,
@@ -2570,8 +2571,9 @@ function openLibrary(tab: LibraryView, fromHistory = false, q = "", contact = ""
   sidebarOpen.value = false;
   libraryTab.value = tab;
   libraryQuery.value = q;
-  libraryContact.value = contact;
   closeSearch();
+  // A person's card and activity over Kontakty (`?contact=`): opened on every call, the same address again included.
+  if (contact) void import("./contacts/contactDock").then(({ showContactDetail }) => showContactDetail(contact));
   const address = buildShellHash(q ? { view: "library", tab, q } : contact ? { view: "library", tab, contact } : { view: "library", tab });
   if (!fromHistory && location.hash !== address) history.pushState(null, "", address);
 }
@@ -3887,6 +3889,17 @@ function openSearchResult(event: MouseEvent, result: SearchResult) {
   event.preventDefault();
   if (!searchOpening.value) void openPage(result.id, false, false, result.headingId ?? undefined);
 }
+/** The directory contact of a colleague's contact hit, or undefined for anyone else. */
+function searchPerson(widget: SearchWidget | undefined) {
+  return widget?.kind === 'contact' && widget.contact?.directoryId ? widget.contact.objectId : undefined;
+}
+function openSearchPerson(event: MouseEvent, contact: string) {
+  if (!isPlainNavigationClick(event)) return;
+  event.preventDefault();
+  if (searchOpening.value) return;
+  rememberSearchView();
+  openLibrary('contacts', false, '', contact);
+}
 function openSearchBoard(event: MouseEvent, result: SearchResult) {
   if (!isPlainNavigationClick(event)) return;
   event.preventDefault();
@@ -4948,7 +4961,7 @@ onUnmounted(() => {
         <HomeDashboard v-else-if="homeOpen" @select="openContent" @navigate="openLibrary($event)" @history="openChangeInHistory" />
         <!-- Knihovna: the personal lists and the overview of all spaces. -->
         <LibraryPage v-else-if="libraryView" :view="libraryView" :space-count="spaces.length" :can-create="canCreateSpace && !pending" @navigate="openLibrary($event)" @create="openSpaceCreation()">
-          <LibraryContent :view="libraryView" :query="libraryQuery" :contact="libraryContact" :user-id="user.id" :spaces="spaces" :can-create="canCreateSpace && !pending" :can-manage="spaces.some(spaceCanManage)" :pending-ids="pinPendingIds" :limit="SPACE_LIST_LIMIT"
+          <LibraryContent :view="libraryView" :query="libraryQuery" :user-id="user.id" :spaces="spaces" :can-create="canCreateSpace && !pending" :can-manage="spaces.some(spaceCanManage)" :pending-ids="pinPendingIds" :limit="SPACE_LIST_LIMIT"
             :refresh-key="libraryRefresh" :personal-refresh-key="personalRefresh" :notification-signal="notificationSignal" :spaces-loaded="spacesLoaded"
             @open="selectSpace($event)" @pin="(space, pinned) => pinSpace(space, pinned)" @create="openSpaceCreation()" @navigate="openLibrary($event)" @select="openContent" @unread="unreadNotifications = $event" />
         </LibraryPage>
@@ -5314,7 +5327,7 @@ onUnmounted(() => {
             <a v-for="item in group.items" v-memo="[item, searchIndex === item.index, query, searchOpening, highlightedPage === item.result.id]" :id="`search-result-${item.index}`" :key="item.key"
               role="option" :tabindex="item.index === searchIndex ? 0 : -1" :aria-disabled="searchOpening"
               :href="item.href" :target="item.widget?.url ? '_blank' : undefined" :rel="item.widget?.url ? 'noopener noreferrer' : undefined" :aria-selected="item.index === searchIndex" :class="{ active: item.index === searchIndex }" :data-semantic="item.semantic" class="search-result" :data-page-id="!item.widget && !item.board && !item.result.isDraft ? item.result.id : undefined" :data-search-board="item.board || undefined" :data-answer-highlight="highlightedPage === item.result.id || undefined"
-              @mousedown.prevent @click="item.widget?.url ? undefined : item.board ? openSearchBoard($event, item.result) : openSearchResult($event, item.result)" @pointermove="selectSearchPointer($event, item.index)" @pointerenter="truncatedTitle($event, '.search-result-title')" @focus="searchIndex = item.index; searchResultChosen = true">
+              @mousedown.prevent @click="item.widget?.url ? undefined : searchPerson(item.widget) ? openSearchPerson($event, searchPerson(item.widget)!) : item.board ? openSearchBoard($event, item.result) : openSearchResult($event, item.result)" @pointermove="selectSearchPointer($event, item.index)" @pointerenter="truncatedTitle($event, '.search-result-title')" @focus="searchIndex = item.index; searchResultChosen = true">
               <span class="space-icon" :data-color="item.color"><AtlasIcon :name="item.icon" :size="18" /></span>
               <span class="search-result-main"><span class="search-result-head"><strong class="search-result-title"><span v-if="item.widget?.key" class="search-issue-key">{{ item.widget.key }}</span><SearchHighlight :text="item.title" :query="query" /></strong>
                 <time v-if="!item.widget && item.result.changedAt" class="search-result-when" :datetime="item.result.changedAt" :title="`${item.result.isDraft ? t.search.saved : t.common.publishedShort} ${formatDateTime(item.result.changedAt)}`">{{ formatShortDate(item.result.changedAt) }}</time></span>
