@@ -349,6 +349,7 @@ public sealed class AtlasEndpointsTests
         "POST /api/assist/change-summary",
         "POST /api/assist/tags",
         "POST /api/assistant/summary",
+        "GET /api/assistant/tools",
         "GET /api/pages/{id:guid}/history",
         "GET /api/pages/{id:guid}/history/{revisionId:guid}",
         "POST /api/pages/{id:guid}/history/{revisionId:guid}/undo",
