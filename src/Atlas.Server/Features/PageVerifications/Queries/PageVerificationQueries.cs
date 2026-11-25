@@ -1,3 +1,4 @@
+using Atlas.Server.Features.Mcp.Commands;
 using Atlas.Server.Features.PageVerifications.Domain;
 using ISession = NHibernate.ISession;
 
@@ -5,9 +6,6 @@ namespace Atlas.Server.Features.PageVerifications.Queries;
 
 /// <summary>The page's verification for whoever may read the page (<c>GET /api/pages/{id}/verification</c>).</summary>
 public sealed record GetPageVerification(Guid PageId);
-
-/// <summary>atlas_list_content_health: G5 on the space, then the shared read.</summary>
-public sealed record GetMcpContentHealth(GetContentHealth Query);
 
 /// <summary>
 /// Stav obsahu (plan §6): the space's published pages with their verification and readership, for its admins and writers.
@@ -21,15 +19,12 @@ public sealed record GetContentHealth(Guid SpaceId, string? State = null, bool M
     string? Query = null, string? Cursor = null, int Limit = 50);
 
 public sealed class PageVerificationQueryHandler(ISession session, PageGate gate, PageVerificationReader reader, IContentAccess access,
-    TimeProvider clock)
+    TimeProvider clock, IRequestChannel channel, McpOrganizationGuard mcp)
 {
     public async Task<PageVerificationView> Handle(GetPageVerification query, CancellationToken ct)
     {
         var opened = (await gate.ReadAsync(query.PageId, AccessOperation.ReadContent, ct)).Require();
-        var published = opened.Page.PublishedRevisionId is { } revision
-            ? await session.QueryOver<PageRevision>().Where(x => x.Id == revision).Select(x => x.Version).SingleOrDefaultAsync<int?>(ct)
-            : null;
-        return await reader.ReadAsync(opened.Page.Id, published, ct);
+        return await reader.ReadWithReadersAsync(opened.Page.Id, ct);
     }
 
     public async Task<ContentHealthList> Handle(GetContentHealth query, CancellationToken ct)
@@ -53,12 +48,17 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
             "unread" => row => row.Read.Views == 0,
             _ => throw new ApiException(400, "Neznámý filtr stavu obsahu.")
         };
-        var offset = SpaceReadershipHandler.SpaceCursor(query.Cursor);
-        var actor = await SpaceReadershipHandler.RequireSpaceEditorAsync(access, query.SpaceId, ct);
+        var offset = SpaceReadership.SpaceCursor(query.Cursor);
+        // G5 on MCP and the assistant: a space out of AI is a missing space.
+        if (channel.Current.IsAiBound)
+        {
+            await mcp.LockSpaceForReadAsync(query.SpaceId, ct);
+        }
+        var actor = await SpaceReadership.RequireSpaceEditorAsync(access, query.SpaceId, ct);
         var space = (await session.GetAsync<Space>(query.SpaceId, ct))!;
         var now = clock.GetUtcNow().UtcDateTime;
-        var (start, end) = SpaceReadershipHandler.LastDays(query.Days, now);
-        var reads = await SpaceReadershipHandler.SpaceReadsAsync(session, actor.Id, query.SpaceId, start, end, ct);
+        var (start, end) = SpaceReadership.LastDays(query.Days, now);
+        var reads = await SpaceReadership.SpaceReadsAsync(session, actor.Id, query.SpaceId, start, end, ct);
         var verifications = (await session.ReadRowsAsync($"""
                 SELECT v."PageId" AS "PageId", st."Id" AS "StewardId", st."DisplayName" AS "StewardName", v."IntervalMonths" AS "IntervalMonths",
                     v."VerifiedUntil" AS "VerifiedUntil", v."VerifiedVersion" AS "VerifiedVersion"
@@ -103,7 +103,7 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
     }
 
     /// <summary>The titles of the page's readable published ancestors from the root; a parent the reader may not read ends the path.</summary>
-    private static List<string> Ancestors(SpaceReadershipHandler.SpaceRead page, Dictionary<Guid, SpaceReadershipHandler.SpaceRead> byId)
+    private static List<string> Ancestors(SpaceReadership.SpaceRead page, Dictionary<Guid, SpaceReadership.SpaceRead> byId)
     {
         var path = new List<string>();
         var seen = new HashSet<Guid> { page.PageId };
@@ -114,5 +114,5 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         return path;
     }
 
-    private sealed record Row(SpaceReadershipHandler.SpaceRead Read, string State, Guid? StewardId, string? StewardName, DateTime? Until, int? VerifiedVersion);
+    private sealed record Row(SpaceReadership.SpaceRead Read, string State, Guid? StewardId, string? StewardName, DateTime? Until, int? VerifiedVersion);
 }

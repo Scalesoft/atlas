@@ -8,8 +8,6 @@ import "./pageSearch.css";
 // page's DOM is read once into one string (and again only after the DOM changed); matches are Ranges painted through the
 // CSS Custom Highlight API, so neither the DOM nor the document changes and no editor decoration is made per match.
 
-export { pageSearchFocus, pageSearchQuery } from "./pageSearchState";
-
 // shortcut: at most this many matches are marked and listed (a one-letter search on a long page); raise with a virtual list.
 export const MAX_MATCHES = 500;
 

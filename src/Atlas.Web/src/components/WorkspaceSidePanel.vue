@@ -228,6 +228,8 @@ function rememberOpener() {
   const active = document.activeElement;
   if (!focusInside()) opener = active instanceof HTMLElement && active !== document.body ? active : null;
 }
+/** An owner that switches the tab of the open panel into focus (Alt C into the dock's Diskuse) marks where closing returns, as opening does. */
+defineExpose({ rememberOpener });
 function focusPanel() {
   if (document.querySelector("dialog[open]")) return; // The modal owner restores focus after its exit.
   const target = panel.value?.querySelector<HTMLElement>('[data-autofocus]')

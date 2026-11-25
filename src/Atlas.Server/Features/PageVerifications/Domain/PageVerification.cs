@@ -48,11 +48,14 @@ public static class PageVerificationStates
     /// <c>{IntervalSql}&gt;0</c> = verification on. PageVerificationTests pins it to the C# rule.</summary>
     public const string IntervalSql = """(CASE WHEN p."IsTemplate" THEN NULL ELSE coalesce(v."IntervalMonths",s."VerificationIntervalMonths") END)""";
 
-    /// <summary>The steward in effect, left-joined as st ("UserAccount") over p and v: an active account that may still read the page (a page
-    /// moved into another space keeps its row, not the right of a steward who cannot read it there); null st."Id" = „bez garanta“.</summary>
-    public const string StewardJoinSql = """
-        LEFT JOIN "UserAccount" st ON st."Id"=v."StewardId" AND st."IsActive"
-          AND EXISTS (SELECT 1 FROM "EffectivePageAccess" e WHERE e."UserId"=v."StewardId" AND e."PageId"=p."Id" AND e."Role">=1)
+    /// <summary>The rule of a steward in effect, over the alias of a "UserAccount" row and a page id column: an active account that may still
+    /// read the page (a page moved into another space keeps its row, not the right of a steward who cannot read it there).</summary>
+    public static string StewardInEffectSql(string account, string page)
+        => $"""{account}."IsActive" AND EXISTS (SELECT 1 FROM "EffectivePageAccess" e WHERE e."UserId"={account}."Id" AND e."PageId"={page} AND e."Role">=1)""";
+
+    /// <summary>The steward in effect (<see cref="StewardInEffectSql"/>), left-joined as st ("UserAccount") over p and v; null st."Id" = „bez garanta“.</summary>
+    public static readonly string StewardJoinSql = $"""
+        LEFT JOIN "UserAccount" st ON st."Id"=v."StewardId" AND {StewardInEffectSql("st", "p.\"Id\"")}
         """;
 
     public static string Of(int? interval, DateTime? until, DateTime now) =>

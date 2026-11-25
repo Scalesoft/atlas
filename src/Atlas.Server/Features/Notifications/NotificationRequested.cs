@@ -17,8 +17,8 @@ public static class NotificationKinds
     /// <summary>A background job failed for good (3.3 plan §4.3), to the wiki administrators: the subject is <see cref="JobSubject"/>,
     /// the anchor the job id. Shown to whoever is a wiki administrator when reading.</summary>
     public const string JobFailed = "job.failed";
-    /// <summary>5.2: the topic (and preference) of the steward's reminders (ContentVerificationJob): one item per page, the later stage
-    /// replaces the earlier one, as a share's change replaces its share.</summary>
+    /// <summary>5.2: the topic (and preference „Připomínky ověření stránek“) of the steward's reminders (ContentVerificationJob): one item
+    /// per page, the later stage replaces the earlier one, as a share's change replaces its share.</summary>
     public const string VerificationDue = "page.verification_due";
     /// <summary>The page's verification expires within 14 days (topic <see cref="VerificationDue"/>).</summary>
     public const string VerificationExpiring = "page.verification_expiring";
@@ -28,7 +28,8 @@ public static class NotificationKinds
     /// it); the reader's note is stored in the anchor and read as the item's excerpt; repeated reports aggregate into one item.</summary>
     public const string ReportedOutdated = "page.reported_outdated";
     /// <summary>5.2 (plan §2.3): the actor's deactivated account was the steward of verified pages of the space (the subject), told to its
-    /// administrators once per space (topic <see cref="VerificationDue"/>); shown while the reader administers the space.</summary>
+    /// administrators once per space; shown while the reader administers the space. No preference, as a job's failure: it is the
+    /// administrator's to act on, and the steward's reminders switched off must not hide it.</summary>
     public const string StewardDeactivated = "space.steward_deactivated";
 
     /// <summary>How long the same actor's repeat of the kind on one item neither counts nor makes it unread again: a reader who reports a
@@ -41,7 +42,7 @@ public static class NotificationKinds
     /// <summary>The preference and aggregation topic of a kind: the three share kinds are one topic, so a share that changes or ends
     /// replaces its earlier item instead of leaving it beside the new one.</summary>
     public static string Topic(string kind) => kind is ItemShareChanged or ItemUnshared ? ItemShared
-        : kind is VerificationExpiring or VerificationExpired or StewardDeactivated ? VerificationDue
+        : kind is VerificationExpiring or VerificationExpired ? VerificationDue
         : kind;
 
     /// <summary>The subject of a job's failures: one per job id, so they aggregate into one item.</summary>

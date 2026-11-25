@@ -11,9 +11,11 @@ namespace Atlas.Server.Features.PageVerifications;
 /// <param name="IntervalMonths">The page's own interval; null inherits <paramref name="SpaceIntervalMonths"/>, 0 = „Neověřovat“.</param>
 /// <param name="SpaceIntervalMonths">The space's interval; null = verification is off in the space.</param>
 /// <param name="PublishedVersion">The version readers read; null for a page never published (it cannot be verified).</param>
+/// <param name="Readers">The panel's „Čtenost“: distinct readers in 90 days, on GET and PUT …/verification while verification is on; null
+/// otherwise (the page's bundle carries its own).</param>
 public sealed record PageVerificationView(string State, Guid? StewardId, string? StewardName, DateTime? VerifiedAt, DateTime? VerifiedUntil,
     int? VerifiedVersion, bool ChangedSinceVerification, Guid? VerifiedById, string? VerifiedByName, bool VerifiedViaAi, int? IntervalMonths,
-    int? SpaceIntervalMonths, int? PublishedVersion);
+    int? SpaceIntervalMonths, int? PublishedVersion, long? Readers = null);
 
 /// <summary>
 /// <c>PUT /api/v1/pages/{id}/verification</c>: every field is optional, at least one is required, all apply together.
@@ -49,12 +51,6 @@ public sealed record ReportPageOutdatedRequest(string? Note = null);
 /// <param name="Notified">How many people were told (the steward, else up to three editors who last published it).</param>
 public sealed record PageOutdatedReport(int Notified);
 
-/// <summary>One page of the space's readership (plan §5.2): counts only, never who read.</summary>
-public sealed record SpaceReadershipItem(Guid PageId, string Title, long Views, long Readers, DateTime? LastViewedAt, DateTime? LastPublishedAt);
-
-/// <param name="NextCursor">For the next page of the list; null at its end.</param>
-public sealed record SpaceReadership(IReadOnlyList<SpaceReadershipItem> Items, string? NextCursor);
-
 /// <summary>The tiles of Stav obsahu: pages of the space with verification on, by state.</summary>
 /// <param name="WithoutSteward">„Bez garanta“ (none, or a deactivated account), whatever the state.</param>
 public sealed record ContentHealthSummary(int Verified, int Expiring, int Expired, int Unverified, int WithoutSteward);
@@ -62,9 +58,10 @@ public sealed record ContentHealthSummary(int Verified, int Expiring, int Expire
 /// <summary>A row of Stav obsahu.</summary>
 /// <param name="Path">The titles of its ancestors from the root, as far as the reader may read them (a hidden parent ends it).</param>
 /// <param name="Readers">Distinct readers in the period; <paramref name="Views"/> the views.</param>
+/// <param name="LastViewedAt">The day of the last view in the period (Prague), no time: counts only, never who.</param>
 /// <param name="CanEdit">The caller may edit the page, so verify it and set its steward (a space writer may only read some pages).</param>
 public sealed record ContentHealthItem(Guid PageId, string Title, IReadOnlyList<string> Path, string State, Guid? StewardId, string? StewardName,
-    DateTime? VerifiedUntil, bool ChangedSinceVerification, long Readers, long Views, DateTime? LastViewedAt, DateTime? LastPublishedAt,
+    DateTime? VerifiedUntil, bool ChangedSinceVerification, long Readers, long Views, DateOnly? LastViewedAt, DateTime? LastPublishedAt,
     int PublishedVersion, int? VerifiedVersion, bool CanEdit)
 {
     /// <summary>Always true: Stav obsahu lists published pages only (only a publication can be verified).</summary>

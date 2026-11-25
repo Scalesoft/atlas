@@ -26,6 +26,8 @@ export interface PageVerification {
   intervalMonths: number | null;
   /** The space's default interval; null = verification is off in the space. */
   spaceIntervalMonths: number | null;
+  /** The panel's Čtenost (90 days) in the answer of GET and PUT …/verification while verification is on; null in the page's bundle. */
+  readers?: number | null;
 }
 /** The intervals a space or a page may verify in, in months (the server's PageVerificationStates.Intervals). */
 export const verificationIntervals = [3, 6, 12] as const;

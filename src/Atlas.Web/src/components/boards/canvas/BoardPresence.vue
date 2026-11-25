@@ -12,7 +12,7 @@ import CollaborationPointer from "../../CollaborationPointer.vue";
 
 /**
  * Other people on the board (spec §3.5): their pointer with their name, and the boxes they drag, in screen space. Each person has
- * the server's colour, the one of their caret in a page (objectPresence.ts `userColor`); the name label is the editor's caret
+ * the server's colour, the one of their caret in a page (collaboratorColors.ts `userColor`); the name label is the editor's caret
  * label. Updates arrive at most 20 times a second; a pointer glides between them in board coordinates (pointerGlide.ts), so it
  * neither jumps nor lags behind the board when the viewport pans or zooms; a dragged box is carried over by a short transition.
  *

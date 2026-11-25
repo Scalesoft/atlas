@@ -1,7 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { computed } from "vue";
-import { automaticCollaboratorColorId, collaboratorChoices, loadPreferredColors, preferredColorChanged, preferredColorEvent, themedCollaboratorColor, themedUserColor } from "./collaboratorColors";
-import { userColor } from "./objectPresence";
+import { automaticCollaboratorColorId, collaboratorChoices, loadPreferredColors, preferredColorChanged, preferredColorEvent, themedCollaboratorColor, themedUserColor, userColor } from "./collaboratorColors";
 
 const api = vi.hoisted(() => vi.fn());
 vi.mock("../api", () => ({ api }));

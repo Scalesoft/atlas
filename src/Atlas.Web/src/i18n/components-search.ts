@@ -67,8 +67,6 @@ const cs = {
     peek: { label: "Nové komentáře", from: (name: string, text: string) => `${name}: ${text}`, reply: "Odpovědět", replyTo: (name: string) => `Odpovědět ${name}…`, hide: "Skrýt" },
     send: "Odeslat",
     sendEnter: "Odeslat (Enter)",
-    sendCtrl: "Odeslat (Ctrl+Enter)",
-    hint: "Ctrl+Enter odešle",
     hintEnter: "Enter odešle, Shift+Enter nový řádek",
     today: "dnes",
     noteDay: "Den poznámky",

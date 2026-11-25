@@ -23,7 +23,7 @@ import AtlasIcon from "./AtlasIcon.vue";
 import PageConnections from "./PageConnections.vue";
 import PageOutline from "./PageOutline.vue";
 import PageSearch from "./PageSearch.vue";
-import { pageSearchQuery } from "../editor/pageSearch";
+import { pageSearchQuery } from "../editor/pageSearchState";
 import UsagePanel from "./objects/UsagePanel.vue";
 import type { UsageApi } from "../objects/relationsApi";
 import LoadingNote from "./settings/LoadingNote.vue";

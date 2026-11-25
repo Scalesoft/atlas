@@ -13,7 +13,7 @@ import { buildShellHashEncoded } from "./shellRoute";
 import { verificationMark } from "./verification/verificationMark";
 
 /** `type` "board": a board of the Boards module (POST /api/pages/references answers it among the pages, UX PG4-4). */
-interface Titled { readonly id: string; readonly title: string; readonly type?: string; readonly verification?: string }
+interface Titled { readonly id: string; readonly title: string; readonly type?: string; readonly verificationState?: string }
 interface Found extends Titled { readonly spaceId?: string; readonly spaceName?: string; readonly isDraft?: boolean; readonly matchedAlias?: string | null }
 
 /** Ověřený obsah (5.2): the link chip draws the verification's shield before the title (display only, as every `icon`). */
@@ -21,7 +21,7 @@ const markOf = (state: string | undefined) => { const mark = verificationMark(st
 const pageUrl = (id: string) => buildShellHashEncoded({ view: "page", pageId: id });
 const reference = (page: Titled): MarkdownPageReference => page.type === "board"
   ? { id: page.id, title: page.title, url: buildShellHashEncoded({ view: "board", boardId: page.id }), icon: "layout-dashboard" }
-  : { id: page.id, title: page.title, url: pageUrl(page.id), ...markOf(page.verification) };
+  : { id: page.id, title: page.title, url: pageUrl(page.id), ...markOf(page.verificationState) };
 /**
  * F2: a search result in the `[[` list shows its space and whether it is a draft („Provoz · Koncept“). `detail` is
  * display-only (editor 0.9.0): the inserted node and a resolved link never carry it.
@@ -199,7 +199,7 @@ const referenceTtlMs = 30_000;
  * The server answers only the pages (and boards, `type`) the reader may open, with the title it would see, reads no bodies and records no opening;
  * a missing id is unavailable. An id that is not a page id never reaches the server. A failed request fails its links.
  */
-const kept = (id: string, page: Titled): Titled => ({ id, title: page.title, ...(page.type ? { type: page.type } : {}), ...(page.verification ? { verification: page.verification } : {}) });
+const kept = (id: string, page: Titled): Titled => ({ id, title: page.title, ...(page.type ? { type: page.type } : {}), ...(page.verificationState ? { verificationState: page.verificationState } : {}) });
 function createReferenceVerifier() {
   let waiting: Waiting[] = [];
   const titled = (entry: Waiting, titles: Map<string, Titled>) => {

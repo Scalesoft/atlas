@@ -60,8 +60,7 @@ public sealed class UpdateAppearanceHandler
         {
             // Before the commit: a failed one only moves live colours, it loses nothing. The editor re-announces its awareness at once
             // (live/collaboratorColors.ts), other surfaces with their next presence.
-            var slot = CollaboratorPalette.SlotOf(command.Appearance.CollaboratorColor);
-            m_colors.Restamp(actor.Id.ToString(), slot >= 0 ? CollaboratorPalette.Entries[slot].Light : null);
+            m_colors.Restamp(actor.Id.ToString(), CollaboratorPalette.LightOf(command.Appearance.CollaboratorColor));
         }
         return command.Appearance;
     }

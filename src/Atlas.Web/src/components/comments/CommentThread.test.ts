@@ -105,6 +105,22 @@ describe("CommentThread", () => {
     expect(view.get("[data-comment-placeholder]").text()).toBe("Komentář byl odstraněn");
   });
 
+  it("puts the keyboard on the next comment after a deletion, else on the previous one", async () => {
+    const api = fakeApi(page([comment("a", { canDelete: true }), comment("b", { canDelete: true }), comment("c", { canDelete: true })]));
+    const view = await mounted(api);
+    const remove = async (id: string) => {
+      await view.get(`[data-comment-id="${id}"] [data-comment-delete]`).trigger("click");
+      await flushPromises();
+      document.querySelector<HTMLButtonElement>("[data-confirm-action]")!.click();
+      await flushPromises();
+    };
+    const focused = () => document.activeElement?.getAttribute("data-comment-id");
+    await remove("b");
+    await vi.waitFor(() => expect(focused()).toBe("c"));
+    await remove("c");
+    await vi.waitFor(() => expect(focused()).toBe("a"));
+  });
+
   it("loads older comments and hears a colleague's new comment through the view session", async () => {
     const api = fakeApi(page([comment("b", { createdAt: "2026-10-26T10:00:00Z" })], true));
     const { views, listeners } = fakeViews();
@@ -126,9 +142,14 @@ describe("CommentThread", () => {
     expect(view.findAll("[data-comment-id]").map(row => row.attributes("data-comment-id"))).toEqual(["c", "b", "a"]);
   });
 
-  it("hides itself where comments are off and none were written, and says so where some were", async () => {
-    let view = await mounted(fakeApi(page([], false, false)));
+  it("hides the page section where comments are off and none were written; the dock's thread and one with comments say so", async () => {
+    let view = await mounted(fakeApi(page([], false, false)), { title: "Diskuse" });
     expect(view.get("[data-comment-thread]").attributes("hidden")).toBeDefined();
+    wrapper!.unmount();
+    view = await mounted(fakeApi(page([], false, false)));
+    expect(view.get("[data-comment-thread]").attributes("hidden")).toBeUndefined();
+    expect(view.find("[data-comments-off]").exists()).toBe(true);
+    expect(view.find("[data-comments-empty]").exists()).toBe(false);
     wrapper!.unmount();
     view = await mounted(fakeApi(page([comment("a")], false, false)));
     expect(view.get("[data-comment-thread]").attributes("hidden")).toBeUndefined();
@@ -287,10 +308,10 @@ describe("CommentThread draft", () => {
 });
 
 describe("CommentComposer", () => {
-  it("sends the Markdown a page saves with Ctrl+Enter, nothing when empty", async () => {
+  it("sends the Markdown a page saves with Enter, nothing when empty", async () => {
     wrapper = mount(CommentComposer, { attachTo: document.body });
     await vi.waitFor(() => expect(document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor).toBeDefined());
-    const press = () => document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, ctrlKey: true, bubbles: true, cancelable: true }));
+    const press = () => document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, bubbles: true, cancelable: true }));
     press();
     expect(wrapper.emitted("submit")).toBeUndefined();
     const editor = document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")!.editor!;
@@ -301,8 +322,8 @@ describe("CommentComposer", () => {
     expect(wrapper.emitted("submit")).toEqual([["Díky **všem**"]]);
   });
 
-  it("sends with a plain Enter only with enterSubmits; Shift+Enter is a new line, and the day chip resets to today after a send", async () => {
-    wrapper = mount(CommentComposer, { props: { enterSubmits: true, dayChip: true }, attachTo: document.body });
+  it("Shift+Enter is a new line, and the day chip resets to today after a send", async () => {
+    wrapper = mount(CommentComposer, { props: { dayChip: true }, attachTo: document.body });
     await vi.waitFor(() => expect(document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor).toBeDefined());
     const press = (shiftKey = false) => document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, shiftKey, bubbles: true, cancelable: true }));
     document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")!.editor!.commands.insertContent("Hotovo");
@@ -320,7 +341,7 @@ describe("CommentComposer", () => {
   });
 
   it("sends with Enter while a suggestion list is only hidden elsewhere on the page (the detail's dependency search), not while one is shown", async () => {
-    wrapper = mount(CommentComposer, { props: { enterSubmits: true }, attachTo: document.body });
+    wrapper = mount(CommentComposer, { attachTo: document.body });
     await vi.waitFor(() => expect(document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor).toBeDefined());
     const list = document.body.appendChild(document.createElement("div"));
     list.className = "md-suggestion-list";
@@ -335,15 +356,6 @@ describe("CommentComposer", () => {
     press();
     expect(wrapper.emitted("submit")).toEqual([["Hotovo"]]);
     list.remove();
-  });
-
-  it("keeps Ctrl+Enter alone for the other composers: a plain Enter sends nothing", async () => {
-    wrapper = mount(CommentComposer, { attachTo: document.body });
-    await vi.waitFor(() => expect(document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor).toBeDefined());
-    document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")!.editor!.commands.insertContent("Text");
-    await flushPromises();
-    document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, bubbles: true, cancelable: true }));
-    expect(wrapper.emitted("submit")).toBeUndefined();
   });
 
   it("cancels with Escape and discards the draft (P3)", async () => {

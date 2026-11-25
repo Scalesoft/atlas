@@ -240,9 +240,9 @@ const pageWithoutSummary = ref(pageOf(headingContent()));
       <p class="st-muted" data-example-party-learned aria-live="polite">Strana: {{ partyApplied }} · adresář by se naučil: {{ partyLearned }}</p>
     </SettingsSection>
     <SettingsSection title="Poznámky požadavku"
-      description="Plán 3.5.1 B9. Poznámka požadavku v detailu je rychlá: CommentComposer s `enterSubmits` (Enter přidá, Shift+Enter nový řádek; ostatní komentáře dál Ctrl+Enter) a `dayChip` (čip „dnes ▾“ vybere jiný den, po přidání se den vrátí na dnešek). Pole se píše v editoru stránky, takže B, I a odrážky platí. Nová komponenta to není: je to opt-in volba existujícího pole komentáře.">
+      description="Plán 3.5.1 B9. Poznámka požadavku v detailu je rychlá: CommentComposer (Enter přidá, Shift+Enter nový řádek, jako všechna pole komentářů) s `dayChip` (čip „dnes ▾“ vybere jiný den, po přidání se den vrátí na dnešek). Pole se píše v editoru stránky, takže B, I a odrážky platí. Nová komponenta to není: je to opt-in volba existujícího pole komentáře.">
       <div class="requirements-example-note" data-example-note>
-        <CommentComposer enter-submits day-chip placeholder="Napište poznámku… Enter přidá, Shift+Enter nový řádek" submit-label="Přidat" hint="Enter přidá" aria-label="Nová poznámka"
+        <CommentComposer day-chip placeholder="Napište poznámku… Enter přidá, Shift+Enter nový řádek" submit-label="Přidat" hint="Enter přidá" aria-label="Nová poznámka"
           @submit="(markdown, day) => { lastNote = `${day}: ${markdown}`; }" />
       </div>
       <p class="st-muted" data-example-note-last aria-live="polite">Poslední poznámka: {{ lastNote || "žádná" }}</p>

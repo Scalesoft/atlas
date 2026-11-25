@@ -15,7 +15,7 @@ public sealed record SearchHit(Guid Id, Guid SpaceId, string SpaceName, string T
     /// <summary>5.2: the page's verification state (unverified, verified, expiring, expired) for the result's icon, the same string as
     /// the tree's and the page references'; absent while off. The order of the results does not depend on it (O5).</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public string? Verification { get; init; }
+    public string? VerificationState { get; init; }
 
     /// <summary>S1 "Významová shoda": found by meaning only, the page does not match the query's words. Its snippet, heading
     /// and anchor are the passage's. Written only when true, so a search without AI serializes as before (AI-24).</summary>

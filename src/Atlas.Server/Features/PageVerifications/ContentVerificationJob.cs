@@ -23,6 +23,10 @@ public sealed class SendVerificationNoticesHandler(ISession session, Outbox outb
     /// <returns>The pages of this batch; fewer than <see cref="Batch"/> means nothing is left.</returns>
     public async Task<int> Handle(SendVerificationNotices command, CancellationToken ct)
     {
+        // By Prague days (O3): „vypršelo“ on the day the verification ends, „brzy vyprší“ 14 days before it, whatever its time of day.
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(command.Now, Queries.SpaceReadership.Prague));
+        var end = PersonalLibrary.AnalyticsHandler.Period(today, today).End;
+        var soon = PersonalLibrary.AnalyticsHandler.Period(today, today.AddDays(PageVerificationStates.Warning.Days)).End;
         var due = await session.ReadRowsAsync($"""
                 SELECT v."PageId" AS "PageId", v."StewardId" AS "StewardId", v."VerifiedUntil" AS "VerifiedUntil"
                 FROM "PageVerification" v
@@ -30,21 +34,23 @@ public sealed class SendVerificationNoticesHandler(ISession session, Outbox outb
                 JOIN "Space" s ON s."Id"=p."SpaceId"
                 {PageVerificationStates.StewardJoinSql}
                 WHERE st."Id" IS NOT NULL AND NOT p."IsTrashed" AND p."PurgedAt" IS NULL AND s."TrashedAt" IS NULL AND {PageVerificationStates.IntervalSql}>0
-                  AND (v."VerifiedUntil"<=:now AND v."NoticeStage"<2 OR v."VerifiedUntil"<=:soon AND v."NoticeStage"<1)
+                  AND (v."VerifiedUntil"<:end AND v."NoticeStage"<{PageVerificationStates.NoticeExpired}
+                    OR v."VerifiedUntil"<:soon AND v."NoticeStage"<{PageVerificationStates.NoticeExpiring})
                 ORDER BY v."PageId" LIMIT :batch
                 FOR UPDATE OF v SKIP LOCKED
-                """, new Dictionary<string, object> { ["now"] = command.Now, ["soon"] = command.Now + PageVerificationStates.Warning, ["batch"] = Batch },
+                """, new Dictionary<string, object> { ["end"] = end, ["soon"] = soon, ["batch"] = Batch },
             row => (PageId: row.GetGuid(0), StewardId: row.GetGuid(1), Until: DateTime.SpecifyKind(row.GetDateTime(2), DateTimeKind.Utc)), ct);
         foreach (var page in due)
         {
-            var kind = page.Until <= command.Now ? NotificationKinds.VerificationExpired : NotificationKinds.VerificationExpiring;
+            var kind = page.Until < end ? NotificationKinds.VerificationExpired : NotificationKinds.VerificationExpiring;
             outbox.Notify(new NotificationRequested(kind, page.PageId, null, [page.StewardId]));
         }
         if (due.Count > 0)
         {
-            await session.CreateSQLQuery("""
-                    UPDATE "PageVerification" SET "NoticeStage"=CASE WHEN "VerifiedUntil"<=:now THEN 2 ELSE 1 END WHERE "PageId" IN (:pages)
-                    """).SetParameter("now", command.Now, NHibernateUtil.UtcDateTime)
+            await session.CreateSQLQuery($"""
+                    UPDATE "PageVerification" SET "NoticeStage"=CASE WHEN "VerifiedUntil"<:end THEN {PageVerificationStates.NoticeExpired} ELSE {PageVerificationStates.NoticeExpiring} END
+                    WHERE "PageId" IN (:pages)
+                    """).SetParameter("end", end, NHibernateUtil.UtcDateTime)
                 .SetParameterList("pages", due.Select(x => x.PageId).ToList()).ExecuteUpdateAsync(ct);
         }
         return due.Count;
