@@ -175,6 +175,11 @@ function quoteSelection() {
 /* The panel slides in from its edge (st-slide-in); reduced motion: the distance is 0, only the fade stays. */
 .comments-example-dock-enter-active { animation: st-slide-in var(--atlas-motion-slow) var(--atlas-ease-out) both; }
 .comments-example-dock-leave-active { animation: st-slide-in var(--atlas-motion-base) var(--atlas-ease-in) reverse both; }
+/* The gallery's stand-in for the dock (the dock itself is WorkspaceSidePanel's own motion), so its frames stay out of the eager motion.css. */
+@keyframes st-slide-in {
+  from { opacity: 0; transform: translateX(calc(var(--atlas-rise) * 6)); }
+  to { opacity: 1; transform: none; }
+}
 .comments-example-send { display: flex; align-items: center; gap: 8px; max-width: 420px; }
 .comments-example-send-input { flex: 1; min-width: 0; height: 36px; padding: 0 10px; border: 1px solid var(--input-line); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 14px; }
 .comments-example-send-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
