@@ -61,7 +61,7 @@ const props = defineProps<ToasterProps>()
      reduced motion keeps only the fade, plan O11). The library itself stays unpatched. -->
 <style>
 /* The toasts sit above what the page keeps at its bottom edge: the phone's action bar (76 px + the safe area) and a board's zoom corner. */
-@media (max-width: 680px) { :root:has(.page-mobile-bar) { --atlas-toast-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); } }
+@media (max-width: 760px) { :root:has(.page-mobile-bar) { --atlas-toast-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); } }
 :root:has(.board-canvas-corner) { --atlas-toast-bottom: 72px; }
 /* A toast is one of the floating surfaces: the menu's shadow (the library's own is a light-scheme one and vanished on
    dark), and one focus ring, the application's outline, instead of the library's grey ring around it as well. */

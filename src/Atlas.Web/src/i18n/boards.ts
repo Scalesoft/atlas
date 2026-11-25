@@ -44,7 +44,6 @@ const cs = {
       insert: "S nástrojem poznámky, textu, tvaru nebo rámu: vložit prvek",
       pick: "Stránka, YouTrack úkol, kontakt, komponenta",
       commands: "Příkazy tabule a hledání prvku podle názvu (také krátké stisknutí mezerníku a Ctrl F); Ctrl K je hledání ve wiki",
-      selectionCommands: "Příkazy k výběru",
       next: "Další prvek v pořadí čtení; za posledním ven z tabule",
       edit: "Upravit vybraný prvek (také dvojklik, klik do textu vybraného prvku; náhled stránky na místě, kartu stránky v panelu)",
       lock: "Zamknout nebo odemknout úpravy tabule",

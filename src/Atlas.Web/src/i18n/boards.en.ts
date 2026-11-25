@@ -44,7 +44,6 @@ const en: BoardsMessages = {
       insert: "With the note, text, shape or frame tool: insert the item",
       pick: "Page, YouTrack issue, contact, component",
       commands: "Board commands and search for an item by name (a short press of Space and Ctrl F too); Ctrl K searches the wiki",
-      selectionCommands: "Commands for the selection",
       next: "Next item in reading order; after the last one, out of the board",
       edit: "Edit the selected item (also a double-click, a click into the text of the selected item; a page preview in place, a page card in the panel)",
       lock: "Lock or unlock editing of the board",

@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, onTestFinished, vi } from "vitest";
+import { toast } from "vue-sonner";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
@@ -1588,6 +1589,7 @@ describe("publish while editing", () => {
   it.each([true, false])("announces publication only after the server confirms it (success=%s)", async success => {
     let finish!: (value: Response) => void;
     const published = new Promise<Response>(resolve => { finish = resolve; });
+    const toasted = vi.spyOn(toast, 'success').mockClear();
     // The page is saved but not published: that is when Publikovat shows (nothing publishes while the version is the published one).
     const fetchMock = requestMock((path, init) => {
       if (path === `/api/pages/${page.id}` && init?.method === 'PUT')
@@ -1599,7 +1601,7 @@ describe("publish while editing", () => {
     await app.get('.sidebar-space-link').trigger('click'); await flushPromises();
     await app.get('.tree-page').trigger('click'); await flushPromises();
     // Loading an already published page is not a fresh confirmation.
-    expect(app.find('.document-status [data-confirmed="true"]').exists()).toBe(false);
+    expect(toasted).not.toHaveBeenCalled();
     const editor = await startEditing(app);
     editor.vm.$emit('change');
     await flushPromises();
@@ -1607,14 +1609,15 @@ describe("publish while editing", () => {
     await flushPromises();
     expect(app.get('.publish-button').attributes('aria-busy')).toBe('true');
     expect(app.get('.publish-button').text()).toBe('Publikování…');
-    expect(app.find('.document-status [data-confirmed="true"]').exists()).toBe(false);
+    expect(toasted).not.toHaveBeenCalled();
     finish(success ? response({ ...page, version: 2, publishedVersion: 2 }) : response({ error: 'Publication failed' }, 500));
     await flushPromises(); await flushPromises();
-    expect(app.find('.document-status [data-confirmed="true"]').exists()).toBe(success);
     if (success) {
-      expect(app.get('.document-status').text()).toBe('Stránka byla publikována.');
+      expect(toasted).toHaveBeenCalledWith('Stránka byla publikována.', expect.anything());
+      expect(app.get('.document-status').text()).toBe('Publikováno');
       expect(app.find('.publish-button').exists()).toBe(false);
     } else {
+      expect(toasted).not.toHaveBeenCalled();
       expect(app.get('.publish-button').attributes('aria-busy')).toBe('false');
       expect(app.get('.publish-button').text()).toBe('Zveřejnit změny');
       expect(app.get('.document-status').attributes('data-tone')).toBe('error');

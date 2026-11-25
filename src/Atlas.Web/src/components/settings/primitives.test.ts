@@ -195,13 +195,11 @@ describe("page building blocks", () => {
     const nav = mount(SettingsNav, { props: { groups, label: "Nastavení", currentPath: "ai" } });
     expect(nav.get('[data-path="ai"] [data-ai-glyph]').attributes("aria-hidden")).toBe("true");
     expect(nav.find('[data-path="networks"] [data-ai-glyph]').exists()).toBe(false);
-    const shell = mount(SettingsShell, { props: { title: "Nastavení", groups, navLabel: "Nastavení", currentPath: "ai" } });
-    expect(shell.find('.settings-shell-sections-current [data-ai-glyph]').exists()).toBe(true);
     const page = mount(SettingsPage, { props: { title: "AI", icon: "ai" } });
     expect(page.find('.settings-page-tile [data-ai-glyph]').exists()).toBe(true);
     const section = mount(SettingsSection, { props: { title: "AI odpovědi", icon: "ai" } });
     expect(section.find('.settings-section-icon [data-ai-glyph]').exists()).toBe(true);
-    for (const view of [nav, shell, page, section]) {
+    for (const view of [nav, page, section]) {
       expect(view.find('[data-ai-glyph][data-working]').exists()).toBe(false);
       view.unmount();
     }

@@ -19,7 +19,6 @@ export const boardKeymap: readonly EditorKeymapEntry[] = [
   row("Enter", "insert"),
   row("P I C K", "pick"),
   row("/ Ctrl F", "commands"),
-  row("Ctrl K", "selectionCommands"),
   row("Tab", "next"),
   row("Enter F2", "edit"),
   row("E", "lock"),

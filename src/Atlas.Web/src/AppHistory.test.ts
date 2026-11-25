@@ -162,6 +162,7 @@ describe("history integration", () => {
   });
   it("publishes with the change summary typed in the panel of the publish arrow", async () => {
     let body: unknown;
+    const toasted = vi.spyOn(toast, "success").mockClear();
     const app = await start("Writer", (path, init) => {
       if (path === "/api/pages/page-1" && init?.method === "PUT") return Promise.resolve(response({ ...page, ...JSON.parse(init.body as string), version: 3 }));
       if (path === "/api/pages/page-1/publish") { body = JSON.parse(init!.body as string); return Promise.resolve(response({ ...page, version: 3, publishedVersion: 3 })); }
@@ -174,7 +175,7 @@ describe("history integration", () => {
     [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find(button => button.textContent?.trim() === "Publikovat")!.click();
     await flushPromises(); await new Promise(resolve => setTimeout(resolve, 30)); await flushPromises();
     expect(body).toEqual({ expectedVersion: 3, changeSummary: "Doplněn postup" });
-    expect(app.get(".document-status").text()).toContain("Stránka byla publikována");
+    expect(toasted).toHaveBeenCalledWith("Stránka byla publikována.", expect.anything());
   });
   it("discards the unpublished changes from the publish panel after showing them against the published version", async () => {
     let restore: unknown;

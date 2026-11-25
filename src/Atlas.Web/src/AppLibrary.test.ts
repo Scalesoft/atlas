@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, onMounted, watch } from "vue";
+import { toast } from "vue-sonner";
 import { flushPromises, type VueWrapper } from "@vue/test-utils";
 import DocumentEditor from "./components/DocumentEditor.vue";
 import type { Page } from "./api";
@@ -57,6 +58,7 @@ const leaveButton = (label: string) => [...document.querySelectorAll<HTMLButtonE
 describe("personal navigation and exports", () => {
   // The page's own changes ask nothing (3.6-B): Hotovo, Zahodit změny and the live-draft question are gone, a checkpoint goes instead.
   it('publishes a checkpointed change with Publikovat and stays in the editor', async () => {
+    const toasted = vi.spyOn(toast, 'success').mockClear();
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const { app, fetchMock } = await start('/#/pages/page-1', (path, init) => {
       if (path === '/api/pages/page-1/publish') return response({ ...page, version: 2, publishedVersion: 2 });
@@ -74,10 +76,11 @@ describe("personal navigation and exports", () => {
     expect(calls('POST', '/publish')).toBe(1);
     // Publishing no longer ends editing.
     expect(app.getComponent(DocumentEditor).props('readonly')).toBe(false);
-    expect(app.get('.document-status').text()).toContain('Stránka byla publikována');
+    expect(toasted).toHaveBeenCalledWith('Stránka byla publikována.', expect.anything());
     expect(confirm).not.toHaveBeenCalled();
   });
   it('offers Publikovat while reading a page whose saved changes are not published', async () => {
+    const toasted = vi.spyOn(toast, 'success').mockClear();
     const { app, fetchMock } = await start('/#/pages/page-1', (path, init) => {
       if (path === '/api/pages/page-1' && !init?.method) return response({ ...page, version: 2 });
       // Publishing checkpoints the live session first (it may hold what no change event reported), so a PUT is expected here.
@@ -91,10 +94,11 @@ describe("personal navigation and exports", () => {
     await button(app, 'Zveřejnit změny').trigger('click'); await settle();
     const publish = fetchMock.mock.calls.find(([path]) => String(path).endsWith('/publish'))!;
     expect(JSON.parse(publish[1]!.body as string)).toMatchObject({ expectedVersion: 2 });
-    expect(app.get('.document-status').text()).toContain('Stránka byla publikována');
+    expect(toasted).toHaveBeenCalledWith('Stránka byla publikována.', expect.anything());
     expect(app.find('.publish-button').exists()).toBe(false);
   });
   it('does not carry a publication success to a different draft', async () => {
+    const toasted = vi.spyOn(toast, 'success').mockClear();
     const { app } = await start('/#/pages/page-1', (path, init) => {
       if (path === '/api/pages/page-1' && !init?.method) return Promise.resolve(response({ ...page, version: 2 }));
       if (path === '/api/pages/page-1/publish') return Promise.resolve(response({ ...page, version: 2, publishedVersion: 2 }));
@@ -102,7 +106,7 @@ describe("personal navigation and exports", () => {
       if (path === '/api/pages/page-2') return Promise.resolve(response({ ...page, id: 'page-2', title: 'Druhý článek', isPublished: false, publishedVersion: null }));
     });
     await button(app, 'Zveřejnit změny').trigger('click'); await settle();
-    expect(app.get('.document-status').text()).toContain('Stránka byla publikována');
+    expect(toasted).toHaveBeenCalledWith('Stránka byla publikována.', expect.anything());
     const target = app.findAll('.tree-page').find(link => link.text().includes('Druhý článek'))!;
     await target.trigger('click'); await settle();
     expect(app.get('.document-status').text()).toBe('');

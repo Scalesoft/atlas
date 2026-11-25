@@ -84,7 +84,7 @@ import { orderSearchGroups } from "./searchGroupOrder";
 import { isHeadingRow, isSemanticRow, rowPassage } from "./searchSemantic";
 import { mergeSearchResults } from "./searchMerge";
 import { createArrivalTracker } from "./searchArrival";
-import { animateAtlas, FEEDBACK_HOLD_MS, forceReducedMotion, literalMs, motionMs, PROTOTYPE_MS } from "./motion/aiMotion";
+import { animateAtlas, forceReducedMotion, literalMs, motionMs, PROTOTYPE_MS } from "./motion/aiMotion";
 import SemanticBadge from "./components/search/SemanticBadge.vue";
 import ResultPassage from "./components/search/ResultPassage.vue";
 import { isCollaborationPending, isCollaborationSuperseded, putWithCollaborationRetry, untilProjected } from "./savePage";
@@ -441,8 +441,6 @@ const spacesLoaded = ref(false);
 const connecting = ref(true);
 const pending = ref(false);
 const error = ref("");
-const message = ref("");
-const messagePageId = ref<string>();
 const setupStep = ref(1);
 const setup = reactive({
   workspaceName: "",
@@ -636,20 +634,10 @@ const documentStatusTone = computed(() => documentStatus.value.tone);
 const collaborationEnabled = computed(() => !!collaborationStatus.value?.enabled);
 const documentStatusText = computed(() => {
   if (editorActive.value && collaborationStatus.value?.connection === 'failed' && !error.value) return t.common.editingUnavailable;
-  // An empty status (offline/reconnecting: the editor owns that notice) is settled too,
-  // so a just-finished publication still reaches the reader.
-  const settled = documentStatus.value.text === '' || [t.common.publishedShort, t.common.draftShort, t.common.unpublishedChanges].includes(documentStatus.value.text);
-  const text = settled && message.value && messagePageId.value === page.value?.id
-    ? message.value : documentStatus.value.text;
+  const text = documentStatus.value.text;
   // A writer's draft is said once, in the top bar (PagePublicationState): the chip by the title steps aside.
   return barPublication.value === 'draft' && (text === t.common.draftShort || text === t.common.unpublishedChanges) ? '' : text;
 });
-// A transient confirmation (publish) gets a check icon and an accent tint, then
-// clears itself after 2s — unlike the persistent revision states it can briefly cover.
-const transientConfirmations: ReadonlySet<string> = new Set([
-  t.toast.pageWasPublished,
-]);
-const documentStatusTransient = computed(() => transientConfirmations.has(documentStatusText.value));
 // The revision state as a chip with its tone (refresh 2.5): published, a draft, unpublished changes; the rest is plain text.
 const documentStatusState = computed(() => ({ [t.common.publishedShort]: "published", [t.common.draftShort]: "draft", [t.common.unpublishedChanges]: "changes" } as Record<string, string>)[documentStatusText.value]);
 function updateCollaborationStatus(status: CollaborationStatus) {
@@ -1257,19 +1245,6 @@ let searchVersion = 0;
 let searchViewToRestore: { url: string; index: number; scrollTop: number } | undefined;
 
 const toaster = useToast();
-let messageTimer: ReturnType<typeof setTimeout> | undefined;
-/**
- * The page header's own status slot keeps the short revision state of the open page („Stránka byla publikována.“)
- * beside its revision chip and gone when another page opens; whether that becomes a toast
- * too is the owner's call. Every other confirmation is a toast (`toaster`, P6 „Jeden systém oznámení“), with „Zpět“ where it can be undone.
- */
-function confirmDocument(text: string) {
-  message.value = text;
-  messagePageId.value = page.value?.id;
-  clearTimeout(messageTimer);
-  if (transientConfirmations.has(text))
-    messageTimer = setTimeout(() => { if (message.value === text) message.value = ""; }, FEEDBACK_HOLD_MS);
-}
 function navigateLink(event: MouseEvent, navigate: () => unknown) {
   if (!isPlainNavigationClick(event)) return;
   event.preventDefault();
@@ -1283,7 +1258,6 @@ async function run(action: () => Promise<void>) {
   if (pending.value) return;
   pending.value = true;
   error.value = "";
-  message.value = "";
   try {
     await action();
   } catch (failure) {
@@ -1378,7 +1352,6 @@ function loginComplete(account: User) {
   return crossFade(() => {
     user.value = account;
     error.value = "";
-    message.value = "";
     loading = authenticated().catch((failure) => {
       if (user.value === account) { error.value = errorMessage(failure); spacesLoaded.value = true; }
     });
@@ -3253,7 +3226,6 @@ function importTitle(value: string) {
   title.value = titleDraft.value = value;
   documentChanged();
 }
-watch(dirty, value => { if (value) message.value = ''; });
 /**
  * The title in its field (3.6-B): saved on confirmation (Enter or leaving the field), never while typed; an empty one is refused at
  * the field. With the live editor attached it goes with the checkpoint, otherwise as a rename, like the tree's.
@@ -3662,11 +3634,7 @@ async function publish(changeSummary: string | null = null) {
       page.value = published;
       libraryRefresh.value++;
       await loadTree(page.value.spaceId);
-      confirmDocument(
-        dirty.value
-          ? t.toast.savedVersionPublished
-          : t.toast.pageWasPublished,
-      );
+      toaster.success(dirty.value ? t.toast.savedVersionPublished : t.toast.pageWasPublished);
       done = true;
       // Publikovat leaves the bar with the publication; the focus it held goes to the editor rather than to the page body.
       await nextTick();
@@ -3726,11 +3694,6 @@ function resetProfile(keepOpen = false) {
   if (!keepOpen) profileOpen.value = false;
   profileDirty.value = false;
   profileError.value = "";
-  // The appearance confirmation is a toast now and owns its own lifetime, but a
-  // page-scoped message ("Stránka byla publikována.") can still be standing here.
-  clearTimeout(messageTimer);
-  message.value = "";
-  messagePageId.value = undefined;
 }
 // Navigating away from an open profile while it holds unsaved changes (a link click,
 // browser back/forward, opening a different page) used to fall back on a bare
@@ -4271,8 +4234,6 @@ function runShortcut(id: AppShortcutId, event: KeyboardEvent): boolean {
   switch (id) {
     case "search":
     case "commands":
-      // Over a selection on a board, Ctrl/⌘+K opens the board's command panel (objects spec §5.2), not the search.
-      if (id === "search" && (event.target as Element | null)?.closest?.("[data-board-surface][data-board-selection]")) return false;
       // Another dialog is on top; the palette shortcut belongs to the palette.
       if (modal && !modal.classList.contains("search-dialog")) return false;
       void openSearch().then(() => { if (id === "commands") void setSearchMode("commands"); });
@@ -4491,7 +4452,6 @@ onUnmounted(() => {
   searchAbort?.abort();
   personalVersion++; personalAbort?.abort();
   clearTimeout(searchTimer);
-  clearTimeout(messageTimer);
 });
 </script>
 
@@ -5018,9 +4978,8 @@ onUnmounted(() => {
               <StatusBadge v-if="catalogPage" tone="info" icon="book-open" size="sm" :label="t.nav.catalogBadge" data-page-catalog />
               <PageVerification v-if="verificationShown(verification)" ref="verificationChip" :key="page.id" v-model:open="verificationOpen" :page-id="page.id" :verification="verification" :can-edit="pageCanWrite" :online="browserOnline" :is-published="page.isPublished" @change="value => { verification = value; }" @open-history="openPageHistory" />
               <Button v-if="page.isTemplate && canManageTemplates" variant="ghost" size="sm" @click="openSpaceTemplates(currentSpace!.id)">{{ t.nav.templateManage }}</Button>
-              <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" :data-transient="documentStatusTransient || undefined" role="status" aria-live="polite" aria-atomic="true">
-                <StatusBadge v-if="documentStatusTransient" :key="documentStatusText" tone="success" :label="documentStatusText" confirmed />
-                <span v-else :key="documentStatusText" class="document-status-text">{{ documentStatusText }}</span>
+              <div class="document-status" :data-tone="documentStatusTone" :data-state="documentStatusState" role="status" aria-live="polite" aria-atomic="true">
+                <span :key="documentStatusText" class="document-status-text">{{ documentStatusText }}</span>
                 <Button variant="outline" v-if="error && dirty" @click="downloadDraft">{{ t.nav.downloadUnsaved }}</Button>
               </div>
               <PagePdfExportStatus v-if="pageCanWrite && afterContent" :key="`pdf:${user.id}:${page.id}`" :page-id="page.id" :version="page.version" :dirty="dirty" :settings-open="pdfExportOpen" @download="pdfDownloadOpen = true" />
