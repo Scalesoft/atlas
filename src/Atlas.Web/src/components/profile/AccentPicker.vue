@@ -31,6 +31,7 @@ const current = computed(() => props.accents.find((accent) => accent.id === mode
       loop
       orientation="horizontal"
       class="accent-swatches"
+      :class="{ 'is-dozen': accents.length >= 12 }"
       :aria-label="label"
       :aria-describedby="`${uid}-name`"
       @update:model-value="model = $event as Id"
@@ -50,6 +51,12 @@ const current = computed(() => props.accents.find((accent) => accent.id === mode
 <style scoped>
 .accent-picker { display: grid; gap: 8px; min-width: 0; container: accent-picker / inline-size; }
 .accent-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Twelve swatches (Moje barva) need 520 px in one row (568 touch); narrower, they wrapped unevenly (9 + 3): two rows of six.
+   :where keeps the rules below, four columns in the narrowest column, in charge. */
+@container accent-picker (max-width: 519px) { .accent-swatches:where(.is-dozen) { display: grid; grid-template-columns: repeat(6, max-content); } }
+@media (pointer: coarse) {
+  @container accent-picker (max-width: 567px) { .accent-swatches:where(.is-dozen) { display: grid; grid-template-columns: repeat(6, max-content); } }
+}
 /* Eight swatches and their gaps need 344 px (376 with the larger touch swatches). In a column that only fits seven, the
    eighth stood alone on a second row: it wraps as two rows of four instead. */
 @container accent-picker (max-width: 343px) { .accent-swatches { display: grid; grid-template-columns: repeat(4, max-content); } }
