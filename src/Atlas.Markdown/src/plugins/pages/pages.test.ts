@@ -103,13 +103,13 @@ describe('wiki page references', () => {
     expect(normalizePageReference({ id: 'x', title: 'X', url: '/wiki', warn: 'yes' })).not.toHaveProperty('warn')
     expect(pageReferenceNode({ id: 'x', title: 'X', url: '/wiki', warn: true }).attrs).toEqual({ id: 'x', title: 'X', url: '/wiki' })
   })
-  it('keeps unavailable pages readable and prevents their navigation callback in readonly', async () => {
+  it('shows an unavailable page as unavailable, not its saved title, and prevents its navigation callback in readonly', async () => {
     const navigate = vi.fn()
     const c = mount([createPagesPlugin({ source: { search: async () => [], resolve: async () => null }, navigate })])
     c.dispatch(insertPageReference({ id: 'missing', title: 'Uložený název', url: '/wiki/missing' })); c.setEditable(false)
     const link = document.querySelector<HTMLAnchorElement>('[data-page-reference]')!
     await vi.waitFor(() => expect(link.getAttribute('aria-disabled')).toBe('true'))
-    expect(link.textContent).toBe('Uložený název'); expect(link.hasAttribute('href')).toBe(false)
+    expect(link.textContent).toBe('Stránka není dostupná'); expect(link.getAttribute('aria-label')).toBe('Stránka není dostupná'); expect(link.hasAttribute('href')).toBe(false)
     link.click(); expect(navigate).not.toHaveBeenCalled()
     expect(c.getProjection().text).toBe('Uložený název')
   })

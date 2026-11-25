@@ -96,8 +96,8 @@ function decorateLink(link: HTMLAnchorElement, page: MarkdownPageReference, opti
   link.addEventListener('click', click)
   const look = (part: MarkdownPageSection | undefined) => `${part?.page ?? ''}\n${part?.missing ?? ''}`
   let resolved: MarkdownPageReference | undefined, available = true, shown = `${first}\n${page.url}\n${look(section())}`
-  // A page the reader cannot open stays its saved title, greyed, without a link.
-  const unavailable = (why: string) => { available = false; chip.update({ state: 'muted', title: why, editable: false }); link.removeAttribute('href'); link.setAttribute('aria-disabled', 'true') }
+  // A page the reader cannot open shows why instead of its saved title (a private space's title must not leak), greyed, without a link.
+  const unavailable = (why: string) => { available = false; chip.update({ label: why, detail: undefined, ariaLabel: undefined, state: 'muted', title: why, editable: false }); link.removeAttribute('href'); link.setAttribute('aria-disabled', 'true') }
   // A section keeps its stored address (the part of the page); a plain link takes the resolved page's.
   const show = () => {
     const part = section(), label = part?.title || resolved?.title || page.title, href = part ? page.url : resolved?.url ?? page.url
