@@ -52,8 +52,13 @@ describe("Stav obsahu", () => {
     expect(lastQuery(api).state).toBe("lapsed");
 
     api.list.mockResolvedValueOnce(health([]));
-    await view.get("[data-health-search]").setValue("vpn");
-    await vi.waitFor(() => expect(lastQuery(api).q).toBe("vpn"), { timeout: 1500 });
+    // The search waits 250 ms for the typing to stop: on a faked clock, so a busy machine cannot outlast the wait.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      await view.get("[data-health-search]").setValue("vpn");
+      await vi.advanceTimersByTimeAsync(250);
+    } finally { vi.useRealTimers(); }
+    expect(lastQuery(api).q).toBe("vpn");
     await flushPromises();
     expect(view.find("[data-health-row]").exists()).toBe(false);
     expect(view.text()).toContain("Nic, co by odpovídalo filtru");
