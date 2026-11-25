@@ -14,7 +14,7 @@ interface Changes { added: number[]; updated: number[]; removed: number[] }
 
 const validColor = /^#[0-9a-fA-F]{6}$/
 const colorOf = (user: Partial<CaretUser>) => typeof user.color === 'string' && validColor.test(user.color) ? user.color : 'transparent'
-/** Both variants of the person's colour; collaboration.css picks the dark one under `html[data-mode="dark"]` and cross-fades a change. */
+/** Both variants of the person's colour; collaboration.css picks the dark one under `.md-editor.md-theme-midnight` and cross-fades a change. */
 const colorVariables = (color: string) => `--caret-light: ${collaboratorColor(color, false)}; --caret-dark: ${collaboratorColor(color, true)}`
 
 function caretElement(user: CaretUser & { color: string }): HTMLElement {
