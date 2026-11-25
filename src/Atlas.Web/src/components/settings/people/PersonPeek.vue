@@ -66,7 +66,7 @@ const loadingHooks = {
 <template>
   <aside class="person-peek" :aria-label="t.peek.aria(account.displayName)" data-person-peek>
     <header class="person-peek-head">
-      <SubjectAvatar kind="user" :name="account.displayName" />
+      <SubjectAvatar kind="user" :name="account.displayName" :user-id="account.id" />
       <div class="person-peek-who">
         <h3>{{ account.displayName }}</h3>
         <p>{{ account.username }} · {{ accountSourceLabels[account.source].label.toLocaleLowerCase(locale) }}</p>

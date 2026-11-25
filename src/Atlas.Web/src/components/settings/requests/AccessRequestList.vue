@@ -75,7 +75,7 @@ watch(
       :menu="[{ id: 'approve', label: t.list.approve, icon: 'circle-check', disabled: busy }, { id: 'reject', label: t.list.reject, icon: 'circle-x', destructive: true, disabled: busy }]"
       @select="id => toggle(request, id === 'approve' ? 'approve' : 'reject')"
     >
-      <template #leading><SubjectAvatar kind="user" :name="request.requesterName" /></template>
+      <template #leading><SubjectAvatar kind="user" :name="request.requesterName" :user-id="request.requesterId" /></template>
       <template #meta>
         <StatusBadge tone="info" icon="key-round" :label="t.list.wantsRead" size="sm" />
         <StatusBadge tone="warning" icon="hourglass" :label="t.list.waiting" size="sm" />

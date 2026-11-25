@@ -74,7 +74,7 @@ watch(() => props.editing, (now, before) => {
 <template>
   <SettingsListRow ref="entry" :title="row.title" :description="description" class="access-entry" :data-access-entry="row.key" :data-editing="editing || undefined">
     <template #leading>
-      <SubjectAvatar v-if="row.subject" :kind="row.subject.kind" :name="row.title" />
+      <SubjectAvatar v-if="row.subject" :kind="row.subject.kind" :name="row.title" :user-id="row.subject.id" />
       <span v-else class="st-icon-tile access-entry-icon" :data-level-color="row.level ?? undefined" :data-tone="row.level ? undefined : 'neutral'"><AtlasIcon :name="kind.icon" :size="17" /></span>
     </template>
     <template v-if="row.href" #title><a class="access-entry-link" :href="row.href">{{ row.title }}</a></template>

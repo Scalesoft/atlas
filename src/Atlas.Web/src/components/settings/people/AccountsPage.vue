@@ -378,7 +378,7 @@ function replace(saved: DirectoryUser) {
                 <tr v-for="user in listed" :key="user.id" :data-account="user.id" :data-new="flash.highlight.value === user.id || undefined" :data-selected="peeked?.id === user.id || undefined">
                   <th scope="row" class="people-person-cell">
                     <span class="people-person">
-                    <SubjectAvatar kind="user" :name="user.displayName" size="sm" />
+                    <SubjectAvatar kind="user" :name="user.displayName" :user-id="user.id" size="sm" />
                     <span class="people-name">
                       <span class="people-name-line">
                         <a class="people-link" :href="router.href(`people/accounts/${user.id}`)" :data-open-account="user.id" :aria-label="t.accounts.openFor(user.displayName)" @click="peek(user, $event)">{{ user.displayName }}</a>

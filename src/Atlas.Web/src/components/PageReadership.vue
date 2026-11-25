@@ -120,7 +120,7 @@ onUnmounted(() => { summaryRequest?.abort(); logRequest?.abort(); });
                     <template #meta><StatusBadge tone="warning" size="sm" icon="key-round" :label="item.operation === 'copy' ? t.readership.secretCopied : t.readership.secretShown" /></template>
                   </SettingsListRow>
                   <SettingsListRow v-else :title="item.userName" data-kind="view">
-                    <template #leading><SubjectAvatar kind="user" :name="item.userName" size="sm" /></template>
+                    <template #leading><SubjectAvatar kind="user" :name="item.userName" :user-id="item.userId" size="sm" /></template>
                     <template #description><time :datetime="item.at">{{ formatActivityTime(item.at) }}</time></template>
                   </SettingsListRow>
                 </template>

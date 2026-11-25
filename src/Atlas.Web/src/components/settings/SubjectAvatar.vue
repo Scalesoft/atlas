@@ -2,18 +2,21 @@
 import { locale } from "../../i18n";
 import { computed, ref } from "vue";
 import { markdownInitials } from "@atlas/markdown/core/userColor";
+import { themedUserColor } from "../../live/collaboratorColors";
 import AtlasIcon from "../AtlasIcon.vue";
 
 // A person (initials in a circle) or a group (icon in a rounded square). Decorative: the name is
 // always written next to it. `photo`: a contact's logo or photo over it (package G); the initials stay when it fails.
+// `userId`: the account the avatar stands for, drawn in that user's colour everywhere (one rule); omit for a contact without an account.
 // `color`: the person's own colour (live/collaboratorColors userColor, the colour of their cursor) where people are told apart (history).
-const props = withDefaults(defineProps<{ kind: "user" | "group"; name?: string; size?: "xs" | "sm" | "md"; photo?: string; color?: string }>(), { name: undefined, size: "md", photo: undefined, color: undefined });
+const props = withDefaults(defineProps<{ kind: "user" | "group"; name?: string; size?: "xs" | "sm" | "md"; photo?: string; color?: string; userId?: string }>(), { name: undefined, size: "md", photo: undefined, color: undefined, userId: undefined });
+const tint = computed(() => props.color ?? (props.kind === "user" && props.userId ? themedUserColor(props.userId) : undefined));
 const failed = ref("");
 const initials = computed(() => markdownInitials(props.name, locale));
 </script>
 
 <template>
-  <span class="subject-avatar" :data-kind="kind" :data-size="size" :style="color ? { background: color, color: '#fff' } : undefined" aria-hidden="true">
+  <span class="subject-avatar" :data-kind="kind" :data-size="size" :style="tint ? { background: tint, color: '#fff' } : undefined" aria-hidden="true">
     <AtlasIcon v-if="kind === 'group' || !initials" :name="kind === 'group' ? 'users' : 'account'" :size="size === 'xs' ? 11 : size === 'sm' ? 14 : 17" />
     <template v-else>{{ initials }}</template>
     <img v-if="photo && photo !== failed" :src="photo" alt="" loading="lazy" decoding="async" class="subject-avatar-photo" @error="failed = photo ?? ''">
