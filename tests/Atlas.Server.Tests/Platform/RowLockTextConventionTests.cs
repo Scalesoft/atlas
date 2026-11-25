@@ -71,6 +71,9 @@ public sealed partial class RowLockTextConventionTests
         // marks: the order a writer of the page takes (Page FOR UPDATE, then the marks: the 3.6 conversion), so the two never deadlock
         // (4.0 first start). A static refresh on the caller's session, without IAtlasLocks; IAtlasLocks offers no SKIP LOCKED.
         ["Atlas.Server.Features.Projector.Persistence.ProjectorIndex.RefreshAsync"] = 1,
+        // PageVerification rows FOR UPDATE SKIP LOCKED in the daily notice batch: the feature's own rows, claimed so two runs never
+        // send the same notice; IAtlasLocks offers no SKIP LOCKED. No content row.
+        ["Atlas.Server.Features.PageVerifications.SendVerificationNoticesHandler.Handle"] = 1,
         // A Space row FOR UPDATE before a page's insert, in the NHibernate listener that writes what TR_Page_PrepareOrganization did
         // (2026110930): the listener runs inside the flush on the session's own connection, below the services that IAtlasLocks is
         // one of; it serialises the creates of a space as the trigger's lock did.

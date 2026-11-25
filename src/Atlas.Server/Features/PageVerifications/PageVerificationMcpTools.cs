@@ -13,18 +13,6 @@ using Wolverine;
 
 namespace Atlas.Server.Features.PageVerifications;
 
-/// <summary>atlas_set_verification: G5 first (the page's space, or the space of a bulk change), then the shared write.</summary>
-public sealed record SetMcpVerification(Guid PageId, SetPageVerificationRequest Request);
-
-/// <summary>atlas_set_verification with spaceId: G5 on the space, then the shared bulk write.</summary>
-public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
-
-/// <summary>atlas_list_content_health: G5 on the space, then the shared read.</summary>
-public sealed record GetMcpContentHealth(GetContentHealth Query);
-
-/// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
-public sealed record ReportMcpOutdated(ReportPageOutdated Command);
-
 public sealed class PageVerificationMcpHandler(McpOrganizationGuard guard, PageVerificationHandler handler, PageVerificationQueryHandler queries)
 {
     public async Task<PageVerificationView> Handle(SetMcpVerification command, CancellationToken ct)

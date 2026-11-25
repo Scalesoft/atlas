@@ -38,7 +38,8 @@ public sealed class PageGateStatementCountTests
             // revision's contribution and notification go with the page's envelope (- 1). Its text is not the published one: a save
             // back to the publication carries the publication over (97138c0b8), seven statements more.
             ("SavePage with new content", 22, await f.RecordAsync<PageDto>(f.Writer, Save(page.Id, "Changed", 2))),
-            ("GetPageTree by a reader", 11, await f.RecordAsync<PageTreeDto>(f.Reader, new GetPageTree(f.SpaceId))),
+            // 12 since 5.2: the verification states of the space's pages, for the link chips.
+            ("GetPageTree by a reader", 12, await f.RecordAsync<PageTreeDto>(f.Reader, new GetPageTree(f.SpaceId))),
             // 13 since PRF-S-7: the account is read under its lock in one statement (15 since COL2-6: the pending totals live on the head);
             // 12 since e28bb5c4f: the wiki administrator status is read once per transaction.
             ("AppendUpdate", 12, await f.RecordAsync<AppendUpdateResult>(f.Writer, Append(typed.Id, live.Generation, f.Writer.Id))),

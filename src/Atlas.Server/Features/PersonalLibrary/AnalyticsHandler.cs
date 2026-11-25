@@ -183,7 +183,7 @@ public sealed class AnalyticsHandler(ISession session, PersonalPageGuard guard, 
     /// with its views, distinct readers and last view in [start, end) and its last publication: one statement, each page's views counted
     /// through IX_PageView_PageTime. Counts only, never who read. Shared by Stav obsahu (plan §6).
     /// </summary>
-    /// <remarks>shortcut: no daily aggregates (plan §5.2): measured by SpaceReadershipBudgetTests; add an aggregate table only when a
+    /// <remarks>shortcut: no daily aggregates (plan §5.2): measured by PageVerificationMigrationTests (5 000 pages, 300 ms); add an aggregate table only when a
     /// space of 5 000 pages over 365 days takes more than 300 ms.</remarks>
     public static Task<List<SpaceRead>> SpaceReadsAsync(ISession session, Guid actorId, Guid spaceId, DateTime start, DateTime end, CancellationToken ct)
         => session.ReadRowsAsync(SpaceReadsSql, new Dictionary<string, object> { ["actor"] = actorId, ["space"] = spaceId, ["start"] = start, ["end"] = end },

@@ -7,6 +7,9 @@ namespace Atlas.Server.Features.PageVerifications.Queries;
 /// <summary>The page's verification for whoever may read the page (<c>GET /api/pages/{id}/verification</c>).</summary>
 public sealed record GetPageVerification(Guid PageId);
 
+/// <summary>atlas_list_content_health: G5 on the space, then the shared read.</summary>
+public sealed record GetMcpContentHealth(GetContentHealth Query);
+
 /// <summary>
 /// Stav obsahu (plan §6): the space's published pages with their verification and readership, for its admins and writers.
 /// </summary>

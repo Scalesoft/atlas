@@ -16,6 +16,15 @@ public sealed record SetSpaceVerification(Guid SpaceId, SetSpaceVerificationRequ
 /// <summary>„Nahlásit neaktuální“: any reader of the page tells its steward; nothing on the page changes.</summary>
 public sealed record ReportPageOutdated(Guid PageId, ReportPageOutdatedRequest Request);
 
+/// <summary>atlas_set_verification: G5 first (the page's space, or the space of a bulk change), then the shared write.</summary>
+public sealed record SetMcpVerification(Guid PageId, SetPageVerificationRequest Request);
+
+/// <summary>atlas_set_verification with spaceId: G5 on the space, then the shared bulk write.</summary>
+public sealed record SetMcpSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
+
+/// <summary>atlas_report_outdated: G5 on the page, then the shared report.</summary>
+public sealed record ReportMcpOutdated(ReportPageOutdated Command);
+
 public sealed class PageVerificationHandler(ISession session, OrganizationLocks locks, PageGate gate, PageVerificationReader reader,
     IRequestChannel channel, Outbox outbox, TimeProvider clock)
 {
