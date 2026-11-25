@@ -9,7 +9,7 @@ export { registerMarkdownOverlay, registerMarkdownOverlayForElement, markdownOve
 export { markdownBlockKeyboardControls, registerMarkdownBlockKeyboardHook } from '../features/drag/blockKeyboard'
 export { computeSectionEnd } from '../features/drag/blockSelection'
 export type { MarkdownBlockKeyboardHook, MarkdownBlockKeyboardTarget } from '../features/drag/blockKeyboard'
-export { markdownUserColor } from './userColor'
+export { markdownUserColor, markdownUserColorSlot, collaboratorColor, COLLABORATOR_COLORS, type CollaboratorColor } from './userColor'
 export type { MarkdownOverlayOptions } from './overlay'
 export type * from './types'
 export { isRichFormat, LEGACY_RICH_FORMAT, RICH_FORMAT } from './types'

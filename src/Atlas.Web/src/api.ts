@@ -16,6 +16,8 @@ export interface Appearance {
   dragPages?: boolean;
   /** „Jazyk“ (4.1): the language of the tool; "auto" (or missing, from an older server) leaves it to the browser (src/i18n). */
   language?: LanguageChoice;
+  /** „Moje barva“ (5.2): "auto" (or missing, from an older server) or an id of the collaborator palette (collaboratorColors.ts). */
+  collaboratorColor?: string;
 }
 export interface User {
   id: string;

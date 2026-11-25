@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import * as Y from 'yjs'
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness'
 import { caretAwareness } from './caretAwareness'
@@ -63,4 +63,25 @@ it('tells the caret plugin of carets and names only, not of the pointer samples 
   expect(heard).toHaveLength(4)
   console.info(`caretAwareness: 800 pointer samples of 40 co-editors in ${elapsed.toFixed(1)} ms; 'change' to the caret plugin: 0 (raw awareness: 800)`)
   peers.forEach(peer => peer.destroy())
+})
+
+// The server stamps the light variant of a person's palette colour; a dark surface shows the plugin the dark one (carets take literals).
+it('shows the caret plugin the dark variant of a palette colour on a dark surface, and leaves any other colour alone', () => {
+  const awareness = new Awareness(new Y.Doc())
+  const remote = new Awareness(new Y.Doc())
+  remote.setLocalState({ user: { id: 'u', name: 'Jana', color: '#1863b6' } })
+  applyAwarenessUpdate(awareness, encodeAwarenessUpdate(remote, [remote.clientID]), 'remote')
+  const other = new Awareness(new Y.Doc())
+  other.setLocalState({ user: { id: 'ai', name: 'Agent', color: '#7c3aed' } })
+  applyAwarenessUpdate(awareness, encodeAwarenessUpdate(other, [other.clientID]), 'remote')
+  const carets = caretAwareness(awareness)
+  const colors = () => [...carets.getStates().values()].flatMap(state => (state as { user?: { color: string } }).user?.color ?? [])
+  expect(colors()).toEqual(['#1863b6', '#7c3aed'])
+  const root = { dataset: { mode: 'dark' } } // this file runs in node: the surface is whatever `document` says
+  vi.stubGlobal('document', { documentElement: root })
+  try {
+    expect(colors()).toEqual(['#2e76cb', '#7c3aed'])
+    expect(awareness.getStates().get(remote.clientID)).toMatchObject({ user: { color: '#1863b6' } })
+  } finally { vi.unstubAllGlobals() }
+  remote.destroy(); other.destroy()
 })

@@ -15,6 +15,8 @@ import { useAiCapabilities } from "../composables/useAiCapabilities";
 import AtlasIcon from "./AtlasIcon.vue";
 import AiPreferencesSection from "./profile/AiPreferencesSection.vue";
 import AccentPicker from "./profile/AccentPicker.vue";
+import InlineReveal from "./settings/InlineReveal.vue";
+import { automaticCollaboratorColorId, collaboratorChoices } from "../collaboratorColors";
 import ThemePreview from "./profile/ThemePreview.vue";
 import type { TokenCatalog } from "./auth/PersonalApiTokens.vue";
 import LoadingSkeleton from "./LoadingSkeleton.vue";
@@ -66,10 +68,12 @@ const props = withDefaults(defineProps<{
   readingWidth?: ReadingWidth;
   /** The signed-in account for the header of Účet a vzhled: login name and the wiki role. */
   username?: string;
+  /** The account id: what „Automaticky“ of „Moje barva“ is for it, the colour a custom choice starts from. */
+  userId?: string;
   isWikiAdmin?: boolean;
   /** The server's release ("4.0.0+commit"); shown in the rail footer as the link to Co je nového. */
   version?: string;
-}>(), { readingWidth: "comfortable", username: "", isWikiAdmin: false });
+}>(), { readingWidth: "comfortable", username: "", userId: "", isWikiAdmin: false });
 const emit = defineEmits<{
   navigate: [tab: ProfileTab]; back: []; preview: [value: Appearance]; previewReadingWidth: [value: ReadingWidth]; saveAppearance: []; cancelAppearance: [];
   dirty: [value: boolean]; busy: [value: boolean]; accountSaved: [name: string]; sessionChanged: []; accessChanged: []; selectPage: [id: string, type?: "page" | "board"]; logout: []; openConversations: []; aiPreferencesSaved: [];
@@ -294,6 +298,14 @@ const languageOptions: ChoiceOption[] = [
 const languageChoice = computed({ get: () => appearance.language ?? "auto", set: (value: string) => (appearance.language = value as LanguageChoice) });
 const layout = computed({ get: () => appearance.layout, set: (value) => (appearance.layout = value as Appearance["layout"]) });
 const accent = computed({ get: () => appearance.accent, set: (value) => (appearance.accent = value) });
+// „Moje barva“ (5.2): automatic, or one of the 12 colours of the collaborator palette (collaboratorColors.ts), revealed under „Vlastní“.
+const colorModeOptions: ChoiceOption[] = [{ value: "auto", label: text.collaboratorColor.auto }, { value: "custom", label: text.collaboratorColor.custom }];
+const lastCustomColor = ref("");
+const collaboratorColor = computed({ get: () => appearance.collaboratorColor ?? "auto", set: (value: string) => { appearance.collaboratorColor = value; lastCustomColor.value = value; } });
+const collaboratorColorMode = computed({
+  get: () => (collaboratorColor.value === "auto" ? "auto" : "custom"),
+  set: (value: string) => { appearance.collaboratorColor = value === "auto" ? "auto" : lastCustomColor.value || automaticCollaboratorColorId(props.userId); },
+});
 const mode = computed({ get: () => appearance.mode, set: (value) => (appearance.mode = value as Appearance["mode"]) });
 // „Stránky otevírat“ is the stored `openLocked` (3.6) as a choice of two (owner 2026-11-07); rovnou k úpravám stays the default.
 const openModeOptions: ChoiceOption[] = [
@@ -515,6 +527,14 @@ async function saveAndLeave() {
               <SettingsRow icon="palette" :label="text.accent.label" :help="text.accent.help" :label-for="false">
                 <AccentPicker v-model="accent" :accents="themeAccents" :mode="previewMode" :label="text.accent.label" :disabled="appearancePending" data-appearance="accent" />
               </SettingsRow>
+              <SettingsRow icon="account" :label="text.collaboratorColor.label" :help="text.collaboratorColor.help" :label-for="false">
+                <div class="collaborator-color" data-appearance="collaborator-color">
+                  <OptionPills v-model="collaboratorColorMode" :options="colorModeOptions" :label="text.collaboratorColor.label" hide-label :disabled="appearancePending" data-appearance="collaborator-color-mode" />
+                  <InlineReveal :open="collaboratorColorMode === 'custom'">
+                    <AccentPicker v-model="collaboratorColor" :accents="collaboratorChoices" :mode="previewMode" :label="text.collaboratorColor.swatches" :disabled="appearancePending" data-appearance="collaborator-color-swatches" />
+                  </InlineReveal>
+                </div>
+              </SettingsRow>
               <SettingsRow icon="layers" :label="text.layout.label" :help="text.layout.help" :label-for="false">
                 <ChoiceCards v-model="layout" :options="layoutOptions" :label="text.layout.label" hide-label :columns="2" :disabled="appearancePending" data-appearance="layout">
                   <template #option="{ option }"><span class="layout-preview" :class="option.value" aria-hidden="true"><i /><i /></span></template>
@@ -583,6 +603,7 @@ async function saveAndLeave() {
 </template>
 
 <style scoped>
+.collaborator-color { display: grid; gap: 12px; min-width: 0; }
 .profile-page { min-width: 0; width: 100%; }
 /* The foot of the rail: Odhlásit se under a quiet rule (board 12). The rule belongs to the row, so the button itself
    keeps the base Button's height, radius, hover, focus and press instead of the flat 36 px block refresh.css gave a direct child. */

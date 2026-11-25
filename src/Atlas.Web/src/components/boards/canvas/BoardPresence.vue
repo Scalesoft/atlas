@@ -5,6 +5,7 @@ import type { Viewport } from "../../../boards/boardViewport";
 import { motionMs } from "../../../motion/aiMotion";
 import { createPointerGlide } from "../../../live/pointerGlide";
 import { isAgentUser } from "../../../live/agentUser";
+import { themedCollaboratorColor } from "../../../collaboratorColors";
 import CollaborationPointer from "../../CollaborationPointer.vue";
 
 /**
@@ -58,12 +59,12 @@ function lookOf(mark: Mark): Look | null {
   const user = props.remote.find(person => person.userId === mark.userId);
   if (mark.itemId === undefined) {
     if (!user?.cursor) return null;
-    return { name: user.displayName, agent: isAgentUser(user.userId), style: { "--collaboration-color": user.color }, at: { x: user.cursor.x, y: user.cursor.y } };
+    return { name: user.displayName, agent: isAgentUser(user.userId), style: { "--collaboration-color": themedCollaboratorColor(user.color) }, at: { x: user.cursor.x, y: user.cursor.y } };
   }
   const drag = user?.dragging.find(entry => entry.itemId === mark.itemId);
   if (!user || !drag) return null;
   const at = screen(drag.x, drag.y), zoom = props.viewport.zoom;
-  return { style: { "--collaboration-color": user.color, width: `${drag.width * zoom}px`, height: `${drag.height * zoom}px`, transform: `translate(${at.x}px, ${at.y}px)` } };
+  return { style: { "--collaboration-color": themedCollaboratorColor(user.color), width: `${drag.width * zoom}px`, height: `${drag.height * zoom}px`, transform: `translate(${at.x}px, ${at.y}px)` } };
 }
 // A mark whose person stopped keeps its last look while it fades out.
 const PresenceMark = defineComponent({
@@ -102,5 +103,5 @@ const PresenceMark = defineComponent({
 .board-presence :deep(.board-ghost) { position: absolute; top: 0; left: 0; animation: st-fade-in var(--atlas-motion-fast) var(--atlas-ease-out);
   transition: transform var(--atlas-motion-fast) var(--atlas-ease-out), opacity var(--atlas-motion-surface) var(--atlas-ease-out); }
 .board-presence :deep(.is-leaving) { opacity: 0; }
-.board-presence :deep(.board-ghost) { border: 2px dashed var(--collaboration-color); border-radius: var(--atlas-radius-md); background: color-mix(in oklab, var(--collaboration-color) 10%, transparent); }
+.board-presence :deep(.board-ghost) { transition: border-color var(--atlas-motion-base) var(--atlas-ease-out), background-color var(--atlas-motion-base) var(--atlas-ease-out); border: 2px dashed var(--collaboration-color); border-radius: var(--atlas-radius-md); background: color-mix(in oklab, var(--collaboration-color) 10%, transparent); }
 </style>

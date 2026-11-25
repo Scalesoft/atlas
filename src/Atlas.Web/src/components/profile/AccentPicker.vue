@@ -1,8 +1,9 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="Id extends string">
 import { computed, useId } from "vue";
 import { RadioGroupItem, RadioGroupRoot } from "reka-ui";
 import AtlasIcon from "../AtlasIcon.vue";
-import { defaultThemeAccent, type ThemeAccent, type ThemeAccentId } from "../../profile";
+import { defaultThemeAccent } from "../../profile";
+import type { AccentChoice } from "./accentChoice";
 import t from "../../i18n/profile";
 
 /**
@@ -10,9 +11,14 @@ import t from "../../i18n/profile";
  * of the chosen one below. A radiogroup: one Tab stop, arrows move and select. Each swatch is drawn in the
  * previewed mode, so in dark it shows the light tone the dark theme uses.
  * Not for content colours: the icon and colour of a space or page is AppearancePicker (60 tones).
+ * An accent with a `swatch` (its own light and dark colour) is drawn in exactly that colour instead of the one of its `hue`: the
+ * collaborator palette („Moje barva“, collaboratorColors.ts), whose swatches must be the colours of the carets.
  */
-const props = withDefaults(defineProps<{ accents: readonly ThemeAccent[]; mode: "light" | "dark"; label: string; disabled?: boolean }>(), { disabled: false });
-const model = defineModel<ThemeAccentId>({ required: true });
+const props = withDefaults(defineProps<{ accents: readonly AccentChoice<Id>[]; mode: "light" | "dark"; label: string; disabled?: boolean }>(), { disabled: false });
+const model = defineModel<Id>({ required: true });
+const swatchStyle = (accent: AccentChoice<Id>) => accent.swatch
+  ? { "--swatch": props.mode === "dark" ? accent.swatch.dark : accent.swatch.light, "--swatch-ring": props.mode === "dark" ? accent.swatch.dark : accent.swatch.light, "--swatch-ink": "#ffffff", "--swatch-h": 0 }
+  : { "--swatch-h": accent.hue };
 const uid = useId();
 const current = computed(() => props.accents.find((accent) => accent.id === model.value));
 </script>
@@ -27,10 +33,10 @@ const current = computed(() => props.accents.find((accent) => accent.id === mode
       class="accent-swatches"
       :aria-label="label"
       :aria-describedby="`${uid}-name`"
-      @update:model-value="model = $event as ThemeAccentId"
+      @update:model-value="model = $event as Id"
     >
       <span v-for="accent in accents" :key="accent.id" class="accent-swatch-cell" :data-value="accent.id">
-        <RadioGroupItem :value="accent.id" class="accent-swatch" :style="{ '--swatch-h': accent.hue }" :aria-label="accent.label" :title="accent.label">
+        <RadioGroupItem :value="accent.id" class="accent-swatch" :style="swatchStyle(accent)" :aria-label="accent.label" :title="accent.label">
           <Transition name="accent-check"><AtlasIcon v-if="model === accent.id" name="check" :size="16" class="accent-swatch-check" /></Transition>
         </RadioGroupItem>
       </span>

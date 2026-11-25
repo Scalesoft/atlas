@@ -10,6 +10,7 @@ import { createAgentReveal } from "./live/agentReveal";
 import { isAgentUser } from "./live/agentUser";
 import { createPointerGlide } from "./live/pointerGlide";
 import { mountAiGlyph } from "./components/ai/mountAiGlyph";
+import { themedCollaboratorColor } from "./collaboratorColors";
 import "./collaborationPresence.css";
 
 type StatePeer = MarkdownEditorState["peers"][number];
@@ -487,7 +488,8 @@ function cursorPositions(editor: Editor) {
   return result;
 }
 
-function setColor(element: HTMLElement, color: string) {
+function setColor(element: HTMLElement, stamped: string) {
+  const color = themedCollaboratorColor(stamped);
   if (element.dataset.color === color) return;
   element.dataset.color = color;
   element.style.setProperty("--collaboration-color", CSS.supports("color", color) ? color : "#64748b");

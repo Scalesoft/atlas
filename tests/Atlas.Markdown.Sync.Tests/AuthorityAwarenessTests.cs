@@ -67,13 +67,12 @@ public sealed class AuthorityAwarenessTests
         Assert.Throws<InvalidDataException>(() => AuthorityAwareness.Validate(Frame("{\"cursor\":" + json + "}"), User, 16384));
     }
     [Fact]
-    public void Keeps_a_claimed_colour_only_when_the_host_has_none_and_it_is_a_colour()
+    public void Stamps_the_colour_the_document_assigned_never_the_one_the_client_claims()
     {
-        string Written(CollabUser user, string claimed)
-            => Encoding.UTF8.GetString(AuthorityAwareness.Validate(Frame("{\"user\":{\"color\":\"" + claimed + "\"}}"), user, 16384).Payload);
-        var colourless = new CollabUser("verified-id", "Name");
-        Assert.Contains("\"color\":\"#2a9d8f\"", Written(colourless, "#2a9d8f"));
-        Assert.Contains("\"color\":\"#888888\"", Written(colourless, "red;background:url(x)"));
-        Assert.Contains("\"color\":\"#123456\"", Written(User, "#2a9d8f"));
+        string Written(CollabUser user, string? assigned)
+            => Encoding.UTF8.GetString(AuthorityAwareness.Validate(Frame("{\"user\":{\"color\":\"#2a9d8f\"}}"), user, 16384, color: assigned).Payload);
+        Assert.Contains("\"color\":\"#1863b6\"", Written(User, "#1863b6"));
+        Assert.Contains("\"color\":\"#123456\"", Written(User, null));
+        Assert.Contains("\"color\":\"#888888\"", Written(new CollabUser("verified-id", "Name"), null));
     }
 }

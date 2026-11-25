@@ -50,6 +50,7 @@ public sealed class UpdateAppearanceHandler
             OpenLocked = command.Appearance.OpenLocked,
             DragPages = command.Appearance.DragPages,
             Language = command.Appearance.Language,
+            CollaboratorColor = command.Appearance.CollaboratorColor,
             ActiveFrom = boundary
         }, ct);
         return command.Appearance;

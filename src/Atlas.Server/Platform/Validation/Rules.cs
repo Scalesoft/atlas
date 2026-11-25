@@ -107,7 +107,8 @@ public static class Rules
     public static void ValidateAppearance(Appearance value)
     {
         if (value.Layout is not ("connected" or "islands") || !AppearanceAccents.Contains(value.Accent, StringComparer.Ordinal) || value.Mode is not ("system" or "light" or "dark")
-            || value.Motion is not ("system" or "reduce") || value.Language is not ("auto" or "cs" or "en"))
+            || value.Motion is not ("system" or "reduce") || value.Language is not ("auto" or "cs" or "en")
+            || value.CollaboratorColor != "auto" && Atlas.Markdown.Sync.CollaboratorPalette.SlotOf(value.CollaboratorColor) < 0)
         {
             throw new ApiException(400, "Nepodporované nastavení vzhledu.");
         }
