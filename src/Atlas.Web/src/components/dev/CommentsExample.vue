@@ -2,7 +2,9 @@
 import { ref } from "vue";
 import type { CommentApi, CommentPage, ObjectComment } from "../../comments/commentApi";
 import type { ObjectListener, ViewSessions } from "../../live/viewSession";
+import { quoteMarkdown, requestedQuote } from "../../comments/commentFocus";
 import CommentThread from "../comments/CommentThread.vue";
+import PageSidePanel from "../PageSidePanel.vue";
 import SettingsPage from "../settings/SettingsPage.vue";
 import SettingsSection from "../settings/SettingsSection.vue";
 import { Button } from "../ui/button";
@@ -70,6 +72,14 @@ const emptyApi: CommentApi = {
 };
 const thread = ref(0);
 const anchorShown = ref("");
+// The page's Diskuse in its dock: the selected text of the sample paragraph is what App's Alt C hands over (`requestedQuote`).
+const article = ref<HTMLElement>();
+const dock = ref(0);
+function quoteSelection() {
+  const selection = window.getSelection();
+  if (!selection || selection.isCollapsed || !article.value?.contains(selection.anchorNode)) return;
+  requestedQuote.value = quoteMarkdown(selection.toString());
+}
 </script>
 
 <template>
@@ -92,6 +102,18 @@ const anchorShown = ref("");
         <CommentThread object-id="gallery-empty-page" title="Komentáře" :api="emptyApi" :lazy="false" />
       </div>
     </SettingsSection>
+    <SettingsSection title="Diskuse stránky v doku"
+      description="Stránka má tu samou diskusi jako tabule: záložka „Diskuse“ v doku stránky (PageSidePanel, tab comments) je stejné CommentThread nad stejným objektem a stejnou relací pohledu, žádný druhý chat. Otevře ji bublina u avatarů s počtem komentářů (zvýrazněným, dokud nepřečtete kolegův nový) a Alt C; kurzor jde rovnou do pole, Escape zavře dok a vrátí kurzor do textu. Je-li ve stránce označený text, nový komentář začne jeho citací (Markdown „> …“), v galerii tlačítkem pod odstavcem. Oproti sekci pod obsahem nezabírá místo článku a zůstane otevřená při čtení.">
+      <div class="comments-example-tools">
+        <Button variant="outline" size="sm" type="button" @click="quoteSelection">Citovat označený text</Button>
+        <Button variant="ghost" size="sm" type="button" @click="dock++">Znovu otevřít</Button>
+      </div>
+      <p ref="article" class="comments-example-article">Zálohy běží každou noc ve dvě hodiny a obnova z nich se zkouší jednou za čtvrtletí. Označte část věty a použijte tlačítko výše.</p>
+      <div class="comments-example-frame comments-example-dock">
+        <PageSidePanel :key="dock" tab="comments" page-id="gallery-page" space-id="gallery-space" page-title="Provozní příručka" :document-root="null" :version="3" :is-published="true"
+          :published-version="3" :comment-api="api" :views="views" />
+      </div>
+    </SettingsSection>
   </SettingsPage>
 </template>
 
@@ -100,4 +122,7 @@ const anchorShown = ref("");
 .comments-example-switch { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
 .comments-example-anchor { color: var(--muted); font-size: 13px; }
 .comments-example-frame { max-width: 720px; }
+.comments-example-article { max-width: 720px; margin: 0 0 12px; font-size: 14px; line-height: 1.6; }
+/* The dock's own width, as WorkspaceSidePanel gives it. */
+.comments-example-dock { max-width: 400px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 </style>

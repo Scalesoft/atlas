@@ -4,6 +4,7 @@ import type { Editor } from "@tiptap/core";
 import type { CommentApi, CommentPage, ObjectComment } from "../../comments/commentApi";
 import type { ObjectListener, ViewSessions } from "../../live/viewSession";
 import { drafts, forgetUnsavedWork, hasUnsavedWork } from "../../lib/unsavedWork";
+import { requestedQuote } from "../../comments/commentFocus";
 import CommentComposer from "./CommentComposer.vue";
 import CommentThread from "./CommentThread.vue";
 
@@ -150,6 +151,31 @@ describe("CommentThread", () => {
     expect(view.find("[data-comment-start]").exists()).toBe(false);
     expect(view.find("[data-comment-composer]").exists()).toBe(true);
     expect(view.find("[data-comments-empty]").exists()).toBe(true);
+  });
+});
+
+describe("CommentThread quote", () => {
+  const editor = () => document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor;
+  afterEach(() => { requestedQuote.value = undefined; });
+
+  it("starts a new comment with the text the page had selected as a Markdown quote, in the field, once (the page's Diskuse, Alt C)", async () => {
+    const api = fakeApi(page([]));
+    requestedQuote.value = "> Záloha běží každou noc\n\n";
+    await mounted(api, { quotes: true });
+    await vi.waitFor(() => expect(editor()?.getText()).toContain("Záloha běží každou noc"));
+    expect(requestedQuote.value).toBeUndefined();
+    expect(editor()!.state.doc.firstChild!.type.name).toBe("blockquote");
+    wrapper!.findComponent(CommentComposer).vm.submit();
+    await flushPromises();
+    expect(vi.mocked(api.post).mock.calls[0]![1]).toBe("> Záloha běží každou noc");
+  });
+
+  it("leaves the selection alone in a thread that does not quote (a board's, the page's section)", async () => {
+    requestedQuote.value = "> Něco\n\n";
+    await mounted(fakeApi(page([comment("a")])));
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    expect(editor()!.getText()).toBe("");
+    expect(requestedQuote.value).toBe("> Něco\n\n");
   });
 });
 

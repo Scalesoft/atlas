@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import t from "../i18n/components-b";
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import type { MarkdownRichValue } from "@atlas/markdown/core";
 import { errorMessage } from "../api";
 import { channelText } from "../channel";
@@ -11,6 +11,10 @@ import { pagePublicationApi, publicationLabels, type PagePublication, type PageP
 import { pageConnectionsApi, type PageConnectionsApi } from "../pageConnections";
 import { sharingApi, type PageAccess } from "../sharing";
 import { peopleCount } from "./sharing/pageAccessText";
+import type { BoardBlockHost } from "../boards/editorBlocks";
+import type { CommentApi } from "../comments/commentApi";
+import type { ViewSessions } from "../live/viewSession";
+import LoadingSkeleton from "./LoadingSkeleton.vue";
 import AtlasIcon from "./AtlasIcon.vue";
 import PageConnections from "./PageConnections.vue";
 import PageOutline from "./PageOutline.vue";
@@ -24,11 +28,13 @@ import { Button } from "./ui/button";
 
 /**
  * The page tools of the dock (refresh 2.5, board 03): the content of the tabs Obsah, Hledat (3.5 J, PageSearch), Historie and
- * Přístup beside the article; Asistent is the assistant's own content. Each tab is a summary with one way on to the full surface, so
+ * Přístup beside the article, and Diskuse: the page's comments, the same CommentThread as a board's Diskuse in its dock (the editor comes with
+ * the tab, not with the dock). Asistent is the assistant's own content. Each tab is a summary with one way on to the full surface, so
  * nothing moved here stops existing elsewhere: Historie opens the page history (restore, compare, PDF of a version),
  * Přístup the page's access view (grants, links, opening history).
  */
-export type PageSideTab = "outline" | "search" | "history" | "access";
+export type PageSideTab = "outline" | "search" | "history" | "access" | "comments";
+const CommentThread = defineAsyncComponent({ loader: () => import("./comments/CommentThread.vue"), loadingComponent: LoadingSkeleton, delay: 120 });
 const props = withDefaults(defineProps<{
   tab: PageSideTab;
   pageId: string;
@@ -49,9 +55,13 @@ const props = withDefaults(defineProps<{
   connections?: PageConnectionsApi;
   usage?: UsageApi;
   publicationApi?: PagePublicationApi;
-}>(), { usage: undefined, publicationApi: () => pagePublicationApi, document: undefined, updatedAt: null, relatedEnabled: true, refreshKey: 0, history: () => historyApi, sharing: () => sharingApi, connections: () => pageConnectionsApi });
+  /** The editor services of the comments (`[[`, YouTrack, `@` people) and their data sources. */
+  host?: BoardBlockHost;
+  commentApi?: CommentApi;
+  views?: Pick<ViewSessions, "open">;
+}>(), { host: undefined, commentApi: undefined, views: undefined, usage: undefined, publicationApi: () => pagePublicationApi, document: undefined, updatedAt: null, relatedEnabled: true, refreshKey: 0, history: () => historyApi, sharing: () => sharingApi, connections: () => pageConnectionsApi });
 /** `publication`: the page's publication as read or set here (the header's chip and Publikovat follow its mode). */
-const emit = defineEmits<{ openHistory: [revision?: PageRevisionSummary]; openAccess: []; openPlace: [id: string, typeId: string]; publication: [value: PagePublication] }>();
+const emit = defineEmits<{ openHistory: [revision?: PageRevisionSummary]; openAccess: []; openPlace: [id: string, typeId: string]; publication: [value: PagePublication]; comments: [count: number]; anchor: [anchor: string] }>();
 
 // The draft (koncept) in the top bar's words: what readers read meanwhile.
 const state = computed(() => !props.isPublished ? t.side.draftUnpublished : props.version > (props.publishedVersion ?? 0) ? t.side.draftReaders(props.publishedVersion) : t.side.published);
@@ -219,6 +229,10 @@ const ownAccess = computed(() => {
       </div>
       <Button variant="outline" size="sm" class="page-side-action" data-open-history @click="emit('openHistory')"><AtlasIcon name="history" :size="15" />{{ more ? t.side.fullHistory : t.side.openHistory }}</Button>
     </section>
+
+    <!-- The same thread as the page's section under its content and a board's dock: one object, one view session; a selection of the page is quoted (Alt C). -->
+    <CommentThread v-else-if="tab === 'comments'" :key="pageId" :object-id="pageId" :view-key="`page:${pageId}`" :host="host" :api="commentApi" :views="views" quotes :lazy="false"
+      @count="emit('comments', $event)" @anchor="emit('anchor', $event)" />
 
     <section v-else class="page-side-section" :aria-label="t.side.accessToPage">
       <div ref="result" class="page-side-result">

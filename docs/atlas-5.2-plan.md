@@ -300,8 +300,10 @@ Jediný diskusní systém je `Features/Comments` + `CommentThread.vue` (`/api/ob
 - **Alt C** otevře záložku a dá kurzor do pole; **Esc** v poli vrátí kurzor do textu na původní místo (už umí fokus doku).
 - **Citace výběru:** je-li ve stránce označený text, začne nový komentář jeho citací (`> text`) a kurzorem pod ní. Citace je
   obyčejný Markdown komentáře, žádná změna serveru ani úložiště.
-- Zmínka `@` už řadí lidi podle vztahu ke stránce a první návrh je předvybraný (Enter vloží); **navíc přítomní na stránce
-  první** je navržené jako malé rozšíření řazení — viz O10.
+- Zmínka `@` už řadí lidi podle vztahu ke stránce a první návrh je předvybraný (Enter vloží). **Přítomní na stránce první**
+  není hotové: řazení bere ID kontaktů, přítomnost nese ID účtů; spojení účtu s kontaktem je zvlášť (O10).
+- Esc zavře dok (`WorkspaceSidePanel`) a vrátí fokus tam, odkud se otevřel (text stránky); rozepsaný komentář zůstane jako
+  koncept.
 
 ### 12.3 Co z původního návrhu odpadá
 
@@ -314,7 +316,7 @@ Jediný diskusní systém je `Features/Comments` + `CommentThread.vue` (`/api/ob
 
 ### 12.4 Testy
 
-Vitest: sloupec záložky a klávesa Alt C (včetně AltGr, který nesmí zachytit), citace výběru do pole, živý počet. Server se
+Vitest: záložka Diskuse v doku, klávesa Alt C (včetně AltGr, který nesmí zachytit), citace výběru do pole, živý počet. Server se
 nemění (žádný server test, žádná migrace).
 
 ### 12.5 Otázky pro vlastníka

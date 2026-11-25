@@ -12,6 +12,8 @@ const en: ShellMessages = {
     copyLink: "Copy link",
     notifications: "Notifications",
     comments: "Comments",
+    discussion: "Discussion",
+    discussionCount: (count: number) => count ? `Discussion, comments: ${count}` : "Discussion",
     pages: "Pages",
     settings: "Settings",
     wikiAdmin: "Wiki administration",
@@ -462,6 +464,7 @@ const en: ShellMessages = {
       treeFilter: "Find in the space tree",
       newPage: "New page in this space",
       edit: "Edit / lock the page",
+      discussion: "Page discussion (selected text is quoted in a new comment)",
       findInPage: "Search in the page (side panel; F3 and Shift F3 for next and previous)",
     },
     w: {

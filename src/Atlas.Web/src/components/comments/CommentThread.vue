@@ -7,7 +7,7 @@ import { commentApi, type CommentApi, type ObjectComment } from "../../comments/
 import { createCommentThread, isCommentsChange } from "../../comments/commentThread";
 import { formatAgo, formatDateTime } from "../../formatDate";
 import { focusWhenPresent } from "../../keyboard/navigation";
-import { requestedComment } from "../../comments/commentFocus";
+import { requestedComment, requestedQuote } from "../../comments/commentFocus";
 import { scrollBehavior } from "../../motion/aiMotion";
 import { viewSessions, type ViewHandle, type ViewSessions } from "../../live/viewSession";
 import { draftKeeper, drafts } from "../../lib/unsavedWork";
@@ -49,11 +49,13 @@ const props = withDefaults(defineProps<{
   title?: string;
   /** Editor services (`[[` pages, YouTrack, `@` people). */
   host?: BoardBlockHost;
+  /** This thread takes the text the reader selected in the page (Alt C, `requestedQuote`) as the quote its new comment starts with: the dock's Diskuse of a page. */
+  quotes?: boolean;
   /** Read only once near the viewport. */
   lazy?: boolean;
   api?: CommentApi;
   views?: Pick<ViewSessions, "open">;
-}>(), { viewKey: undefined, anchor: null, title: undefined, host: () => inertBlockHost, lazy: true, api: () => commentApi, views: undefined });
+}>(), { viewKey: undefined, anchor: null, title: undefined, host: () => inertBlockHost, quotes: false, lazy: true, api: () => commentApi, views: undefined });
 const emit = defineEmits<{ count: [count: number]; anchor: [anchor: string] }>();
 
 const thread = createCommentThread(props.objectId, props.api);
@@ -101,6 +103,16 @@ async function revealRequested() {
   setTimeout(() => { if (highlighted.value === id) highlighted.value = ""; }, 3000);
 }
 watch([status, requestedComment], () => void revealRequested());
+// A selection of the page asked for the discussion: the field opens (an empty page section unfolds) with it quoted and the caret under it.
+async function takeQuote() {
+  const text = requestedQuote.value;
+  if (!text || !props.quotes || status.value !== "ready" || !canPost.value) return;
+  requestedQuote.value = undefined;
+  composing.value = true;
+  await nextTick();
+  await composer.value?.quote(text);
+}
+watch([status, requestedQuote], () => void takeQuote(), { flush: "post" });
 onMounted(() => {
   // The page's one proximity observer (within a viewport of the screen, or at once on a focus or a press inside).
   if (!props.lazy || !root.value || requestedComment.value) start();

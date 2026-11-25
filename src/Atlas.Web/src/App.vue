@@ -135,9 +135,9 @@ import AppDialog from "./components/AppDialog.vue";
 import UnsavedChangesDialog from "./components/UnsavedChangesDialog.vue";
 // The help carries the editor's keymap (@atlas/markdown/core): it loads when first asked for, not with the shell.
 const KeyboardHelpDialog = lazyComponent(() => import("./components/KeyboardHelpDialog.vue"), { loading: dialogSkeleton(t.common.keyboardShortcuts, "wide") });
-import { appShortcuts, createShortcutMatcher, type AppShortcutId } from "./keyboard/shortcuts";
+import { appShortcuts, chordLabel, createShortcutMatcher, type AppShortcutId } from "./keyboard/shortcuts";
 import { matchCommands } from "./keyboard/commandMatch";
-import { landFocusWhenRendered, listKeys, tablistKeys } from "./keyboard/navigation";
+import { focusWhenPresent, landFocusWhenRendered, listKeys, tablistKeys } from "./keyboard/navigation";
 import ActionDisclosureGroup from "./components/ActionDisclosureGroup.vue";
 import { holdsRequirements, useProjectorPage } from "./projector/useProjectorPage";
 import type { DeploymentDocument } from "./projector/deploymentMap";
@@ -284,7 +284,8 @@ const PageMobileBar = lazyComponent(() => import("./components/PageMobileBar.vue
 const PageUndoWedge = lazyComponent(() => import("./components/PageUndoWedge.vue"));
 import type { PageSideTab } from "./components/PageSidePanel.vue";
 import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearch";
-import { requestedComment } from "./comments/commentFocus";
+import { quoteMarkdown, requestedComment, requestedQuote } from "./comments/commentFocus";
+import { usePageCommentCount } from "./comments/pageCommentCount";
 import { articleArrives } from "./editor/articleMotion";
 import { useStageHeight } from "./components/library/stageHeight";
 import { useTabIndicator } from "./components/library/tabIndicator";
@@ -3010,6 +3011,8 @@ async function undoRestore(restored: Page) {
 // Automatic opening reserves a comfortable article next to the dock, even with a widened rail.
 const pageDockHasRoom = computed(() => viewportWidth.value >= 1280 && workspaceWidth.value >= 1000);
 const pageDockTab = ref<PageSideTab>("outline");
+// The quiet count at the discussion button; read after the page's text, live through the page's view session.
+const pageDiscussion = usePageCommentCount(() => (afterContent.value && documentOpen.value ? page.value?.id : undefined));
 const documentBody = ref<HTMLElement | null>(null);
 const pageDockShown = computed(() => workspacePanel.content.value === PageSidePanel);
 const pageDockTabs = computed(() => documentOpen.value && page.value ? [
@@ -3017,6 +3020,7 @@ const pageDockTabs = computed(() => documentOpen.value && page.value ? [
   { id: "search", label: t.common.search },
   ...(assistantReachable.value ? [{ id: "assistant", label: t.common.assistant, icon: "ai" }] : []),
   ...(pageCanWrite.value ? [{ id: "history", label: t.common.history }] : []),
+  { id: "comments", label: t.common.discussion },
   { id: "access", label: t.common.access },
 ] : undefined);
 const pageDockActive = computed(() => pageDockShown.value ? pageDockTab.value : assistant.open.value ? "assistant" : undefined);
@@ -3032,7 +3036,25 @@ function showPageDock(tab: PageSideTab, focus = true) {
   pageDockTab.value = tab;
   workspacePanel.show({ label: t.common.sidePanel, content: PageSidePanel, focus });
 }
+/**
+ * The page's Diskuse (the button beside the avatars, Alt C): the dock's tab with the same thread a board has; the text selected in the
+ * page becomes the quote of a new comment, and the caret goes into the field (Escape closes the dock and returns to the text).
+ */
+async function openDiscussion() {
+  if (!documentOpen.value || !pageDockTabs.value) return false;
+  const selection = window.getSelection();
+  const picked = selection && !selection.isCollapsed && documentBody.value?.contains(selection.anchorNode) ? quoteMarkdown(selection.toString()) : "";
+  // The thread's editor services (people, pages) come first, so the first Alt C already has `@`.
+  await pageChrome.comments().catch(() => undefined);
+  if (picked) requestedQuote.value = picked;
+  showPageDock("comments");
+  rememberPageDock(true);
+  pageDiscussion.seen();
+  if (!picked) { await nextTick(); const side = document.querySelector("[data-page-side=comments]"); if (side) void focusWhenPresent(side, '.comment-composer [contenteditable="true"]', 90); }
+  return true;
+}
 function selectPageDockTab(id: string) {
+  if (id === "comments") { void openDiscussion(); return; }
   if (id === "assistant") launchAssistant(true);
   else showPageDock(id as PageSideTab);
 }
@@ -4226,6 +4248,10 @@ function runShortcut(id: AppShortcutId, event: KeyboardEvent): boolean {
       pageSearchFocus.value++;
       return true;
     }
+    case "discussion":
+      if (modal || !documentOpen.value || !pageDockTabs.value) return false;
+      void openDiscussion();
+      return true;
     case "treeFilter": return !modal && treeFilterShortcut();
     case "goLibrary": return go(() => openLibrary("spaces"));
     case "goRecent": return go(() => openLibrary("recent"));
@@ -4722,6 +4748,8 @@ onUnmounted(() => {
           <div v-if="!profileOpen" class="bar-actions">
             <div v-if="page && documentValue && !pageAccessTab && !libraryTab && !administrationOpen" class="document-actions">
                 <CollaboratorAvatars v-if="collaborationEnabled && browserOnline" :peers="pagePeers" @navigate="editor?.navigateToPeer($event)" />
+                <!-- The page's Diskuse like a board's: the count is the comments', accented while a colleague's new one is unseen (Alt C opens it too). -->
+                <Tooltip v-if="pageDockTabs"><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" class="page-discussion-button text-muted-foreground" :aria-label="t.common.discussionCount(pageDiscussion.count.value)" :aria-pressed="pageDockOpen && pageDockTab === 'comments'" :data-fresh="pageDiscussion.fresh.value || undefined" @click="openDiscussion"><AtlasIcon name="quote" /><Transition name="page-discussion-count" mode="out-in"><span v-if="pageDiscussion.count.value" :key="pageDiscussion.count.value" class="page-discussion-count" data-page-discussion-count aria-hidden="true">{{ pageDiscussion.count.value }}</span></Transition></Button></TooltipTrigger><TooltipContent>{{ t.common.discussion }} · {{ chordLabel("Alt+c") }}</TooltipContent></Tooltip>
                 <div class="document-secondary-actions">
                 <CopyPageLink ref="copyPageLink" :page-id="page.id" />
                 <!-- Icon-only like „Kopírovat odkaz“ beside them, so they say what they do the same way when pointed at or focused. -->
@@ -5057,7 +5085,7 @@ onUnmounted(() => {
           ><template v-if="workspacePanel.header.value && !pageDockShown" #header><component :is="workspacePanel.header.value" /></template
           ><PageSidePanel v-if="pageDockShown && page" :tab="pageDockTab" :page-id="page.id" :space-id="page.spaceId" :page-title="page.title"
             :document-root="documentBody" :document="documentValue" :version="shownVersion" :is-published="page.isPublished" :published-version="nothingToPublish && page.publishedVersion !== null ? shownVersion : page.publishedVersion"
-            :updated-at="page.activeFrom" @publication="value => { publication = value; }" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
+            :updated-at="page.activeFrom" :host="commentHost?.(page.id, page.spaceId)" @comments="pageDiscussion.set($event)" @anchor="revealCitedHeading($event)" @publication="value => { publication = value; }" :related-enabled="aiCapabilities.related" :refresh-key="libraryRefresh"
             @open-history="openPageHistory" @open-access="openPageAccess(page.id)" @open-place="(id, typeId) => openContent(id, typeId === 'atlas.board' ? 'board' : 'page')"
           /><component :is="workspacePanel.content.value" v-else-if="!pageDockShown" v-bind="workspacePanel.contentProps.value" /></WorkspaceSidePanel>
         </div>

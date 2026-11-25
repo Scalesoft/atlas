@@ -99,7 +99,17 @@ function reset() {
 let controller: MarkdownEditorController<"rich"> | null = null;
 function dispatch(command: MarkdownCommand) { controller?.dispatch(command); }
 function created(instance: MarkdownEditorController<"rich">) { controller = instance; }
-defineExpose({ reset, submit, dispatch });
+/** Starts the field with a quote (`quoteMarkdown`) above what is typed, the caret in the empty line below it: the page's selection asked for the discussion. */
+async function quote(markdown: string) {
+  if (!markdown) return;
+  const typedNow = typed();
+  draft.value = boardTextDocument(typedNow.startsWith(markdown.trimEnd()) ? typedNow : `${markdown}${typedNow}`);
+  await nextTick();
+  const field = form.value && await focusWhenPresent(form.value, '[contenteditable="true"]') ? form.value.querySelector('[contenteditable="true"]') : null;
+  // The editor follows the document's selection: the caret goes to the end of the text, under the quote.
+  if (field) { const range = document.createRange(); range.selectNodeContents(field); range.collapse(false); const selection = window.getSelection(); selection?.removeAllRanges(); selection?.addRange(range); }
+}
+defineExpose({ reset, submit, dispatch, quote });
 </script>
 
 <template>

@@ -13,6 +13,20 @@ const publication = (extra = {}) => ({ mode: null, spaceMode: "Manual", effectiv
 const checked = (wrapper: { get: (selector: string) => { attributes: (name: string) => string | undefined } }) => wrapper.get("[data-publication-choice] [aria-checked=true]").attributes("data-value");
 const publicationApi = (state = publication()) => ({ get: vi.fn(async () => state as never), set: vi.fn(async (_: string, mode: string | null) => ({ ...state, mode, effective: mode ?? state.spaceMode }) as never) });
 
+describe("PageSidePanel Diskuse", () => {
+  it("shows the page's thread (the one a board has) with the page's own comments and view session", async () => {
+    const api = { page: vi.fn(async () => ({ items: [], hasMore: false, count: 0, canPost: true })), post: vi.fn(), edit: vi.fn(), remove: vi.fn(), counts: vi.fn(async () => ({})) };
+    const views = { open: vi.fn(() => ({ watch: () => () => {}, viewport() {}, presence() {}, close() {} })) };
+    const wrapper = mount(PageSidePanel, { props: { ...base, tab: "comments", commentApi: api, views }, attachTo: document.body });
+    await vi.waitFor(() => expect(wrapper.find("[data-comment-thread]").exists()).toBe(true));
+    await flushPromises();
+    expect(api.page).toHaveBeenCalledWith("p1");
+    expect(views.open).toHaveBeenCalledWith("page:p1");
+    expect(wrapper.find("[data-comment-composer]").exists()).toBe(true);
+    wrapper.unmount();
+  });
+});
+
 describe("PageSidePanel", () => {
   it("shows the publication, lets an editor change it and shows a reader only the state", async () => {
     const api = publicationApi();

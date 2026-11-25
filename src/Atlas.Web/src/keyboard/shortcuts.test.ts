@@ -95,6 +95,18 @@ describe("matching a key press", () => {
     expect(match(press(document.body, "n", { ctrlKey: true }))).toBeUndefined();
   });
 
+  it("opens the page's discussion with Alt C by the physical key, also in the editor, and never with AltGr or another modifier", () => {
+    const match = createShortcutMatcher(appShortcuts);
+    const alt = (target: Element, init: KeyboardEventInit = {}) => press(target, "c", { altKey: true, code: "KeyC", ...init });
+    expect(match(alt(document.body))?.id).toBe("discussion");
+    expect(match(alt(element('<div contenteditable="true"></div>')))?.id).toBe("discussion");
+    expect(match(press(document.body, "ç", { altKey: true, code: "KeyC" }))?.id).toBe("discussion");
+    expect(match(alt(document.body, { ctrlKey: true }))).toBeUndefined();
+    expect(match(alt(document.body, { shiftKey: true }))).toBeUndefined();
+    expect(match(press(document.body, "c", { code: "KeyC" }))).toBeUndefined();
+    expect(chordLabel("Alt+c")).toBe("Alt C");
+  });
+
   it("opens the help with Ctrl+/ outside the editor only", () => {
     const match = createShortcutMatcher(appShortcuts);
     expect(match(press(document.body, "/", { ctrlKey: true }))?.id).toBe("helpAlt");
