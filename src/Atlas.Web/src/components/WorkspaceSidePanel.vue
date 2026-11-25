@@ -5,6 +5,8 @@ import CommandIcon from './CommandIcon.vue';
 import { readStored, writeStored } from '../lib/browserStorage';
 import { animateAtlas, motionMs, prefersReducedMotion } from '../motion/aiMotion';
 import t from "../i18n/components-c";
+import { tablistKeys } from '../keyboard/navigation';
+import { useTabIndicator } from './library/tabIndicator';
 
 /**
  * Non-modal right column of the workspace (Atlas 2.0, D6). The page beside it stays readable,
@@ -19,8 +21,8 @@ import t from "../i18n/components-c";
  *
  * With `tabs` (refresh 2.5, board 03) the header becomes the dock's tab row (Obsah · Asistent · Historie · Přístup);
  * the host decides what each tab shows and receives the choice through `update:activeTab`. The `header` slot then
- * sits under the tabs (the assistant's own title and menu). The active tab's pill slides to the new tab and the
- * content only fades, without moving.
+ * sits under the tabs (the assistant's own title and menu). The active tab's pill slides to the new tab (useTabIndicator,
+ * which measures only the tab row, never the page beside it) and the content only fades, without moving.
  */
 /** `icon` is a CommandIcon name: `ai` draws the AI glyph (aiGlyphBoundary.guard.test.ts), anything else an Atlas icon. */
 export interface WorkspacePanelTab { id: string; label: string; icon?: string }
@@ -115,13 +117,7 @@ watch(host, el => {
   const parent = el?.parentElement;
   if (!parent) return;
   row = parent;
-  let measured = -1;
-  const measure = (size = parent.clientWidth) => {
-    if (size > 0) available.value = size;
-    // The tabs' indicator moves only with the room; read on every resize of the row it forced a layout of the page as editing
-    // started (perf 3.5).
-    if (size !== measured) { measured = size; placeIndicator(); }
-  };
+  const measure = (size = parent.clientWidth) => { if (size > 0) available.value = size; };
   measure();
   // The observer reports the size it saw, without reading the layout again.
   containerObserver = new ResizeObserver(entries => measure(Math.round(entries.at(-1)?.borderBoxSize?.[0]?.inlineSize ?? parent.clientWidth)));
@@ -129,7 +125,7 @@ watch(host, el => {
 }, { flush: 'post' });
 
 watch(() => props.storageKey, () => { width.value = stored(); });
-const onResize = () => { viewport.value = window.innerWidth; available.value = host.value?.parentElement?.clientWidth || viewport.value; placeIndicator(); };
+const onResize = () => { viewport.value = window.innerWidth; available.value = host.value?.parentElement?.clientWidth || viewport.value; };
 const instance = getCurrentInstance();
 onMounted(() => {
   window.addEventListener('resize', onResize);
@@ -145,7 +141,6 @@ onMounted(() => {
     enter(undefined, props.autoFocus ? placesWithoutPanel() : undefined);
     if (props.autoFocus) focusPanel();
   }
-  void nextTick(placeIndicator);
 });
 onBeforeUnmount(() => { window.removeEventListener('resize', onResize); containerObserver?.disconnect(); pageSwap?.disconnect(); stopDrag(); cancelMotion(); tabMotion?.cancel(); });
 
@@ -258,7 +253,6 @@ watch(() => props.open, async (open) => {
     // A panel the owner opens by itself comes with its page (the article of a new page is already laid out here,
     // but was never shown without the panel): nothing travels. A reversed close always continues.
     enter(from, props.autoFocus || from ? places : undefined);
-    placeIndicator();
     if (props.autoFocus) focusPanel();
   } else {
     cancelDrag();
@@ -307,7 +301,6 @@ watch([overlay, effectiveWidth], () => {
   if (overlay.value) cancelDrag();
   cancelPageMotion();
   if (!props.open) { cancelMotion(); rendered.value = false; }
-  void nextTick(placeIndicator);
 }, { flush: 'sync' });
 
 function close() {
@@ -320,27 +313,10 @@ function keydown(event: KeyboardEvent) {
   close();
 }
 
-// Tabs: automatic activation, arrows/Home/End (WAI-ARIA tabs); the pill measures the active tab.
-const indicator = ref<{ left: number; width: number } | null>(null);
-function placeIndicator() {
-  const list = tabList.value;
-  const active = list?.querySelector<HTMLElement>('[role=tab][aria-selected=true]');
-  indicator.value = active ? { left: active.offsetLeft, width: active.offsetWidth } : null;
-}
+// Tabs: automatic activation, arrows/Home/End (WAI-ARIA tabs, tablistKeys); the pill measures the active tab.
+const indicator = useTabIndicator(tabList, '[role=tab][aria-selected=true]', () => [props.activeTab, props.tabs?.map(tab => `${tab.id}${tab.label}`).join()]);
 function select(id: string) { if (id !== props.activeTab) emit('update:activeTab', id); }
-function tabKeys(event: KeyboardEvent) {
-  const tabs = props.tabs ?? [];
-  if (!tabs.length || event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
-  const index = Math.max(0, tabs.findIndex(tab => tab.id === props.activeTab));
-  const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index - 1 + tabs.length) % tabs.length
-    : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1;
-  if (next < 0) return;
-  event.preventDefault();
-  select(tabs[next]!.id);
-  void nextTick(() => [...(tabList.value?.querySelectorAll<HTMLElement>('[role=tab]') ?? [])].find(tab => tab.dataset.tab === tabs[next]!.id)?.focus());
-}
 watch(() => [props.activeTab, props.tabs?.map(tab => tab.id).join()], (current, previous) => {
-  void nextTick(placeIndicator);
   // Only the content fades on a tab change, it never slides (board 16).
   if (previous && current[0] !== previous[0] && body.value) {
     const opacity = tabMotion?.playState === 'running' ? getComputedStyle(body.value).opacity : '0';
@@ -348,7 +324,6 @@ watch(() => [props.activeTab, props.tabs?.map(tab => tab.id).join()], (current, 
     tabMotion = animateAtlas(body.value, [{ opacity }, { opacity: 1 }], { duration: motionMs(body.value, '--atlas-motion-base') });
   }
 }, { flush: 'post' });
-watch(width, () => { void nextTick(placeIndicator); });
 
 // Width: the SidebarResizer drag and keyboard pattern, mirrored (the handle is the left edge).
 let startX = 0, startWidth = 0, preferredBeforeDrag = 0, pointerId: number | undefined;
@@ -399,8 +374,8 @@ function resetWidth() { width.value = fallback.value; persist(); }
         :aria-valuetext="t.sidebarResizer.pixels(effectiveWidth)" :title="t.sidebarResizer.hint"
         @pointerdown="startDrag" @keydown="resizeKeys" @dblclick="resetWidth"><span aria-hidden="true" /></div>
       <header class="workspace-panel-header">
-        <div v-if="tabs" ref="tabList" class="workspace-panel-tabs" role="tablist" :aria-label="tabsLabel" @keydown="tabKeys">
-          <span v-if="indicator" class="workspace-panel-tab-pill" aria-hidden="true" :style="{ transform: `translateX(${indicator.left}px)`, width: `${indicator.width}px` }" />
+        <div v-if="tabs" ref="tabList" class="workspace-panel-tabs" role="tablist" :aria-label="tabsLabel" @keydown="tablistKeys">
+          <span v-if="indicator.shown" class="workspace-panel-tab-pill" :class="{ 'is-ready': indicator.ready }" aria-hidden="true" :style="{ transform: `translateX(${indicator.left}px)`, width: `${indicator.width}px` }" />
           <button v-for="tab in tabs" :id="tabId(tab.id)" :key="tab.id" type="button" role="tab" class="workspace-panel-tab"
             :aria-selected="tab.id === activeTab" :aria-controls="bodyId" :tabindex="tab.id === activeTab ? 0 : -1" :data-tab="tab.id"
             @click="select(tab.id)"><CommandIcon v-if="tab.icon" :name="tab.icon" :size="14" /><span class="workspace-panel-tab-label" :data-label="tab.label">{{ tab.label }}</span></button>
@@ -437,7 +412,9 @@ function resetWidth() { width.value = fallback.value; persist(); }
 .workspace-panel-tab-label { display: inline-flex; flex-direction: column; }
 .workspace-panel-tab-label::after { content: attr(data-label); content: attr(data-label) / ""; height: 0; overflow: hidden; visibility: hidden; font-weight: 650; pointer-events: none; user-select: none; }
 .workspace-panel-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.workspace-panel-tab-pill { position: absolute; top: 50%; left: 0; height: 30px; margin-top: -15px; border-radius: 8px; background: var(--accent-soft); transition: transform var(--atlas-motion-base) var(--atlas-ease-inout), width var(--atlas-motion-base) var(--atlas-ease-inout); }
+.workspace-panel-tab-pill { position: absolute; top: 50%; left: 0; height: 30px; margin-top: -15px; border-radius: 8px; background: var(--accent-soft); }
+/* Placed without motion first (a panel that opens does not slide its pill in from the corner), then it glides. */
+.workspace-panel-tab-pill.is-ready { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout), width var(--atlas-motion-base) var(--atlas-ease-inout); }
 .workspace-panel-subheader { display: flex; flex: none; align-items: center; gap: 8px; min-height: 40px; padding: 4px 12px 4px 16px; border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent); font-weight: 650; }
 .workspace-panel-close { display: grid; flex: none; place-items: center; width: var(--control-h, 36px); height: var(--control-h, 36px); border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out); }
 @media (hover: hover) and (pointer: fine) { .workspace-panel-close:hover { background: var(--accent-soft); color: var(--text); } }
@@ -452,6 +429,6 @@ function resetWidth() { width.value = fallback.value; persist(); }
 .workspace-panel-resizer.is-dragging::before { background: var(--accent); }
 @media (hover: hover) and (pointer: fine) { .workspace-panel-resizer:hover::before { background: var(--accent); } }
 /* Reduced motion: the pill moves at once; the content still fades through animateAtlas. */
-@media (prefers-reduced-motion: reduce) { .workspace-panel-tab-pill { transition-property: opacity; } }
-:global([data-atlas-reduced-motion] .workspace-panel-tab-pill) { transition-property: opacity; }
+@media (prefers-reduced-motion: reduce) { .workspace-panel-tab-pill.is-ready { transition-property: opacity; } }
+:global([data-atlas-reduced-motion] .workspace-panel-tab-pill.is-ready) { transition-property: opacity; }
 </style>

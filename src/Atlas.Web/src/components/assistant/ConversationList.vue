@@ -9,6 +9,7 @@ import LoadingNote from "../settings/LoadingNote.vue";
 import SettingsList from "../settings/SettingsList.vue";
 import SettingsListRow from "../settings/SettingsListRow.vue";
 import { Button } from "../ui/button";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * „Moje konverzace“ (plan §15): the user's own listed conversations, newest first. A conversation that lost a source is listed
@@ -43,7 +44,7 @@ const emit = defineEmits<{ open: [id: string]; more: []; back: []; retry: [] }>(
         </template>
       </SettingsListRow>
     </SettingsList>
-    <Button v-if="hasMore && !error" type="button" variant="ghost" size="sm" :disabled="loading" @click="emit('more')">{{ t.list.more }}</Button>
+    <LoadMoreButton v-if="hasMore && !error" :busy="loading" @click="emit('more')" />
   </section>
 </template>
 

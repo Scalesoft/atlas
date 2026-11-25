@@ -242,3 +242,16 @@ it("opens a field that says it is a button with Space, without scrolling the pag
   expect(event.defaultPrevented).toBe(true);
   expect(name.classes()).toContain("is-editing");
 });
+
+it("draws an internal person (a contact linked to an account) on that user's colour, as the editor's card does; anyone else on the accent", async () => {
+  const { themedUserColor } = await import("../../live/collaboratorColors");
+  wrapper = mount(ContactCard, { attachTo: document.body, props: { contact: { ...jana, directoryId: "u1" } } });
+  const avatar = wrapper.get<HTMLElement>(".contact-avatar");
+  expect(avatar.attributes("data-contact-internal")).toBeDefined();
+  const probe = document.createElement("span");
+  probe.style.background = themedUserColor("u1");
+  expect(avatar.element.style.background).toBe(probe.style.background);
+  expect(avatar.element.style.background).not.toBe("");
+  await wrapper.setProps({ contact: jana });
+  expect([avatar.attributes("data-contact-internal"), avatar.element.style.background]).toEqual([undefined, ""]);
+});

@@ -13,6 +13,7 @@ import LogRow from "./LogRow.vue";
 import { entriesText } from "./logFormat";
 import { rowKeys } from "../../../keyboard/navigation";
 import { TooltipProvider } from "../../ui/tooltip";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * The entries of the server log for a `filter`, newest first (Správa wiki → Systémový log, and the log of one job run): a sized skeleton while
@@ -171,7 +172,7 @@ onMounted(() => void reload());
           </ul>
         </TooltipProvider>
         <span ref="bottom" class="log-sentinel" data-log-bottom aria-hidden="true" />
-        <button v-if="more" type="button" class="st-link log-older" :disabled="loadingOlder" data-log-older @click="loadOlder">{{ loadingOlder ? t.list.loadingOlder : t.list.older }}</button>
+        <LoadMoreButton v-if="more" older class="log-older" :busy="loadingOlder" data-log-older @click="loadOlder" />
       </div>
     </LoadingRegion>
   </div>

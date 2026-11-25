@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { scrollBehavior } from "../../motion/aiMotion";
 import AtlasIcon from "../AtlasIcon.vue";
+import { useTabIndicator } from "../library/tabIndicator";
 import type { SettingsTab } from "./types";
 
 // Parts of one detail page (a vault: Stav, Přístupy, Ochrana, Hesla, Audit) as real links with
@@ -9,20 +10,18 @@ import type { SettingsTab } from "./types";
 // are underlined tabs with words only (boards 07–10); `segmented` is the quieter switch for the parts of one tab
 // (AI → Modely) and keeps its icons. The underline is one element that glides under the current tab (board 16:
 // 200 ms, the move curve); it is placed without motion first. The segmented switch has the same kind of element: the
-// raised segment (a surface with its shadow) glides to the chosen one instead of appearing there.
+// raised segment (a surface with its shadow) glides to the chosen one instead of appearing there. Both are measured by
+// useTabIndicator, the one measuring of every tab row.
 const props = withDefaults(defineProps<{ options: SettingsTab[]; modelValue: string; label: string; variant?: "tabs" | "segmented" }>(), { variant: "tabs" });
 const nav = ref<HTMLElement>();
-const indicator = ref({ left: 0, top: 0, width: 0, height: 2, ready: false, shown: false });
-function place() {
-  const current = nav.value?.querySelector<HTMLElement>('a[aria-current="page"]');
-  if (!current) { indicator.value = { ...indicator.value, shown: false }; return; }
-  // The underline sits on the bottom 2 px of the tab, which overlaps the line of the bar by 1 px; the segment covers its link.
-  indicator.value = props.variant === "tabs"
-    ? { left: current.offsetLeft, top: current.offsetTop + current.offsetHeight - 2, width: current.offsetWidth, height: 2, ready: indicator.value.ready, shown: true }
-    : { left: current.offsetLeft, top: current.offsetTop, width: current.offsetWidth, height: current.offsetHeight, ready: indicator.value.ready, shown: true };
-  if (!indicator.value.ready) requestAnimationFrame(() => { indicator.value = { ...indicator.value, ready: true }; });
-  reveal(current);
-}
+const CURRENT = 'a[aria-current="page"]';
+const indicator = useTabIndicator(nav, CURRENT, () => [props.modelValue, props.variant, props.options.map((item) => `${item.id}${item.count ?? ""}${item.label}`).join("|")]);
+// The underline sits on the bottom 2 px of the tab, which overlaps the line of the bar by 1 px; the segment covers its link.
+const box = computed(() => {
+  const { left, top, width, height } = indicator.value;
+  return props.variant === "tabs" ? { left, top: top + height - 2, width, height: 2 } : { left, top, width, height };
+});
+watch(indicator, () => { const current = nav.value?.querySelector<HTMLElement>(CURRENT); if (current) reveal(current); });
 /** A phone scrolls the tabs sideways (below): the current one is scrolled into the bar, with a little of its neighbour, so
  * opening a later part (Činnost) does not leave its tab, and only a stub of its underline, past the edge. The bar scrolls
  * itself, never the page; the first placement is instant, later ones glide unless motion is reduced. */
@@ -37,17 +36,6 @@ function reveal(current: HTMLElement) {
   if (typeof bar.scrollTo === "function") bar.scrollTo({ left, behavior: indicator.value.ready ? scrollBehavior(bar) : "auto" });
   else bar.scrollLeft = left;
 }
-let observer: ResizeObserver | undefined;
-onMounted(() => {
-  place();
-  if (typeof ResizeObserver === "function" && nav.value) {
-    observer = new ResizeObserver(() => place());
-    observer.observe(nav.value);
-  }
-  void document.fonts?.ready.then(place);
-});
-onBeforeUnmount(() => observer?.disconnect());
-watch(() => [props.modelValue, props.variant, props.options.map((item) => `${item.id}${item.count ?? ""}${item.label}`).join("|")], () => void nextTick(place));
 </script>
 
 <template>
@@ -55,7 +43,7 @@ watch(() => [props.modelValue, props.variant, props.options.map((item) => `${ite
     <a v-for="item in options" :key="item.id" :href="item.href" :aria-current="modelValue === item.id ? 'page' : undefined" :data-tab="item.id">
       <AtlasIcon v-if="variant === 'segmented'" :name="item.icon" :size="15" />{{ item.label }}<span v-if="item.count !== undefined" class="settings-tab-count">{{ item.count }}</span>
     </a>
-    <span class="settings-tabs-indicator" :class="{ 'is-ready': indicator.ready }" :data-shown="indicator.shown || undefined" :style="{ width: `${indicator.width}px`, height: `${indicator.height}px`, transform: `translate(${indicator.left}px, ${indicator.top}px)` }" aria-hidden="true" />
+    <span class="settings-tabs-indicator" :class="{ 'is-ready': indicator.ready }" :data-shown="indicator.shown || undefined" :style="{ width: `${box.width}px`, height: `${box.height}px`, transform: `translate(${box.left}px, ${box.top}px)` }" aria-hidden="true" />
   </nav>
 </template>
 

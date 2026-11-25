@@ -521,8 +521,8 @@ for (const combo of combos) {
       // Účet a vzhled (board 12), so the way out is another section.
       page.on('dialog', (dialog) => { throw new Error(`Native dialog: ${dialog.message()}`); });
       if (combo.device === 'mobile') {
-        await page.getByRole('button', { name: /Sekce/ }).click();
-        await page.getByRole('dialog', { name: 'Sekce' }).getByRole('link', { name: 'Zabezpečení' }).click();
+        await page.getByRole('button', { name: 'Zobrazit boční navigaci', exact: true }).click();
+        await page.locator('#atlas-settings-rail').getByRole('link', { name: 'Zabezpečení' }).click();
       } else await page.locator('.settings-sidebar-rail [data-path="/profile/security"]').click();
       const leave = page.getByRole('dialog', { name: 'Neuložené změny' });
       await expect(leave).toBeVisible();

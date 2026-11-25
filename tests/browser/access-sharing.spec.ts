@@ -143,11 +143,11 @@ test("space settings manages anonymous sharing from the keyboard on mobile", asy
   await page.goto("/#/spaces/space");
   await page.getByRole("button", { name: "Akce prostoru: Vývoj", exact: true }).click();
   await page.getByRole("menuitem", { name: "Nastavení prostoru", exact: true }).click();
-  // Nastavení prostoru is a page; on a phone its sections are in the "Sekce" sheet, as real links.
+  // Nastavení prostoru is a page; its sections are real links in the left panel (a drawer on a phone).
   await expect(page).toHaveURL(/#\/spaces\/space\/settings\/general$/);
   const dialog = page.locator("[data-settings-host]");
-  await dialog.getByRole("button", { name: /Sekce/ }).click();
-  const sharing = page.getByRole("dialog", { name: "Sekce" }).getByRole("link", { name: "Sdílení", exact: true });
+  await page.getByRole("button", { name: "Zobrazit boční navigaci", exact: true }).click();
+  const sharing = page.locator("#atlas-settings-rail").getByRole("link", { name: "Sdílení", exact: true });
   await sharing.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/#\/spaces\/space\/settings\/sharing$/);

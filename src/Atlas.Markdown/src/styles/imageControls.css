@@ -70,7 +70,7 @@
 .md-image-more .md-context-popover-body { padding: 5px; }
 .md-image-more .md-image-menu-action { width: 100%; }
 .md-image-menu-action svg { width: var(--icon-sm, 16px); height: var(--icon-sm, 16px); flex-shrink: 0; color: var(--text-dim, #49676e); }
-.md-image-menu-separator { height: 1px; margin: 5px 9px; background: var(--line, #d4e4e7); }
+.md-image-menu-separator, .md-suggestion-list .sep { height: 1px; margin: 5px 9px; background: var(--line, #d4e4e7); }
 .md-image-menu-action.danger svg { color: inherit; }
 .md-image-menu-action.danger:hover { background: color-mix(in srgb, var(--red, #b83e46) 8%, transparent); }
 .md-image-more .md-image-menu-action.danger { color: var(--red, #b83e46); }

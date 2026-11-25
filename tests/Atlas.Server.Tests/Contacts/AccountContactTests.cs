@@ -50,6 +50,9 @@ public sealed class AccountContactTests
 
         // (a) exactly one contact of the address: linked, the account in its directoryId.
         Assert.Equal(a.ToString(), await DirectoryIdAsync(f, jana));
+        // The live contact a page and a board draw carries that account: both cards colour the internal person by it (D7).
+        var live = (await f.As<LiveContactsResult>(f.Reader, new LiveContacts([jana]))).Items[jana];
+        Assert.Equal(("ok", a.ToString()), (live.State, live.Contact!["directoryId"]!.GetValue<string>()));
         // (b) the same name only and (c) several: offered as pairs when read, not linked.
         Assert.Null(await DirectoryIdAsync(f, petr));
         Assert.Equal($"{b}:{petr}:name", await PairsAsync(f, b));

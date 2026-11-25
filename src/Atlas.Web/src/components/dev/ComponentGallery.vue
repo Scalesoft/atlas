@@ -19,6 +19,7 @@ import { requirementKeymap } from "../../projector/requirementKeymap";
 import InlineRevealExample from "./InlineRevealExample.vue";
 import StubbedPopoverExample from "./StubbedPopoverExample.vue";
 import LoadingSkeleton from "../LoadingSkeleton.vue";
+import LoadMoreButton from "../LoadMoreButton.vue";
 import LoadingRegion from "../LoadingRegion.vue";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -45,6 +46,8 @@ import type { Space } from "../../api";
 import { themeAccents } from "../../profile";
 import AccountStatusBadge from "../settings/people/AccountStatusBadge.vue";
 import PageStatusBadge from "../PageStatusBadge.vue";
+import RelativeTime from "../RelativeTime.vue";
+import { formatDateTime, formatShortDate } from "../../formatDate";
 import PageIcon from "../PageIcon.vue";
 import PageTree from "../PageTree.vue";
 import { resolveTreeInsert, resolveTreeMove, type TreeDrop, type TreePage } from "../../treeMove";
@@ -73,6 +76,8 @@ import StatTile from "../settings/StatTile.vue";
 import ActivityHeatmap from "../ActivityHeatmap.vue";
 import { shiftDay } from "../../activity";
 import OptionPills from "../settings/OptionPills.vue";
+import BulkSelectBar from "../settings/BulkSelectBar.vue";
+import { useBulkSelection } from "../settings/bulkSelection";
 import SearchableTags from "../settings/SearchableTags.vue";
 import SearchField from "../settings/SearchField.vue";
 import AppearancePickerExample from "./AppearancePickerExample.vue";
@@ -164,6 +169,9 @@ const rowName = ref("");
 const checked = ref(true);
 const enabled = ref(true);
 const period = ref("week");
+const viewMode = ref("list");
+const bulkRows = ["Přístupová příručka", "Postup při výpadku", "Noví kolegové"];
+const bulk = useBulkSelection(() => bulkRows);
 const pdfCover = ref<PdfCoverDetail[]>(["revision", "state", "revisionDate"]);
 const pdfDownloadOpen = ref(false);
 const sliderSteps = ["Rychle", "Důkladně", "Do hloubky"];
@@ -314,7 +322,8 @@ const galleryVersions: PageRevisionSummary[] = [
   galleryVersion(2, {}),
 ];
 const resultVisible = ref(true);
-const retried = ref(false);
+const retried = ref(false), loadMoreBusy = ref(false);
+const demoLoadMore = () => { loadMoreBusy.value = true; setTimeout(() => { loadMoreBusy.value = false; }, 1200); };
 // LoadingRegion demo: the first load shows a skeleton, later refreshes keep the rows in place.
 const regionReady = ref(true), regionLoading = ref(false);
 const regionRows = ref(["Provozní řád", "Onboarding"]);
@@ -471,6 +480,16 @@ const steps: FlowStep[] = [
           <label class="gallery-choice"><Switch v-model="enabled" /> Povolit oznámení</label>
           <OptionPills v-model="period" label="Období" :options="[{ value: 'week', label: 'Týden' }, { value: 'month', label: 'Měsíc' }, { value: 'year', label: 'Rok', disabled: true }]" />
         </SettingsSection>
+        <SettingsSection title="OptionPills segmented" description="settings/OptionPills.vue s segmented — tichý vzhled přepínače pohledu (Karty | Seznam, Náhled | Markdown): jeden zvednutý čip klouže na zvolenou volbu. Chování je stejné jako u pilulek. Použijte ho pro přepínání pohledů na stejný obsah; obyčejné pilulky jsou pro nezávislé filtry, SettingsTabs pro části detailu.">
+          <OptionPills v-model="viewMode" segmented label="Pohled" hide-label :options="[{ value: 'list', label: 'Seznam' }, { value: 'cards', label: 'Karty' }]" />
+        </SettingsSection>
+        <SettingsSection title="BulkSelectBar" description="settings/BulkSelectBar.vue + useBulkSelection — jediný hromadný výběr seznamu (Obsah, Schvalování konceptů, Stav obsahu): Notionův model, výběr začíná zaškrtnutím řádku a lišta s počtem a akcemi se rozbalí při prvním zaškrtnutí. Ne pro volbu položek ve formuláři nebo dialogu.">
+          <BulkSelectBar :selection="bulk"><Button size="sm" type="button">Publikovat vybrané</Button></BulkSelectBar>
+          <label v-for="row in bulkRows" :key="row" class="gallery-choice"><Checkbox :model-value="bulk.has(row)" @update:model-value="bulk.toggle(row)" /> {{ row }}</label>
+        </SettingsSection>
+        <SettingsSection title="FormField error" description="FormField.vue s error — sdílená chyba pole mimo nastavení: v nastavení SettingsRow, jinde FormField. Zpráva stojí pod polem (role=alert) a pole ji čte přes aria-describedby.">
+          <FormField label="Název" error="Název je povinný"><template #default="{ describedBy }"><Input model-value="" :aria-describedby="describedBy" aria-invalid="true" /></template></FormField>
+        </SettingsSection>
         <SettingsSection title="PdfCoverDetailsField" description="PdfCoverDetailsField.vue — co titulní strana PDF uvede o revizi; ruční export (Export do PDF) i automatický export (Titulní strana) jedním polem. Předvolby (OptionPills: Všechny údaje, Formální, Bez údajů), jednotlivé údaje zaškrtávátky a vedle živý náhled titulní strany s ukázkovými údaji: zaškrtnutý údaj se do papíru rozvine, odškrtnutý složí, řádek pod ukazatelem či fokusem se na papíře zvýrazní. Samostatná komponenta, protože ji sdílí dva dialogy a náhled patří jen k ní; obecný výběr více voleb → ChoiceCards multiple.">
           <PdfCoverDetailsField v-model="pdfCover" title="Příručka Acme Care" space="Zdravotnictví" />
           <p class="st-muted">Hodnota: {{ pdfCover.length ? pdfCover.join(", ") : "žádné údaje" }}</p>
@@ -546,6 +565,9 @@ const steps: FlowStep[] = [
           <div class="st-actions"><PageStatusBadge :is-published="false" :version="1" :published-version="null" /><PageStatusBadge :is-published="true" :version="2" :published-version="1" /><PageStatusBadge :is-published="true" :version="2" :published-version="2" /></div>
           <div class="st-actions"><AccountStatusBadge :account="{ isActive: true, credentialState: 'active' }" /><AccountStatusBadge :account="{ isActive: true, credentialState: 'pending' }" /><AccountStatusBadge :account="{ isActive: false, credentialState: 'active' }" /></div>
         </SettingsSection>
+        <SettingsSection title="RelativeTime" description="RelativeTime.vue — jedno pravidlo pro datum: řádek seznamu = „před …“ s přesným datem a časem v title (RelativeTime, obnovuje se jednou sdílenou minutovou hodinou), sloupec tabulky = formatShortDate + title, detail nebo dok = formatDateTime. Ručně sestavený čas v řádku seznamu nepsat.">
+          <div class="st-actions"><RelativeTime :value="new Date(Date.now() - 5 * 60_000).toISOString()" /><time :title="formatDateTime('2026-09-07T16:33:00Z')">{{ formatShortDate('2026-09-07T16:33:00Z') }}</time><time>{{ formatDateTime('2026-09-07T16:33:00Z') }}</time></div>
+        </SettingsSection>
         <SettingsSection title="PageIcon + SearchHighlight" description="PageIcon.vue — dekorace stránky. SearchHighlight.vue — bezpečné zvýraznění nalezeného textu.">
           <div class="gallery-choice"><PageIcon :decoration="{ revisionId: 'gallery', icon: 'book-open', color: 'blue' }" /><SearchHighlight text="Provozní dokumentace a návody" query="dokumentace" /></div>
         </SettingsSection>
@@ -570,6 +592,13 @@ const steps: FlowStep[] = [
           <EmptyState title="Zatím žádné položky" text="Zde bude obsah po přidání první položky." icon="folder" />
           <EmptyState inline icon="search" title="Nic neodpovídá hledání. Zkuste jiné slovo." />
           <LoadingSkeleton :rows="2" label="Ukázka načítání" />
+        </SettingsSection>
+        <SettingsSection title="LoadMoreButton" description="LoadMoreButton.vue — jediné tlačítko „Načíst další“ pro seznamy stránkované kurzorem nebo offsetem (D10): bez ikony, běžící načítání je stav busy tlačítka (točítko, zakázané, aria-busy), „Starší…“ (older) jen v historii. U seznamu, který už řádky ukazuje, failed přidá tichou větu „Načtení dalších selhalo“ a tlačítko se stane opakováním. Samo se nenačítá nic; automaticky se dál načítá jen hledání (jeho vlastní hlídač na konci výsledků). Ruční tlačítko ve vlastním stylu místo tohoto je zakázané.">
+          <div class="flex flex-wrap items-start gap-3">
+            <LoadMoreButton :busy="loadMoreBusy" @click="demoLoadMore" />
+            <LoadMoreButton older />
+            <LoadMoreButton failed />
+          </div>
         </SettingsSection>
         <SettingsSection title="HistoryChanges" description="HistoryChanges.vue — změny verze stránky jako vykreslené bloky (Přidáno / Odstraněno / Upraveno se zvýrazněnými slovy), nezměněné bloky sbalené; přepínač Náhled | Markdown. Lišta nejdřív řekne počet změn, počty slov doplní, až je spočítá mimo hlavní vlákno; změny se vykreslují odshora po několika na snímek („Načítám další změny…“), šipky ↑ ↓ na změně nebo na tlačítkách mezi nimi skáčou. Bloky, které se liší jen neviditelně (identita nadpisu, prázdné a výchozí atributy starší revize), se za změnu nepočítají. Použití: historie stránky, schvalování konceptů, karta návrhu konceptu v asistentovi (prop label místo řádku verzí, jen Markdown; ukázka v AssistantPanel, scény Návrh úpravy sekce a Přeformátování).">
           <HistoryChanges :revision="galleryHistoryAfter" :previous="galleryHistoryBefore" />
@@ -653,7 +682,7 @@ const steps: FlowStep[] = [
               @create-page="toast('Nová stránka (jen v galerii).')" @create-board="toast('Nová tabule (jen v galerii).')" @set-collapsed="setGalleryCollapsed" @select="selectedTreePage = $event.id" @toggle-collapsed="toggleGalleryTree" />
           </ul></div>
         </SettingsSection>
-        <SettingsSection title="Strom: odkazové uzly, filtr a nabídka řádku" description="PageTree v SidebarSpace (spec 2026-10-27 §5 a §13). Levé menu se skládá přetažením: kontakt, sekci, požadavek, tabuli nasazení nebo stránku jiného stromu pusťte na řádek (třetiny: před, do, za; tabule a odkaz jsou listy) nebo na řádek prostoru a vznikne odkazový uzel — umístění, ne kopie; Odebrat ze stromu ruší jen odkaz. Uzel nese ikonu typu cíle s malou značkou odkazu, nečitelný cíl zámek bez názvu. Stránka s vlastní tabulí (nasazení) má tichou značku, která tabuli otevře (Ctrl+Enter). Písmeno na řádku otevře filtr (také Ctrl+Shift+F, lupa na dotyku, Najít ve stromu v nabídce prostoru): první shoda je předvybraná, Enter ji otevře, ↑ ↓ vybírají, první Esc napsané smaže, druhý filtr zavře a vrátí rozbalení; bez shody Hledat v celé wiki. Dokud se stránky prostoru načítají, strom drží kostru tří řádků místo holého textu. Nabídka řádku je táž editorová nabídka jako na tabuli (ActionMenu se skupinami) z vyhrazeného „⋯“, pravým tlačítkem, Ctrl+mezerníkem, Alt+Enter, Ctrl+. nebo Shift+F10; Delete koš. Ovládání (docs/interaction-rules.md): řádek je odkaz, takže první klik otevře stránku (jako se na tabuli prvek nejdřív vybere, D1) a úpravu názvu na místě začne F2, dvojklik nebo Přejmenovat v nabídce; Enter nebo klik jinam název uloží, Esc ho vrátí. Přejmenování, přesun a odebrání ukážou oznámení se Zpět (useToast), v ukázce to zkuste. Řadit abecedně (zaškrtávací položka nabídky řádku, pro kořen v nabídce … prostoru) drží přímé podstránky seřazené podle názvů i pro nové, přejmenované a sem přesunuté stránky; řadí server, takže pořadí sdílí web, API i MCP. Úroveň to tiše značí ikonou A–Z u rodiče, jen pro zapisovatele. Ruční přesun v rámci takové úrovně řazení zruší a pořadí ponechá (Abecední řazení zrušeno · Zpět). Přesouvat stránky tažením v téže nabídce (a v profilu) přetahování vypne; přesouvá se pak Přesunout… a Alt+šipkami. Proč ne nový komponent: strom, menu, filtr (SearchField + treeFilter) i přetažení jsou existující díly; nový je jen druh uzlu.">
+        <SettingsSection title="Strom: odkazové uzly, filtr a nabídka řádku" description="PageTree v SidebarSpace (spec 2026-10-27 §5 a §13). Levé menu se skládá přetažením: kontakt, sekci, požadavek, tabuli nasazení nebo stránku jiného stromu pusťte na řádek (třetiny: před, do, za; tabule a odkaz jsou listy) nebo na řádek prostoru a vznikne odkazový uzel — umístění, ne kopie; Odebrat ze stromu ruší jen odkaz. Uzel nese ikonu typu cíle s malou značkou odkazu, nečitelný cíl zámek bez názvu. Stránka s vlastní tabulí (nasazení) má tichou značku, která tabuli otevře (Ctrl+Enter). Písmeno na řádku otevře filtr (také Ctrl+Shift+F, lupa na dotyku, Najít ve stromu v nabídce prostoru): první shoda je předvybraná, Enter ji otevře, ↑ ↓ vybírají, první Esc napsané smaže, druhý filtr zavře a vrátí rozbalení; bez shody Hledat v celé wiki. Dokud se stránky prostoru načítají, strom drží kostru tří řádků místo holého textu. Nabídka řádku je nabídka editoru stránky jako na tabuli (openRowActionsMenu: psaní filtruje, skupiny oddělené čarou) z vyhrazeného „⋯“, pravým tlačítkem, Ctrl+mezerníkem, Alt+Enter, Ctrl+. nebo Shift+F10; Delete koš. Ovládání (docs/interaction-rules.md): řádek je odkaz, takže první klik otevře stránku (jako se na tabuli prvek nejdřív vybere, D1) a úpravu názvu na místě začne F2, dvojklik nebo Přejmenovat v nabídce; Enter nebo klik jinam název uloží, Esc ho vrátí. Přejmenování, přesun a odebrání ukážou oznámení se Zpět (useToast), v ukázce to zkuste. Řadit abecedně (zaškrtávací položka nabídky řádku, pro kořen v nabídce … prostoru) drží přímé podstránky seřazené podle názvů i pro nové, přejmenované a sem přesunuté stránky; řadí server, takže pořadí sdílí web, API i MCP. Úroveň to tiše značí ikonou A–Z u rodiče, jen pro zapisovatele. Ruční přesun v rámci takové úrovně řazení zruší a pořadí ponechá (Abecední řazení zrušeno · Zpět). Přesouvat stránky tažením v téže nabídce (a v profilu) přetahování vypne; přesouvá se pak Přesunout… a Alt+šipkami. Proč ne nový komponent: strom, menu, filtr (SearchField + treeFilter) i přetažení jsou existující díly; nový je jen druh uzlu.">
           <div class="gallery-sidebar-spaces">
             <p class="gallery-caption"><span class="gallery-drag-source" draggable="true" @dragstart="galleryDragContact"><AtlasIcon name="user" :size="14" /> Petr Svoboda — přetáhněte do stromu</span></p>
             <ul class="sidebar-space-list" aria-label="Ukázkový strom s odkazovými uzly">
@@ -703,7 +732,7 @@ const steps: FlowStep[] = [
           <LogsExample />
           <details><summary>Zdroj této sestavy</summary><pre class="gallery-example-source"><code>{{ logsSource }}</code></pre></details>
         </SettingsSection>
-        <SettingsSection title="Koš: TrashList" description="settings/TrashList.vue — jeden seznam koše pro všechny druhy (jednotný koš): Kontakty → Koš, Koš Mého prostoru, Koš stránek prostoru i Koš prostorů ve Správě wiki. Řádek SettingsListRow s ikonou druhu, kdo a kdy; Obnovit: název a Smazat trvale: název. Odebraný řádek se prolne ven a fokus přejde na další, šipky přecházejí mezi řádky. Smazat trvale se vždy potvrzuje (ConfirmDialog, slot #purge říká, co zmizí), u prostoru až po opsání názvu (confirmName). Řádky načítá hostitel (v-model:items); restore vracející false řádek nechá (koš stránek se nejdřív zeptá, kam obnovit). Pro živé položky použijte SettingsList; nový koš nikdy nestavte vlastní. Řádek má také „Co s tím jde dělat“ (P2): na tlačítku řádku Ctrl+mezerník, Alt+Enter, Ctrl+., Shift+F10, klávesa nabídky nebo pravé tlačítko otevře tutéž editorovou nabídku (Obnovit, Smazat trvale) a Esc vrátí klávesnici na řádek. Je to RowActionsMenu (components/RowActionsMenu.vue), sdílený díl všech seznamů řádků (koš, řádek přístupu v Přístupech, adresář kontaktů, Můj prostor): proč ne nabídka stromu — ta je jedna pro celý strom s přetahem a kotví na „⋯“ řádku, řádek seznamu potřebuje jen hostitele pěti gest uvnitř sebe; kreslí ji ActionMenu s `actions`, tedy tak jako nabídku stránky a tabule, i strom stránek: bez nadpisu, dlaždice ikon, tučné názvy, zkratky jako kód a smazání červeně (jedna nabídka, jeden vzhled). Delete a F2 na řádku rovnou provedou položku, která je uvádí jako zkratku, jako ve stromu a na tabuli: tady Delete Smazat trvale (s potvrzením). Na dotyku nabídku nahrazují viditelná tlačítka řádku (žádná akce není jen na najetí).">
+        <SettingsSection title="Koš: TrashList" description="settings/TrashList.vue — jeden seznam koše pro všechny druhy (jednotný koš): Kontakty → Koš, Koš Mého prostoru, Koš stránek prostoru i Koš prostorů ve Správě wiki. Řádek SettingsListRow s ikonou druhu, kdo a kdy; Obnovit: název a Smazat trvale: název. Odebraný řádek se prolne ven a fokus přejde na další, šipky přecházejí mezi řádky. Smazat trvale se vždy potvrzuje (ConfirmDialog, slot #purge říká, co zmizí), u prostoru až po opsání názvu (confirmName). Řádky načítá hostitel (v-model:items); restore vracející false řádek nechá (koš stránek se nejdřív zeptá, kam obnovit). Pro živé položky použijte SettingsList; nový koš nikdy nestavte vlastní. Řádek má také „Co s tím jde dělat“ (P2): na tlačítku řádku Ctrl+mezerník, Alt+Enter, Ctrl+., Shift+F10, klávesa nabídky nebo pravé tlačítko otevře tutéž editorovou nabídku (Obnovit, Smazat trvale) a Esc vrátí klávesnici na řádek. Je to RowActionsMenu (components/RowActionsMenu.vue), sdílený díl všech seznamů řádků (koš, řádek přístupu v Přístupech, adresář kontaktů, Můj prostor): proč ne nabídka stromu — ta je jedna pro celý strom s přetahem a kotví na „⋯“ řádku, řádek seznamu potřebuje jen hostitele pěti gest uvnitř sebe; otevírá ji openRowActionsMenu (boards/canvas/actionsMenuChunk.ts) jako nabídku editoru stránky, tak jako na stránce, na tabuli i ve stromu stránek: bez nadpisu, psaní filtruje řádky, zkratky jako kód, skupiny oddělené čarou a smazání červeně (jedna nabídka, jeden kód). Delete a F2 na řádku rovnou provedou položku, která je uvádí jako zkratku, jako ve stromu a na tabuli: tady Delete Smazat trvale (s potvrzením). Na dotyku nabídku nahrazují viditelná tlačítka řádku (žádná akce není jen na najetí).">
           <TrashList v-model:items="galleryTrash" label="Ukázkový koš" :icon="item => item.icon" :detail="item => item.detail" :restore="async () => {}" :purge="async () => {}"
             :confirm-name="item => item.icon === 'book-open' ? item.title : ''" :loaded="true" empty-text="Všechno je obnovené nebo smazané. Načtěte galerii znovu.">
             <template #purge="{ item }"><p><strong>{{ item.title }}</strong> se smaže natrvalo. <template v-if="item.icon === 'book-open'">U prostoru se nejdřív opisuje název.</template></p></template>

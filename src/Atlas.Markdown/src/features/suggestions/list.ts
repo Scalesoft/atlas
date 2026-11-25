@@ -14,6 +14,10 @@ export interface MarkdownSuggestionItem {
   checked?: boolean
   /** The key that does the same without the menu („Ctrl+Alt+2“), shown at the row's end. */
   shortcut?: string
+  /** Deletes or removes something: a red row. */
+  destructive?: boolean
+  /** A line above the row parts its group from the rows before (not above the first row). */
+  separated?: boolean
 }
 export type SuggestionStatus = 'idle' | 'loading' | 'ready' | 'error'
 let nextList = 0
@@ -78,7 +82,8 @@ export function createSuggestionList(options: {
       if (!next.length) { status('ready'); return }
       rows = next.map((item, index) => {
         const row = doc.createElement('button'); row.type = 'button'; row.tabIndex = -1
-        row.className = 'row'; row.id = `${element.id}-opt-${index}`; row.setAttribute('role', 'option')
+        if (item.separated && index) { const line = doc.createElement('div'); line.className = 'sep'; line.setAttribute('aria-hidden', 'true'); element.append(line) }
+        row.className = item.destructive ? 'row danger' : 'row'; row.id = `${element.id}-opt-${index}`; row.setAttribute('role', 'option')
         row.setAttribute('aria-disabled', String(!!item.disabled)); row.disabled = !!item.disabled
         const icon = doc.createElement('span'); icon.className = 'ic'; icon.setAttribute('aria-hidden', 'true')
         let avatarUrl = ''

@@ -22,12 +22,12 @@ const spaces = [{ id: "hp", color: "violet" }, { id: "runbooks", color: "coral" 
 
 <template>
   <div class="settings-ui settings-people-example" data-settings-people-example>
-    <p class="st-note">PersonPeek (people/PersonPeek.vue, soukromá část stránky Lidé): na širokém displeji otevře klik na jméno v tabulce lidí náhled vedle tabulky – stav, skupiny a přístup k prostorům – a vede do plné karty člověka (Přístupy, Účet, Skupiny, Tokeny, Činnost). Změny se dělají jen na kartě; jméno zůstává odkazem na kartu pro novou kartu prohlížeče, klávesnici i úzké displeje. Pro plný přehled přístupů je PrincipalAccessEditor na kartě.</p>
+    <p class="st-note">PersonPeek (people/PersonPeek.vue, soukromá část stránky Lidé): klik na jméno v tabulce lidí ho ukáže v postranním panelu (WorkspaceSidePanel, adresa ?osoba=) – stav, skupiny a přístup k prostorům – a vede do plné karty člověka (Přístupy, Účet, Skupiny, Tokeny, Činnost). Změny se dělají jen na kartě; jméno zůstává odkazem na kartu pro novou kartu prohlížeče, klávesnici i úzké displeje. Pro plný přehled přístupů je PrincipalAccessEditor na kartě.</p>
     <div class="settings-people-example-peek"><PersonPeek :account="account" current-user-id="u-other" :spaces="spaces" :preview="preview" /></div>
   </div>
 </template>
 
 <style scoped>
 .settings-people-example { display: grid; gap: 14px; }
-.settings-people-example-peek { max-width: 360px; }
+.settings-people-example-peek { max-width: 360px; border: 1px solid var(--line); border-radius: var(--st-radius); background: var(--surface); }
 </style>

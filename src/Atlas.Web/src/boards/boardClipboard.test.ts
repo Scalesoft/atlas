@@ -19,6 +19,15 @@ describe("board clipboard (interaction spec §3.2)", () => {
     expect(copyPayload([note("a")], [])).toBeNull();
   });
 
+  it("D12: writes a block's or a contact card's Markdown as their plain text, which a page pastes as the component", () => {
+    const block: BoardViewItem = { id: "b", kind: "block", x: 0, y: 0, width: 300, height: 120, z: 1, props: { block: { type: "contactCard" } } };
+    const fence = "```a-contact\n- name: Jana\n```";
+    const markdown = (item: BoardViewItem) => (item.kind === "block" ? fence : undefined);
+    expect(copyPayload([note("a"), block], ["a", "b"], markdown)!.text).toBe(`a\n\n${fence}`);
+    // Without Markdown (the relations graph, a block whose projection failed) the plain text stays as before.
+    expect(copyPayload([note("a"), block], ["a", "b"])!.text).toBe("a");
+  });
+
   it("pastes as new items centred where it goes, on top, with the connectors joined to the copies", () => {
     counter = 0;
     const copied = readPayload(copyPayload([note("a"), note("b", { x: 300, z: 4 }), link("c", "a", "b")], ["a", "b"])!.json)!;

@@ -1,7 +1,8 @@
 // „Řadit abecedně“ in the row menu and „Přesouvat stránky tažením“ (3.6): the server sorts; the tree offers the switch and marks the level.
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import PageTree from "./PageTree.vue";
+import { loadActionsMenu } from "./boards/canvas/actionsMenuChunk";
 import type { TreePage } from "../treeMove";
 
 const node = (id: string, parentId: string | null = null, extra: Partial<TreePage> = {}): TreePage =>
@@ -9,6 +10,8 @@ const node = (id: string, parentId: string | null = null, extra: Partial<TreePag
 const pages = [node("hub", null, { childrenByTitle: true }), node("alfa", "hub"), node("plain"), node("board", null, { type: "board", version: 0 })];
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
 afterEach(() => { document.body.replaceChildren(); });
+beforeAll(async () => { await loadActionsMenu(); });
+const sortRow = () => [...document.querySelectorAll<HTMLElement>("[data-testid=intentions] [role=option]")].find(item => item.textContent?.includes("Řadit abecedně"));
 
 describe("sorting a level by title", () => {
   it("offers a checkable „Řadit abecedně“ on a page, ticked while its children are sorted, and reports the choice", async () => {
@@ -16,10 +19,8 @@ describe("sorting a level by title", () => {
     // Reachable from the keyboard as every other row action: Shift+F10 on the row.
     await app.get('[data-tree-item="hub"]').trigger("keydown", { key: "F10", shiftKey: true });
     await tick();
-    const item = document.querySelector<HTMLElement>('[data-tree-action="sortByTitle"]')!;
-    expect(item.getAttribute("role")).toBe("menuitemcheckbox");
+    const item = sortRow()!;
     expect(item.getAttribute("aria-checked")).toBe("true");
-    expect(item.textContent).toContain("Řadit abecedně");
     item.click();
     await tick();
     expect(app.emitted("action")).toEqual([["sortByTitle", expect.objectContaining({ id: "hub" })]]);
@@ -29,7 +30,7 @@ describe("sorting a level by title", () => {
     const other = mount(PageTree, { props: { pages, canReorder: true, menu: true }, attachTo: document.body });
     await other.get('[data-tree-row="plain"] [data-tree-more]').trigger("click");
     await tick();
-    expect(document.querySelector('[data-tree-action="sortByTitle"]')!.getAttribute("aria-checked")).toBe("false");
+    expect(sortRow()!.hasAttribute("aria-checked")).toBe(false);
     other.unmount();
   });
 
@@ -39,7 +40,7 @@ describe("sorting a level by title", () => {
     expect(writer.find('[data-tree-item="plain"] [data-tree-sorted]').exists()).toBe(false);
     await writer.get('[data-tree-row="board"] [data-tree-more]').trigger("click");
     await tick();
-    expect(document.querySelector('[data-tree-action="sortByTitle"]')).toBeNull();
+    expect(sortRow()).toBeUndefined();
     writer.unmount();
     document.body.replaceChildren();
 
@@ -47,7 +48,7 @@ describe("sorting a level by title", () => {
     expect(reader.find("[data-tree-sorted]").exists()).toBe(false);
     await reader.get('[data-tree-row="hub"] [data-tree-more]').trigger("click");
     await tick();
-    expect(document.querySelector('[data-tree-action="sortByTitle"]')).toBeNull();
+    expect(sortRow()).toBeUndefined();
     reader.unmount();
   });
 

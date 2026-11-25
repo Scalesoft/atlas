@@ -7,6 +7,10 @@ import { documentHeadings, goToHeading, sectionCount, usePageOutline, type PageO
 import AtlasIcon from "./AtlasIcon.vue";
 import { atlasPageSectionDragType, pageSectionPayload } from "../boards/boardDrop";
 import { listKeys } from "../keyboard/navigation";
+import { type DraggedObject } from "../boards/boardDrop";
+import objects from "../i18n/components-objects";
+import RowActionsMenu from "./RowActionsMenu.vue";
+import AddToTreeDialog from "./objects/AddToTreeDialog.vue";
 
 /**
  * „Na této stránce“ (refresh 2.5): the headings of the open page as in-page navigation. The page dock shows the list
@@ -104,6 +108,11 @@ function dragSection(heading: PageOutlineHeading, event: DragEvent) {
   event.dataTransfer.setData(atlasPageSectionDragType, pageSectionPayload(props.pageId, heading.headingId));
   event.dataTransfer.setData("text/uri-list", new URL(`#/pages/${encodeURIComponent(props.pageId)}?heading=${encodeURIComponent(heading.headingId)}`, location.href).href);
 }
+
+/** „Přidat do stromu…“: the section as a reference node (the menu path of dragging the entry onto the tree). */
+const adding = ref<DraggedObject | null>(null);
+const rowMenu = [{ id: "addToTree", label: objects.addToTree.menu, icon: "folder-input" }];
+const addable = (heading: { title: string }) => !standingIn.value && !!props.pageId && !!(heading as PageOutlineHeading).headingId;
 
 function choose(heading: PageOutlineHeading, index: number) {
   keepActive(index);
@@ -207,8 +216,11 @@ watch([headings, active], () => void nextTick(() => { if (!list.value?.contains(
           <button type="button" class="page-outline-entry" :aria-current="!standingIn && index === active ? 'location' : undefined" :data-level="heading.level"
             :draggable="pageId && (heading as PageOutlineHeading).headingId ? 'true' : undefined" @dragstart="dragSection(heading as PageOutlineHeading, $event)"
             @click="choose(heading as PageOutlineHeading, index)">{{ heading.title }}</button>
+          <RowActionsMenu v-if="addable(heading)" :items="rowMenu" :label="objects.addToTree.rowActions(heading.title)"
+            @select="adding = { id: pageId!.toLowerCase(), typeId: 'atlas.page', title: heading.title, anchor: (heading as PageOutlineHeading).headingId }" />
         </li>
       </ol>
+      <AddToTreeDialog :open="!!adding" :object="adding" @close="adding = null" />
     </nav>
   </Transition>
 </template>

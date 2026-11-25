@@ -20,11 +20,11 @@ Motion uses tokens only (`--atlas-motion-*`) and reduced motion is respected eve
 | Loading | `LoadingSkeleton`, `LoadingRegion`, `LoadingNote`; `ui/button busy` for actions | Show at once with a sized skeleton; no hand-made spinners or bare "Načítání...". |
 | Empty / error | `EmptyState`, `ErrorState` with Retry; `.notice.error` plus link button in compact rows | A failed region offers Retry. |
 | List of items | `SettingsList` + `SettingsListRow`, `TrashList`; columns: `ui/table` or `div role=table` | Arrow keys between rows; Delete and F2 act on the row. |
-| Bulk selection | `ui/checkbox` appearing on hover or focus; bar above the list | Start by ticking, no separate "Vybrat" mode. |
+| Bulk selection | `settings/BulkSelectBar` + `useBulkSelection` (`ui/checkbox` on hover or focus; Space via `rowKeys`); bar above the list | Start by ticking, no separate "Vybrat" mode. |
 | Search field / picker (P8) | `SearchField` in app chrome, `md-input` in editor and board panels; `useSearchKeys` | First result preselected; Enter takes it; first Esc clears, second closes. |
 | View switch / tabs | `OptionPills`, `SettingsTabs`, dock tabs | Radiogroup: one Tab stop, arrows select. Board dock tabs follow the page order. |
 | Status / date / person | `StatusBadge` (icon plus word); `formatDate.ts`; `SubjectAvatar` | Date: list row "ago" plus exact title; table column short date plus title; detail date and time. Every user in their own colour. |
 | Load more | `LoadMoreButton`, "Načíst další" | Automatic only in search. |
-| Discussion | `PageDiscussionButton` + `CommentThread` in the dock | Pages and boards alike; phone: page below content, board in the dock. |
+| Discussion | `PageDiscussionButton` + `CommentThread` in the dock | Pages and boards alike; phone: page below content, board in the dock. One board item: „Diskuse“ in its actions menu, as an object's. |
 | Who else edits now | `CollaboratorAvatars` in the top bar, before Diskuse | Pages and boards alike: everyone with the document open to edit (page: its Yjs awareness; board: a heartbeat on its view session `board:{id}`), a click goes to their pointer. Avatars on a board card say who edits that card's object, not the board. |
 | Contact card | Editor block and `ContactCard` render the same data | Change one, check the other. |

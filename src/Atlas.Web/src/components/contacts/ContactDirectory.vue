@@ -33,6 +33,7 @@ import SkillExperts from "./SkillExperts.vue";
 import type { SkillApi } from "../../contacts/skillApi";
 import type { ContactApi } from "../../contacts/contactApi";
 import "../settings/settings.css";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * Knihovna → Kontakty (objects spec §2.3): the wiki's contact directory. Every contact once, whether a page or a board shows it or
@@ -279,7 +280,7 @@ function merged(id: string) { store.value.revoke(id); restored.value = true; }
       </TransitionGroup>
       <footer v-if="rows.length" class="contact-directory-footer">
         <p class="help" role="status">{{ t.directory.count(rows.length, total) }}</p>
-        <Button v-if="total > ids.length" variant="outline" type="button" :disabled="loading" :aria-busy="loading" data-contact-more @click="more"><AtlasIcon name="refresh" :size="16" />{{ t.directory.more }}</Button>
+        <LoadMoreButton v-if="total > ids.length" :busy="loading" data-contact-more @click="more" />
       </footer>
       <ConfirmDialog :open="!!trashing && used !== 0" :title="t.directory.trashDialog" :confirm-label="t.directory.moveToTrash" confirm-icon="trash" :busy="trashBusy" :error="trashError"
         @confirm="trash" @cancel="trashing = null">

@@ -17,6 +17,7 @@ const en: BoardsMessages = {
     removeFromBoard: "Remove from board",
     delete: { title: "Delete", words: ["remove", "delete"] },
     openDetail: { title: "Open detail", words: ["detail", "relations", "description"] },
+    comments: { title: "Discussion", words: ["comments", "comment", "discuss"] },
     settings: { title: "Board settings", words: ["background", "grid", "snapping", "timeline"] },
     boardDetail: { title: "Board detail", words: ["detail", "relations"] },
     note: { title: "Note", words: ["sticky", "idea"] },

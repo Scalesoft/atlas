@@ -28,7 +28,6 @@ const cs = {
     openBoardOf: (title: string) => `Otevřít tabuli nasazení stránky ${title}`,
     deploymentBoard: "Tabule nasazení",
     actionsOf: (title: string) => `Akce: ${title}`,
-    actions: "Akce",
   },
   badge: {
     draft: "Koncept",

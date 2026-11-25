@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { api, ApiError, errorMessage, type Appearance, type Page } from '../api';
 import { historyApi, type PageRevision } from '../history';
+import BulkSelectBar from './settings/BulkSelectBar.vue';
+import { useBulkSelection } from './settings/bulkSelection';
 import EmptyState from './settings/EmptyState.vue';
 import ErrorState from './settings/ErrorState.vue';
 import FilterMenu from './settings/FilterMenu.vue';
@@ -17,11 +19,14 @@ import LoadingNote from './settings/LoadingNote.vue';
 import OptionPills from './settings/OptionPills.vue';
 import t from '../i18n/components-spaces';
 import { Button } from './ui/button';
+import { Checkbox } from './ui/checkbox';
+import { rowKeys } from '../keyboard/navigation';
 import ChangeSummaryField from './publishing/ChangeSummaryField.vue';
 import { approveRequest, normalizeChangeSummary } from '../publishing/publication';
 import { createPresenceRoster } from '../live/objectPresence';
 import { viewSessions } from '../live/viewSession';
 import { locale } from '../i18n';
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 interface Draft {
   id: string;
@@ -45,7 +50,6 @@ const query = ref('');
 const appliedQuery = ref('');
 const authorId = ref('');
 const kind = ref<Kind>('all');
-const selected = ref<string[]>([]);
 const loading = ref(false), loadingMore = ref(false), busy = ref(false), loaded = ref(false);
 const requiresReload = ref(false);
 const listError = ref(''), failure = ref<Record<string, string>>({});
@@ -84,7 +88,9 @@ watch(() => previewItem.value?.id, id => {
 let disposed = false, listGeneration = 0, previewGeneration = 0;
 let listAbort: AbortController | undefined, previewAbort: AbortController | undefined;
 const eligible = computed(() => items.value.filter(item => !failure.value[item.id]));
-const selection = computed(() => eligible.value.filter(item => selected.value.includes(item.id)));
+// The selection (BulkSelectBar, the same in every list) holds only rows whose approval has not failed.
+const selection = useBulkSelection(() => eligible.value.map(item => item.id));
+const chosen = computed(() => eligible.value.filter(item => selection.has(item.id)));
 const authors = computed(() => {
   return Object.entries(knownAuthors.value).sort((a, b) => a[1].localeCompare(b[1], locale));
 });
@@ -114,7 +120,7 @@ async function load(more = false) {
   const controller = new AbortController();
   listAbort = controller;
   if (more) loadingMore.value = true;
-  else { closePreview(); loading.value = true; selected.value = []; failure.value = {}; renewed.value = {}; confirming.value = false; completed.value = 0; attempted.value = 0; }
+  else { closePreview(); loading.value = true; selection.clear(); failure.value = {}; renewed.value = {}; confirming.value = false; completed.value = 0; attempted.value = 0; }
   listError.value = '';
   try {
     const response = await api<{ items: Draft[]; total: number; authors?: { id: string; name: string }[] }>(listPath(more ? items.value.length : 0), { signal: controller.signal });
@@ -134,11 +140,8 @@ async function load(more = false) {
 function applyFilters() {
   if (busy.value) return;
   appliedQuery.value = query.value.trim();
-  selected.value = [];
+  selection.clear();
   void load();
-}
-function toggleAll(event: Event) {
-  selected.value = (event.target as HTMLInputElement).checked ? eligible.value.map(item => item.id) : [];
 }
 function closePreview() {
   previewGeneration++; previewAbort?.abort(); previewItem.value = undefined;
@@ -169,14 +172,14 @@ async function showPreview(item: Draft) {
   }
 }
 function reviewSelection() {
-  if (!busy.value && !loading.value && !loadingMore.value && !requiresReload.value && selection.value.length) confirming.value = true;
+  if (!busy.value && !loading.value && !loadingMore.value && !requiresReload.value && chosen.value.length) confirming.value = true;
 }
 async function approve() {
-  if (disposed || busy.value || loading.value || loadingMore.value || requiresReload.value || !confirming.value || !selection.value.length || summaryCheck.value.error) return;
+  if (disposed || busy.value || loading.value || loadingMore.value || requiresReload.value || !confirming.value || !chosen.value.length || summaryCheck.value.error) return;
   const summary = summaryCheck.value.value;
   // Snapshot each selected row so an intervening list update never changes the reviewed revision.
   const batchSpace = props.spaceId;
-  const batch = selection.value.map(item => ({ ...item }));
+  const batch = chosen.value.map(item => ({ ...item }));
   listGeneration++; listAbort?.abort();
   confirming.value = false; busy.value = true;
   failure.value = {}; completed.value = 0; attempted.value = 0;
@@ -192,7 +195,7 @@ async function approve() {
         completed.value++;
         items.value = items.value.filter(row => row.id !== item.id);
         total.value = Math.max(0, total.value - 1);
-        selected.value = selected.value.filter(id => id !== item.id);
+        selection.toggle(item.id, false);
         if (previewItem.value?.id === item.id) closePreview();
       } catch (reason) {
         if (disposed || props.spaceId !== batchSpace) break;
@@ -200,7 +203,7 @@ async function approve() {
         failure.value = { ...failure.value, [item.id]: stale
           ? t.approval.staleFailure(item.title, errorMessage(reason))
           : t.approval.uncertainFailure(item.title, errorMessage(reason)) };
-        selected.value = selected.value.filter(id => id !== item.id);
+        selection.toggle(item.id, false);
         if (!stale) { requiresReload.value = true; break; }
         if (changedAgain(reason)) await reloadRow(batchSpace, item, summary);
       }
@@ -260,11 +263,11 @@ async function approveRenewed() {
   }
 }
 watch(() => props.spaceId, () => {
-  listGeneration++; listAbort?.abort(); closePreview(); selected.value = [];
+  listGeneration++; listAbort?.abort(); closePreview(); selection.clear();
   knownAuthors.value = {}; items.value = []; total.value = 0; loaded.value = false;
   void load();
 });
-watch(query, () => { selected.value = []; confirming.value = false; });
+watch(query, () => { selection.clear(); confirming.value = false; });
 onBeforeUnmount(() => {
   disposed = true; listGeneration++; previewGeneration++; listAbort?.abort(); previewAbort?.abort();
   clearInterval(clock); closeView?.(); roster.dispose();
@@ -285,12 +288,14 @@ void load();
     <template v-if="!listError || loaded">
       <div class="approval-summary">
         <span class="approval-count">{{ loaded ? t.approval.count(items.length, total) : '' }}<LoadingNote inline :active="loaded && loading" :label="t.approval.searching" /></span>
-        <label v-if="eligible.length"><input type="checkbox" :aria-label="t.approval.selectLoadedAria" :checked="selection.length === eligible.length" :disabled="busy || loading || loadingMore" @change="toggleAll" /> {{ t.approval.selectLoaded }}</label>
       </div>
+      <BulkSelectBar class="approval-bulk" :selection="selection" :disabled="busy || loading || loadingMore">
+        <Button size="sm" data-review-selection :disabled="busy || loading || loadingMore || requiresReload" @click="reviewSelection">{{ t.approval.reviewSelection }}</Button>
+      </BulkSelectBar>
       <LoadingRegion :loading="loading" :ready="loaded" :rows="4" row-height="64px" :label="t.approval.loading">
-      <TransitionGroup v-if="items.length" tag="div" name="approval" class="approval-rows atlas-stagger">
-        <article v-for="item in items" :key="item.id" class="approval-row">
-          <label class="approval-check"><input v-model="selected" type="checkbox" :value="item.id" :aria-label="t.approval.select(item.title)" :disabled="busy || !!failure[item.id]" /></label>
+      <TransitionGroup v-if="items.length" tag="div" name="approval" class="approval-rows atlas-stagger" :class="{ 'bulk-selecting': selection.count > 0 }" @keydown="rowKeys($event, '.approval-row')">
+        <article v-for="item in items" :key="item.id" class="approval-row bulk-row">
+          <span class="approval-check"><Checkbox :model-value="selection.has(item.id)" class="bulk-box" :aria-label="t.approval.select(item.title)" :disabled="busy || !!failure[item.id]" @update:model-value="selection.toggle(item.id)" /></span>
           <div class="approval-identity"><strong>{{ item.title }}</strong><small>{{ item.authorName }} · {{ formatDateTime(item.changedAt) }} · v{{ item.version }}</small></div>
           <span class="approval-kind">{{ item.publishedRevisionId ? t.approval.kindChanges : t.approval.kindNew }}</span>
           <span v-if="beingEdited(item)" class="approval-live" data-being-edited>{{ t.approval.beingEdited }}</span>
@@ -299,15 +304,14 @@ void load();
         </article>
       </TransitionGroup>
       <EmptyState v-else icon="circle-check" :title="t.approval.noDrafts" :text="t.approval.noDraftsText" />
-      <Button v-if="hasMore" variant="outline" :aria-busy="loadingMore" :disabled="loading || loadingMore || busy || confirming || queryPending" @click="load(true)">{{ t.approval.loadMore }}</Button>
+      <LoadMoreButton v-if="hasMore" :busy="loadingMore" :disabled="loading || busy || confirming || queryPending" @click="load(true)" />
       </LoadingRegion>
-      <div class="approval-actions"><span>{{ t.approval.selected(selection.length) }}</span><Button data-review-selection :disabled="!selection.length || busy || loading || loadingMore || requiresReload" @click="reviewSelection">{{ t.approval.reviewSelection }}</Button></div>
       <AppDialog :title="t.approval.confirmTitle" :open="confirming" @close="confirming = false">
         <div class="approval-confirm" role="group" :aria-label="t.approval.confirmLabel">
-        <strong>{{ t.approval.publishQuestion(selection.length) }}</strong>
+        <strong>{{ t.approval.publishQuestion(chosen.length) }}</strong>
         <p>{{ t.approval.confirmText }}</p>
-        <ul><li v-for="item in selection" :key="item.id">{{ item.title }} · v{{ item.version }}</li></ul>
-        <ChangeSummaryField v-model="changeSummary" :error="summaryCheck.error" :disabled="busy" :help="selection.length > 1 ? t.approval.sameSummary : undefined" />
+        <ul><li v-for="item in chosen" :key="item.id">{{ item.title }} · v{{ item.version }}</li></ul>
+        <ChangeSummaryField v-model="changeSummary" :error="summaryCheck.error" :disabled="busy" :help="chosen.length > 1 ? t.approval.sameSummary : undefined" />
         </div>
         <template #footer>
           <Button variant="outline" @click="confirming = false">{{ t.approval.back }}</Button>
@@ -342,11 +346,11 @@ void load();
 .approval-intro { margin-top: 0; color: var(--muted); font-size: 13px; }
 .approval-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 14px 0 10px; }
 .approval-search { flex: 1 1 260px; }
-.approval-summary, .approval-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 4px; color: var(--muted); font-size: 12px; }
+.approval-summary { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 4px; color: var(--muted); font-size: 12px; }
 .approval-summary { border-bottom: 1px solid var(--line); }
+/* The selection stands above the rows, as in every list (BulkSelectBar). */
+.approval-bulk { padding: 8px 4px 0; }
 .approval-count { display: inline-flex; align-items: center; gap: 12px; }
-.approval-summary label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
 /* Rows arrive one after another; an approved row fades away in place and the rest close the gap. */
 .approval-rows { position: relative; }
 .approval-rows > .approval-leave-active { position: absolute; inset-inline: 0; animation: st-fade-out var(--atlas-motion-base) var(--atlas-ease-out) both; pointer-events: none; }
@@ -361,7 +365,6 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
 /* The dialog pads its own content (24 px) and holds its buttons in the footer, as every other dialog does. */
 .approval-confirm p { color: var(--muted); font-size: 12px; }
 .approval-confirm ul { max-height: min(40vh, 320px); overflow: auto; padding-left: 20px; font-size: 13px; }
-.approval-actions { position: sticky; bottom: 0; z-index: 2; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
 .approval-preview { min-width: 0; max-height: min(75vh, 760px); overflow: auto; }
 .approval-preview-tabs { margin-bottom: 12px; }
 @media (max-width: 640px) { .approval-search { flex-basis: 100%; } .approval-row { gap: 8px; } }

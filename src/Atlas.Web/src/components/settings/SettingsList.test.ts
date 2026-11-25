@@ -112,7 +112,7 @@ describe("SettingsList keys and the row menu", () => {
     document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true, cancelable: true }));
     expect(picked).toEqual(["b:remove"]);
     await wrapper.get("[data-id=a] [data-row-more]").trigger("click");
-    await flushPromises();
-    expect(document.querySelector("[data-row-action]")?.textContent).toContain("Odebrat");
+    await vi.waitFor(() => expect(document.querySelector("[data-testid=intentions]")).not.toBeNull());
+    expect(document.querySelector("[data-testid=intentions] [role=option]")?.textContent).toContain("Odebrat");
   });
 });

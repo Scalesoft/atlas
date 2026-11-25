@@ -81,8 +81,8 @@ it("arrows move between rows; a row's „Co s tím jde dělat“ offers every ca
   first.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
   expect(document.activeElement).toBe(rows()[1]!.get("[data-unlinked-link]").element);
   rows()[1]!.element.dispatchEvent(new KeyboardEvent("keydown", { key: ".", ctrlKey: true, bubbles: true }));
-  await flushPromises();
-  expect([...document.querySelectorAll("[data-row-action]")].map(item => item.textContent?.trim()))
+  await vi.waitFor(() => expect(document.querySelector("[data-testid=intentions]")).not.toBeNull());
+  expect([...document.querySelectorAll("[data-testid=intentions] [role=option]")].map(item => item.textContent?.trim()))
     .toEqual(["Propojit: Petr Malý · Modelsoft", "Propojit: Petr Malý ml.", "Nechat textem"]);
 });
 

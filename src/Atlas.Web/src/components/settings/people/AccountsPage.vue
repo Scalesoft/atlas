@@ -24,6 +24,8 @@ import type { ChoiceOption } from "../types";
 import { useSettingsRoute } from "../useSettingsRoute";
 import PersonCard from "./PersonCard.vue";
 import PersonPeek from "./PersonPeek.vue";
+import { useWorkspacePanel } from "../../../composables/useWorkspacePanel";
+import { Table, TableCaption, TableHead, TableHeader, TableRow, TableCell } from "../../ui/table";
 import { outOfReach } from "../../../lib/outOfReach";
 import { foldText } from "../../../lib/foldText";
 import { createLeaveWave, createRowGlide } from "./rowGlide";
@@ -34,6 +36,7 @@ import { accountSourceLabels, accountStatus, accountStatusLabels, type AccountSt
 import InviteAccountWizard from "./InviteAccountWizard.vue";
 import type { InviteDraft } from "./types";
 import "./people.css";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * Nastavení wiki → Kdo → Lidé (wiki administrator only). `sub` is the third path segment:
@@ -249,40 +252,25 @@ const listed = computed(() => {
 // One set per line: the directory's waiting accounts over the whole list, a narrowed list's own beside its own count.
 const narrowed = computed(() => !!search.value.trim() || !!status.value || !!groupFilter.value);
 const pendingCount = computed(() => (narrowed.value ? listed.value.filter((user) => accountStatus(user) === "pending").length : summary.value?.pending ?? 0));
-// The person beside the table (?osoba=): where the list has room for it, a click on a name opens the summary; the name
-// stays a link to the full card for a new tab, the keyboard and narrower lists. The room is the width of the list itself
-// (the application sidebar takes its share), not the screen: 1,040 px leaves the table 680 px beside the 360 px summary.
-const peekMinRoom = 1040;
+// The person in the shared dock (?osoba=): a click on a name opens the summary there; the name stays a link to the full
+// card for a new tab and the keyboard. The address is the state: closing the dock clears it, a deep link opens it.
+const panel = useWorkspacePanel();
 const peekId = computed(() => router.route.value.query.osoba ?? "");
-const layout = ref<HTMLElement>();
-const room = ref(false);
-const peeked = computed(() => (peekId.value && room.value ? users.value.find((user) => user.id === peekId.value) : undefined));
-let layoutObserver: ResizeObserver | undefined;
-const measureRoom = () => (room.value = (layout.value?.clientWidth ?? 0) >= peekMinRoom);
-watch(layout, (element) => {
-  layoutObserver?.disconnect();
-  if (!element) return;
-  measureRoom();
-  if (typeof ResizeObserver === "function") (layoutObserver = new ResizeObserver(measureRoom)).observe(element);
-}, { flush: "post" });
-onBeforeUnmount(() => layoutObserver?.disconnect());
-// The list narrowed (a window, the application sidebar) below the room the summary needs: it closes with its address.
-watch(room, (value, before) => { if (!value && before && peekId.value) closePeek(); });
+const peeked = computed(() => (peekId.value ? users.value.find((user) => user.id === peekId.value) : undefined));
+const peekShown = () => panel.open.value && panel.content.value === PersonPeek;
+watch(peeked, (user) => {
+  if (user) panel.show({ label: user.displayName, content: PersonPeek, props: { account: user, currentUserId: context.userId, spaces: context.spaces }, focus: false });
+  else if (peekShown()) panel.hide();
+}, { immediate: true });
+watch(() => panel.open.value, (open) => { if (!open && peekId.value && panel.content.value === PersonPeek) closePeek(); });
+onBeforeUnmount(() => { if (peekShown()) panel.hide(); });
 function peek(user: DirectoryUser, event: MouseEvent) {
-  if (!room.value || !isPlainNavigationClick(event)) return;
+  if (!isPlainNavigationClick(event)) return;
   event.preventDefault();
   router.setQuery({ ...router.route.value.query, osoba: peekId.value === user.id ? undefined : user.id });
 }
 function closePeek() {
   router.setQuery({ ...router.route.value.query, osoba: undefined });
-}
-// Escape closes the summary from the table or from inside it and hands focus back to the person it showed.
-async function escapePeek(event: KeyboardEvent) {
-  const id = peeked.value?.id;
-  if (!id || event.defaultPrevented) return;
-  closePeek();
-  await nextTick();
-  layout.value?.querySelector<HTMLElement>(`[data-open-account="${id}"]`)?.focus({ preventScroll: true });
 }
 
 // A filter can bring back or take away dozens of rows at once. Vue's own leave classes force a layout of the table for
@@ -356,7 +344,7 @@ function replace(saved: DirectoryUser) {
 
     <template v-else>
       <ErrorState v-if="error" :title="t.accounts.refreshFailed" :text="error" :busy="loading" @retry="load()" />
-      <div ref="layout" class="people-layout" :data-room="room ? 'true' : undefined" :data-peek="peeked ? 'true' : undefined" @keydown.esc="escapePeek">
+      <div class="people-layout">
         <div class="people-main">
           <div class="people-filters-line" role="search" :aria-label="t.accounts.filter">
             <div class="people-search"><SearchField v-model="search" :label="t.accounts.searchLabel" :placeholder="t.accounts.searchPlaceholder" data-account-search /></div>
@@ -365,18 +353,19 @@ function replace(saved: DirectoryUser) {
           </div>
           <p class="people-count" aria-live="polite">{{ t.accounts.count(listed.length, !!more) }}<template v-if="pendingCount"> · {{ t.accounts.awaiting(pendingCount) }}</template></p>
           <div v-if="listed.length" class="people-table-frame">
-            <table class="people-table" :aria-label="t.accounts.tableLabel">
-              <thead>
-                <tr>
-                  <th scope="col">{{ t.accounts.colPerson }}</th>
-                  <th v-if="membershipsLoaded" scope="col" class="people-col-groups">{{ t.accounts.colGroups }}</th>
-                  <th scope="col" class="people-col-state">{{ t.accounts.colState }}</th>
-                  <th scope="col" class="people-col-source">{{ t.accounts.colSource }}</th>
-                </tr>
-              </thead>
-              <TransitionGroup ref="rowsGroup" tag="tbody" name="people-rows" :css="false" @enter="rowEnter" @leave="rowLeave">
-                <tr v-for="user in listed" :key="user.id" :data-account="user.id" :data-new="flash.highlight.value === user.id || undefined" :data-selected="peeked?.id === user.id || undefined">
-                  <th scope="row" class="people-person-cell">
+            <Table class="people-table">
+              <TableCaption class="sr-only">{{ t.accounts.tableLabel }}</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead scope="col">{{ t.accounts.colPerson }}</TableHead>
+                  <TableHead v-if="membershipsLoaded" scope="col" class="people-col-groups">{{ t.accounts.colGroups }}</TableHead>
+                  <TableHead scope="col" class="people-col-state">{{ t.accounts.colState }}</TableHead>
+                  <TableHead scope="col" class="people-col-source">{{ t.accounts.colSource }}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TransitionGroup ref="rowsGroup" tag="tbody" name="people-rows" class="[&_tr:last-child]:border-0" :css="false" @enter="rowEnter" @leave="rowLeave">
+                <TableRow v-for="user in listed" :key="user.id" :data-account="user.id" :data-new="flash.highlight.value === user.id || undefined" :data-selected="peeked?.id === user.id || undefined">
+                  <TableHead scope="row" class="people-person-cell">
                     <span class="people-person">
                     <SubjectAvatar kind="user" :name="user.displayName" :user-id="user.id" size="sm" />
                     <span class="people-name">
@@ -388,37 +377,31 @@ function replace(saved: DirectoryUser) {
                       <span class="people-login">{{ user.username }}</span>
                     </span>
                     </span>
-                  </th>
-                  <td v-if="membershipsLoaded" class="people-col-groups">
+                  </TableHead>
+                  <TableCell v-if="membershipsLoaded" class="people-col-groups">
                     <span class="people-groups">
                       <a v-for="group in (memberships[user.id] ?? []).slice(0, 2)" :key="group.id" class="people-group" :href="router.href(`people/groups/${group.id}`)">{{ group.name }}</a>
                       <span v-if="(memberships[user.id]?.length ?? 0) > 2" class="people-more">+{{ memberships[user.id]!.length - 2 }}</span>
                       <span v-if="!memberships[user.id]?.length" class="people-more" :aria-label="t.accounts.noGroupLabel">—</span>
                     </span>
-                  </td>
-                  <td class="people-col-state">
+                  </TableCell>
+                  <TableCell class="people-col-state">
                     <span class="people-state">
                       <AccountStatusBadge v-if="accountStatus(user) !== 'active'" :account="user" />
-                      <span v-else class="people-active"><span class="people-active-dot" aria-hidden="true" />{{ t.accounts.active }}</span>
+                      <StatusBadge v-else tone="success" dot :label="t.accounts.active" size="sm" />
                       <StatusBadge v-if="waiting(user)" tone="warning" icon="user-check" :label="t.accounts.requestWaiting(waiting(user))" size="sm" data-account-requests />
                     </span>
-                  </td>
-                  <td class="people-col-source">{{ accountSourceLabels[user.source].label }}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell class="people-col-source">{{ accountSourceLabels[user.source].label }}</TableCell>
+                </TableRow>
               </TransitionGroup>
-            </table>
+            </Table>
           </div>
           <EmptyState v-else-if="users.length || search.trim()" compact icon="search" :title="users.length ? t.accounts.noneMatch(users.length) : t.accounts.nobodyMatches" :text="t.accounts.tryOther" />
           <EmptyState v-else compact icon="account" :title="t.accounts.emptyTitle" :text="t.accounts.emptyText" />
           <div v-if="more" class="st-actions">
-            <Button variant="outline" type="button" :disabled="loadingMore" data-more-accounts @click="loadMore"><AtlasIcon :name="loadingMore ? 'loader-circle' : 'plus'" :size="16" :class="{ 'atlas-spinner': loadingMore }" />{{ t.common.loadMore }}</Button>
+            <LoadMoreButton :busy="loadingMore" data-more-accounts @click="loadMore" />
           </div>
-        </div>
-        <!-- The slot is always there: its column opens and closes with the summary, and the summary leaves into it. -->
-        <div class="people-peek-slot">
-          <Transition name="st-fade">
-            <PersonPeek v-if="peeked" :key="peeked.id" class="people-peek" :account="peeked" :current-user-id="context.userId" :spaces="context.spaces" @close="closePeek" />
-          </Transition>
         </div>
       </div>
     </template>
@@ -426,21 +409,11 @@ function replace(saved: DirectoryUser) {
 </template>
 
 <style scoped>
-/* The summary has a column of its own that opens from 0 to 360 px (20 px of it the gap) and closes again, so the table
-   glides narrower instead of jumping; `1fr` and not minmax(0, 1fr), which does not interpolate. Without the room
-   (`data-room`) the column is not there at all and a click on a name opens the card. */
-.people-layout { display: grid; grid-template-columns: 1fr; align-items: start; min-width: 0; }
-.people-layout[data-room] { grid-template-columns: 1fr 0px; transition: grid-template-columns var(--atlas-motion-slow) var(--atlas-ease-out); }
-.people-layout[data-room][data-peek] { grid-template-columns: 1fr 360px; }
-.people-layout:not([data-room]) .people-peek-slot { display: none; }
-.people-peek-slot { position: sticky; top: calc(var(--atlas-topbar-height, 52px) + 12px); display: grid; min-width: 0; overflow: clip; }
-.people-peek-slot > .people-peek { grid-area: 1 / 1; width: 340px; margin-left: 20px; max-height: calc(100dvh - 120px); overflow-y: auto; overscroll-behavior: contain; }
 .people-main { display: grid; gap: 12px; min-width: 0; }
 .people-filters-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .people-search { flex: 1 1 260px; min-width: min(220px, 100%); max-width: 340px; }
 .people-count { margin: 0; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
-.people-table-frame { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--st-radius); background: var(--surface); }
-.people-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.people-table-frame { overflow: hidden; border: 1px solid var(--line); border-radius: var(--st-radius); background: var(--surface); }
 .people-table thead th { height: 40px; padding: 0 16px; border-bottom: 1px solid var(--st-line-soft); color: var(--muted); font-size: 12.5px; font-weight: 600; text-align: left; white-space: nowrap; background: var(--st-subtle); }
 .people-table tbody tr { transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 /* The table rises in once when it arrives (its data comes after the page); a row that a filter brings back rises, one that
@@ -454,6 +427,7 @@ function replace(saved: DirectoryUser) {
   .people-table tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 32%, var(--surface)); }
 }
 .people-table tbody :is(th, td) { height: 52px; padding: 8px 16px; vertical-align: middle; text-align: left; font-weight: 400; }
+.people-table .people-person-cell { white-space: normal; }
 .people-person { display: flex; align-items: center; gap: 12px; min-width: 220px; }
 .people-person :deep(.subject-avatar) { width: 32px; height: 32px; color: var(--accent); background: var(--accent-soft); }
 .people-name { display: grid; min-width: 0; }
@@ -472,15 +446,10 @@ function replace(saved: DirectoryUser) {
 .people-group:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .people-more { color: var(--muted); font-size: 12px; }
 .people-state { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.people-active { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; }
-.people-active-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
 .people-col-source { color: var(--muted); font-size: 13px; white-space: nowrap; }
 @container settings-shell (max-width: 720px) {
   .people-col-source, .people-col-groups { display: none; }
   .people-person { min-width: 0; }
   .people-table tbody :is(th, td) { padding-inline: 12px; }
 }
-/* Reduced motion: the summary only fades; the table does not travel. */
-@media (prefers-reduced-motion: reduce) { .people-layout[data-room] { transition: none; } }
-[data-atlas-reduced-motion] .people-layout[data-room] { transition: none; }
 </style>

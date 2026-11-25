@@ -96,11 +96,11 @@ describe("Stav obsahu", () => {
     const { api, view } = open();
     await flushPromises();
     await view.get("[data-health-row] [data-row-more]").trigger("click");
-    await flushPromises();
-    const labels = [...document.querySelectorAll("[data-row-action]")].map((entry) => entry.textContent);
+    await vi.waitFor(() => expect(document.querySelector("[data-testid=intentions]")).not.toBeNull());
+    const labels = [...document.querySelectorAll("[data-testid=intentions] [role=option]")].map((entry) => entry.textContent);
     expect(labels[0]).toContain("Ověřit");
     expect(labels[1]).toContain("garanta");
-    (document.querySelector("[data-row-action]") as HTMLElement).click();
+    (document.querySelector("[data-testid=intentions] [role=option]") as HTMLElement).click();
     await flushPromises();
     expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: [rows[0]!.pageId] });
   });
@@ -113,7 +113,7 @@ describe("Stav obsahu", () => {
     await view.get("[data-health-search]").setValue("x");
     await vi.waitFor(() => expect(api.list).toHaveBeenCalledTimes(2), { timeout: 1500 });
     await flushPromises();
-    await view.get("[data-health-all]").trigger("click");
+    await view.get("[data-bulk-all]").trigger("click");
     await flushPromises();
     await view.get("[data-health-verify]").trigger("click");
     await flushPromises();
@@ -127,12 +127,12 @@ describe("Stav obsahu", () => {
   it("selects pages and verifies them in bulk, then reads the list again", async () => {
     const { api, view, flash } = open();
     await flushPromises();
-    expect(view.find("[data-health-bulk]").exists()).toBe(false);
+    expect(view.find("[data-bulk-bar]").exists()).toBe(false);
     const boxes = view.findAll("[data-health-row] [role=checkbox]");
     await boxes[0]!.trigger("click");
     await boxes[1]!.trigger("click");
     await flushPromises();
-    expect(view.get("[data-health-bulk]").text()).toContain("Vybrány 2 stránky");
+    expect(view.get("[data-bulk-bar]").text()).toContain("Vybráno: 2");
     await view.get("[data-health-verify]").trigger("click");
     await flushPromises();
     expect(api.bulk).toHaveBeenCalledWith("provoz", { action: "verify", pageIds: ["p1", "p2"] });
@@ -143,7 +143,7 @@ describe("Stav obsahu", () => {
   it("fills owners from the last author for the selection", async () => {
     const { api, view } = open();
     await flushPromises();
-    await view.get("[data-health-all]").trigger("click");
+    await view.get("[data-bulk-all]").trigger("click");
     await flushPromises();
     await view.get("[data-health-from-author]").trigger("click");
     await flushPromises();
@@ -163,7 +163,7 @@ describe("Stav obsahu", () => {
     await flushPromises();
     expect(api.bulk).toHaveBeenLastCalledWith("provoz", { action: "verify", pageIds: ["p2"] });
 
-    await list()[1]!.trigger("keydown", { key: "g" });
+    await list()[1]!.trigger("keydown", { key: "s" });
     await flushPromises();
     await vi.waitFor(() => expect(people).toHaveBeenCalledWith("p2", "", expect.anything()));
     await flushPromises();

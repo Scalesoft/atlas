@@ -13,7 +13,7 @@ import "./boardPopover.css";
 
 /**
  * The board's command panel (objects spec §5.2): one searchable list of what the board can do, opened at the pointer by `/` or a
- * tap of Space, over a selection by Ctrl/⌘+K. Its list is the page editor's own suggestion list (the slash menu's look, keys and
+ * tap of Space, by Ctrl/⌘+F (Ctrl/⌘+K is the wiki search, not this panel). Its list is the page editor's own suggestion list (the slash menu's look, keys and
  * motion: arrows, Home, End, Enter, Esc); only the search field above it is the board's, since on a board nothing is typed into a
  * text. The keys are every search's (P3, P8): the first Esc empties the search and the next one closes, Enter or Tab runs the first
  * match once something is typed (the untouched empty search runs nothing until the arrows move to a command). Placed inside the

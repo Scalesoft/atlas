@@ -21,9 +21,9 @@ it("lights the first action of an ActionDisclosure menu opened by a click", asyn
   expect(rows()[0]!.hasAttribute("data-highlighted")).toBe(true);
 });
 
-it("lights the first enabled action of an ActionMenu (the tree row's menu) when it opens", async () => {
+it("lights the first enabled action of an ActionMenu when it opens", async () => {
   const items = [{ id: "a", label: "Otevřít", disabled: true }, { id: "b", label: "Přejmenovat" }, { id: "c", label: "Přesunout do koše…", destructive: true }];
-  wrapper = mount(ActionMenu, { attachTo: document.body, props: { items, label: "Akce", itemAttr: "data-x", actions: true, open: true }, slots: { default: () => h("button", "x") } });
+  wrapper = mount(ActionMenu, { attachTo: document.body, props: { items, label: "Akce", itemAttr: "data-x", open: true }, slots: { default: () => h("button", "x") } });
   await flushPromises(); await settle();
   expect(document.activeElement).toBe(rows()[1]);
   expect(rows()[2]!.classList).toContain("board-menu-destructive");

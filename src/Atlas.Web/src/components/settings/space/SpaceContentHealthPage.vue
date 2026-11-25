@@ -15,6 +15,7 @@ import { Checkbox } from "../../ui/checkbox";
 import EmptyState from "../EmptyState.vue";
 import ErrorState from "../ErrorState.vue";
 import FilterMenu from "../FilterMenu.vue";
+import BulkSelectBar from "../BulkSelectBar.vue";
 import InlineReveal from "../InlineReveal.vue";
 import SearchField from "../SearchField.vue";
 import SearchableChoiceList from "../SearchableChoiceList.vue";
@@ -24,17 +25,20 @@ import SettingsPage from "../SettingsPage.vue";
 import SettingsSection from "../SettingsSection.vue";
 import StatTile from "../StatTile.vue";
 import StatusBadge from "../StatusBadge.vue";
+import { useBulkSelection } from "../bulkSelection";
 import { useSettingsContext } from "../context";
 import { useSettingsFlash } from "../flash";
 import { useSettingsRoute } from "../useSettingsRoute";
 import type { ChoiceOption } from "../types";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * Stav obsahu (5.2, plan §6): what of a space is verified, what expires and what people actually read, in existing parts only: StatTile row that sets
  * the filter, one SettingsList with a search and FilterMenus, a selection with bulk actions. Counts of readers, never names. The default order is
- * „Nejdřív čtené a neověřené“. Keyboard first: arrows move through the rows, Space selects, V verifies the selection (or the row), G picks the owner,
+ * „Nejdřív čtené a neověřené“. Keyboard first: arrows move through the rows, Space selects (BulkSelectBar, the selection of every list), V verifies
+ * the selection (or the row), S picks the owner (G collides with the „g …“ go-to keys),
  * Enter opens the page. The server answers the state of every page (one C# function), so nothing is derived here. A row offers only what the reader
- * can do there: Ověřit, the checkbox, V and G where it may edit the page and the page verifies; „Přesunout do koše“ (the tree's trash, Zpět in
+ * can do there: Ověřit, the checkbox, V and S where it may edit the page and the page verifies; „Přesunout do koše“ (the tree's trash, Zpět in
  * the toast) on an unread page it may edit. „Bez garanta“ offers the owner from the last author for the whole space (the server's fill).
  */
 const props = withDefaults(defineProps<{
@@ -63,7 +67,6 @@ const loadError = ref("");
 /** The last action's failure with its way forward: the same action again, or (a page with subpages) the page, whose tree trashes it. */
 const failure = shallowRef<{ text: string; retry: () => unknown; label?: string }>();
 const busy = ref(false);
-const selected = ref(new Set<string>());
 const active = ref(0);
 const root = ref<HTMLElement>();
 let request: AbortController | undefined;
@@ -99,7 +102,7 @@ async function load(append = false, keep = false) {
     if (controller.signal.aborted) return;
     data.value = result;
     items.value = append ? [...items.value, ...result.items] : result.items;
-    if (!append) { selected.value = new Set(); active.value = keep ? Math.min(active.value, Math.max(0, items.value.length - 1)) : 0; }
+    if (!append) { selection.clear(); active.value = keep ? Math.min(active.value, Math.max(0, items.value.length - 1)) : 0; }
   } catch (failure) {
     if (!controller.signal.aborted) loadError.value = errorMessage(failure);
   } finally {
@@ -127,10 +130,8 @@ const pickTile = (filter: ContentHealthFilter) => { state.value = state.value ==
 
 // Selection and the bulk actions: only the rows the reader may verify (it edits the page and the page verifies).
 const actionable = (item: ContentHealthItem) => item.canEdit && item.state !== "off";
-const chosen = computed(() => items.value.filter((item) => selected.value.has(item.pageId)));
-const toggle = (id: string) => { const next = new Set(selected.value); if (!next.delete(id)) next.add(id); selected.value = next; };
-const allShown = computed(() => items.value.some(actionable) && items.value.filter(actionable).every((item) => selected.value.has(item.pageId)));
-const toggleAll = () => { selected.value = allShown.value ? new Set() : new Set(items.value.filter(actionable).map((item) => item.pageId)); };
+const selection = useBulkSelection(() => items.value.filter(actionable).map((item) => item.pageId));
+const chosen = computed(() => items.value.filter((item) => selection.has(item.pageId)));
 /** The rows an action acts on: the selection, or the row the keyboard stands on when nothing is selected. */
 const target = () => (chosen.value.length ? chosen.value : items.value.slice(active.value, active.value + 1).filter(actionable));
 
@@ -215,19 +216,18 @@ async function pickSteward(stewardId: string) {
 }
 const openPage = (id: string) => context.openPage(id);
 
-/** The keys of a row (↑ ↓ Home End are the list's): Space selects, V verifies, G picks an owner, Enter opens. Not while a button or field has the key. */
+/** The keys of a row (↑ ↓ Home End and Space are the list's, rowKeys): V verifies, S picks an owner, Enter opens. Not while a button or field has the key. */
 function rowKey(event: KeyboardEvent, index: number) {
   if (event.altKey || event.ctrlKey || event.metaKey || (event.target as HTMLElement).closest("input, textarea, button, a, [role='checkbox']")) return;
   const key = event.key.toLowerCase();
-  if (key === " ") { event.preventDefault(); if (actionable(items.value[index]!)) toggle(items.value[index]!.pageId); }
-  else if (key === "v") { event.preventDefault(); void verify(); }
-  else if (key === "g") { event.preventDefault(); openPicker(); }
+  if (key === "v") { event.preventDefault(); void verify(); }
+  else if (key === "s") { event.preventDefault(); openPicker(); }
   else if (key === "enter") { event.preventDefault(); openPage(items.value[index]!.pageId); }
 }
 
-/** The row's menu: what the bulk buttons do (Ověřit, Garant), Otevřít and, where it is offered, „Přesunout do koše“. No V/G hints until the keys are settled (D6). */
+/** The row's menu: what the bulk buttons do (Ověřit, Garant), Otevřít and, where it is offered, „Přesunout do koše“. V and S are `shortcut` hints (the keys themselves are rowKey's). */
 const rowMenu = (item: ContentHealthItem) => [
-  ...(actionable(item) ? [{ id: "verify", label: t.health.verify, icon: "shield-check", disabled: busy.value }, { id: "steward", label: t.health.setSteward, icon: "user", disabled: busy.value }] : []),
+  ...(actionable(item) ? [{ id: "verify", label: t.health.verify, icon: "shield-check", shortcut: "V", disabled: busy.value }, { id: "steward", label: t.health.setSteward, icon: "user", shortcut: "S", disabled: busy.value }] : []),
   { id: "open", label: t.health.open, icon: "file-text" },
   ...(item.canEdit && !item.views ? [{ id: "trash", label: t.health.toTrash, icon: "trash", destructive: true, disabled: busy.value }] : []),
 ];
@@ -259,15 +259,6 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
             <FilterMenu v-model="sort" :label="t.health.sort" :options="sortOptions" data-health-sort />
             <FilterMenu v-model="days" :label="t.health.period" :options="periodOptions" icon="clock" data-health-period />
           </div>
-          <InlineReveal :open="chosen.length > 0">
-            <div class="health-bulk" role="group" :aria-label="t.health.selected(chosen.length)" data-health-bulk>
-              <strong>{{ t.health.selected(chosen.length) }}</strong>
-              <Button size="sm" type="button" :disabled="busy" data-health-verify @click="verify()"><AtlasIcon name="shield-check" :size="15" />{{ t.health.verify }}<kbd>V</kbd></Button>
-              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-steward @click="openPicker"><AtlasIcon name="user" :size="15" />{{ t.health.setSteward }}<kbd>G</kbd></Button>
-              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-from-author @click="fromAuthor"><AtlasIcon name="history" :size="15" />{{ t.health.fromAuthor }}</Button>
-              <Button variant="ghost" size="sm" type="button" @click="selected = new Set()">{{ t.health.clear }}</Button>
-            </div>
-          </InlineReveal>
           <InlineReveal :open="offerSpaceFill">
             <div class="health-bulk" data-health-space-fill>
               <span>{{ t.health.fromAuthorSpace(summary?.withoutSteward ?? 0) }}</span>
@@ -275,12 +266,16 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
             </div>
           </InlineReveal>
           <ErrorState v-if="failure" :title="t.health.actionFailed" :text="failure.text" :retry-label="failure.label" :busy="busy" @retry="failure.retry()" />
-          <div :aria-busy="loading" class="health-rows">
-            <label v-if="items.some(actionable)" class="health-all"><Checkbox :model-value="allShown" :aria-label="t.health.selectAll" data-health-all @update:model-value="toggleAll" /><span>{{ t.health.selectAll }}</span></label>
+          <div :aria-busy="loading" class="health-rows" :class="{ 'bulk-selecting': selection.count > 0 }">
+            <BulkSelectBar :selection="selection">
+              <Button size="sm" type="button" :disabled="busy" data-health-verify @click="verify()"><AtlasIcon name="shield-check" :size="15" />{{ t.health.verify }}<kbd>V</kbd></Button>
+              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-steward @click="openPicker()"><AtlasIcon name="user" :size="15" />{{ t.health.setSteward }}<kbd>S</kbd></Button>
+              <Button variant="outline" size="sm" type="button" :disabled="busy" data-health-from-author @click="fromAuthor"><AtlasIcon name="history" :size="15" />{{ t.health.fromAuthor }}</Button>
+            </BulkSelectBar>
             <SettingsList v-if="items.length" :label="t.health.list">
-              <SettingsListRow v-for="(item, index) in items" :key="item.pageId" :title="item.title" :description="rowText(item)" :tabindex="index === active ? 0 : -1" class="health-row" :menu="rowMenu(item)" :menu-label="t.health.rowActions(item.title)" :more="actionable(item)" data-health-row :data-page="item.pageId" :data-selected="selected.has(item.pageId) || undefined" @select="rowAction(item, $event)" @keydown="rowKey($event, index)" @focusin="active = index">
+              <SettingsListRow v-for="(item, index) in items" :key="item.pageId" :title="item.title" :description="rowText(item)" :tabindex="index === active ? 0 : -1" class="health-row bulk-row" :menu="rowMenu(item)" :menu-label="t.health.rowActions(item.title)" :more="actionable(item)" data-health-row :data-page="item.pageId" :data-selected="selection.has(item.pageId) || undefined" @select="rowAction(item, $event)" @keydown="rowKey($event, index)" @focusin="active = index">
                 <!-- A row it cannot verify keeps the checkbox's room (the titles stay in one line) without the checkbox. -->
-                <template #leading><Checkbox :model-value="selected.has(item.pageId)" :aria-label="t.health.selectRow(item.title)" tabindex="-1" :class="{ invisible: !actionable(item) }" :disabled="!actionable(item)" @update:model-value="toggle(item.pageId)" /></template>
+                <template #leading><Checkbox :model-value="selection.has(item.pageId)" :aria-label="t.health.selectRow(item.title)" tabindex="-1" class="bulk-box" :class="{ invisible: !actionable(item) }" :disabled="!actionable(item)" @update:model-value="selection.toggle(item.pageId)" /></template>
                 <template #meta>
                   <span class="health-detail">{{ rowDetail(item) }}</span>
                   <StatusBadge :tone="verificationTone(item.state)" :icon="verificationIcon(item.state)" :label="verificationLabel(item)" size="sm" :data-health-state="item.state" />
@@ -293,9 +288,9 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
               </SettingsListRow>
             </SettingsList>
             <EmptyState v-if="empty" compact icon="search" :title="t.health.emptyTitle" :text="t.health.emptyText" />
-            <Button v-if="data?.nextCursor" variant="outline" size="sm" type="button" :disabled="loading" class="health-more" data-health-more @click="load(true)">{{ t.health.more }}</Button>
+            <LoadMoreButton v-if="data?.nextCursor" class="health-more" :busy="loading" data-health-more @click="load(true)" />
           </div>
-          <p class="health-keys">{{ t.health.keys }}</p>
+          <p class="health-keys" data-health-keys>{{ t.health.keysLead }} <kbd>V</kbd> {{ t.health.keysVerify }}, <kbd>S</kbd> {{ t.health.keysSteward }}, <kbd>Enter</kbd> {{ t.health.keysOpen }}.</p>
         </SettingsSection>
       </template>
     </SettingsPage>
@@ -316,7 +311,6 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
 .health-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .health-filters .search-field { flex: 1 1 220px; }
 .health-bulk { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0 4px; font-size: 13px; }
-.health-all { display: flex; align-items: center; gap: 10px; padding: 4px 0; color: var(--muted); font-size: 13px; }
 .health-rows > .settings-list { margin: 0 calc(var(--st-pad-x, 18px) * -1); --st-row-pad-x: var(--st-pad-x, 18px); }
 .health-rows > .st-empty.is-compact { border-style: none; padding-block: 20px; }
 .health-row { transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out); }

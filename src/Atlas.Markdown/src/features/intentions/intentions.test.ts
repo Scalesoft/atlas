@@ -255,4 +255,18 @@ describe('the same menu without an editor (a board item)', () => {
     expect(menu()).toBeNull()
     expect(closed).toHaveBeenCalledOnce()
   })
+  it('a host\'s row list (the page tree): a line parts its groups, a destructive row is red, a disabled row is skipped', () => {
+    const anchor = document.createElement('div'); document.body.append(anchor)
+    const opened = openMarkdownIntentionsMenu({ document, anchor: () => anchor.getBoundingClientRect(), contextElement: anchor, rows: [[
+      { id: 'open', label: 'Otevřít', separated: true, disabled: true, run: vi.fn() }, { id: 'rename', label: 'Přejmenovat', shortcut: 'F2', run: vi.fn() },
+      { id: 'trash', label: 'Přesunout do koše', separated: true, destructive: true, run: vi.fn() }]] })
+    // No line above the first row shown; the one above Koš is not an option.
+    expect([...menu()!.children].map(child => child.className)).toEqual(['md-suggestion-heading', 'row', 'row on', 'sep', 'row danger'])
+    expect(menu()!.querySelector('.sep')!.getAttribute('aria-hidden')).toBe('true')
+    expect(active()).toBe('Přejmenovat')
+    opened.key(new KeyboardEvent('keydown', { key: 'k' }))
+    expect(rows()).toEqual(['Přesunout do koše'])
+    expect(menu()!.querySelector('.sep')).toBeNull()
+    opened.close()
+  })
 })

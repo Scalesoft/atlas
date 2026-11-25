@@ -7,7 +7,8 @@ import { cleanBoardText } from "./boardText";
 
 /**
  * Copy and paste between boards (interaction spec §3.2): the items as JSON in Atlas's own clipboard type, and their text as plain
- * text for other applications. What comes back from the clipboard is untrusted: only well-formed items of known kinds pass.
+ * text for other applications; a block or a contact card as its Markdown, which a page pastes as the same component (D12).
+ * What comes back from the clipboard is untrusted: only well-formed items of known kinds pass.
  */
 export const boardClipboardType = "application/x-atlas-board+json";
 const MARK = "atlas.board";
@@ -16,19 +17,20 @@ const MAX_ITEMS = 1000;
 
 export interface ClipboardPayload { json: string; text: string }
 
-function plainText(item: BoardViewItem): string {
+function plainText(item: BoardViewItem, markdown?: (item: BoardViewItem) => string | undefined): string {
   if (item.kind === "page") return pageTargetOf(item)?.title ?? "";
-  return item.kind === "connector" ? "" : item.text ?? "";
+  return item.kind === "connector" ? "" : markdown?.(item) ?? item.text ?? "";
 }
 
-/** The selected items with the connectors whose both ends are among them, or null for an empty selection. */
-export function copyPayload(items: readonly BoardViewItem[], ids: readonly string[]): ClipboardPayload | null {
+/** The selected items with the connectors whose both ends are among them, or null for an empty selection. `markdown`: the Markdown of an
+ * item that has one beside its text (a block, a contact card). */
+export function copyPayload(items: readonly BoardViewItem[], ids: readonly string[], markdown?: (item: BoardViewItem) => string | undefined): ClipboardPayload | null {
   const chosen = items.filter(item => ids.includes(item.id) && item.kind !== "connector");
   if (!chosen.length) return null;
   const copied = new Set(chosen.map(item => item.id));
   const links = items.filter(item => item.kind === "connector" && copied.has(item.from ?? "") && copied.has(item.to ?? ""));
   const records = [...chosen, ...links].map(item => ({ ...copyOf(item, { id: item.id }), ...(item.parent && { parent: item.parent }) }));
-  return { json: JSON.stringify({ [MARK]: 1, items: records }), text: chosen.map(plainText).filter(Boolean).join("\n\n") };
+  return { json: JSON.stringify({ [MARK]: 1, items: records }), text: chosen.map(item => plainText(item, markdown)).filter(Boolean).join("\n\n") };
 }
 
 const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value);

@@ -104,6 +104,25 @@ describe("rows of several controls with the arrow keys", () => {
     key("Home"); expect(document.activeElement?.textContent).toBe("Jana");
     key("End"); expect(document.activeElement?.getAttribute("aria-label")).toBe("Jméno");
   });
+
+  it("ticks the row's bulk-selection box with Space, unless the focused control takes Space itself", () => {
+    document.body.innerHTML = '<ul><li tabindex="0"><button class="bulk-box" tabindex="-1"></button><a href="#">Jana</a><button class="open">Otevřít</button></li><li tabindex="-1"><button class="bulk-box" disabled></button></li></ul>';
+    const list = document.querySelector("ul")!;
+    const ticks: string[] = [];
+    list.querySelectorAll<HTMLElement>(".bulk-box").forEach((box, index) => box.addEventListener("click", () => ticks.push(`row ${index}`)));
+    const space = (from: Element) => {
+      const event = new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true });
+      Object.defineProperty(event, "currentTarget", { value: list });
+      Object.defineProperty(event, "target", { value: from });
+      rowKeys(event, "li");
+      return event;
+    };
+    expect(space(list.children[0]!).defaultPrevented).toBe(true);
+    expect(space(list.querySelector("a")!).defaultPrevented).toBe(true);
+    expect(space(list.querySelector(".open")!).defaultPrevented).toBe(false);
+    expect(space(list.children[1]!).defaultPrevented).toBe(false);
+    expect(ticks).toEqual(["row 0", "row 0"]);
+  });
 });
 
 describe("cards in a wrapping grid with the arrow keys (Knihovna's spaces)", () => {

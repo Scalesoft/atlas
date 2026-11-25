@@ -221,7 +221,7 @@ const ownAccess = computed(() => {
       <PageConnections layout="list" :page-id="pageId" :space-id="spaceId" :page-title="pageTitle" :document="document" :refresh-key="refreshKey" :related-enabled="relatedEnabled" :api="connections" />
       <dl class="page-side-facts" :aria-label="t.side.aboutPage">
         <dt>{{ t.side.version }}</dt><dd>{{ version }} · {{ state }}</dd>
-        <template v-if="updatedAt"><dt>{{ t.side.edited }}</dt><dd><time :datetime="updatedAt">{{ formatDate(updatedAt) }}</time></dd></template>
+        <template v-if="updatedAt"><dt>{{ t.side.edited }}</dt><dd><time :datetime="updatedAt">{{ formatDateTime(updatedAt) }}</time></dd></template>
         <template v-if="verificationShown(verification)">
           <dt>{{ tv.steward }}</dt>
           <dd data-verification-steward>

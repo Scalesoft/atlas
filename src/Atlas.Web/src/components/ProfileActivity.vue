@@ -22,6 +22,7 @@ import { formatActivityTime, formatDate, formatDay } from "../formatDate";
 import { isPlainNavigationClick, pageLink } from "../pageLinks";
 import { periodQuery, shiftDay, validPeriod, type ActivitySummary, type ActivityChanges, type ActivityChange, type PopularPage } from "../activity";
 import { pragueNow } from "@atlas/markdown/core";
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 /**
  * Aktivita (profile): the calendar of saved changes for a year, the changes of a chosen day and the
@@ -156,7 +157,7 @@ onUnmounted(() => { summaryRequest?.abort(); detailRequest?.abort(); popularRequ
             </SettingsListRow>
           </SettingsList>
           <EmptyState v-else-if="!detailError" compact icon="calendar" :title="t.activity.noChanges" :text="t.activity.noChangesDay" />
-          <div v-if="more" class="st-actions"><Button variant="outline" size="sm" type="button" :disabled="detailLoading" :aria-busy="detailLoading" @click="loadDay(selected, true)"><AtlasIcon name="down" :size="15" />{{ t.activity.moreChanges }}</Button></div>
+          <div v-if="more" class="st-actions"><LoadMoreButton :busy="detailLoading" @click="loadDay(selected, true)" /></div>
         </LoadingRegion>
       </SettingsSection>
     </InlineReveal>

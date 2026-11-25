@@ -1,6 +1,6 @@
 import type { MarkdownEditorState, MarkdownPlugin } from "@atlas/markdown/core";
 import type { Editor } from "@tiptap/core";
-import type { DecorationSet } from "@tiptap/pm/view";
+import type { DecorationSet, EditorView } from "@tiptap/pm/view";
 import { absolutePositionToRelativePosition, relativePositionToAbsolutePosition, yCursorPluginKey, ySyncPluginKey } from "@tiptap/y-tiptap";
 import type { Awareness } from "y-protocols/awareness";
 import * as Y from "yjs";
@@ -185,8 +185,8 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
     const originX = containerRect.left + container.clientLeft - container.scrollLeft;
     const originY = containerRect.top + container.clientTop - container.scrollTop;
     const measured = new Map(currentPeers.flatMap(peer => {
-      const position = positions.get(peer.clientId);
-      return position === undefined ? [] : [[peer.clientId, editor.view.coordsAtPos(position)] as const];
+      const position = positions.get(peer.clientId), shown = position === undefined ? null : shownPosition(editor.view, position);
+      return shown === null ? [] : [[peer.clientId, editor.view.coordsAtPos(shown)] as const];
     }));
     const textWidth = editable.getBoundingClientRect().width;
     const pointed = new Map(currentPeers.flatMap(peer => {
@@ -280,8 +280,11 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       // Another client's state: an anchor that resolves to nothing (deleted text, garbage) shows no pointer.
       const position = relativePositionToAbsolutePosition(sync.doc, sync.type, Y.createRelativePositionFromJSON(pointer.anchor), sync.mapping as never);
       if (position === null || position < 0 || position > editor.state.doc.content.size) return undefined;
-      const at = editor.view.coordsAtPos(position);
-      const scale = pointerScale(pointer.w, textWidth);
+      const shown = shownPosition(editor.view, position);
+      if (shown === null) return undefined;
+      const at = editor.view.coordsAtPos(shown);
+      // Anchored in text this view folds away: the sender's offset from it means nothing here, it points at the folded heading's line.
+      const scale = shown === position ? pointerScale(pointer.w, textWidth) : 0;
       return { left: at.left + clampOffset(pointer.x! * scale), top: at.top + clampOffset(pointer.y! * scale), down: pointer.down === true };
     } catch { return undefined; }
   }
@@ -447,7 +450,7 @@ function attach(editor: Editor, changed: () => void, signal: AbortSignal, pointe
       const position = positions.get(clientId);
       const cursor = overlay.querySelector<HTMLElement>(`[data-client-id="${clientId}"]`);
       if (position === undefined || !cursor) return false;
-      scrollCaretIntoView(editor, position, reducedMotion ? "auto" : scrollBehavior(cursor));
+      scrollCaretIntoView(editor, shownPosition(editor.view, position) ?? position, reducedMotion ? "auto" : scrollBehavior(cursor));
       // The halo is one ripple of the cursor (prototype `rippleOnce`): the class lives exactly as long as the animation.
       cursor.classList.add("is-highlighted");
       const halo = animateAtlas(cursor, [
@@ -485,6 +488,25 @@ function caretAwareness(editor: Editor) {
 
 function clampOffset(value: number) {
   return Math.min(POINTER_REACH, Math.max(-POINTER_REACH, value));
+}
+
+/**
+ * Where a document position shows: in place, or, when a heading fold or a requirement filter hides its block (a top-level block with
+ * display: none has no box, so coordsAtPos would give the editor's top-left corner), at the end of the nearest shown block before it,
+ * the folded section's heading line. Null when nothing before it shows. Unfolded, the position shows in place again.
+ */
+function shownPosition(view: EditorView, position: number): number | null {
+  const doc = view.state.doc, $pos = doc.resolve(position);
+  if (!$pos.depth) return position;
+  const shows = (at: number) => { const dom = view.nodeDOM(at); return !(dom instanceof HTMLElement) || getComputedStyle(dom).display !== "none"; };
+  let index = $pos.index(0), at = $pos.before(1);
+  if (shows(at)) return position;
+  while (index-- > 0) {
+    const block = doc.child(index);
+    at -= block.nodeSize;
+    if (shows(at)) return at + block.nodeSize - 1;
+  }
+  return null;
 }
 
 function cursorPositions(editor: Editor) {

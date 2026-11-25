@@ -14,6 +14,7 @@ import InlineReveal from "../settings/InlineReveal.vue";
 import { Button } from "../ui/button";
 import { Switch } from "../ui/switch";
 import "../settings/settings.css";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * Knihovna → Oznámení (inbox spec 2026-10-29): the reader's mentions and shares, newest event first and grouped by day, the
@@ -150,7 +151,7 @@ defineExpose({ load });
     </div>
     <footer class="notification-footer">
       <p v-if="error && items.length" class="notification-error" role="alert"><AtlasIcon name="triangle-alert" :size="15" />{{ error }}</p>
-      <Button v-if="next" variant="outline" :disabled="loading" :aria-busy="loading" @click="load(true)"><AtlasIcon name="refresh" :size="16" />{{ t.notifications.loadOlder }}</Button>
+      <LoadMoreButton v-if="next" :busy="loading" @click="load(true)" />
       <Button ref="settingsToggle" variant="ghost" class="notification-settings-toggle" aria-controls="notification-settings" :aria-expanded="settingsOpen" @click="toggleSettings">
         <AtlasIcon name="settings" :size="16" />{{ t.notifications.settings }}
       </Button>

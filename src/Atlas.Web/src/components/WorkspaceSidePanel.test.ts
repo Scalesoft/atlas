@@ -402,12 +402,14 @@ describe("WorkspaceSidePanel tabs (page dock)", () => {
     expect(wrapper.find(".workspace-panel-subheader .sub").exists()).toBe(true);
     // Focus went to the selected tab, the first stop of a tabbed panel.
     expect(document.activeElement).toBe(tab("outline").element);
-    await list.trigger("keydown", { key: "ArrowRight" });
+    await tab("outline").trigger("keydown", { key: "ArrowRight" });
     await nextTick(); await nextTick();
     expect(wrapper.emitted("update:activeTab")?.[0]).toEqual(["assistant"]);
     expect(tab("assistant").attributes("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(tab("assistant").element);
-    await list.trigger("keydown", { key: "End" });
+    // The pill is measured by the shared tab indicator (useTabIndicator) and stands under the selected tab.
+    expect(wrapper.find(".workspace-panel-tab-pill").exists()).toBe(true);
+    await tab("assistant").trigger("keydown", { key: "End" });
     expect(wrapper.emitted("update:activeTab")?.[1]).toEqual(["history"]);
     await tab("outline").trigger("click");
     expect(wrapper.emitted("update:activeTab")?.[2]).toEqual(["outline"]);

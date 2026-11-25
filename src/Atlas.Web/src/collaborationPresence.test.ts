@@ -12,6 +12,7 @@ import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from "y-protoc
 import * as Y from "yjs";
 import type { MarkdownEditorState } from "@atlas/markdown/core";
 import { createCollaborationPresence, pointerScale } from "./collaborationPresence";
+import { FOLDED } from "./editor/headingFold";
 
 type Peer = MarkdownEditorState["peers"][number];
 
@@ -704,5 +705,73 @@ describe("an agent's write typed in", () => {
     expect(editor.getText()).toContain("slovo39x19");
     expect(editor.getText().startsWith("P" + "x".repeat(Math.ceil(frameCount / 10)))).toBe(true);
     console.info(`agent reveal: 800 words typed in over ${frameCount} frames (${now - started} ms of motion), ${transactions} transactions, worst frame ${worst} ms`);
+  });
+});
+
+describe("a collaborator in a section folded in this view", () => {
+  it("stands on the folded heading's line, caret and pointer alike, and returns to the exact place when it opens", () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    // As headingFold.css and requirements.css: a fold or a filter hides top-level blocks, which then have no box.
+    const style = document.createElement("style");
+    style.textContent = `.${FOLDED} { display: none !important; }`;
+    document.head.append(style);
+    // The fold decoration (headingFoldPlugin.ts) over the second block: the section under the heading "Nadpis".
+    const fold = Extension.create({
+      name: "test-fold",
+      addProseMirrorPlugins: () => [new Plugin<boolean>({
+        state: { init: () => false, apply: (tr, folded) => tr.getMeta("test-fold") ?? folded },
+        props: { decorations(state) {
+          if (!this.getState(state)) return null;
+          const at = state.doc.child(0).nodeSize;
+          return DecorationSet.create(state.doc, [Decoration.node(at, at + state.doc.child(1).nodeSize, { class: FOLDED })]);
+        } },
+      })],
+    });
+    const docA = new Y.Doc(), docB = new Y.Doc();
+    docA.on("update", (update: Uint8Array) => Y.applyUpdate(docB, update));
+    docB.on("update", (update: Uint8Array) => Y.applyUpdate(docA, update));
+    const editorOf = (ydoc: Y.Doc, extra: Extension[] = []) => {
+      const awareness = new Awareness(ydoc), host = document.createElement("div");
+      document.body.append(host);
+      const editor = new Editor({ element: host, extensions: [Document, Paragraph, Text, Collaboration.configure({ document: ydoc }),
+        CollaborationCarets.configure({ provider: { awareness }, user: { name: "Jana", color: "#d946ef" } }), ...extra] });
+      attached.push(() => { editor.destroy(); host.remove(); awareness.destroy(); });
+      return { editor, host, awareness };
+    };
+    const jana = editorOf(docA), reader = editorOf(docB, [fold]);
+    vi.spyOn(reader.editor.view, "coordsAtPos").mockImplementation(pos => ({ left: 100 + pos * 8, right: 101 + pos * 8, top: 60, bottom: 80 }));
+    const presence = createCollaborationPresence({ onChange: () => {}, pointers: true });
+    const abort = new AbortController();
+    attached.push(presence.plugin.create({ profile: "rich", signal: abort.signal }).onAttach!({ editor: reader.editor, controller: {} as never, signal: abort.signal }) as () => void);
+    // "Nadpis" is 1–7 (its line ends at 7), the section's paragraph starts at 8: Jana types at 11.
+    jana.editor.commands.setContent("<p>Nadpis</p><p>tělo sekce</p><p>další</p>");
+    const sync = ySyncPluginKey.getState(jana.editor.state)!;
+    const relative = Y.relativePositionToJSON(absolutePositionToRelativePosition(11, sync.type, sync.binding.mapping));
+    jana.awareness.on("update", ({ added, updated, removed }: Record<string, number[]>) =>
+      applyAwarenessUpdate(reader.awareness, encodeAwarenessUpdate(jana.awareness, [...added!, ...updated!, ...removed!]), "remote"));
+    jana.awareness.setLocalStateField("cursor", { anchor: relative, head: relative });
+    jana.awareness.setLocalStateField("pointer", { anchor: relative, x: 3, y: 15 });
+    vi.advanceTimersByTime(0);
+    presence.update([{ clientId: jana.awareness.clientID, id: "jana", name: "Jana", color: "#d946ef" }]);
+    const settle = () => { const start = performance.now(); for (let i = 0; i <= 60; i++) frame(start + i * 16); };
+    settle();
+    const caret = () => reader.host.querySelector<HTMLElement>(`[data-client-id="${jana.awareness.clientID}"]`)!;
+    const pointer = () => reader.host.querySelector<HTMLElement>(".collaboration-pointer")!;
+    expect(caret().style.transform).toBe(`translate3d(${100 + 11 * 8}px, 60px, 0px)`);
+    expect(pointer().style.transform).toBe(`translate3d(${100 + 11 * 8 + 3}px, 75px, 0px)`);
+
+    // Folded: on the heading's line, at its end, never at the editor's corner; the pointer on it too, without the offset from the hidden text.
+    reader.editor.view.dispatch(reader.editor.state.tr.setMeta("test-fold", true));
+    settle();
+    expect(caret().style.transform).toBe(`translate3d(${100 + 7 * 8}px, 60px, 0px)`);
+    expect(caret().textContent).toBe("Jana");
+    expect(pointer().style.transform).toBe(`translate3d(${100 + 7 * 8}px, 60px, 0px)`);
+
+    reader.editor.view.dispatch(reader.editor.state.tr.setMeta("test-fold", false));
+    settle();
+    expect(caret().style.transform).toBe(`translate3d(${100 + 11 * 8}px, 60px, 0px)`);
+    expect(pointer().style.transform).toBe(`translate3d(${100 + 11 * 8 + 3}px, 75px, 0px)`);
+    style.remove();
+    vi.useRealTimers();
   });
 });

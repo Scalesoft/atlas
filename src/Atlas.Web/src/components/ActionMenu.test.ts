@@ -4,6 +4,7 @@ import { defineComponent, h, ref } from "vue";
 import ActionMenu from "./ActionMenu.vue";
 import AppDialog from "./AppDialog.vue";
 import RowActionsMenu from "./RowActionsMenu.vue";
+import { loadActionsMenu } from "./boards/canvas/actionsMenuChunk";
 
 let wrapper: VueWrapper | undefined;
 afterEach(() => { wrapper?.unmount(); wrapper = undefined; document.body.replaceChildren(); });
@@ -78,7 +79,7 @@ describe("ActionMenu", () => {
   });
 
   it("an action menu has no title (the owner's rule for action and choice menus)", async () => {
-    show({ open: true, actions: true });
+    show({ open: true });
     await flushPromises();
     expect(menu()!.textContent).toBe("ObdélníkElipsaNedostupné");
   });
@@ -98,5 +99,51 @@ describe("RowActionsMenu", () => {
     await flushPromises();
     expect(wrapper.findComponent(RowActionsMenu).emitted("select")).toEqual([["trash"], ["edit"]]);
     expect(menu()).toBeNull();
+  });
+
+  // O1 (UX unification): a row's „Co s tím jde dělat“ is the page editor's own menu, as on a page and a board.
+  const intentions = () => document.querySelector<HTMLElement>("[data-testid=intentions]");
+  const options = () => [...intentions()?.querySelectorAll<HTMLElement>("[role=option]") ?? []].map(option => option.querySelector(".t")!.textContent);
+  const press = (target: Element, key: string, init: KeyboardEventInit = {}) => target.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
+  const rowItems = [{ id: "edit", label: "Upravit", icon: "pencil", shortcut: "F2", group: "a" }, { id: "trash", label: "Smazat", icon: "trash", destructive: true, group: "b" }];
+
+  it("opens the page editor's menu named for the row: typing filters, Enter runs, the focus stays on the row and the menu key opens no second one", async () => {
+    await loadActionsMenu();
+    const row = defineComponent({ setup: () => () => h("li", [h("button", { type: "button", "data-first": "" }, "Řádek"), h(RowActionsMenu, { label: "Akce: Jana", items: rowItems })]) });
+    wrapper = mount(row, { attachTo: document.body });
+    const button = wrapper.get("[data-first]").element as HTMLButtonElement;
+    button.focus();
+    press(button, "ContextMenu");
+    expect(intentions()!.getAttribute("aria-label")).toBe("Akce: Jana");
+    expect(options()).toEqual(["Upravit", "Smazat"]);
+    expect(intentions()!.querySelector(".sep")).not.toBeNull();
+    expect(intentions()!.querySelector("[aria-selected=true] .t")!.textContent).toBe("Upravit");
+    // Windows sends the menu key's contextmenu after its keydown: it neither opens another menu nor the browser's.
+    const late = new MouseEvent("contextmenu", { bubbles: true, cancelable: true });
+    button.dispatchEvent(late);
+    expect(late.defaultPrevented).toBe(true);
+    expect(document.querySelectorAll("[data-testid=intentions]")).toHaveLength(1);
+    press(button, "s");
+    expect(options()).toEqual(["Smazat"]);
+    press(button, "Enter");
+    expect(intentions()).toBeNull();
+    expect(wrapper.findComponent(RowActionsMenu).emitted("select")).toEqual([["trash"]]);
+    expect(document.activeElement).toBe(button);
+  });
+
+  it("returns the focus to the row's first button when it was lost, and stays in an AppDialog's top layer, where Esc closes only the menu", async () => {
+    await loadActionsMenu();
+    const row = defineComponent({ setup: () => () => h("ul", h("li", [h("span", "Text"), h("button", { type: "button", "data-first": "" }, "Obnovit"), h(RowActionsMenu, { label: "Řádek", items: rowItems })])) });
+    wrapper = mount(AppDialog, { attachTo: document.body, props: { title: "Uspořádat", open: true }, slots: { default: () => h(row) } });
+    await flushPromises();
+    const dialog = wrapper.get("dialog").element as HTMLDialogElement;
+    (document.activeElement as HTMLElement | null)?.blur();
+    wrapper.get("li span").element.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: 20, clientY: 20 }));
+    expect(intentions()!.closest("dialog")).toBe(dialog);
+    press(document.body, "Escape");
+    expect(intentions()).toBeNull();
+    expect(dialog.open).toBe(true);
+    expect(wrapper.emitted("close")).toBeUndefined();
+    expect(document.activeElement).toBe(wrapper.get("[data-first]").element);
   });
 });

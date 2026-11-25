@@ -75,8 +75,8 @@ it("offers both decisions from the row's actions menu (Shift+F10)", async () => 
   const api = show([suggestion("u1", "c1")]);
   await flushPromises();
   await rows()[0]!.get("[data-account-link]").trigger("keydown", { key: "F10", shiftKey: true });
-  await flushPromises();
-  const items = [...document.querySelectorAll<HTMLElement>("[data-row-action]")];
+  await vi.waitFor(() => expect(document.querySelector("[data-testid=intentions]")).not.toBeNull());
+  const items = [...document.querySelectorAll<HTMLElement>("[data-testid=intentions] [role=option]")];
   expect(items.map(item => item.textContent?.trim())).toEqual(["Propojit", "Není to on"]);
   items[1]!.click();
   await flushPromises();

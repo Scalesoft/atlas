@@ -27,7 +27,6 @@ const en: ComponentsTreeMessages = {
     openBoardOf: (title: string) => `Open the deployment board of page ${title}`,
     deploymentBoard: "Deployment board",
     actionsOf: (title: string) => `Actions: ${title}`,
-    actions: "Actions",
   },
   badge: {
     draft: "Draft",

@@ -1,4 +1,4 @@
-import type { ContactsPluginOptions, MarkdownContact } from "@atlas/markdown/plugins/contacts";
+import type { ContactsPluginOptions, LiveContact, MarkdownContact } from "@atlas/markdown/plugins/contacts";
 import t from "../i18n/contacts";
 import type { Editor } from "@tiptap/core";
 import { h, shallowRef } from "vue";
@@ -194,13 +194,18 @@ export async function usedOn(objectId: string, signal: AbortSignal, api: Pick<Us
   return { places: places.slice(0, usedOnPlaces), more: Math.max(0, places.length - usedOnPlaces) + page.hidden };
 }
 
+/** A contact linked to an account (its `directoryId` is the account's id, AccountContacts) is that internal person: the editor colours their
+ *  avatar as ContactCard does. */
+export const withAccount = (live: LiveContact): LiveContact => live.state === "ok" && live.contact.directoryId && !live.contact.internalUser
+  ? { ...live, contact: { ...live.contact, internalUser: { id: live.contact.directoryId, name: live.contact.name } } } : live;
+
 /** The contacts plugin's host options (§3, §4, K2): live contacts always; linking and the last-usage question where the document is a place. */
 export function contactPluginOptions(host?: ContactHost): Pick<ContactsPluginOptions, "live" | "link" | "remove" | "directoryUrl" | "editLinked" | "readerUsage" | "qrCode" | "readerSkills" | "rateSkills" | "userColor"> {
   return {
     qrCode: drawContactQr,
     // A person's chip in their caret's colour (one colour per person in pages, boards and history).
     userColor: themedUserColor,
-    live: (objectId, { signal }) => contactApi.live(objectId, { signal }),
+    live: (objectId, { signal }) => contactApi.live(objectId, { signal }).then(withAccount),
     editLinked: (contact, { editor, anchor, signal, save }) =>
       openVuePopover({ editor, anchor, signal, title: `Kontakt ${contact.name}`, variant: "panel", component: PageContactEditor, props: { snapshot: contact, save } }),
     // shortcut: the directory has no address of one contact yet, so the link opens the directory; link the contact once it has one.

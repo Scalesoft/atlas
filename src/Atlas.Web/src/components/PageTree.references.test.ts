@@ -1,7 +1,8 @@
 // Reference nodes, drops from outside, the row menu and its keys.
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import PageTree from "./PageTree.vue";
+import { loadActionsMenu } from "./boards/canvas/actionsMenuChunk";
 import { atlasObjectDragType, objectPayload } from "../boards/boardDrop";
 import type { TreePage } from "../treeMove";
 
@@ -16,6 +17,11 @@ const pages = [
   node("locked", null, { type: "reference", version: 0, title: "", readable: false, canEdit: true }),
 ];
 const row = (app: ReturnType<typeof mount>, id: string) => app.get(`[data-tree-item="${id}"]`);
+// The row menu is the page editor's own (its chunk is in before the tests, as the tree preheats it).
+beforeAll(async () => { await loadActionsMenu(); });
+const menu = () => document.querySelector<HTMLElement>("[data-testid=intentions]");
+const menuRows = () => [...menu()?.querySelectorAll<HTMLElement>("[role=option]") ?? []];
+const labels = () => menuRows().map(item => item.querySelector(".t")!.textContent);
 const rowBox = (app: ReturnType<typeof mount>, id: string) => {
   const element = row(app, id).element.closest(".tree-row") as HTMLElement;
   element.getBoundingClientRect = () => ({ top: 0, height: 30, bottom: 30, left: 0, right: 100, width: 100, x: 0, y: 0, toJSON: () => ({}) });
@@ -78,16 +84,24 @@ describe("reference nodes in the tree", () => {
     reader.unmount(); app.unmount();
   });
 
-  it("opens one editor-style menu from a row's „⋯“ with grouped actions and reports the chosen one", async () => {
+  it("opens the page editor's menu from a row's „⋯“ with grouped actions, filters it by typing and reports the chosen one", async () => {
     const app = mount(PageTree, { props: { pages, canReorder: true, menu: true, boards: true }, attachTo: document.body });
     await app.get('[data-tree-row="a"] [data-tree-more]').trigger("click");
-    await new Promise(resolve => setTimeout(resolve, 0));
-    const actions = [...document.querySelectorAll<HTMLElement>("[data-tree-action]")].map(item => item.dataset.treeAction);
-    expect(actions).toEqual(["open", "openAttached", "copyLink", "newPage", "newBoard", "rename", "move", "sortByTitle", "trash"]);
-    expect(document.querySelectorAll(".board-menu-separator")).toHaveLength(3);
-    document.querySelector<HTMLElement>('[data-tree-action="move"]')!.click();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(menu()!.getAttribute("aria-label")).toBe("Akce: a");
+    expect(labels()).toEqual(["Otevřít", "Otevřít připojenou tabuli", "Kopírovat odkaz", "Nová podstránka", "Nová tabule", "Přejmenovat", "Přesunout…", "Řadit abecedně", "Přesunout do koše…"]);
+    expect(menu()!.querySelectorAll(".sep")).toHaveLength(3);
+    expect(menuRows().at(-1)!.classList).toContain("danger");
+    expect(menuRows()[5]!.querySelector("kbd")!.textContent).toBe("F2");
+    expect(app.get('[data-tree-row="a"]').classes()).toContain("tree-row-menu-open");
+    for (const letter of "přesunout") document.body.dispatchEvent(new KeyboardEvent("keydown", { key: letter, bubbles: true, cancelable: true }));
+    expect(labels()).toEqual(["Přesunout…", "Přesunout do koše…"]);
+    document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(menu()).toBeNull();
     expect(app.emitted("action")).toEqual([["move", expect.objectContaining({ id: "a" })]]);
+    // The focus went back to the row before the action (a dialog then takes it).
+    expect(document.activeElement).toBe(row(app, "a").element);
+    await app.vm.$nextTick();
+    expect(app.get('[data-tree-row="a"]').classes()).not.toContain("tree-row-menu-open");
     app.unmount();
   });
 
@@ -111,15 +125,13 @@ describe("reference nodes in the tree", () => {
     for (const init of [{ key: " ", code: "Space", ctrlKey: true }, { key: "Enter", altKey: true }, { key: ".", ctrlKey: true }, { key: "F10", shiftKey: true }, { key: "ContextMenu" }]) {
       const app = mount(PageTree, { props: { pages, canReorder: true, menu: true }, attachTo: document.body });
       await row(app, "a1").trigger("keydown", init);
-      await new Promise(resolve => setTimeout(resolve, 0));
-      expect(document.querySelector("[data-tree-action]"), JSON.stringify(init)).not.toBeNull();
+      expect(menu(), JSON.stringify(init)).not.toBeNull();
       app.unmount();
       document.body.replaceChildren();
     }
     const app = mount(PageTree, { props: { pages, canReorder: true, menu: true }, attachTo: document.body });
     for (const init of [{ key: " ", code: "Space" }, { key: "Enter" }, { key: "Enter", ctrlKey: true, altKey: true }]) await row(app, "a1").trigger("keydown", init);
-    await new Promise(resolve => setTimeout(resolve, 0));
-    expect(document.querySelector("[data-tree-action]")).toBeNull();
+    expect(menu()).toBeNull();
     app.unmount();
   });
 
