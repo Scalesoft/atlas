@@ -9,6 +9,7 @@ namespace Atlas.Server.Platform.Identity;
 public sealed class SpaceRoles
 {
     private readonly ISession m_session;
+    private readonly Dictionary<Guid, bool> m_inAi = [];
 
     public SpaceRoles(ISession session)
     {
@@ -57,10 +58,17 @@ public sealed class SpaceRoles
 
     public Task<bool> IsWikiAdminAsync(UserAccount actor, CancellationToken ct) => EffectiveWikiAdmin.IsAdminAsync(m_session, actor, ct);
 
-    /// <summary>G5: whether the space takes part in AI and MCP (<see cref="AccessSql.SpaceInAi"/>), in the caller's transaction.</summary>
-    public Task<bool> InAiAsync(Guid spaceId, CancellationToken ct)
-        => m_session.CreateSQLQuery($"SELECT {AccessSql.SpaceInAi(":space")} AS included").AddScalar("included", NHibernateUtil.Boolean)
-            .SetParameter("space", spaceId).UniqueResultAsync<bool>(ct);
+    /// <summary>G5: whether the space takes part in AI and MCP (<see cref="AccessSql.SpaceInAi"/>), in the caller's transaction; read
+    /// once per space and request, as every gate of an AI-bound request asks it again (PageGateLockTraceTests).</summary>
+    public async Task<bool> InAiAsync(Guid spaceId, CancellationToken ct)
+    {
+        if (!m_inAi.TryGetValue(spaceId, out var included))
+        {
+            m_inAi[spaceId] = included = await m_session.CreateSQLQuery($"SELECT {AccessSql.SpaceInAi(":space")} AS included")
+                .AddScalar("included", NHibernateUtil.Boolean).SetParameter("space", spaceId).UniqueResultAsync<bool>(ct);
+        }
+        return included;
+    }
 
     public const string WikiAdminOnly = "Tuto operaci může provést pouze správce wiki.";
 
