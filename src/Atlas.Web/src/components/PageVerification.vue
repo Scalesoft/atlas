@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import t from "../i18n/verification";
-import { computed, nextTick, onBeforeUnmount, reactive, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { errorMessage } from "../api";
 import { formatDate } from "../formatDate";
-import { pageAccounts, type PagePerson } from "../contacts/contactSources";
+import { pageAccounts } from "../contacts/contactSources";
+import { useAccountSearch, type PageAccountSource } from "../contacts/useAccountSearch";
 import { pageVerificationApi, verificationIcon, verificationLabel, verificationShown, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
 import AtlasIcon from "./AtlasIcon.vue";
 import { Button } from "./ui/button";
@@ -12,7 +13,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Textarea } from "./ui/textarea";
 import SearchableChoiceList from "./settings/SearchableChoiceList.vue";
 import StatusBadge from "./settings/StatusBadge.vue";
-import type { ChoiceOption } from "./settings/types";
 
 /**
  * „Ověřeno“ at the page title (5.2, plan §3.1): the status chip of the page (StatusBadge, as the catalog badge beside it) as the trigger of a small
@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
   isPublished: boolean;
   api?: PageVerificationApi;
   /** The people an owner may be (the page's accounts); the gallery passes local ones. */
-  people?: (pageId: string, text: string, signal: AbortSignal) => Promise<PagePerson[]>;
+  people?: PageAccountSource;
 }>(), { api: () => pageVerificationApi, people: (pageId: string, text: string, signal: AbortSignal) => pageAccounts(pageId)(text, signal) });
 const emit = defineEmits<{ change: [value: PageVerification]; openHistory: [] }>();
 
@@ -70,6 +70,7 @@ const verify = () => { if (props.canEdit && props.isPublished) void run({ verify
 
 async function show(next: View) {
   view.value = next;
+  if (next === "steward") findStewards();
   error.value = "";
   await nextTick();
   root.value?.querySelector<HTMLElement>("[data-step-focus], input, textarea, button:not([disabled])")?.focus();
@@ -86,26 +87,8 @@ function keydown(event: KeyboardEvent) {
 }
 
 // Změnit garanta: the page's accounts, searched remotely; the first result is preselected, Enter picks it.
-const query = ref("");
-const found = shallowRef<ChoiceOption[]>([]);
-const searching = ref(false);
-let search: AbortController | undefined;
-let timer: ReturnType<typeof setTimeout> | undefined;
-async function lookup() {
-  search?.abort();
-  const controller = (search = new AbortController());
-  searching.value = true;
-  try {
-    const people = await props.people(props.pageId, query.value.trim(), controller.signal);
-    if (!controller.signal.aborted) found.value = people.map((person) => ({ value: person.id, label: person.name, description: person.username ?? person.email ?? undefined, icon: "user" }));
-  } catch {
-    if (!controller.signal.aborted) found.value = [];
-  } finally {
-    if (search === controller) searching.value = false;
-  }
-}
-watch([query, view], () => { if (view.value !== "steward") return; clearTimeout(timer); timer = setTimeout(() => void lookup(), query.value ? 180 : 0); });
-onBeforeUnmount(() => { search?.abort(); clearTimeout(timer); clearTimeout(closing); });
+const { query, options: found, loading: searching, start: findStewards } = useAccountSearch(() => [props.pageId], props.people);
+onBeforeUnmount(() => clearTimeout(closing));
 const pickSteward = (id: string) => void run({ stewardId: id });
 
 function openUntil() {
