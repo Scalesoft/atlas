@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="cs" data-mode="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karta kontaktu na tabuli – varianty</title>
+<style>
+/* Tokeny jako v Atlasu: pohyb z motion.css (fast 120 / base 200 / slow 280 ms, ease-out), tmavý režim v šedých. */
+:root {
+  --m-fast: 120ms; --m-base: 200ms; --m-slow: 280ms; --ease: cubic-bezier(.22, 1, .36, 1); --ease-io: cubic-bezier(.65, 0, .35, 1);
+  --rise: 8px; --press: .98;
+  --page: #eceef0; --board: #f4f5f6; --dot: #d4d7db; --surface: #fff; --hover: #eef0f2; --line: #dcdfe3; --text: #1c1f23; --muted: #666c74;
+  --accent: #2f6f7e; --accent-soft: #e3eff2; --err: #c0353a; --shadow: 0 1px 2px rgb(20 47 59 / .04), 0 8px 24px rgb(20 47 59 / .05);
+  --shadow-hover: 0 2px 4px rgb(20 47 59 / .05), 0 12px 32px rgb(20 47 59 / .1);
+}
+[data-mode="dark"] {
+  --page: #141516; --board: #1a1b1d; --dot: #2b2d30; --surface: #242528; --hover: #2f3134; --line: #3a3c40; --text: #e8e9eb; --muted: #9b9ea5;
+  --accent: #c3c6cd; --accent-soft: #34363a; --err: #f0777b; --shadow: 0 1px 2px rgb(0 0 0 / .2); --shadow-hover: 0 2px 6px rgb(0 0 0 / .3), 0 12px 32px rgb(0 0 0 / .28);
+}
+/* Omezený pohyb: fade nejvýš 160 ms, žádný posun ani otáčení (AGENTS.md). */
+[data-rm] { --m-base: 160ms; --m-slow: 160ms; --rise: 0px; --press: 1; --ease: linear; --ease-io: linear; }
+@media (prefers-reduced-motion: reduce) { :root { --m-base: 160ms; --m-slow: 160ms; --rise: 0px; --press: 1; --ease: linear; --ease-io: linear; } }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--text); font: 14px/1.45 system-ui, "Segoe UI", sans-serif; transition: background-color var(--m-slow) var(--ease); }
+button { font: inherit; color: inherit; }
+svg.i { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- Stránka prototypu ---------- */
+.bar { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 24px; background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.bar h1 { margin: 0 12px 0 0; font-size: 15px; }
+.bar label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; }
+.bar button { padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; }
+main { max-width: 1480px; margin: 0 auto; padding: 8px 24px 64px; }
+section.v { margin-top: 28px; padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+section.v > h2 { margin: 0 0 2px; font-size: 17px; }
+section.v > .sub { margin: 0 0 14px; color: var(--muted); max-width: 90ch; }
+.tag { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; vertical-align: 2px; background: var(--accent-soft); color: var(--accent); }
+.tag.bad { background: color-mix(in srgb, var(--err) 14%, transparent); color: var(--err); }
+.cells { display: flex; flex-wrap: wrap; gap: 76px 36px; align-items: flex-start; padding: 56px 24px 28px; border-radius: 10px; background: var(--board); background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 16px 16px; }
+.cell { display: grid; gap: 6px; }
+.cell > .cap { font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: baseline; }
+.cell > .cap b { color: var(--text); }
+.cell > .status { min-height: 18px; font-size: 12px; color: var(--accent); }
+dl.notes { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 16px; margin: 18px 0 0; font-size: 13px; }
+dl.notes dt { color: var(--muted); font-weight: 600; }
+dl.notes dd { margin: 0; }
+.plus::before { content: "+ "; color: #2d8a4e; font-weight: 700; } .minus::before { content: "− "; color: var(--err); font-weight: 700; }
+details.find { margin-top: 20px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+details.find summary { cursor: pointer; font-weight: 600; }
+details.find ol { margin: 8px 0 0; padding-left: 20px; } details.find li { margin: 4px 0; }
+code { font: 12px ui-monospace, Consolas, monospace; background: var(--hover); padding: 0 4px; border-radius: 4px; }
+table.cmp { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.cmp th, table.cmp td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.cmp th { color: var(--muted); font-weight: 600; }
+.reco { margin-top: 28px; padding: 18px 20px; border-radius: 14px; border: 1px solid var(--accent); background: var(--accent-soft); }
+
+/* ---------- Uzel tabule (slot = BoardNode, node = obrys karty) ---------- */
+.slot { position: relative; display: inline-block; }
+.node { position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); outline: 2px solid transparent; outline-offset: 2px;
+  transition: outline-color var(--m-fast) var(--ease), box-shadow var(--m-fast) var(--ease), border-color var(--m-fast) var(--ease); }
+.slot.is-sel .node { outline-color: var(--accent); }
+@media (hover: hover) and (pointer: fine) { .node:hover { box-shadow: var(--shadow-hover); } }
+.node:focus-visible { outline-color: var(--accent); }
+/* Táhlo karty (ContactObjectCard.vue:53): 22×22, vpravo nahoře 6 px, vidět při hoveru, fokusu a výběru. */
+.grip { position: absolute; z-index: 4; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; color: var(--muted); cursor: grab; opacity: 0; transition: opacity var(--m-fast) var(--ease), background-color var(--m-fast) var(--ease); }
+.slot:hover .grip, .slot:focus-within .grip, .slot.is-sel .grip { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .grip:hover { background: var(--hover); color: var(--text); } }
+/* Úchyty tabule: pravý dolní je funkční (táhněte), pravý horní jen ukazuje geometrii skutečného rohového úchytu (10 px, střed na rohu). */
+.rz { position: absolute; z-index: 5; width: 10px; height: 10px; border: 1.5px solid var(--accent); border-radius: 3px; background: var(--surface); opacity: 0; transition: opacity var(--m-fast) var(--ease); }
+.rz.br { right: -5px; bottom: -5px; cursor: nwse-resize; touch-action: none; } .rz.tr { right: -5px; top: -5px; pointer-events: none; }
+.slot:hover .rz, .slot.is-sel .rz { opacity: 1; }
+
+/* ---------- Karta kontaktu (společný základ) ---------- */
+.card { position: relative; width: 100%; height: 100%; container: c / size; color: var(--text); }
+.card.free { container-type: normal; }
+.row { display: flex; gap: 12px; height: 100%; padding: 12px 14px; }
+.av { position: relative; display: grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 13px; font-weight: 700; }
+.body { display: grid; align-content: start; gap: 3px; min-width: 0; flex: 1; }
+.head { display: grid; min-width: 0; padding-right: 26px; /* roh patří táhlu */ }
+.nm { overflow: hidden; font-size: 15px; font-weight: 650; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.rl { overflow: hidden; color: var(--muted); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+.ln { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; color: var(--text); }
+.ln > svg { color: var(--muted); }
+.ln > span.v { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--accent); }
+.ln > span.sp { flex: 1; }
+.t-m, .t-l { display: none; }
+/* Úrovně podle velikosti karty (container query na kartě samotné, ne na obrazovce). */
+@container c (max-height: 79px) { .rl { display: none; } }
+@container c (max-height: 109px) { .row { padding: 10px 12px; gap: 10px; } .av { width: 32px; height: 32px; font-size: 12px; } }
+@container c (min-height: 110px) { .t-m { display: flex; } }
+@container c (min-height: 200px) and (min-width: 340px) { .t-l { display: flex; } .av { width: 46px; height: 46px; font-size: 16px; } .nm { font-size: 17px; } .row { padding: 16px 18px; gap: 14px; } .body { gap: 5px; } }
+@container c (max-width: 219px) { .nm { font-size: 14px; } .row { gap: 9px; } }
+
+/* Tlačítka karty */
+.ib { display: inline-grid; flex: none; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; transition: background-color var(--m-fast) var(--ease), color var(--m-fast) var(--ease), scale var(--m-fast) var(--ease); }
+@media (hover: hover) and (pointer: fine) { .ib:hover { background: var(--hover); color: var(--text); } }
+.ib:active { scale: var(--press); } .ib[aria-pressed="true"], .ib[aria-expanded="true"] { background: var(--accent-soft); color: var(--accent); }
+.acts { display: inline-flex; gap: 2px; opacity: 0; transition: opacity var(--m-fast) var(--ease); }
+.slot:hover .acts, .slot:focus-within .acts, .slot.is-sel .acts { opacity: 1; }
+@media (hover: none) { .acts { opacity: 1; } }
+.ib .lbl { display: none; }
+@container c (min-width: 340px) { .acts.wide .ib { width: auto; padding: 0 8px; gap: 5px; } .acts.wide .lbl { display: inline; font-size: 12px; } }
+
+/* QR (vždy černé na bílém, v každém tématu) */
+.qrb { background: #fff; border-radius: 8px; box-shadow: 0 0 0 1px var(--line); overflow: hidden; }
+.qrb svg { display: block; width: 100%; height: 100%; }
+.qrv { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; gap: 14px; padding: 12px; background: var(--surface); opacity: 0; visibility: hidden; scale: .98;
+  transition: opacity var(--m-base) var(--ease), scale var(--m-base) var(--ease), visibility 0s linear var(--m-base); }
+[data-qr="on"] .card > .qrv, [data-qr="on"] .fixed > .qrv { opacity: 1; visibility: visible; scale: 1; transition-delay: 0s; }
+.qrv .qrb { flex: none; width: min(calc(100cqh - 24px), 56cqw); aspect-ratio: 1; }
+.qrv .cap2 { display: grid; gap: 4px; min-width: 0; padding-right: 26px; align-content: center; }
+.qrv .cap2 strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.qrv .cap2 .hint { color: var(--muted); font-size: 12px; line-height: 1.35; }
+.qrv .cap2 .btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border: 1px solid var(--line); border-radius: 7px; background: transparent; font-size: 12px; cursor: pointer; transition: background-color var(--m-fast) var(--ease); }
+@media (hover: hover) and (pointer: fine) { .pill:hover { background: var(--hover); } }
+@container c (max-aspect-ratio: 5/4) {
+  .qrv { flex-direction: column; justify-content: center; gap: 8px; text-align: center; }
+  .qrv .qrb { width: min(calc(100cqw - 24px), calc(100cqh - 24px - 34px)); }
+  .qrv .cap2 { padding-right: 0; justify-items: center; } .qrv .cap2 .hint { display: none; }
+}
+@container c (max-height: 169px) { .qrv .cap2 .hint { display: none; } }
+
+/* Bublina QR mimo kartu (portál): nezávisí na velikosti karty */
+.pop { position: absolute; z-index: 10; top: calc(100% + 10px); left: 0; display: grid; justify-items: center; gap: 8px; width: 244px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-hover);
+  opacity: 0; visibility: hidden; translate: 0 calc(var(--rise) * -1); transition: opacity var(--m-menu, 140ms) var(--ease), translate var(--m-menu, 140ms) var(--ease), visibility 0s linear 140ms; }
+.pop.open { opacity: 1; visibility: visible; translate: 0 0; transition-delay: 0s; }
+.pop .qrb { width: 200px; height: 200px; } .pop p { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ---------- Dnešní stav (chyba) ---------- */
+.v0 .card { container-type: normal; overflow: auto; scrollbar-width: thin; }
+.v0 .row { height: auto; }
+.v0 .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; padding-right: 0; }
+.v0 .nm { overflow: visible; white-space: normal; font-size: 15px; }
+.v0 .share { display: inline-flex; gap: 2px; margin-left: auto; align-self: center; }
+.v0 .share .ib { outline: 1px dashed var(--err); outline-offset: -1px; }
+.v0 .grip { outline: 1px dashed var(--err); outline-offset: -1px; }
+.v0 .body > .ln, .v0 .body > .lines { display: flex; }
+.v0 .lines { flex-wrap: wrap; gap: 0 10px; color: var(--muted); font-size: 13px; }
+.v0 ul { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
+.v0 .qrpanel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--m-base) var(--ease); }
+.v0 [data-qr="on"] .qrpanel { grid-template-rows: 1fr; }
+.v0 .qrpanel > div { overflow: hidden; min-height: 0; }
+.v0 .qrpanel .qrb { width: 216px; height: 216px; margin: 10px 0 2px; }
+
+/* ---------- B: otočení na rub ---------- */
+.vB .card { perspective: 900px; }
+.vB .flip { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform var(--m-slow) var(--ease-io); }
+.vB [data-qr="on"] .flip { transform: rotateY(180deg); }
+.vB .face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: inherit; background: var(--surface); }
+.vB .face.back { transform: rotateY(180deg); }
+.vB .face.back .qrv { position: absolute; opacity: 1; visibility: visible; scale: 1; transition: none; }
+[data-rm] .vB .flip, :root[data-rm] .vB .flip { transform: none !important; transition: none; }
+[data-rm] .vB .face { transition: opacity var(--m-base) linear; backface-visibility: visible; transform: none !important; }
+[data-rm] .vB .face.back { opacity: 0; } [data-rm] .vB [data-qr="on"] .face.front { opacity: 0; } [data-rm] .vB [data-qr="on"] .face.back { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .vB .flip { transform: none !important; transition: none; } .vB .face { transition: opacity var(--m-base) linear; backface-visibility: visible; transform: none !important; }
+  .vB .face.back { opacity: 0; } .vB [data-qr="on"] .face.front { opacity: 0; } .vB [data-qr="on"] .face.back { opacity: 1; }
+}
+
+/* ---------- C: akce v kontextovém panelu ---------- */
+.tb { position: absolute; z-index: 9; bottom: calc(100% + 10px); left: 0; display: flex; gap: 2px; padding: 4px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow-hover); opacity: 0; visibility: hidden; translate: 0 var(--rise);
+  transition: opacity var(--m-base) var(--ease), translate var(--m-base) var(--ease), visibility 0s linear var(--m-base); }
+.slot.is-sel .tb { opacity: 1; visibility: visible; translate: 0 0; transition-delay: 0s; }
+.tb .ib { width: 28px; height: 28px; } .tb .sw { width: 16px; height: 16px; border-radius: 999px; background: var(--accent-soft); border: 1px solid var(--line); }
+.tb .sep { width: 1px; margin: 4px 3px; background: var(--line); }
+
+/* ---------- D: proporcionální škálování ---------- */
+.vD .card { container-type: normal; }
+.vD .fixed { position: absolute; left: 0; top: 0; width: 270px; height: 160px; container: c / size; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Karta kontaktu na tabuli</h1>
+  <label><input type="checkbox" id="dark"> Tmavý režim</label>
+  <label><input type="checkbox" id="rm"> Omezený pohyb</label>
+  <label><input type="checkbox" id="sel" checked> Karta vybraná (táhlo, panel, úchyty)</label>
+  <button id="allqr" type="button">Přepnout QR u všech</button>
+  <span style="color:var(--muted);font-size:12px">Každou kartu lze táhnout za pravý dolní úchyt. Klávesy na kartě (Tab): <code>Q</code> QR · <code>V</code> vCard · <code>Esc</code> zpět.</span>
+</div>
+<main>
+<details class="find" open>
+  <summary>Co přesně koliduje dnes (kód, větev develop)</summary>
+  <ol>
+    <li><b>Táhlo × tlačítka.</b> <code>ContactObjectCard.vue:53</code> – <code>.bcard-contact-drag</code> je <code>absolute; top:6px; right:6px; 22×22</code>, viditelné při hoveru, fokusu a výběru (:54). <code>ContactCard.vue</code> – <code>.contact-share</code> (2× 26 px, <code>margin-left:auto</code>) sedí v řádku jména u pravého okraje, 14 px od hrany (padding <code>boardCard.css:7</code>). QR ikona zabírá x 14–40, y 12–38 px, táhlo x 6–28, y 6–28 → překryv ≈ 14×16 px. Táhlo je pozicované, maluje se nad nepozicovanými tlačítky a bere jim klik.</li>
+    <li><b>QR se nevejde.</b> <code>InlineReveal</code> na konci <code>.contact-body</code> rozbalí 216×216 px QR pod telefony (ve stránce karta roste). Na tabuli je výška pevná (<code>boardCard.css:7</code> <code>height:100%; overflow:hidden</code>), <code>ContactObjectCard.vue:52</code> přepíná na <code>overflow:auto</code> → vnitřní posuvník a ustřižený kód.</li>
+    <li><b>Žádné škálování.</b> <code>ContactCard.vue</code> má <code>container-type:inline-size</code>, ale ani jedno <code>@container</code> pravidlo; jediná varianta je <code>compact</code> (skryje i QR).</li>
+    <li><b>Úchyty tabule</b> (<code>BoardNode.vue:213, 341-360</code>): rohový resize úchyt 10 px (střed na rohu) leží pár px od táhla; akce vpravo nahoře jsou tak mezi dvěma ovládacími prvky tabule. Táhlo je <code>aria-hidden</code> bez fokusu, klávesnicová cesta k přetažení neexistuje.</li>
+    <li><b>Úpravy v místě.</b> Úrovně podle velikosti musí platit jen v klidu; při úpravě (<code>editing</code>, <code>nodrag nopan nowheel</code>) se zobrazí všechna pole a karta scrolluje.</li>
+  </ol>
+</details>
+<div id="variants"></div>
+
+<section class="v">
+  <h2>Srovnání</h2>
+  <table class="cmp">
+    <tr><th></th><th>A · úrovně + QR v kartě</th><th>B · rub karty</th><th>C · panel + bublina</th><th>D · škálování</th></tr>
+    <tr><th>Kolize s táhlem a úchyty</th><td>žádná (roh vyhrazen)</td><td>žádná</td><td>žádná (v kartě nejsou ikony)</td><td>žádná, ale vše se zmenšuje</td></tr>
+    <tr><th>Čitelnost při 180×90</th><td>jméno + role, ostrý text</td><td>jméno + role</td><td>jméno + role</td><td>text ~8 px, špatně čitelný</td></tr>
+    <tr><th>QR sedí ve všech velikostech</th><td>ano, do výšky karty; pod 120 px bublina</td><td>ano (rub), pod 120 px bublina</td><td>vždy (bublina)</td><td>zmenšený s kartou</td></tr>
+    <tr><th>Objevitelnost akcí</th><td>střední (ikony při hoveru/výběru)</td><td>střední</td><td>nižší, ale shodná s ostatními kartami tabule</td><td>střední</td></tr>
+    <tr><th>Klávesnice</th><td>Tab na ikony, Q / V na kartě</td><td>stejně, Esc = zpět</td><td>výběr → panel (šipky), Esc zpět</td><td>jako A</td></tr>
+    <tr><th>Pohyb</th><td>cross-fade + scale .98 (200 ms)</td><td>3D otočení 280 ms (omezený pohyb: fade)</td><td>panel i bublina: fade + rise 8 px</td><td>žádný nový</td></tr>
+    <tr><th>Práce</th><td>M: CSS kontejnerové úrovně + přepínač v <code>ContactCard.vue</code></td><td>M–V: A + dvě tváře, inert, náhrada za omezený pohyb</td><td>M: větev v <code>BoardContextToolbar.vue</code> + bublina + CSS úrovně</td><td>S: ResizeObserver, ale slepá ulička</td></tr>
+  </table>
+</section>
+
+<div class="reco">
+  <h2 style="margin:0 0 6px;font-size:17px">Doporučení: A + C dohromady</h2>
+  <p style="margin:0 0 6px"><b>Úrovně podle velikosti karty (A)</b> jsou nutný základ – bez nich se kontakt nevejde ani při dalších úpravách. <b>Vizitka (vCard) a QR patří do kontextového panelu tabule (C)</b>, jako akce všech ostatních karet: z karty zmizí ikony vpravo nahoře, kolize skončí a táhlo zůstane jediným prvkem v rohu. QR se pak ukáže <b>na místě karty</b> (nahradí detaily, velikost podle kratší strany, A); je-li karta příliš malá na sken (&lt; 120 px výšky), otevře se bublina vedle karty. Na kartě zůstane navíc nenápadná akce (A) až od střední velikosti. Rub karty (B) je hezký, ale 3D otáčení stojí víc práce a omezený pohyb mu bere smysl; škálování (D) nedoporučuji.</p>
+  <p style="margin:0;color:var(--muted)">Při úpravě karty (Enter, F2, dvojklik) se úrovně vypnou: všechna pole zůstanou dostupná a karta scrolluje jako dnes.</p>
+</div>
+</main>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const P = {
+  grip: '<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',
+  dl: '<path d="M12 3v12m0 0-4-4m4 4 4-4M4 20h16"/>', qr: '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h3v3h-3zM20 14v3M14 20h6"/>',
+  mail: '<path d="M3 6h18v12H3zM3 7l9 7 9-7"/>', tel: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+  web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>', pin: '<path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  back: '<path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/>', flip: '<path d="M4 12a8 8 0 0 1 14-5l2 2M20 4v5h-5M20 12a8 8 0 0 1-14 5l-2-2M4 20v-5h5"/>',
+  open: '<path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/>', more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+};
+const ic = (n, s) => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true"${s ? ` style="width:${s}px;height:${s}px"` : ''}>${P[n]}</svg>`;
+// Vymyšlená osoba a data (example.test); QR je jen ukázka vzoru, ne čitelný kód.
+const D = { name: 'Alena Vzorová', ini: 'AV', role: 'Vedoucí produktu', org: 'Example s.r.o.', mail: 'alena.vzorova@example.test', tel: '+420 601 000 123', tel2: '+420 224 000 456', web: 'example.test', addr: 'Vzorová 12, 110 00 Praha' };
+function qrSvg(seed = 7) {
+  const n = 25; let s = seed; const rnd = () => (s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32; const m = [];
+  for (let y = 0; y < n; y++) { m[y] = []; for (let x = 0; x < n; x++) m[y][x] = rnd() > .52; }
+  for (const [ox, oy] of [[0, 0], [n - 7, 0], [0, n - 7]]) {
+    for (let y = -1; y < 8; y++) for (let x = -1; x < 8; x++) { const X = ox + x, Y = oy + y; if (X < 0 || Y < 0 || X >= n || Y >= n) continue; m[Y][X] = x >= 0 && y >= 0 && x < 7 && y < 7 && (x === 0 || y === 0 || x === 6 || y === 6 || (x > 1 && x < 5 && y > 1 && y < 5)); }
+  }
+  let d = ''; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (m[y][x]) d += `M${x} ${y}h1v1h-1z`;
+  return `<svg viewBox="-2 -2 ${n + 4} ${n + 4}" shape-rendering="crispEdges"><rect x="-2" y="-2" width="${n + 4}" height="${n + 4}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+const qrBox = '<div class="qrb" role="img" aria-label="QR kód kontaktu (ukázka)">' + qrSvg() + '</div>';
+const lines = (acts) => `
+  <div class="ln t-m">${ic('mail')}<span class="v">${D.mail}</span></div>
+  <div class="ln t-m">${ic('tel')}<span class="v">${D.tel}</span><span class="sp"></span>${acts || ''}</div>
+  <div class="ln t-l">${ic('tel')}<span class="v">${D.tel2}</span></div>
+  <div class="ln t-l">${ic('web')}<span class="v">${D.web}</span></div>
+  <div class="ln t-l">${ic('pin')}<span class="v" style="color:var(--text)">${D.addr}</span></div>`;
+const head = `<div class="head"><strong class="nm">${D.name}</strong><span class="rl">${D.role} · ${D.org}</span></div>`;
+const btn = (act, icon, label, extra = '') => `<button type="button" class="ib" data-act="${act}" title="${label}" aria-label="${label}" ${extra}>${ic(icon)}<span class="lbl">${act === 'qr' ? 'QR' : 'vCard'}</span></button>`;
+const acts = `<span class="acts wide">${btn('vcf', 'dl', 'Stáhnout vizitku (vCard)')}${btn('qr', 'qr', 'Zobrazit QR kód', 'aria-pressed="false"')}</span>`;
+const qrView = `<div class="qrv" inert>${qrBox}<div class="cap2"><strong>${D.name}</strong><span class="hint">Naskenujte telefonem: celá vizitka je v kódu, funguje i v uzavřené síti.</span><span class="btns"><button type="button" class="pill" data-act="qr">${ic('back')} Zpět <kbd>Esc</kbd></button><button type="button" class="pill" data-act="vcf">${ic('dl')} vCard</button></span></div></div>`;
+const grip = `<span class="grip" draggable="true" aria-hidden="true" title="Přetáhnout kontakt na stránku nebo tabuli">${ic('grip', 14)}</span>`;
+const pop = `<div class="pop" role="dialog" aria-label="QR kód kontaktu">${qrBox}<p>${D.name} · naskenujte telefonem</p></div>`;
+
+const V = [
+  { id: '0', cls: 'v0', title: 'Dnešní stav', tag: ['chyba', 'bad'], sub: 'Takto kontakt vypadá teď (ContactObjectCard → ContactCard). Červeně čárkovaně: tlačítka a táhlo se překrývají; QR se rozbalí pod obsah a karta dostane vnitřní posuvník.',
+    inner: () => `<div class="card"><div class="row"><span class="av">${D.ini}</span><div class="body"><div class="head"><strong class="nm">${D.name}</strong><span class="share">${btn('vcf', 'dl', 'Stáhnout vizitku (vCard)')}${btn('qr', 'qr', 'Zobrazit QR kód', 'aria-pressed="false"')}</span></div>
+      <div class="lines"><span>${D.role}</span><span>· ${D.org}</span></div><ul><li class="ln">${ic('mail')}<span class="v">${D.mail}</span></li><li class="ln">${ic('tel')}<span class="v">${D.tel}</span></li><li class="ln">${ic('tel')}<span class="v">${D.tel2}</span></li><li class="ln">${ic('web')}<span class="v">${D.web}</span></li></ul>
+      <div class="qrpanel"><div>${qrBox}</div></div></div></div></div>`, extra: grip, inPlace: false, fallback: false, noNodeQr: true,
+    notes: [['Problém', 'x', 'Táhlo přes tlačítka, QR pod obsahem, posuvník uvnitř karty; při 180×90 nevidíte skoro nic. Ikony jsou vždy v pravém horním rohu mezi táhlem a rohovým úchytem.']] },
+  { id: 'A', cls: 'vA', title: 'A · Úrovně podle velikosti, QR nahradí obsah', tag: ['doporučený základ', ''],
+    sub: 'Karta je kontejner. Malá: avatar + jméno (+ role). Střední: + e-mail a telefon. Velká: vše, akce s popisky. Pravý horní roh je vyhrazený táhlu; akce sedí na řádku telefonu. QR překryje kartu (cross-fade + scale), velikost podle kratší strany; pod 120 px výšky se otevře bublina.',
+    inner: () => `<div class="card"><div class="row"><span class="av">${D.ini}</span><div class="body">${head}${lines(acts)}</div></div>${qrView}</div>`, extra: grip + pop, inPlace: true, fallback: true,
+    notes: [
+      ['Vzhled', 'S 180×90: avatar + jméno + role, nic víc, žádné ikony. M 270×160: + e-mail, telefon, ikony vCard a QR u telefonu (hover/výběr). L 420×280: + druhý telefon, web, adresa, ikony s popisky. QR vyplní výšku karty, vlevo kód, vpravo popisek a „Zpět“; u skoro čtvercové karty pod sebou.'],
+      ['Táhlo a akce', 'Táhlo má roh pro sebe (<code>padding-right: 26px</code> jen v hlavičce); akce jsou o řádek níž a vlevo od rohového úchytu. Žádný překryv ani u 180 px.'],
+      ['Klávesnice', 'Tab: karta → vCard → QR. <code>Q</code>/<code>V</code> na fokusované kartě fungují i na S, kde ikony nejsou. Esc zavře QR. Fokus jde na „Zpět“ a po zavření se vrací na QR tlačítko.'],
+      ['Pohyb', 'QR: opacity + scale .98→1 za <code>--atlas-motion-base</code>, obrácené uprostřed plynule; omezený pohyb jen fade. Ikony se rozsvěcují opacity (bez posunu).'],
+      ['Tmavý režim', 'Šedé plochy a čáry z tokenů; QR zůstává černé na bílém (telefon čte jen to).'],
+      ['Plusy', 'Jedna karta, žádný nový koncept; nový rozměr se jen přidá; vše v CSS + jeden přepínač.', 'plus'],
+      ['Mínusy', 'Na S nejsou akce vidět (klávesy, nebo panel – viz C); QR zakryje údaje, dokud ho nezavřete.', 'minus'],
+      ['Práce', 'Střední: <code>@container</code> pravidla v <code>ContactCard.vue</code>, QR vrstva místo <code>InlineReveal</code>, úrovně vypnout při <code>editable</code>.'],
+    ] },
+  { id: 'B', cls: 'vB', title: 'B · QR na rubu karty (otočení)', tag: ['hezké, dražší', ''],
+    sub: 'Stejné úrovně jako A, ale QR je rub vizitky: karta se otočí kolem svislé osy. Na rubu QR, „Zpět“ a vCard. Pod 120 px výšky bublina.',
+    inner: () => `<div class="card"><div class="flip"><div class="face front"><div class="row"><span class="av">${D.ini}</span><div class="body">${head}${lines(`<span class="acts wide">${btn('vcf', 'dl', 'Stáhnout vizitku (vCard)')}${btn('qr', 'flip', 'Otočit kartu: QR kód', 'aria-pressed="false"')}</span>`)}</div></div></div>
+      <div class="face back">${qrView.replace(' inert', '')}</div></div></div>`, extra: grip + pop, inPlace: true, fallback: true, flip: true,
+    notes: [
+      ['Vzhled', 'Přední strana jako A. Zadní: QR podle kratší strany. Metafora papírové vizitky je srozumitelná.'],
+      ['Táhlo a akce', 'Stejně jako A. Táhlo se neotáčí (leží nad kartou ve slotu).'],
+      ['Klávesnice', 'Stejná jako A; skrytá strana je <code>inert</code>, takže Tab nezabloudí na neviditelné tlačítko.'],
+      ['Pohyb', '<code>rotateY</code> 280 ms (<code>--atlas-motion-slow</code>, ease-in-out). Omezený pohyb: žádné otáčení, jen cross-fade ≤ 160 ms (zapněte nahoře).'],
+      ['Plusy', 'Nejnázornější „rub“; QR nic nezakrývá po zavření; vyplní celou plochu.', 'plus'],
+      ['Mínusy', '3D transformace rozmaže text za pohybu, na tabuli se zoomem a mnoha kartami je to další vrstva kompozice; dvě tváře = dvojí údržba; pravidlo „žádné skoky“ vyžaduje samostatnou náhradu pro omezený pohyb.', 'minus'],
+      ['Práce', 'Střední až vyšší: A + dvě tváře, <code>inert</code>, záloha pro omezený pohyb, test pohybu.'],
+    ] },
+  { id: 'C', cls: 'vC', title: 'C · Akce v kontextovém panelu, QR v bublině', tag: ['doporučená akce', ''],
+    sub: 'V kartě nejsou žádné ikony. Vybraná karta ukáže kontextový panel tabule (BoardContextToolbar) s tlačítky vCard a QR; QR se otevře v bublině vedle karty, nezávisle na její velikosti. Obsah kartě škálují úrovně jako v A.',
+    inner: () => `<div class="card"><div class="row"><span class="av">${D.ini}</span><div class="body">${head}${lines('')}</div></div></div>`, extra: grip + pop, tb: true, popQr: true,
+    notes: [
+      ['Vzhled', 'Karta je čistý obsah ve třech úrovních, bez ikon; nad vybranou kartou plave panel: barva · vCard · QR · otevřít · více. QR bublina má pevných 200 px, takže vždy sedí a je ostrý.'],
+      ['Táhlo a akce', 'V rohu je jen táhlo a úchyt tabule. Akce nejsou nikdy v kartě, tedy nemohou kolidovat s ničím.'],
+      ['Klávesnice', 'Výběr karty → panel (šipky, Home, End procházejí tlačítka, Esc zpět na tabuli – jak už panel funguje). V prototypu: Tab z karty do panelu, šipky mezi tlačítky. <code>Q</code> a <code>V</code> na kartě navíc.'],
+      ['Pohyb', 'Panel i bublina: opacity + rise 8 px (<code>--atlas-rise</code>), zavření 140 ms; omezený pohyb jen fade.'],
+      ['Plusy', 'Shodné s ostatními kartami tabule, nulová kolize, QR vždy čitelný, málo CSS v kartě.', 'plus'],
+      ['Mínusy', 'Akce nejsou vidět na nevybrané kartě (objevitelnost); QR není „v kartě“; panel potřebuje novou větev pro kontakt.', 'minus'],
+      ['Práce', 'Střední: větev v <code>BoardContextToolbar.vue</code> pro objekt typu kontakt + bublina (reka-ui Popover jako paleta barev) + úrovně jako A.'],
+    ] },
+  { id: 'D', cls: 'vD', title: 'D · Proporcionální škálování celé karty', tag: ['slepá ulička', 'bad'],
+    sub: 'Jedna kompozice 270×160 se zvětšuje a zmenšuje jako celek (jako vzorec na tabuli, BoardBlock „fit“). Žádné úrovně, žádná kolize, ale nic se nepřeskládá.',
+    inner: () => `<div class="card"><div class="fixed"><div class="row"><span class="av">${D.ini}</span><div class="body">${head}${lines(acts)}</div></div>${qrView}</div></div>`, extra: grip, inPlace: true, fallback: false, scale: true,
+    notes: [
+      ['Vzhled', 'S 180×90: celek na 56 %, text kolem 7 px, nečitelné. L 420×280: celek na 175 %, velká písmena a prázdné pásy při jiném poměru stran.'],
+      ['Táhlo a akce', 'Uvnitř zmenšené kompozice jsou ikony 15 px → 8 px, cíl pro klik nepoužitelný. Táhlo je nezávislé.'],
+      ['Plusy', 'Triviální (ResizeObserver + scale), žádná logika úrovní.', 'plus'],
+      ['Mínusy', 'Nečitelné malé, plýtvá velkými, zoom není responzivita; ikony a QR tlačítka nelze zasáhnout; poměr stran se nepřizpůsobí.', 'minus'],
+      ['Práce', 'Nízká, ale výsledek neuspokojí.'],
+    ] },
+];
+
+const root = $('#variants'); const sizes = [['S', 180, 90], ['M', 270, 160], ['L', 420, 280], ['Vlastní', 320, 200]];
+let selected = true;
+V.forEach(v => {
+  const sec = document.createElement('section'); sec.className = 'v ' + v.cls;
+  sec.innerHTML = `<h2>${v.title}<span class="tag ${v.tag[1]}">${v.tag[0]}</span></h2><p class="sub">${v.sub}</p><div class="cells"></div><dl class="notes">${v.notes.map(([k, t, c]) => `<dt>${k}</dt><dd class="${c || ''}">${c ? t : t === 'x' ? '' : t}</dd>`).join('').replace(/<dd class="">x<\/dd>/, '')}</dl>`;
+  root.append(sec);
+  const cells = $('.cells', sec);
+  sizes.forEach(([name, w, h]) => {
+    const cell = document.createElement('div'); cell.className = 'cell';
+    cell.innerHTML = `<div class="cap"><b>${name}</b><span class="dim"></span></div><div class="slot${selected ? ' is-sel' : ''}" data-v="${v.id}"><div class="node" tabindex="0" role="group" aria-label="Kontakt ${D.name}" style="width:${w}px;height:${h}px" data-qr="off">${v.inner()}</div>${v.extra || ''}<span class="rz tr"></span><span class="rz br" title="Změnit velikost"></span></div><div class="status" aria-live="polite"></div>`;
+    const slot = $('.slot', cell); slot.dataset.inplace = v.inPlace ? '1' : ''; slot.dataset.fallback = v.fallback ? '1' : ''; slot.dataset.pop = v.popQr ? '1' : '';
+    if (v.tb) slot.insertAdjacentHTML('beforeend', `<div class="tb" role="toolbar" aria-label="Akce karty"><button type="button" class="ib" aria-label="Pozadí"><span class="sw"></span></button><span class="sep"></span>${btn('vcf', 'dl', 'Stáhnout vizitku (vCard)')}${btn('qr', 'qr', 'Zobrazit QR kód', 'aria-pressed="false" aria-haspopup="dialog"')}<button type="button" class="ib" aria-label="Otevřít kontakt">${ic('open')}</button><button type="button" class="ib" aria-label="Více">${ic('more')}</button></div>`);
+    cells.append(cell); wire(slot, v);
+  });
+});
+
+function tier(w, h) { return h < 110 ? (h < 80 ? 'XS (jen jméno)' : 'XS') : h >= 200 && w >= 340 ? 'L' : 'M'; }
+function wire(slot, v) {
+  const node = $('.node', slot), cell = slot.parentElement, dim = $('.dim', cell), status = $('.status', cell), fixed = $('.fixed', node);
+  const say = t => { status.textContent = t; clearTimeout(say.t); say.t = setTimeout(() => status.textContent = '', 2600); };
+  const ro = new ResizeObserver(() => {
+    const w = node.clientWidth, h = node.clientHeight;
+    dim.textContent = `${node.offsetWidth}×${node.offsetHeight} px · úroveň ${v.scale ? 'M (měřítko ' + Math.min(w / 270, h / 160).toFixed(2) + ')' : v.id === '0' ? '— (bez úrovní)' : tier(w, h)}`;
+    if (fixed) { const k = Math.min(w / 270, h / 160); fixed.style.transform = `translate(${(w - 270 * k) / 2}px,${(h - 160 * k) / 2}px) scale(${k})`; }
+  }); ro.observe(node);
+  const setQr = (on, viaPop) => {
+    $$('[data-act="qr"]', slot).forEach(b => { b.setAttribute('aria-pressed', on); if (b.hasAttribute('aria-expanded') || viaPop) b.setAttribute('aria-expanded', on); });
+    if (viaPop) { $('.pop', slot)?.classList.toggle('open', on); return; }
+    node.dataset.qr = on ? 'on' : 'off';
+    const q = $('.qrv', node), f = $('.face.front', node), b = $('.face.back', node);
+    if (q && !b) q.inert = !on; if (f) { f.inert = on; b.inert = !on; }
+    if (on) setTimeout(() => $('.qrv .pill', node)?.focus({ preventScroll: true }), 60);
+    else if (slot.contains(document.activeElement)) $('[data-act="qr"]', slot)?.focus({ preventScroll: true });
+  };
+  const isOn = () => node.dataset.qr === 'on' || $('.pop.open', slot);
+  const toggle = () => {
+    const small = node.clientHeight < 120;
+    if (v.noNodeQr) { const on = node.dataset.qr !== 'on'; node.dataset.qr = on ? 'on' : 'off'; $$('[data-act="qr"]', slot).forEach(b => b.setAttribute('aria-pressed', on)); say(on ? 'QR se rozbalil pod obsah (karta dostala posuvník)' : 'QR zavřen'); return; }
+    if (isOn()) { setQr(false, !!$('.pop.open', slot)); say('QR zavřen'); return; }
+    if (v.popQr || (v.fallback && small)) { setQr(true, true); say(small && !v.popQr ? 'Karta je příliš malá na sken → QR v bublině' : 'QR v bublině'); }
+    else { setQr(true, false); say('QR místo obsahu karty'); }
+  };
+  slot.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    if (b.dataset.act === 'qr') toggle(); else say('Stahuje se vizitka „Alena_Vzorova.vcf“');
+  });
+  slot.addEventListener('keydown', e => {
+    if (e.target.matches('input,textarea')) return;
+    if (e.key === 'Escape' && isOn()) { e.preventDefault(); if (!v.noNodeQr) toggle(); }
+    else if (e.target === node && (e.key === 'q' || e.key === 'Q')) toggle();
+    else if (e.target === node && (e.key === 'v' || e.key === 'V')) say('Stahuje se vizitka „Alena_Vzorova.vcf“');
+    else if (e.target.closest('.tb') && /Arrow(Left|Right)|Home|End/.test(e.key)) {
+      const bs = $$('.tb .ib', slot), i = bs.indexOf(document.activeElement); const n = e.key === 'Home' ? 0 : e.key === 'End' ? bs.length - 1 : i + (e.key === 'ArrowRight' ? 1 : -1);
+      bs[(n + bs.length) % bs.length].focus(); e.preventDefault();
+    }
+  });
+  const br = $('.rz.br', slot);
+  br.addEventListener('pointerdown', e => {
+    e.preventDefault(); br.setPointerCapture(e.pointerId); const x0 = e.clientX, y0 = e.clientY, w0 = node.offsetWidth, h0 = node.offsetHeight;
+    const move = m => { node.style.width = Math.max(120, w0 + m.clientX - x0) + 'px'; node.style.height = Math.max(64, h0 + m.clientY - y0) + 'px'; };
+    br.addEventListener('pointermove', move); br.addEventListener('pointerup', () => br.removeEventListener('pointermove', move), { once: true });
+  });
+}
+document.addEventListener('pointerdown', e => $$('.pop.open').forEach(p => { if (!p.parentElement.contains(e.target)) { p.classList.remove('open'); $$('[data-act="qr"]', p.parentElement).forEach(b => { b.setAttribute('aria-pressed', 'false'); b.setAttribute('aria-expanded', 'false'); }); } }));
+
+$('#dark').onchange = e => document.documentElement.dataset.mode = e.target.checked ? 'dark' : 'light';
+$('#rm').onchange = e => { document.documentElement.toggleAttribute('data-rm', e.target.checked); };
+$('#sel').onchange = e => { selected = e.target.checked; $$('.slot').forEach(s => s.classList.toggle('is-sel', selected)); };
+$('#allqr').onclick = () => $$('.slot').forEach(s => { const b = $('[data-act="qr"]', s); b && b.click(); });
+if (matchMedia('(prefers-color-scheme: dark)').matches) { $('#dark').checked = true; document.documentElement.dataset.mode = 'dark'; }
+</script>
+</body>
+</html>
