@@ -36,6 +36,8 @@ export interface BoardCanvasContext {
   dropTarget: Readonly<Ref<ReadonlySet<string>>>;
   /** `single`, `editing`, the highlighting, `dropTarget` and `hoveredEdge` as an item reads them for itself ({@link perItem}). */
   per: { single(id: string): boolean; editing(id: string): boolean; mark(id: string): NodeMark | undefined; linkMark(id: string): LinkMark | undefined; dropTarget(id: string): boolean; hoveredEdge(id: string): boolean };
+  /** The radius of the circle a connector's end is grabbed by (larger for a finger). */
+  endRadius: Readonly<Ref<number>>;
   startEdit(id: string): void;
   /** Saves `text` of `id` as one `set` while its edit goes on (a pause in typing, the page hidden). */
   saveText(id: string, text: string): void;

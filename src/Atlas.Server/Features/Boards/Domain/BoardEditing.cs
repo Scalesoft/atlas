@@ -91,7 +91,7 @@ public static class BoardEditing
             }
             else
             {
-                rejection = Edit(item, change, sequence, out next);
+                rejection = Edit(items, item, change, sequence, out next);
             }
             if (rejection is not null)
             {
@@ -120,7 +120,7 @@ public static class BoardEditing
             { Type: "create" } => new BoardChange(change.Type, Item: change.Item is { } item ? item with { Props = BoardProps.Canonical(item.Props ?? []) } : null),
             { Type: "move" } => new BoardChange(change.Type, ItemId: change.ItemId, X: change.X, Y: change.Y, Width: change.Width, Height: change.Height),
             { Type: "set" } => new BoardChange(change.Type, ItemId: change.ItemId, Text: change.Text, Color: change.Color,
-                Props: change.Props is { } props ? BoardProps.Canonical(props) : null),
+                Props: change.Props is { } props ? BoardProps.Canonical(props) : null, From: change.From, To: change.To),
             { Type: "reorder" } => new BoardChange(change.Type, ItemId: change.ItemId, Z: change.Z),
             { Type: "delete" or "restore" } => new BoardChange(change.Type, ItemId: change.ItemId),
             { Type: "parent" } => new BoardChange(change.Type, ItemId: change.ItemId, ParentId: change.ParentId),
@@ -219,12 +219,12 @@ public static class BoardEditing
         }).ToArray();
     }
 
-    /// <summary>Every item id a batch names: the items it changes, the ids it creates, the ends of new connectors and the new
-    /// parents.</summary>
+    /// <summary>Every item id a batch names: the items it changes, the ids it creates, the ends of new or reconnected connectors and
+    /// the new parents.</summary>
     public static IReadOnlyCollection<Guid> TouchedIds(IReadOnlyList<BoardChange>? changes)
     {
         return (changes ?? []).Where(change => change is not null)
-            .SelectMany(change => new[] { change.ItemId, change.Item?.Id, change.Item?.From, change.Item?.To, change.ParentId })
+            .SelectMany(change => new[] { change.ItemId, change.Item?.Id, change.Item?.From, change.Item?.To, change.ParentId, change.From, change.To })
             .OfType<Guid>().Distinct().ToArray();
     }
 
@@ -376,7 +376,7 @@ public static class BoardEditing
         return height;
     }
 
-    private static string? Edit(BoardItemState item, BoardChange change, long sequence, out BoardItemState? next)
+    private static string? Edit(Dictionary<Guid, BoardItemState> items, BoardItemState item, BoardChange change, long sequence, out BoardItemState? next)
     {
         next = null;
         switch (change.Type)
@@ -384,15 +384,30 @@ public static class BoardEditing
             case "move" when Geometry(change.X, change.Y, change.Width, change.Height):
                 next = item with { X = change.X!.Value, Y = change.Y!.Value, Width = change.Width!.Value, Height = change.Height!.Value };
                 break;
-            case "set" when (change.Text is not null || change.Color is not null || change.Props is { Count: > 0 }) && Text(item.Kind, change.Text)
-                            && (change.Color is null or "" || Colors.Contains(change.Color)):
+            case "set" when (change.Text is not null || change.Color is not null || change.Props is { Count: > 0 } || change.From is not null || change.To is not null)
+                            && Text(item.Kind, change.Text) && (change.Color is null or "" || Colors.Contains(change.Color)):
                 var props = change.Props is { Count: > 0 } patch ? BoardProps.Merge(item.Kind, item.Props, patch) : item.Props;
                 if (props is null)
                 {
                     return BoardRejection.Invalid;
                 }
+                // New ends keep the connector (its id, label and style): a new end is a live item of the board, never the other end. The
+                // end that stays was checked when it was set (and is not loaded: a batch loads only the items it names).
+                var from = change.From ?? item.FromItemId;
+                var to = change.To ?? item.ToItemId;
+                if (change.From is not null || change.To is not null)
+                {
+                    if (item.Kind != BoardItemKinds.Connector || from is null || from == to)
+                    {
+                        return BoardRejection.Invalid;
+                    }
+                    if (((change.From is { } start ? End(items, start) : null) ?? (change.To is { } end ? End(items, end) : null)) is { } refused)
+                    {
+                        return refused;
+                    }
+                }
                 // An empty colour removes it, as an empty text empties the text.
-                next = item with { Text = change.Text ?? item.Text, Color = change.Color is "" ? null : change.Color ?? item.Color, Props = props };
+                next = item with { Text = change.Text ?? item.Text, Color = change.Color is "" ? null : change.Color ?? item.Color, Props = props, FromItemId = from, ToItemId = to };
                 break;
             case "reorder" when Layer(change.Z):
                 next = item with { Z = (int)change.Z!.Value };

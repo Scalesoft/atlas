@@ -427,17 +427,68 @@ describe("BoardCanvas: connecting", () => {
     expect(connector).toMatchObject({ type: "create", item: { kind: "connector", from: "a", to: (created as { item: { id: string } }).item.id } });
   });
 
-  it("reconnects a connector's end to another item by replacing it in one batch, keeping its label and style", async () => {
-    canvas({ items: [...twoNotes(), note("d", { y: 500 }), link("c", "a", "b", { text: "vede", props: { route: "curved", arrowStart: "none", arrowEnd: "arrow", dash: "dashed" } })] });
+  it("reconnects a connector's end as the same connector, lighting up the cards meanwhile and selecting it after (A2, A4)", async () => {
+    const board = canvas({ items: [...twoNotes(), note("d", { y: 500 }), link("c", "a", "b", { text: "vede", props: { route: "curved", arrowStart: "none", arrowEnd: "arrow", dash: "dashed" } })] });
     const end = document.createElement("circle");
     end.setAttribute("data-type", "target");
+    // Vue Flow starts the move of an end as a connection from the end that stays.
     flow().vm.$emit("edgeUpdateStart", { event: { target: end }, edge: { id: "c" } });
-    flow().vm.$emit("edgeUpdate", { edge: { id: "c" }, connection: { source: "a", target: "d", sourceHandle: "bottom", targetHandle: "top" } });
+    flow().vm.$emit("connectStart", { nodeId: "a", handleId: "right", handleType: "source" });
+    await nextTick();
+    expect(board.get("[data-board-canvas]").classes()).toContain("is-connecting");
+    flow().vm.$emit("edgeUpdate", { edge: { id: "c" }, connection: { source: "a", target: "d", sourceHandle: "right", targetHandle: "top" } });
+    flow().vm.$emit("connectEnd", new MouseEvent("mouseup"));
     flow().vm.$emit("edgeUpdateEnd", { event: new MouseEvent("mouseup"), edge: { id: "c" } });
-    expect(changes()).toEqual([[
-      { type: "delete", itemId: "c" },
-      { type: "create", item: expect.objectContaining({ kind: "connector", from: "a", to: "d", text: "vede", props: { route: "curved", arrowStart: "none", arrowEnd: "arrow", dash: "dashed", fromSide: "bottom", toSide: "top" } }) },
-    ]]);
+    await nextTick();
+    // Its unset start stays unset (facing sides), as the preview drew it.
+    expect(changes()).toEqual([[{ type: "set", itemId: "c", to: "d", props: { toSide: "top" } }]]);
+    expect(board.get("[data-board-canvas]").classes()).not.toContain("is-connecting");
+    expect(board.emitted("selection")?.at(-1)).toEqual([["c"]]);
+  });
+});
+
+describe("BoardCanvas: connector preview (A3, A9)", () => {
+  const graphNode = (id: string, x: number, y: number) => ({ id, computedPosition: { x, y }, dimensions: { width: 200, height: 200 }, handleBounds: {} });
+  const preview = () => wrapper!.findComponent({ name: "BoardConnectorPreview" });
+
+  it("draws the connection line as the connector it becomes: its route and look, snapped to the side of the card it lands at", async () => {
+    canvas({ items: [...twoNotes(), link("c", "a", "b", { color: "red", props: { route: "straight", arrowStart: "arrow", arrowEnd: "none", dash: "dashed" } })] });
+    const end = document.createElement("circle");
+    end.setAttribute("data-type", "source");
+    flow().vm.$emit("edgeUpdateStart", { event: { target: end }, edge: { id: "c" } });
+    const slot = flow().vm.$slots["connection-line"]!;
+    // Moving its start over the card a (handle `left` near the pointer): the line runs from there to its fixed end b, as the edge.
+    const line = slot({ sourceNode: graphNode("b", 400, 0), targetNode: graphNode("a", 0, 0), targetHandle: { id: "left" }, targetX: 0, targetY: 100 } as never);
+    const props = (line[0]!.props ?? {}) as Record<string, unknown>;
+    expect(props).toMatchObject({ source: { side: "left", x: 0, y: 100 }, target: { side: "left", x: 400, y: 100 }, port: { side: "left", x: 0, y: 100 } });
+    expect(props.look).toMatchObject({ route: "straight", arrowStart: "arrow", arrowEnd: "none", dash: "dashed", color: "red" });
+  });
+
+  it("draws the keyboard's connector while the arrows choose, skipping members of a collapsed group, and L on a connector moves its end", async () => {
+    const group: BoardViewItem = { id: "g", kind: "group", x: -500, y: 0, width: 300, height: 200, z: 0, text: "Tým", props: { collapsed: true } };
+    const board = canvas({ items: [group, note("hidden", { x: -300, parent: "g" }), ...twoNotes(), note("d", { x: -700 }), link("c", "a", "b")] });
+    const surface = board.get("[data-board-surface]").element;
+    await select("a");
+    key(surface, { key: "l" });
+    key(surface, { key: "ArrowLeft" });
+    await nextTick();
+    // The member hidden in the collapsed group lies nearest on the left, but the arrows skip it.
+    expect(board.get("[data-board-announcement]").text()).not.toContain("hidden");
+    expect(preview().exists()).toBe(true);
+    key(surface, { key: "Escape" });
+    await nextTick();
+    expect(preview().exists()).toBe(false);
+    flow().vm.$emit("nodesChange", [{ id: "a", type: "select", selected: false }]);
+    flow().vm.$emit("edgesChange", [{ id: "c", type: "select", selected: true }]);
+    await nextTick();
+    key(surface, { key: "l" });
+    await nextTick();
+    expect(board.get("[data-board-announcement]").text()).toContain("Přepojit konec spojnice na Poznámka: b");
+    key(surface, { key: "ArrowLeft" });
+    key(surface, { key: "Enter" });
+    await nextTick();
+    // From b the arrow skips a, the end that stays, and lands on the collapsed group's card.
+    expect(changes().at(-1)).toEqual([{ type: "set", itemId: "c", to: "g" }]);
   });
 });
 

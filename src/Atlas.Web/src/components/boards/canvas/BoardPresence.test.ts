@@ -56,3 +56,12 @@ it("draws an AI's pointer in the AI gradient with its stars writing in its name,
   expect(ai!.get("[data-ai-glyph]").attributes("data-state")).toBe("writing");
   expect(ai!.text()).toBe("Nexus");
 });
+
+it("draws a colleague's connector in progress as a dashed line in their colour, from the side of its start to the item it would land at (A8)", () => {
+  const boxes: Record<string, { x: number; y: number; width: number; height: number }> = { a: { x: 0, y: 0, width: 100, height: 100 }, b: { x: 300, y: 0, width: 100, height: 100 } };
+  const drawing: RemoteDrag = { userId: "u3", displayName: "Petr", color: "#e76f51", dragging: [], connecting: { from: "a", to: "b", x: 250, y: 50 } };
+  const marks = mount(BoardPresence, { attachTo: document.body, props: { remote: [drawing], viewport: { x: 10, y: 0, zoom: 1 }, boxOf: (id: string) => boxes[id] } });
+  const line = marks.get("[data-board-remote-connector]");
+  expect([line.attributes("x1"), line.attributes("y1"), line.attributes("x2"), line.attributes("y2")]).toEqual(["110", "50", "310", "50"]);
+  expect(line.attributes("style")).toContain("--collaboration-color");
+});

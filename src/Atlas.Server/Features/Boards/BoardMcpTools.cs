@@ -39,7 +39,8 @@ public sealed class BoardMcpTools(IMessageBus bus)
         "Typy změn (pole type): " +
         "create {item: {id?, kind, x, y, width, height, z, text?, color?, props, targetResourceId?, from?, to?}}; " +
         "move {itemId, x, y, width, height} (přesun i změna velikosti); " +
-        "set {itemId, text?, color?, props?} (props jen měněné klíče, null odebere volitelný; text \"\" vyprázdní, color \"\" barvu odebere); " +
+        "set {itemId, text?, color?, props?, from?, to?} (props jen měněné klíče, null odebere volitelný; text \"\" vyprázdní, color \"\" barvu odebere; " +
+        "from/to přepojí konec spojnice na jiný prvek, spojnice si nechá id, popisek i styl); " +
         "reorder {itemId, z} (vyšší z je nahoře); " +
         "parent {itemId, parentId?} (vloží prvek do skupiny nebo rámu, bez parentId ho vyjme); " +
         "delete {itemId}, restore {itemId}; rename {title} (název tabule); settings {settings} (background dots|lines|none|timeline, snapToGrid, gridSize 8|16|24|32|48). " +

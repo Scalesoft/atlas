@@ -208,6 +208,18 @@ describe("board session", () => {
     expect(view.presence).toHaveBeenCalledWith("b1", { dragging });
   });
 
+  it("shows other people's connectors in progress, only what is well formed, and sends its own in whole pixels (A8)", async () => {
+    vi.useFakeTimers();
+    const { session, view, cursor } = harness();
+    await settle();
+    cursor({ userId: "u2", displayName: "Jana", payload: { connecting: { from: "a", side: "nowhere", to: 7, x: 10, y: 20, extra: "x" } } });
+    expect(session.state.remote).toEqual([{ userId: "u2", displayName: "Jana", color: "#2a9d8f", dragging: [], connecting: { from: "a", x: 10, y: 20 } }]);
+    cursor({ userId: "u2", displayName: "Jana", payload: { connecting: { from: "a", x: Number.NaN, y: 2 } } });
+    expect(session.state.remote).toEqual([]);
+    session.presence({ dragging: [], connecting: { from: "a", side: "right", to: "b", x: 1.6, y: 2.4 } });
+    expect(view.presence).toHaveBeenCalledWith("b1", { dragging: [], connecting: { from: "a", side: "right", to: "b", x: 2, y: 2 } });
+  });
+
   it("shows other people's cursors until they leave the board or fall silent", async () => {
     vi.useFakeTimers();
     const { session, cursor } = harness();
