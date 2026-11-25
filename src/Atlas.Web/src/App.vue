@@ -4756,7 +4756,7 @@ onUnmounted(() => {
             <div v-if="page && documentValue && !pageAccessTab && !libraryTab && !administrationOpen" class="document-actions">
                 <CollaboratorAvatars v-if="collaborationEnabled && browserOnline" :peers="pagePeers" @navigate="editor?.navigateToPeer($event)" />
                 <!-- The page's Diskuse like a board's: the count is the comments', accented while a colleague's new one is unseen (Alt C opens it too). -->
-                <span v-if="pageDockTabs" class="page-discussion-anchor"><PageDiscussionButton v-if="afterContent" ref="discussionButton" :page-id="page.id" :self-id="user?.id" :open="discussionOpen" @toggle="toggleDiscussion" @open="openDiscussion" /></span>
+                <span v-if="pageDockTabs" class="page-discussion-anchor"><PageDiscussionButton v-if="afterContent" ref="discussionButton" :page-id="page.id" :self-id="user?.id" :open="discussionOpen" :host="commentHost?.(page.id, page.spaceId)" @toggle="toggleDiscussion" @open="openDiscussion" /></span>
                 <div class="document-secondary-actions">
                 <CopyPageLink ref="copyPageLink" :page-id="page.id" />
                 <!-- Icon-only like „Kopírovat odkaz“ beside them, so they say what they do the same way when pointed at or focused. -->

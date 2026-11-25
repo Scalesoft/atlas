@@ -89,6 +89,7 @@ function peekWrites() {
   unread.value++;
   bubbles.value = [...bubbles.value, { id: `peek-${next++}`, authorId: "00000000-0000-0000-0000-0000000000b2", authorName: "Petr Svoboda", text: "Souhlasím, čtvrtek je lepší" }].slice(-5);
 }
+async function peekReply(markdown: string) { await api.post("gallery-page", markdown); }
 function toggleDock() {
   dockOpen.value = !dockOpen.value;
   if (dockOpen.value) { bubbles.value = []; unread.value = 0; }
@@ -121,7 +122,7 @@ function quoteSelection() {
       </div>
     </SettingsSection>
     <SettingsSection title="Diskuse stránky v doku"
-      description="Stránka má tu samou diskusi jako tabule: záložka „Diskuse“ v doku stránky (PageSidePanel, tab comments) je stejné CommentThread nad stejným objektem a stejnou relací pohledu, žádný druhý chat. Otevře ji bublina u avatarů s počtem komentářů (zvýrazněným, dokud nepřečtete kolegův nový) a Alt C; kurzor jde rovnou do pole, Escape zavře dok a vrátí kurzor do textu. Je-li ve stránce označený text, nový komentář začne jeho citací (Markdown „> …“), v galerii tlačítkem pod odstavcem. Oproti sekci pod obsahem nezabírá místo článku a zůstane otevřená při čtení.">
+      description="Stránka má tu samou diskusi jako tabule: záložka „Diskuse“ v doku stránky (PageSidePanel, tab comments) je stejné CommentThread nad stejným objektem a stejnou relací pohledu, žádný druhý chat. Otevře ji bublina u avatarů s počtem komentářů (zvýrazněným, dokud nepřečtete kolegův nový) a Alt C; kurzor jde rovnou do pole, Escape zavře dok a vrátí kurzor do textu. Pole odpovědi (v panelu i v bublině nahoře) je jedno: odesílá Enter, Shift+Enter píše nový řádek a papírové letadélko vedle pole to říká těm, kdo to nevědí (tlumené u prázdného pole, akcentové s textem, při odeslání popojede). Je-li ve stránce označený text, nový komentář začne jeho citací (Markdown „> …“), v galerii tlačítkem pod odstavcem. Oproti sekci pod obsahem nezabírá místo článku a zůstane otevřená při čtení.">
       <div class="comments-example-tools">
         <Button variant="outline" size="sm" type="button" @click="quoteSelection">Citovat označený text</Button>
         <Button variant="ghost" size="sm" type="button" @click="dock++">Znovu otevřít</Button>
@@ -129,7 +130,7 @@ function quoteSelection() {
         <span class="comments-example-anchor">
           <Button variant="ghost" size="icon-sm" type="button" class="comments-example-bubble-button" :aria-pressed="dockOpen" :aria-label="'Diskuse'" @click="toggleDock"><AtlasIcon name="quote" />
             <span v-if="unread" class="comments-example-unread">{{ unread }}</span></Button>
-          <PageDiscussionPeek :bubbles="bubbles" :docked="dockOpen" :ttl="8000" @open="toggleDock" @dismiss="bubbles = bubbles.filter(item => item.id !== $event)" />
+          <PageDiscussionPeek :bubbles="bubbles" :docked="dockOpen" :ttl="8000" :reply="peekReply" @open="toggleDock" @dismiss="bubbles = bubbles.filter(item => item.id !== $event)" />
         </span>
       </div>
       <p ref="article" class="comments-example-article">Zálohy běží každou noc ve dvě hodiny a obnova z nich se zkouší jednou za čtvrtletí. Označte část věty a použijte tlačítko výše.</p>

@@ -618,7 +618,7 @@
    (`data-docked`). The distances are tokens and --st-pop-from is 1 under reduced motion: only the fades stay. */
 .peek-enter-active { animation: atlas-peek-in var(--atlas-motion-pop) var(--atlas-ease-out) both; animation-delay: calc(var(--peek-index, 0) * var(--st-stagger, 40ms)); }
 .peek-leave-active { animation: st-rise-out var(--atlas-motion-base) var(--atlas-ease-out) both; }
-.discussion-peek[data-docked] .peek-leave-active { animation: atlas-peek-dock var(--atlas-motion-slow) var(--atlas-ease-in) both; animation-delay: calc(var(--peek-index, 0) * var(--st-stagger, 40ms)); }
+.peek-leave-active[data-sent], .discussion-peek[data-docked] .peek-leave-active { animation: atlas-peek-dock var(--atlas-motion-slow) var(--atlas-ease-in) both; animation-delay: calc(var(--peek-index, 0) * var(--st-stagger, 40ms)); }
 .peek-move { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout); }
 @keyframes atlas-peek-in {
   from { opacity: 0; transform: translate(calc(var(--atlas-rise) * 1.5), calc(var(--atlas-rise) * -2)) scale(var(--st-pop-from, .8)); }
@@ -628,6 +628,11 @@
 @keyframes atlas-peek-dock {
   from { opacity: 1; transform: none; }
   to { opacity: 0; transform: translate(calc(var(--atlas-rise) * 10), 0) scale(var(--st-pop-from, .8)); }
+}
+/* The send plane nudges forward and settles when a quick reply goes (CommentSendButton); under reduced motion the distance is 0: a dip of opacity. */
+@keyframes atlas-send-nudge {
+  40% { opacity: .4; transform: translate(calc(var(--atlas-rise) * 2), calc(var(--atlas-rise) * -2)); }
+  100% { opacity: 1; transform: none; }
 }
 /* A panel slides in from its edge (the gallery's stand-in for the dock; the dock itself is WorkspaceSidePanel's own motion). */
 @keyframes st-slide-in {

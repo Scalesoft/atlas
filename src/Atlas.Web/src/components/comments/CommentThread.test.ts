@@ -179,6 +179,36 @@ describe("CommentThread quote", () => {
   });
 });
 
+describe("CommentThread quick reply", () => {
+  const editor = () => document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor;
+  const enter = (init: KeyboardEventInit = {}) => document.querySelector(".ProseMirror")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, ...init }));
+
+  it("has the paper plane (Odeslat (Enter)), dim while empty and accent with text, and Enter sends while Shift+Enter writes a line", async () => {
+    const api = fakeApi(page([]));
+    await mounted(api, { quick: true });
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    const send = wrapper!.get(".comment-send");
+    expect(send.attributes("aria-label")).toBe("Odeslat (Enter)");
+    expect(send.attributes("aria-disabled")).toBe("true");
+    expect(wrapper!.find(".comment-composer-actions [data-comment-submit]").exists()).toBe(false);
+    editor()!.commands.insertContent("Hotovo");
+    await flushPromises();
+    expect(send.attributes("data-ready")).toBeDefined();
+    enter({ shiftKey: true });
+    await flushPromises();
+    expect(api.post).not.toHaveBeenCalled();
+    enter();
+    await flushPromises();
+    expect(api.post).toHaveBeenCalledWith("obj-1", "Hotovo", null);
+  });
+
+  it("keeps the text button and Ctrl+Enter in a thread that is not quick (a board's)", async () => {
+    await mounted(fakeApi(page([])));
+    expect(wrapper!.find(".comment-send").exists()).toBe(false);
+    expect(wrapper!.get("[data-comment-submit]").text()).toBe("Odeslat");
+  });
+});
+
 describe("CommentThread draft", () => {
   it("keeps an unsent comment by its object and anchor when the thread goes, and opens the page's section with it (UX-P-6)", async () => {
     const editor = () => document.querySelector<HTMLElement & { editor?: Editor }>(".ProseMirror")?.editor;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, shallowRef } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef } from "vue";
 import { MarkdownEditor } from "@atlas/markdown/vue";
 import type { MarkdownCommand, MarkdownEditorController, MarkdownRichValue } from "@atlas/markdown/core";
 import "@atlas/markdown/styles/base.css";
@@ -13,6 +13,7 @@ import { markdownProjection } from "../../pageSourceDraft";
 import { boardTextInput } from "../boards/text/boardMarkdownText";
 import "../boards/text/boardTextSurface.css";
 import { Button } from "../ui/button";
+import CommentSendButton from "./CommentSendButton.vue";
 import t from "../../i18n/components-search";
 import { focusWhenPresent } from "../../keyboard/navigation";
 import { draftKeeper, drafts, holdUnsavedWork } from "../../lib/unsavedWork";
@@ -27,7 +28,8 @@ import { pragueNow, historyStampText } from "@atlas/markdown/core";
  * anywhere in it writes. With `draftKey` (a new comment) the typed text counts as unsaved work and is kept under that key when the
  * field goes, to come back with the next field (UX-P-6), unless „Zrušit“ or Escape threw it away (the host drops a kept draft once
  * its comment is sent). With `enterSubmits` (a requirement's note, quick like 3.4's) Enter sends and Shift+Enter writes a new line; with
- * `dayChip` a chip „dnes ▾“ picks the day of the note (sent as the second argument of `submit`) and returns to today after each send.
+ * `sendIcon` puts a paper-plane button (CommentSendButton) in the field's corner instead of the text button, dim while the field is empty and
+ * accent with text, for a quick reply that Enter sends (the page's discussion and its peek); with `dayChip` a chip „dnes ▾“ picks the day of the note (sent as the second argument of `submit`) and returns to today after each send.
  */
 const props = withDefaults(defineProps<{
   initial?: string;
@@ -41,8 +43,9 @@ const props = withDefaults(defineProps<{
   hint?: string;
   enterSubmits?: boolean;
   dayChip?: boolean;
+  sendIcon?: boolean;
 }>(), { initial: "", placeholder: () => t.comments.placeholder, submitLabel: () => t.comments.send, cancelable: false, busy: false, host: () => inertBlockHost, ariaLabel: () => t.comments.text, draftKey: undefined,
-  hint: () => t.comments.hint, enterSubmits: false, dayChip: false });
+  hint: () => t.comments.hint, enterSubmits: false, dayChip: false, sendIcon: false });
 const emit = defineEmits<{ submit: [markdown: string, date?: string]; cancel: [] }>();
 const today = pragueNow().date;
 const day = ref(today);
@@ -54,6 +57,7 @@ const plugins = [...boardTextPlugins(props.host), boardTextInput];
 const key = props.draftKey;
 const draft = shallowRef<MarkdownRichValue>((key && (drafts.get(key) as MarkdownRichValue | undefined)) || boardTextDocument(props.initial));
 const typed = () => cleanCommentText(markdownProjection(draft.value, plugins));
+const canSend = computed(() => !!typed().trim());
 let discarded = false;
 if (key) {
   const keep = draftKeeper();
@@ -118,6 +122,7 @@ defineExpose({ reset, submit, dispatch, quote });
     <!-- @vue-generic {'rich'} --><MarkdownEditor v-model="draft" profile="rich" variant="compact" :ariaLabel="ariaLabel" :plugins="plugins" :lexicon="host.lexicon" :placeholder="placeholder"
       :outline="editorOutline" v-bind="editorChrome" :show-block-add-button="false" :fullscreenable="false" @created="created"
       :class="[theme, 'atlas-document-editor', 'board-text', 'comment-composer-editor']" />
+    <CommentSendButton v-if="sendIcon" class="comment-composer-send" :ready="canSend" :busy="busy" :label="enterSubmits ? t.comments.sendEnter : t.comments.sendCtrl" data-comment-submit />
     </div>
     <div class="comment-composer-actions">
       <span v-if="dayChip" class="comment-composer-day">
@@ -126,7 +131,7 @@ defineExpose({ reset, submit, dispatch, quote });
       </span>
       <span class="comment-composer-hint">{{ hint }}</span>
       <Button v-if="cancelable" variant="ghost" size="sm" type="button" data-comment-cancel @click="cancel">{{ t.comments.cancel }}</Button>
-      <Button size="sm" type="submit" :disabled="busy" :aria-busy="busy || undefined" data-comment-submit>{{ submitLabel }}</Button>
+      <Button v-if="!sendIcon" size="sm" type="submit" :disabled="busy" :aria-busy="busy || undefined" data-comment-submit>{{ submitLabel }}</Button>
     </div>
   </form>
 </template>
@@ -145,6 +150,10 @@ defineExpose({ reset, submit, dispatch, quote });
 .comment-composer-field :deep(.comment-composer-editor .ProseMirror) { box-sizing: border-box; min-height: 72px; padding: 9px 12px; cursor: text; }
 /* The placeholder belongs to the empty field only, not to the empty line after Shift+Enter. */
 .comment-composer-field :deep(.comment-composer-editor .ProseMirror p.is-empty:not(.is-editor-empty)::before) { content: none; }
+/* The paper-plane sits in the field's corner; the text keeps clear of it. */
+.comment-composer-field { position: relative; }
+.comment-composer-send { position: absolute; right: 6px; bottom: 6px; }
+.comment-composer-field:has(.comment-composer-send) :deep(.comment-composer-editor .ProseMirror) { padding-right: 44px; }
 .comment-composer-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 .comment-composer-day { position: relative; }
 .comment-composer-day-chip { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: 12px; padding: 2px 10px; cursor: pointer; }

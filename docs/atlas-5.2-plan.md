@@ -305,6 +305,11 @@ Dva povrchy jedné diskuse, nikdy oba naráz:
   Co přišlo při otevřeném panelu, četl čtenář v jeho seznamu.
 - **Klávesnice:** **Alt C** přepíná (otevře panel s kurzorem v poli, podruhé zavře), **Esc** zavře panel a vrátí kurzor do textu
   na původní místo, rozepsané zůstane jako koncept. Peek je dosažitelný Tabem (bubliny jsou tlačítka).
+- **Rychlá odpověď a odeslání:** „Odpovědět“ u bubliny rozevře pod ní pole odpovědi (stejný `CommentComposer` jako v panelu, tedy `@`,
+  `[[`, koncept); Enter odešle, Shift+Enter píše nový řádek, Esc pole složí. Vedle pole je **papírové letadélko**
+  (`CommentSendButton`, jedna implementace v bublině i v panelu): tlumené u prázdného pole, akcentové s textem, popojede při odeslání,
+  Tabem dosažitelné, popisek „Odeslat (Enter)" cs/en. Odeslaná odpověď odletí jako bublina do panelu. Panel odesílá Enterem stejně;
+  diskuse tabule zůstává u Ctrl+Enter a textového tlačítka, dokud vlastník neřekne jinak.
 - **Citace výběru:** je-li ve stránce označený text, nový komentář začne jeho citací (`> text`) a kurzorem pod ní. Je to
   obyčejný Markdown komentáře; server a úložiště se nemění.
 - **Pohyb:** bublina vstupuje z rohu avatarů (`--atlas-rise`, `--st-pop-from`, `--atlas-motion-pop`), odchází nahoru nebo
@@ -317,7 +322,6 @@ Dva povrchy jedné diskuse, nikdy oba naráz:
   hledá se, jde do záloh a do MCP jako dnes. Příslib „nic se neukládá“ z promo scény tím **nelze** dát.
 - „Píše…“ (tři tečky) potřebuje efemérní kanál, takže **není** v 5.2; tečky se přidají, až bude důvod stavět ten kanál.
 - „Do komentáře“ a štítek „odešla“: zbytečné, všechno už je komentář.
-- Samostatné pole rychlé odpovědi v peeku **není**: „Odpovědět“ otevře panel s kurzorem v poli (stejný editor, koncept, `@`).
 
 ### 12.4 Testy
 
@@ -332,4 +336,3 @@ tlačítko a panel s předáním naživo.
 |---|---|---|
 | O10 | Řadit v `@` přítomné na stránce první? | ano, až půjde spojit účet s kontaktem (řazení bere ID kontaktů, přítomnost ID účtů) |
 | O11 | „Píše…“ a skutečný chat bez ukládání? | ne v 5.2; vyžaduje efemérní kanál (awareness) |
-| O12 | Samostatné pole rychlé odpovědi přímo v bublině? | ne; „Odpovědět“ otevře panel |

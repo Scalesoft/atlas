@@ -51,11 +51,13 @@ const props = withDefaults(defineProps<{
   host?: BoardBlockHost;
   /** This thread takes the text the reader selected in the page (Alt C, `requestedQuote`) as the quote its new comment starts with: the dock's Diskuse of a page. */
   quotes?: boolean;
+  /** A quick reply (the page's discussion): Enter sends, Shift+Enter writes a new line, and a paper-plane button says so. */
+  quick?: boolean;
   /** Read only once near the viewport. */
   lazy?: boolean;
   api?: CommentApi;
   views?: Pick<ViewSessions, "open">;
-}>(), { viewKey: undefined, anchor: null, title: undefined, host: () => inertBlockHost, quotes: false, lazy: true, api: () => commentApi, views: undefined });
+}>(), { viewKey: undefined, anchor: null, title: undefined, host: () => inertBlockHost, quotes: false, quick: false, lazy: true, api: () => commentApi, views: undefined });
 const emit = defineEmits<{ count: [count: number]; anchor: [anchor: string] }>();
 
 const thread = createCommentThread(props.objectId, props.api);
@@ -183,7 +185,7 @@ const hidden = () => status.value === "missing" || (status.value === "ready" && 
         <AtlasIcon name="quote" :size="15" />{{ t.comments.write }}</Button>
     </header>
     <template v-if="status === 'ready'">
-      <CommentComposer v-if="canPost && !folded" ref="composer" :host="host" :busy="posting" :cancelable="!!title && !items.length" :draft-key="draftKey" @submit="post"
+      <CommentComposer v-if="canPost && !folded" ref="composer" :host="host" :busy="posting" :cancelable="!!title && !items.length" :draft-key="draftKey" :enter-submits="quick" :send-icon="quick" :hint="quick ? t.comments.hintEnter : t.comments.hint" @submit="post"
         @cancel="stopWriting" />
       <p v-else-if="!canPost" class="comment-thread-note" data-comments-off>{{ t.comments.off }}</p>
     </template>
