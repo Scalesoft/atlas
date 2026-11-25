@@ -10,7 +10,8 @@ namespace Atlas.Server.Features.PageVerifications.Commands;
 /// <summary>Ověřit, Nastavit garanta, interval of one page (plan §2.3): anyone who may edit the page (an editor or the space's admin).</summary>
 public sealed record SetPageVerification(Guid PageId, SetPageVerificationRequest Request);
 
-/// <summary>The bulk actions of Stav obsahu over pages of one space; each page is decided as <see cref="SetPageVerification"/>.</summary>
+/// <summary>The bulk actions of Stav obsahu over pages of one space; each page is decided as <see cref="SetPageVerification"/>, except that
+/// stewardFromLastAuthor skips a page that has an active steward.</summary>
 public sealed record SetSpaceVerification(Guid SpaceId, SetSpaceVerificationRequest Request);
 
 /// <summary>„Nahlásit neaktuální“: any reader of the page tells its steward; nothing on the page changes.</summary>
@@ -93,6 +94,12 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 if (page.SpaceId != command.SpaceId)
                 {
                     skipped.Add(new SkippedPage(id, "404"));
+                    continue;
+                }
+                // „Garant podle posledního autora“ fills in a missing steward, it never replaces one.
+                if (request.Action == "stewardFromLastAuthor" && await HasStewardAsync(page.Id, ct))
+                {
+                    skipped.Add(new SkippedPage(id, "has_steward"));
                     continue;
                 }
                 await ApplyAsync(page, actor, single, ct);
@@ -214,6 +221,9 @@ public sealed class PageVerificationHandler(ISession session, OrganizationLocks 
                 """).AddScalar("Reads", NHibernateUtil.Boolean).SetParameter("user", stewardId).SetParameter("page", page.Id).UniqueResultAsync<bool>(ct);
         return reads ? stewardId : throw new ApiException(400, "Tento uživatel nemůže být garantem této stránky.");
     }
+
+    private async Task<bool> HasStewardAsync(Guid pageId, CancellationToken ct)
+        => (await session.GetAsync<PageVerification>(pageId, ct))?.StewardId is { } steward && (await session.GetAsync<UserAccount>(steward, ct))?.IsActive == true;
 
     /// <summary>The author of the last published version (PageRevision.AuthorId), null when never published.</summary>
     private async Task<Guid?> LastAuthorAsync(Page page, CancellationToken ct)

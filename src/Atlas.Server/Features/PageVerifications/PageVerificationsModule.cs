@@ -59,7 +59,7 @@ public static class PageVerificationsModule
                 CancellationToken ct) => Results.Ok(await bus.InvokeAsync<SpaceVerificationResult>(new SetSpaceVerification(spaceId, request), ct)))
             .Produces<SpaceVerificationResult>().ProducesProblem(400).ProducesProblem(404)
             .WithSummary("Change up to 500 pages of the space at once: action verify, steward (stewardId, null clears it) or stewardFromLastAuthor " +
-                "(the author of the last published version) over pageIds. Without pageIds, stewardFromLastAuthor sets the steward of every verified " +
+                "(the author of the last published version, only for pages without an active steward; the others are skipped as has_steward) over pageIds. Without pageIds, stewardFromLastAuthor sets the steward of every verified " +
                 "page of the space that has none. Pages refused (no edit right, never published, …) are listed in skipped with the reason.");
         var readership = group.MapGet("/spaces/{spaceId:guid}/readership", async (Guid spaceId, DateOnly from, DateOnly to, string? filter, string? cursor,
                 IMessageBus bus, CancellationToken ct)

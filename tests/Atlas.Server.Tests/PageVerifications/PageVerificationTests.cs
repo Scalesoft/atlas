@@ -206,6 +206,12 @@ public sealed class PageVerificationTests
         var foreign = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
             new { action = "verify", pageIds = new[] { other.Id } }), HttpStatusCode.OK);
         Assert.Equal((0, "404"), (foreign["changed"]!.GetValue<int>(), Assert.Single(foreign["skipped"]!.AsArray())!["reason"]!.GetValue<string>()));
+        // „Podle posledního autora“ over chosen pages fills in a missing steward, it never replaces one.
+        await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Put, $"/api/pages/{open.Id}/verification", new { stewardId = writerId }), HttpStatusCode.OK);
+        var kept = await AtlasHttpSite.Json(await AtlasHttpSite.SendAsync(writer, HttpMethod.Post, bulk,
+            new { action = "stewardFromLastAuthor", pageIds = new[] { open.Id } }), HttpStatusCode.OK);
+        Assert.Equal((0, "has_steward"), (kept["changed"]!.GetValue<int>(), Assert.Single(kept["skipped"]!.AsArray())!["reason"]!.GetValue<string>()));
+        Assert.Equal(writerId, (await AtlasHttpSite.Json(await writer.GetAsync($"/api/pages/{open.Id}/verification"), HttpStatusCode.OK))["stewardId"]!.GetValue<string>());
     }
 
     [PostgreSqlFact]
