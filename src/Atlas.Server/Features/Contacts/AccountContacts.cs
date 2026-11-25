@@ -100,11 +100,20 @@ public sealed class AccountContacts(ISession session, IAtlasLocks locks, Contact
     }
 
     /// <summary>Writes the account into the contact's directoryId, as the account itself (it is that person); false when it is someone's meanwhile.</summary>
+    /// <summary>A new account made from a contact (a profile's „Vytvořit účet“): that contact becomes the account's, under the sweep's locks;
+    /// false when the contact cannot be (trashed, private, someone's already, refused by the directory).</summary>
+    public async Task<bool> LinkNewAsync(UserAccount account, Guid contactId, CancellationToken ct)
+    {
+        await locks.AcquireContentSharedAsync(ct);
+        await locks.AcquireAdvisoryAsync("atlas.contact:account-sweep", ct);
+        return await LinkAsync(account, contactId, ct);
+    }
+
     private async Task<bool> LinkAsync(UserAccount account, Guid contactId, CancellationToken ct)
     {
         // The row before the directory's lock (ContactObjectType.ApplyAsync), as every change of a contact takes them; SweepAsync locked it already.
         var envelope = await session.GetForUpdateAsync<ContentResource>(contactId, ct);
-        if (envelope is not { TrashedAt: null, Data: { } json } || JsonNode.Parse(json)!["directoryId"] is not null)
+        if (envelope is not { TrashedAt: null, Data: { } json } || envelope.Scope == "private" || JsonNode.Parse(json)!["directoryId"] is not null)
         {
             return false;
         }

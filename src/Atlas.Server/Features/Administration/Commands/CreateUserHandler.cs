@@ -5,6 +5,7 @@ using Atlas.Server.Features.Administration.Queries;
 using ISession = NHibernate.ISession;
 using Atlas.Server.Features.Auth.Builtin;
 using Atlas.Server.Features.Auth.Domain;
+using Atlas.Server.Features.Contacts;
 using Atlas.Server.Features.Contacts.LinkRun;
 using Atlas.Server.Platform.Jobs;
 
@@ -17,9 +18,12 @@ public sealed class CreateUserHandler
     private readonly BuiltinAuthenticationOptions m_builtin;
     private readonly ISecurityChangeGuard m_guard;
     private readonly IJobRequests m_jobs;
+    private readonly AccountContacts m_contacts;
 
-    public CreateUserHandler(ISession session, AdministrationAccess access, BuiltinAuthenticationOptions builtin, ISecurityChangeGuard guard, IJobRequests jobs)
+    public CreateUserHandler(ISession session, AdministrationAccess access, BuiltinAuthenticationOptions builtin, ISecurityChangeGuard guard, IJobRequests jobs,
+        AccountContacts contacts)
     {
+        m_contacts = contacts;
         m_session = session;
         m_access = access;
         m_builtin = builtin;
@@ -62,7 +66,15 @@ public sealed class CreateUserHandler
             throw new ApiException(409, "Uživatelské jméno už existuje.");
         }
         await AccountHistory.RecordAsync(m_session, account, actor.Id, ct, created: true);
-        await m_jobs.RequestAsync(AccountContactsJob.JobId, "Nový účet", ct: ct);
+        // Made from a contact: that contact is the account's at once, or the whole request fails and nothing is made.
+        if (command.Request.ContactId is { } contact && !await m_contacts.LinkNewAsync(account, contact, ct))
+        {
+            throw new ApiException(409, "Kontakt nejde propojit s novým účtem: patří už jinému účtu, je soukromý nebo v koši.", "contact_not_linkable");
+        }
+        if (command.Request.ContactId is null)
+        {
+            await m_jobs.RequestAsync(AccountContactsJob.JobId, "Nový účet", ct: ct);
+        }
         var token = await AccountTokens.InviteAsync(m_session, id, actor.Id, ct);
         await AdministrationReads.RefreshAsync(m_session, ct);
         var user = await AdministrationReads.UserAsync(m_session, id, ct);

@@ -207,7 +207,7 @@ public sealed class SkillsHandler(PersonalPageGuard guard, ContactDirectory dire
     public async Task<SkillGraph> Handle(GetSkillGraph query, CancellationToken ct)
     {
         var actor = await guard.LockIdentityAsync(null, false, ct);
-        var pairs = await store.GraphPairsAsync(actor, Ai(query.AiScopeOnly), query.SpaceId, ct);
+        var pairs = await store.GraphPairsAsync(actor, Ai(query.AiScopeOnly), query.SpaceId, query.ContactId, ct);
         var live = await directory.LiveAsync(actor, pairs.Select(x => x.ContactId).Distinct().ToArray(), ct);
         var people = live.Values.Where(x => x is { State: "ok", ContactId: not null, Contact: not null }).DistinctBy(x => x.ContactId)
             .ToDictionary(x => x.ContactId!.Value, x => x.Contact!);

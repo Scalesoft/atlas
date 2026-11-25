@@ -288,17 +288,18 @@ public sealed class SkillStore(ISession session)
     }
 
     /// <summary>The person–topic pairs the reader may see a rating of (at most 3000), in topics of readable pages of <paramref name="spaceId"/> when given.</summary>
-    public Task<List<(Guid ContactId, Guid TagId)>> GraphPairsAsync(UserAccount actor, bool aiScopeOnly, Guid? spaceId, CancellationToken ct)
+    public Task<List<(Guid ContactId, Guid TagId)>> GraphPairsAsync(UserAccount actor, bool aiScopeOnly, Guid? spaceId, Guid? contactId, CancellationToken ct)
         => session.ReadRowsAsync($$"""
             {{PageTagStore.AccessiblePages}}
             SELECT DISTINCT r."ContactId", r."TagId" FROM "SkillRating" r JOIN "Tag" t ON t."Id" = r."TagId" AND t."MergedIntoId" IS NULL
-            WHERE (r."Visibility" <> 'private' OR r."RaterId" = :actor)
+            WHERE (r."Visibility" <> 'private' OR r."RaterId" = :actor) AND (NOT :forcontact OR r."ContactId" = :contact)
               AND (NOT :inspace OR EXISTS (SELECT 1 FROM "PageTag" pt JOIN accessible p ON p."Id" = pt."PageId"
                 WHERE pt."TagId" = r."TagId" AND pt."ActiveTo" IS NULL AND p."SpaceId" = :space))
             LIMIT 3000
             """, new Dictionary<string, object>
             {
-                ["actor"] = actor.Id, ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly, ["inspace"] = spaceId is not null, ["space"] = spaceId ?? Guid.Empty
+                ["actor"] = actor.Id, ["stamp"] = actor.SecurityStamp, ["ai"] = aiScopeOnly, ["inspace"] = spaceId is not null, ["space"] = spaceId ?? Guid.Empty,
+                ["forcontact"] = contactId is not null, ["contact"] = contactId ?? Guid.Empty
             }, row => (row.GetGuid(0), row.GetGuid(1)), ct);
 
     /// <summary>The links among :tags: part_of (narrower → broader) and related.</summary>

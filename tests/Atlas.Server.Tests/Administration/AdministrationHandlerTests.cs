@@ -5,7 +5,12 @@ using Atlas.Server.Features.Administration.Commands;
 using Atlas.Server.Features.Administration.Contracts;
 using Atlas.Server.Features.Administration.Domain;
 using Atlas.Server.Features.Administration.Queries;
+using System.Text.Json.Nodes;
+using Atlas.Server.Features.Contacts;
 using Atlas.Server.Features.Contacts.LinkRun;
+using Atlas.Server.Features.Objects.Commands;
+using Atlas.Server.Features.Objects.Contracts;
+using Atlas.Server.Platform.Resources;
 using Atlas.Server.Platform.Jobs;
 using Atlas.Server.Tests.Events;
 using Atlas.Server.Tests.Platform;
@@ -72,6 +77,27 @@ public sealed class AdministrationHandlerTests
     }
 
     [PostgreSqlFact]
+    public async Task An_account_made_from_a_contact_is_that_contact_at_once_or_is_not_made()
+    {
+        await using var f = await AdministrationFixture.CreateAsync();
+        async Task<Guid> Contact(string name, string scope) => (await f.As<ObjectDto>(f.Admin,
+            new CreateObject(ContactObjectType.Id, scope, null, new JsonObject { ["name"] = name }))).Id;
+        var contact = await Contact("Rita Nová", ObjectScopes.Wiki);
+        var created = await f.As<CreatedBuiltinUser>(f.Admin, new CreateUser(new("rita.nova", "Rita Nová", ContactId: contact)));
+        Assert.Equal(created.User.Id.ToString(), await OutboxTests.ScalarAsync(f.Host.ConnectionString,
+            $"""SELECT "Data"->>'directoryId' FROM "ContentResource" WHERE "Id"='{contact}'"""));
+        Assert.Equal(contact, created.User.ContactId);
+
+        // A contact that is someone's already, or private, refuses, and the account is not made either (one transaction).
+        Assert.Equal(409, (await Assert.ThrowsAsync<ApiException>(() => f.As<CreatedBuiltinUser>(f.Admin, new CreateUser(new("rita.druha", "Rita Nová", ContactId: contact))))).Status);
+        var secret = await Contact("Soukromá Osoba", ObjectScopes.Private);
+        Assert.Equal(409, (await Assert.ThrowsAsync<ApiException>(() => f.As<CreatedBuiltinUser>(f.Admin, new CreateUser(new("soukroma", "Soukromá Osoba", ContactId: secret))))).Status);
+        Assert.Equal(0L, await OutboxTests.ScalarAsync(f.Host.ConnectionString, """SELECT count(*) FROM "UserAccount" WHERE "Username" IN ('rita.druha','soukroma')"""));
+        // Only a wiki administrator makes accounts.
+        await AdministrationFixture.Denied(403, "Tuto operaci může provést pouze správce wiki.", () => f.As<CreatedBuiltinUser>(f.Member, new CreateUser(new("jiny", "Jiný", ContactId: contact))));
+    }
+
+    [PostgreSqlFact]
     public async Task A_new_account_asks_for_its_contact_and_the_job_gives_it_one()
     {
         await using var f = await AdministrationFixture.CreateAsync(AccountContactsRun);
@@ -81,6 +107,10 @@ public sealed class AdministrationHandlerTests
         await f.Host.Services.GetRequiredService<IJobRunner>().RunToEndAsync(AccountContactsJob.JobId, "Test");
         Assert.Equal(1L, await OutboxTests.ScalarAsync(f.Host.ConnectionString,
             $"""SELECT count(*) FROM "ContentResource" WHERE "TypeId"='atlas.contact' AND "Data"->>'directoryId'='{created.User.Id}'"""));
+        // Lidé opens that contact as the person's profile.
+        var contact = await OutboxTests.ScalarAsync(f.Host.ConnectionString,
+            $"""SELECT "Id" FROM "ContentResource" WHERE "TypeId"='atlas.contact' AND "Data"->>'directoryId'='{created.User.Id}'""");
+        Assert.Equal(contact, Assert.Single(await f.As<IReadOnlyList<UserSummary>>(f.Admin, new ListUsers(Id: created.User.Id))).ContactId);
     }
 
     [PostgreSqlFact]

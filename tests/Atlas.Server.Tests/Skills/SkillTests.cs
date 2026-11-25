@@ -240,6 +240,25 @@ public sealed class SkillTests
     }
 
     [PostgreSqlFact]
+    public async Task A_persons_graph_is_their_topics_only_as_the_reader_may_see_them()
+    {
+        await using var f = await RelationsFixture.SharedAsync();
+        var own = Guid.NewGuid().ToString("N")[..8];
+        var person = await f.ContactAsync(f.Writer, ObjectScopes.Wiki, $"Hana {own}", $"hana-{own}@example.test");
+        var other = await f.ContactAsync(f.Writer, ObjectScopes.Wiki, $"Ivan {own}", $"ivan-{own}@example.test");
+        await f.As<ContactSkills>(f.Writer, new RateSkill(person, new RateSkillRequest($"Rust {own}", 4, "signed")));
+        await f.As<ContactSkills>(f.Writer, new RateSkill(person, new RateSkillRequest($"Go {own}", 5, "private")));
+        await f.As<ContactSkills>(f.Writer, new RateSkill(other, new RateSkillRequest($"Kotlin {own}", 3, "signed")));
+
+        // The person and the topics others may see of them: no colleague, no topic only a private rating names.
+        var graph = await f.As<SkillGraph>(f.Reader, new GetSkillGraph(ContactId: person));
+        Assert.Equal([person], graph.Nodes.Where(x => x.Kind == "person").Select(x => x.Id));
+        Assert.Equal([$"Rust {own}"], graph.Nodes.Where(x => x.Kind == "topic").Select(x => x.Name));
+        // Its rater sees the private one too.
+        Assert.Contains((await f.As<SkillGraph>(f.Writer, new GetSkillGraph(ContactId: person))).Nodes, x => x.Name == $"Go {own}");
+    }
+
+    [PostgreSqlFact]
     public async Task The_migration_runs_over_existing_tags_and_again_without_a_change()
     {
         await using var schema = await DisposableSchema.CreateMigratedAsync("atlas_skills_");

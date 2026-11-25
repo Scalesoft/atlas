@@ -13,12 +13,14 @@ public class AdministrationUserView
     public virtual DateTime ActiveFrom { get; set; }
     public virtual bool HasBuiltinCredential { get; set; }
     public virtual bool HasPassword { get; set; }
+    /// <summary>The account's directory contact (AccountContacts.OwnContact): its profile.</summary>
+    public virtual Guid? ContactId { get; set; }
 
     public virtual UserSummary ToSummary()
     {
         var state = HasBuiltinCredential ? HasPassword ? "active" : "pending" : "none";
         var source = HasBuiltinCredential ? "builtin" : "external";
         return new UserSummary(Id, Username, DisplayName, IsActive, IsWikiAdmin, HasBuiltinCredential,
-            state, source, AdministrationVersion.Format(ActiveFrom));
+            state, source, AdministrationVersion.Format(ActiveFrom), ContactId);
     }
 }
