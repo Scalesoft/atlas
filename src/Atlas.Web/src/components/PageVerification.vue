@@ -3,6 +3,7 @@ import t from "../i18n/verification";
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { errorMessage } from "../api";
 import { formatDate } from "../formatDate";
+import { animateAtlas, motionMs } from "../motion/aiMotion";
 import { pageAccounts } from "../contacts/contactSources";
 import { useAccountSearch, type PageAccountSource } from "../contacts/useAccountSearch";
 import { pageVerificationApi, verificationIcon, verificationLabel, verificationShown, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
@@ -58,7 +59,11 @@ async function run(change: VerificationChange, back = true) {
   busy.value = true;
   error.value = "";
   try {
-    emit("change", await props.api.change(props.pageId, change));
+    const before = props.verification?.verifiedAt ?? null;
+    const next = await props.api.change(props.pageId, change);
+    // A new verification: the chip confirms it once (StatusBadge pop and halo), keyed by its time.
+    if (next.verifiedAt && next.verifiedAt !== before) confirmedAt.value = next.verifiedAt;
+    emit("change", next);
     if (back) show("main");
   } catch (failure) {
     error.value = errorMessage(failure) || t.failed;
@@ -68,11 +73,17 @@ async function run(change: VerificationChange, back = true) {
 }
 const verify = () => { if (props.canEdit && props.isPublished) void run({ verify: true }); };
 
+const confirmedAt = ref<string | null>(null);
 async function show(next: View) {
+  // The popover's height follows the view instead of jumping (above the chip its edge glides with it rather than leaping).
+  const box = root.value?.parentElement;
+  const from = box?.getBoundingClientRect().height ?? 0;
   view.value = next;
   if (next === "steward") findStewards();
   error.value = "";
   await nextTick();
+  const to = box?.getBoundingClientRect().height ?? 0;
+  if (box && from && Math.abs(to - from) > 1) animateAtlas(box, [{ height: `${from}px`, overflow: "clip" }, { height: `${to}px`, overflow: "clip" }], { duration: motionMs(box, "--atlas-motion-base") });
   root.value?.querySelector<HTMLElement>("[data-step-focus], input, textarea, button:not([disabled])")?.focus();
 }
 watch(open, (isOpen) => { if (!isOpen) { view.value = "main"; error.value = ""; note.value = ""; } });
@@ -119,7 +130,7 @@ async function sendReport() {
   <Popover v-if="value" v-model:open="open">
     <PopoverTrigger as-child>
       <button type="button" class="page-verification-chip" :title="tooltip" :aria-label="t.chipLabel(label)" :data-state="value.state" data-page-verification-chip>
-        <StatusBadge :tone="verificationTone(value.state)" :icon="verificationIcon(value.state)" :label="label" size="sm" />
+        <StatusBadge :key="value.verifiedAt ?? ''" :tone="verificationTone(value.state)" :icon="verificationIcon(value.state)" :label="label" size="sm" :confirmed="!!value.verifiedAt && value.verifiedAt === confirmedAt" />
       </button>
     </PopoverTrigger>
     <PopoverContent class="page-verification-pop" align="start" :side-offset="6" data-page-verification-popover @keydown="keydown">

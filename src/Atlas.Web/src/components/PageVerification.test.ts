@@ -57,6 +57,7 @@ describe("PageVerification chip", () => {
 describe("PageVerification popover", () => {
   it("shows the owner, who verified and what changed since, and an editor verifies with V", async () => {
     const service = api();
+    service.change.mockResolvedValueOnce(sample("verified", { verifiedAt: at(0) }));
     open(sample("verified", { changedSinceVerification: true, verifiedViaAi: true }), { api: service });
     await openPopover();
     expect(pop()!.textContent).toContain("Jana Malá");
@@ -66,6 +67,10 @@ describe("PageVerification popover", () => {
     await flushPromises();
     expect(service.change).toHaveBeenCalledWith("p1", { verify: true });
     expect(wrapper!.emitted("change")![0]![0]).toMatchObject({ state: "verified" });
+    // The new verification is confirmed once on the chip (StatusBadge pop and halo); the bundle's old one never was.
+    expect(chip()!.querySelector(".status-badge[data-confirmed]")).toBeNull();
+    await wrapper!.setProps({ verification: wrapper!.emitted("change")![0]![0] as Verification });
+    expect(chip()!.querySelector(".status-badge[data-confirmed]")).not.toBeNull();
   });
 
   it("cannot verify a page that is not published and says why", async () => {
