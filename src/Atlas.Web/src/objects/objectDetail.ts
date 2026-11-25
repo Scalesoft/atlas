@@ -27,8 +27,8 @@ export const hideObjectDetail = () => { if (objectDetailShown()) panel.hide(); }
 export const openDetailId = () => (objectDetailShown() ? detail.row?.id : undefined);
 watch(() => panel.activeTab.value, tab => { if (objectDetailShown() && tab) detail.tab = tab as BoardDetailTab; });
 
-/** `focus` false keeps the keyboard where it is (walking the graph with the arrows shows each node's dock). */
-export function showObjectDetail(row: DetailRow, handlers: ObjectDetailHandlers, focus = true) {
-  Object.assign(detail, { row, tab: "overview", api: handlers.api, usage: handlers.usage, onOpen: handlers.onOpen, onFocus: handlers.onFocus, graph: !!handlers.onFocus });
-  panel.show({ label: t.detail, content: ContentDetail, props: detail, tabs, activeTab: "overview", focus });
+/** `focus` false keeps the keyboard where it is (walking the graph with the arrows shows each node's dock); `tab` the one it opens at. */
+export function showObjectDetail(row: DetailRow, handlers: ObjectDetailHandlers, focus = true, tab: BoardDetailTab = "overview") {
+  Object.assign(detail, { row, tab, api: handlers.api, usage: handlers.usage, onOpen: handlers.onOpen, onFocus: handlers.onFocus, graph: !!handlers.onFocus });
+  panel.show({ label: t.detail, content: ContentDetail, props: detail, tabs, activeTab: tab, focus });
 }

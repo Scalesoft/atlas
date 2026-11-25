@@ -17,6 +17,7 @@ const cs = {
     removeFromBoard: "Odebrat z tabule",
     delete: { title: "Smazat", words: ["odstranit", "smazat", "odebrat"] },
     openDetail: { title: "Otevřít detail", words: ["detail", "vazby", "popis"] },
+    comments: { title: "Diskuse", words: ["komentáře", "komentovat", "diskuze"] },
     settings: { title: "Nastavení tabule", words: ["pozadí", "mřížka", "přichytávání", "časová osa"] },
     boardDetail: { title: "Detail tabule", words: ["detail", "vazby"] },
     note: { title: "Poznámka", words: ["lístek", "nápad"] },

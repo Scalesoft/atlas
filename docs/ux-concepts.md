@@ -25,5 +25,5 @@ Motion uses tokens only (`--atlas-motion-*`) and reduced motion is respected eve
 | View switch / tabs | `OptionPills`, `SettingsTabs`, dock tabs | Radiogroup: one Tab stop, arrows select. Board dock tabs follow the page order. |
 | Status / date / person | `StatusBadge` (icon plus word); `formatDate.ts`; `SubjectAvatar` | Date: list row "ago" plus exact title; table column short date plus title; detail date and time (pending owner decision D9). Every user in their own colour (pending owner decision D8). |
 | Load more | `LoadMoreButton`, "Načíst další" (pending owner decision D10) | Automatic only in search. |
-| Discussion | `PageDiscussionButton` + `CommentThread` in the dock | Pages and boards alike; phone: page below content, board in the dock. |
+| Discussion | `PageDiscussionButton` + `CommentThread` in the dock | Pages and boards alike; phone: page below content, board in the dock. One board item: „Diskuse“ in its actions menu, as an object's. |
 | Contact card | Editor block and `ContactCard` render the same data | Change one, check the other (pending owner decision D7). |

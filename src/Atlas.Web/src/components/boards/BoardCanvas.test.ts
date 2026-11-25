@@ -12,6 +12,8 @@ import type { BoardViewItem } from "../../boards/boardSession";
 import { editedPage } from "../../boards/pageEditing";
 import { contactCardShare } from "../../boards/contactCardShare";
 import { liveObjects } from "../../objects/liveObjects";
+import { contactsOnBoard } from "../../boards/editorBlocks";
+import { loadMarkdownDialect } from "@atlas/markdown/core";
 import BoardCanvas from "./BoardCanvas.vue";
 import { loadActionsMenu } from "./canvas/actionsMenuChunk";
 import BoardCommandPanel from "./canvas/BoardCommandPanel.vue";
@@ -42,6 +44,9 @@ vi.mock("vue-sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warnin
 // The dock of an object (ContentDetail) has its own tests: here only what the canvas asks of it.
 const objectDetail = vi.hoisted(() => ({ showObjectDetail: vi.fn() }));
 vi.mock("../../objects/objectDetail", () => objectDetail);
+// K2's question has its own tests (contactLinking.test.ts): here only whether the canvas asks it.
+const linking = vi.hoisted(() => ({ contactRemoved: vi.fn() }));
+vi.mock("../../contacts/contactLinking", async importOriginal => ({ ...await importOriginal<typeof import("../../contacts/contactLinking")>(), contactRemoved: linking.contactRemoved }));
 // The derivations as they are, watched: what a selection or a drag frame derives anew.
 vi.mock("../../boards/boardFlow", async importOriginal => {
   const original = await importOriginal<typeof import("../../boards/boardFlow")>();
@@ -1169,10 +1174,10 @@ describe("BoardCanvas: neighbours and detail (objects spec §5.3, §6)", () => {
     expect(wrapper!.emitted("openPage")).toEqual([["page-1", undefined]]);
     await loadActionsMenu();
     key(node("p").element, { key: " ", code: "Space", ctrlKey: true });
-    expect(menuRows()).toEqual(["Upravit", "Otevřít stránku", "Otevřít detail", "Kopírovat odkaz", "Duplikovat", "Odebrat z tabule"]);
+    expect(menuRows()).toEqual(["Upravit", "Otevřít stránku", "Otevřít detail", "Diskuse", "Kopírovat odkaz", "Duplikovat", "Odebrat z tabule"]);
     for (const letter of "detail") key(node("p").element, { key: letter });
     key(node("p").element, { key: "Enter" });
-    expect(wrapper!.emitted("openDetail")).toEqual([["p"]]);
+    expect(wrapper!.emitted("openDetail")).toEqual([["p", "overview"]]);
     expect(editedPage.value).toBeNull();
   });
 
@@ -1227,7 +1232,7 @@ describe("BoardCanvas: „Co s tím jde dělat“ (P2)", () => {
     await nextTick();
     expect(selectedIds()).toEqual(["a"]);
     expect(document.querySelector("[data-testid=intentions]")?.getAttribute("aria-label")).toBe("Co s tím jde dělat");
-    expect(menuRows()).toEqual(["Upravit", "Duplikovat", "Smazat"]);
+    expect(menuRows()).toEqual(["Upravit", "Diskuse", "Duplikovat", "Smazat"]);
     expect(document.querySelector("[data-testid=intentions] [aria-selected=true] .t")?.textContent).toBe("Upravit");
     // Esc closes the menu first; the selection stays.
     key(node("a").element, { key: "Escape" });
@@ -1265,14 +1270,15 @@ describe("BoardCanvas: „Co s tím jde dělat“ (P2)", () => {
     } finally { unregister(); }
   });
 
-  it("keeps the browser's menu where the board offers nothing (a reader's note) and on a link inside an item", async () => {
+  it("gives a reader's note only its Diskuse (D13), and keeps the browser's menu on a link inside an item", async () => {
     await loadActionsMenu();
     canvas({ canEdit: false });
     await flushPromises();
     const reader = new MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2 });
     node("a").element.dispatchEvent(reader);
-    expect(reader.defaultPrevented).toBe(false);
-    expect(menu()).toBeNull();
+    expect(reader.defaultPrevented).toBe(true);
+    expect(menuRows()).toEqual(["Diskuse"]);
+    key(node("a").element, { key: "Escape" });
     wrapper!.unmount();
     canvas();
     await flushPromises();
@@ -1368,7 +1374,7 @@ describe("BoardCanvas: „Co s tím jde dělat“ (P2)", () => {
 describe("BoardCanvas: a contact as in a page (2B)", () => {
   const contact = (): BoardViewItem => ({ id: "o", kind: "object", x: 0, y: 0, width: 340, height: 80, z: 1, targetResourceId: "c-2b", props: { typeId: "atlas.contact", objectId: "c-2b" } });
   const seed = () => liveObjects.seed({ id: "c-2b", typeId: "atlas.contact", version: 1, title: "Jana Nováková", data: { name: "Jana Nováková" }, canEdit: false, available: true });
-  const shown = () => expect(objectDetail.showObjectDetail).toHaveBeenLastCalledWith({ id: "c-2b", typeId: "atlas.contact", title: "Jana Nováková", spaceId: "space-1" }, { onOpen: expect.any(Function) });
+  const shown = () => expect(objectDetail.showObjectDetail).toHaveBeenLastCalledWith({ id: "c-2b", typeId: "atlas.contact", title: "Jana Nováková", spaceId: "space-1" }, { onOpen: expect.any(Function) }, true, "overview");
 
   it("opens a contact card's detail in the dock (ContentDetail) on a reader's Enter and on Ctrl+Enter, and gives a reader its business card and QR code", async () => {
     seed();
@@ -1398,6 +1404,70 @@ describe("BoardCanvas: a contact as in a page (2B)", () => {
     key(board.get("[data-board-surface]").element, { key: "f", ctrlKey: true });
     await flushPromises();
     expect(board.find("[data-board-command-panel]").exists()).toBe(true);
+  });
+});
+
+describe("BoardCanvas: a contact on the board as in a page (4C, D12, D13)", () => {
+  const id = "0b5f3c1e-2d4a-4e8b-9f7a-1c2d3e4f5a6b";
+  const contact = (): BoardViewItem => ({ id: "o", kind: "object", x: 0, y: 0, width: 340, height: 80, z: 1, targetResourceId: id, props: { typeId: "atlas.contact", objectId: id } });
+  const seed = () => liveObjects.seed({ id, typeId: "atlas.contact", version: 1, title: "Jana Nováková", data: { name: "Jana Nováková", aliases: ["JN"] }, canEdit: false, available: true });
+  /** The board's host as BoardView makes it: the board the place, its contacts counted over its items. */
+  const host = (items: BoardViewItem[]) => ({ youTrack: { search: async () => [], resolve: async () => null },
+    contactHost: { place: () => ({ kind: "board" as const, id: "b1" }), count: (objectId: string, gone?: ReadonlySet<string>) => contactsOnBoard(items.filter(item => !gone?.has(item.id)), objectId) } });
+
+  it("4C: asks no last-usage question for a contact whose card leaves while a text of the board still mentions it, and asks without the mention", async () => {
+    await loadMarkdownDialect();
+    seed();
+    const mentioned = [contact(), note("n", { x: 400, text: `Ptejte se [Jana](a-contact:?name=Jana&objectId=${id}).` })];
+    canvas({ placeKey: "b1", items: mentioned, blockHost: host(mentioned) });
+    linking.contactRemoved.mockClear();
+    await select("o");
+    key(node("o").element, { key: "Delete" });
+    await flushPromises();
+    expect(changes().at(-1)).toEqual([{ type: "delete", itemId: "o" }]);
+    expect(linking.contactRemoved).not.toHaveBeenCalled();
+    wrapper!.unmount();
+    const alone = [contact(), note("n", { x: 400, text: "Ptejte se Jany." })];
+    canvas({ placeKey: "b1", items: alone, blockHost: host(alone) });
+    await select("o");
+    key(node("o").element, { key: "Delete" });
+    await flushPromises();
+    expect(linking.contactRemoved).toHaveBeenCalledWith(id, "Jana Nováková", { kind: "board", id: "b1" }, 0);
+  });
+
+  it("D12: copies a contact card as the Markdown of a contact block, without the directory's aliases", async () => {
+    await loadMarkdownDialect();
+    seed();
+    const items = [contact()];
+    const board = canvas({ items, blockHost: host(items) });
+    await select("o");
+    const data: Record<string, string> = {};
+    await vi.waitFor(() => {
+      board.get("[data-board-surface]").element.dispatchEvent(clipboardEvent("copy", data));
+      expect(data["text/plain"]).toMatch(/^```a-contact/);
+    });
+    expect(data["text/plain"]).toContain(id);
+    expect(data["text/plain"]).not.toContain("JN");
+  });
+
+  it("D13: opens the one item's Diskuse from its actions menu: a note's in the board's detail, a contact card's in the object's dock", async () => {
+    seed();
+    await loadActionsMenu();
+    const blockHost = { youTrack: { search: async () => [], resolve: async () => null }, links: { spaceId: () => "space-1" } };
+    canvas({ items: [note("n")], blockHost });
+    await select("n");
+    key(node("n").element, { key: " ", code: "Space", ctrlKey: true });
+    for (const letter of "disk") key(node("n").element, { key: letter });
+    key(node("n").element, { key: "Enter" });
+    expect(wrapper!.emitted("openDetail")).toEqual([["n", "comments"]]);
+    objectDetail.showObjectDetail.mockClear();
+    wrapper!.unmount();
+    canvas({ items: [contact()], blockHost });
+    await select("o");
+    key(node("o").element, { key: " ", code: "Space", ctrlKey: true });
+    for (const letter of "disk") key(node("o").element, { key: letter });
+    key(node("o").element, { key: "Enter" });
+    await vi.waitFor(() => expect(objectDetail.showObjectDetail).toHaveBeenCalledWith(expect.objectContaining({ id }), expect.anything(), true, "comments"));
   });
 });
 

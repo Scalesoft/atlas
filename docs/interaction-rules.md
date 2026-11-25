@@ -123,7 +123,10 @@ Tři zásady nad vším:
 
 - Stejný prvek (text, blok, kontakt, čip) se na tabuli chová stejně jako ve stránce: stejné Esc, Enter, ukládání, Zpět, AI,
   nabídka akcí. Tabule přidává jen výběr a přesun (P1).
-- Soubory a obrázky jdou přetáhnout na tabuli stejně jako do stránky.
+- Soubory a obrázky na tabuli zatím nejsou: tabule nemá úložiště souborů (D12). Zkopírovaný blok nebo karta kontaktu z tabule
+  se do stránky vloží jako tatáž komponenta (Markdown v textu schránky); ze stránky na tabuli přejde text.
+- Diskuse k jedné vybrané položce tabule je řádek „Diskuse“ v nabídce akcí, stejně jako u objektu: karta stránky nebo objektu
+  otevře diskusi svého objektu, ostatní položky diskusi tabule ukotvenou u položky (D13).
 - Ve stránce je každý kontakt samostatný blok (mezi kontakty jdou psát nadpisy). Na tabuli smí jedna karta nést víc
   kontaktů: je to jeden objekt se seznamem lidí. *(D8)*
 
@@ -231,7 +234,6 @@ Editor stránky
 Tabule
 - Diskuse tabule je na telefonu v doku, diskuse stránky pod obsahem (P14, přijatá odchylka).
 - Karta kontaktu přejde do úprav už fokusem a má vlastní obsluhu Esc (ContactCard, P1, P3).
-- Obrázky a soubory nejdou přetáhnout na tabuli (P14).
 - Výběr kontaktů na tabuli se nenaučí napsanou zkratku jako ostatní výběry osob (P8).
 - Komponenty a karty kontaktu a stránky nemají pro AI čitelný text, takže AI nad nimi nic nenabízí (P11).
 
