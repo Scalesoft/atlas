@@ -31,6 +31,7 @@ import { disclosureHooks } from "../disclosure";
 import { errorMessage } from "../../../api";
 import { formatDateTime } from "../../../formatDate";
 import AccessLevelBadge from "../AccessLevelBadge.vue";
+import EmptyState from "../EmptyState.vue";
 import LoadingNote from "../LoadingNote.vue";
 import StatusBadge from "../StatusBadge.vue";
 import { allLevelOptions } from "../access/accessKinds";
@@ -133,7 +134,7 @@ const loadingHooks = {
             <ul v-if="groups.length" class="person-peek-chips">
               <li v-for="group in groups" :key="group.id"><a :href="href(`people/groups/${group.id}`)">{{ group.name }}</a></li>
             </ul>
-            <p v-else class="person-peek-empty">{{ t.peek.noGroups }}</p>
+            <EmptyState v-else inline compact icon="users" :title="t.peek.noGroups" />
           </section>
           <section class="person-peek-group" aria-labelledby="person-peek-spaces">
             <h4 id="person-peek-spaces" class="st-group-label">{{ t.peek.spaceAccess }}</h4>
@@ -146,7 +147,7 @@ const loadingHooks = {
                 <span v-else class="person-peek-via">{{ t.peek.noAccess }}</span>
               </li>
             </ul>
-            <p v-else class="person-peek-empty">{{ t.peek.noSpaces }}</p>
+            <EmptyState v-else inline compact icon="book" :title="t.peek.noSpaces" />
             <a v-if="otherEntries > 0" class="st-link person-peek-more" :href="href(path)">{{ t.peek.more(otherEntries) }}<AtlasIcon name="arrow-right" :size="14" /></a>
           </section>
         </div>
@@ -162,6 +163,8 @@ const loadingHooks = {
 .person-peek > h4 { margin: 0; }
 .person-peek-body { display: flex; flex-direction: column; gap: 14px; }
 .person-peek-badges, .person-peek-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Links drawn as the settings' buttons: a button, never an underlined link (the panel holds no settings-ui link rules). */
+.person-peek-actions a { text-decoration: none; }
 .person-peek-meta { margin: 0; color: var(--muted); font-size: 12.5px; }
 .person-peek-group { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 12px; border-top: 1px solid var(--st-line-soft); }
 .person-peek-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }

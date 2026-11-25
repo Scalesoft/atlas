@@ -25,6 +25,9 @@ it("draws one person's topics for their profile: asked of the server for that pe
   // Drawn in the profile's narrow dock too: the graph, not the map's list.
   await vi.dynamicImportSettled(); await flushPromises();
   expect(setOption.mock.calls.at(-1)?.[0].series[0].data.map((node: { name: string }) => node.name)).toEqual(["Kubernetes", "Eva Dvořáková"]);
+  // The person is the profile's (named above it, in the tooltip here); a topic's label points away from the middle, clear of its spoke.
+  const [topic, them] = setOption.mock.calls.at(-1)![0].series[0].data;
+  expect([topic.label.position, them.label.show]).toEqual(["top", false]);
 });
 
 it("shows nothing of its own for a person with no topic yet (the level bars beneath say so)", async () => {

@@ -40,6 +40,8 @@ describe("the account part of a person's profile", () => {
     expect(api.account).toHaveBeenCalledWith("acc-1");
     expect(view.get("[data-person-account]").text()).toContain("Vývojáři");
     expect(view.get("[data-person-account-open]").attributes("href")).toBe("#/settings/people/accounts/acc-1");
+    // Nothing reached yet says so in the compact inline empty state, as elsewhere in settings.
+    expect(view.findAllComponents({ name: "EmptyState" }).map(state => state.props("title"))).toEqual(["Žádný prostor."]);
   });
 
   it("makes a wiki administrator an account of a contact without one, prefilled and linked to that contact", async () => {

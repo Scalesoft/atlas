@@ -103,7 +103,8 @@ function option() {
     tooltip: { renderMode: "richText", confine: true, backgroundColor: surface, borderColor: line, textStyle: { color: text, fontSize: 12 },
       formatter: (params: { dataType: string; data: { name: string; detail?: string } }) => params.dataType === "node" ? [params.data.name, params.data.detail].filter(Boolean).join("\n") : "" },
     series: [{
-      type: "graph", layout: props.contactId ? "none" : "force", roam: true, draggable: true, label: { show: true, position: "right", color: text, fontSize: 11 },
+      // A person's star leaves room at the edges for the outward labels.
+      type: "graph", layout: props.contactId ? "none" : "force", zoom: props.contactId ? 0.7 : 1, roam: true, draggable: true, label: { show: true, position: "right", color: text, fontSize: 11 },
       // Hundreds of nodes (§7a): a tighter layout, and people's names on hover only, so the topics stay readable.
       force: crowded ? { repulsion: 70, edgeLength: [25, 70], gravity: 0.25 } : { repulsion: 320, edgeLength: [80, 170], gravity: 0.05 },
       emphasis: { focus: "adjacency", lineStyle: { width: 3 }, label: { show: true } },
@@ -118,12 +119,15 @@ function option() {
     }],
   };
 }
-/** One person's graph (their profile) as a star: them in the middle, their topics around at even angles; ECharts fits it to the canvas. */
+/** One person's graph (their profile) as a star: them in the middle, unlabelled (the profile names them; the tooltip too), their topics
+ *  around at even angles, each label pointing away from the middle so it clears its spoke; ECharts fits it to the canvas. */
 function star(node: SkillNode) {
   if (!props.contactId) return {};
   const topics = shown.value.nodes.filter(each => each.kind === "topic");
   const index = topics.indexOf(node);
-  return index < 0 ? { x: 0, y: 0 } : { x: Math.cos((2 * Math.PI * index) / topics.length - Math.PI / 2) * 100, y: Math.sin((2 * Math.PI * index) / topics.length - Math.PI / 2) * 100 };
+  if (index < 0) return { x: 0, y: 0, label: { show: false } };
+  const angle = (2 * Math.PI * index) / topics.length - Math.PI / 2, x = Math.cos(angle), y = Math.sin(angle);
+  return { x: x * 100, y: y * 100, label: { show: true, position: Math.abs(x) > Math.abs(y) ? (x > 0 ? "right" : "left") : y > 0 ? "bottom" : "top" } };
 }
 async function draw() {
   if (!showGraph.value || !host.value || disposed) return;
