@@ -28,6 +28,10 @@ public static class NotificationKinds
     /// it); the reader's note is stored in the anchor and read as the item's excerpt; repeated reports aggregate into one item.</summary>
     public const string ReportedOutdated = "page.reported_outdated";
 
+    /// <summary>How long the same actor's repeat of the kind on one item neither counts nor makes it unread again: a reader who reports a
+    /// page again and again does not re-raise the steward's item (5.2 review L1). Zero for the other kinds.</summary>
+    public static TimeSpan QuietPeriod(string kind) => kind == ReportedOutdated ? TimeSpan.FromMinutes(10) : TimeSpan.Zero;
+
     /// <summary>The kinds a preference names; a share's change and end follow the switch of <see cref="ItemShared"/>.</summary>
     public static readonly IReadOnlyList<string> All = [CommentMention, PageMention, ItemShared, VerificationDue, ReportedOutdated];
 

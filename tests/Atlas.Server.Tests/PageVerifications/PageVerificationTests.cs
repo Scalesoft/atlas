@@ -207,4 +207,30 @@ public sealed class PageVerificationTests
             new { action = "verify", pageIds = new[] { other.Id } }), HttpStatusCode.OK);
         Assert.Equal((0, "404"), (foreign["changed"]!.GetValue<int>(), Assert.Single(foreign["skipped"]!.AsArray())!["reason"]!.GetValue<string>()));
     }
+
+    [PostgreSqlFact]
+    public async Task A_reader_reporting_again_does_not_raise_the_stewards_item_again()
+    {
+        await using var f = await BoardsFixture.CreateAsync(outbox: true);
+        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", f.SpaceId);
+        var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(f.SpaceId, null, "Postup", Atlas.Server.Tests.Attachments.AttachmentFixture.Rich("Postup"), "Postup")));
+        await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
+        async Task<Atlas.Server.Features.Notifications.Contracts.NotificationDto> ReportAsync(Atlas.Server.Platform.Identity.UserAccount reporter, string note)
+        {
+            await f.As<PageOutdatedReport>(reporter, new ReportPageOutdated(page.Id, new ReportPageOutdatedRequest(note)));
+            await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
+            return Assert.Single((await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(f.Writer,
+                new Atlas.Server.Features.Notifications.Queries.ListNotifications(null))).Items, x => x.SubjectId == page.Id);
+        }
+
+        var first = await ReportAsync(f.Reader, "Staré číslo.");
+        await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationsMarked>(f.Writer,
+            new Atlas.Server.Features.Notifications.Commands.MarkNotificationsRead(first.Id));
+        // The same reader again, at once: the read item stays read, counts nothing and keeps its note.
+        var again = await ReportAsync(f.Reader, "Pořád staré.");
+        Assert.Equal((true, 1, first.Anchor), (again.Read, again.Count, again.Anchor));
+        // Another reader raises it as before.
+        var other = await ReportAsync(f.Admin, "Opravdu.");
+        Assert.Equal((false, 1, f.Admin.Id), (other.Read, other.Count, other.ActorId));
+    }
 }

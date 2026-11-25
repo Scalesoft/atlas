@@ -8,7 +8,8 @@ namespace Atlas.Server.Features.Notifications;
 /// <summary>
 /// Delivers <see cref="NotificationRequested"/> into the recipients' inboxes in one statement (inbox spec §3, §4): not to the actor,
 /// an inactive or missing account or one that switched the kind's topic off. An unread item of the key counts one more event and takes
-/// the latest kind of its topic, a read one is unread again with one. The message the item counted last (LastMessageId, its envelope's
+/// the latest kind of its topic, a read one is unread again with one; the same actor's repeat within the kind's
+/// <see cref="NotificationKinds.QuietPeriod"/> changes nothing. The message the item counted last (LastMessageId, its envelope's
 /// id) changes nothing when it comes again, as a retry after a lost commit or a replayed dead letter does. Another message counts in
 /// whatever order the queue brings it. After the commit each recipient's own channel hears that its inbox changed.
 /// </summary>
@@ -27,11 +28,12 @@ public sealed class NotificationRequestedHandler(ISession session, AccessChanges
                   "SubjectId"=EXCLUDED."SubjectId","Anchor"=EXCLUDED."Anchor","ActorId"=EXCLUDED."ActorId",
                   "LastMessageId"=EXCLUDED."LastMessageId","UpdatedAt"=now(),"ReadAt"=NULL
                 WHERE n."LastMessageId" IS DISTINCT FROM :message
+                  AND NOT (n."Kind"=EXCLUDED."Kind" AND n."ActorId" IS NOT DISTINCT FROM EXCLUDED."ActorId" AND n."UpdatedAt">now()-:quiet*interval '1 second')
                 RETURNING n."RecipientId"
                 """)
             .SetParameter("kind", message.Kind).SetParameter("topic", NotificationKinds.Topic(message.Kind)).SetParameter("subject", message.SubjectId).SetParameter("anchor", message.Anchor, NHibernateUtil.String)
             .SetParameter("key", message.Key).SetParameter("actor", message.ActorId, NHibernateUtil.Guid)
-            .SetParameter("message", envelope.Id).SetParameter("recipients", string.Join(',', message.RecipientIds.Distinct()))
+            .SetParameter("quiet", (int)NotificationKinds.QuietPeriod(message.Kind).TotalSeconds).SetParameter("message", envelope.Id).SetParameter("recipients", string.Join(',', message.RecipientIds.Distinct()))
             .ListAsync<Guid>(ct);
         foreach (var recipient in recipients)
         {
