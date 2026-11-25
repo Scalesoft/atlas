@@ -30,7 +30,7 @@ describe("PageSidePanel Diskuse", () => {
 
 describe("PageSidePanel", () => {
   it("shows the owner, the verification and the 90-day readership, opens the dialog and lets an editor change the interval (5.2)", async () => {
-    const verificationApi = { change: vi.fn(async (_: string, change: object) => verification(change) as never), report: vi.fn() };
+    const verificationApi = { read: vi.fn(), change: vi.fn(async (_: string, change: object) => verification(change) as never), report: vi.fn() };
     const wrapper = mount(PageSidePanel, { props: { ...base, tab: "outline", connections, publicationApi: publicationApi(), verification: verification() as never, canEdit: true, verificationApi, readers: 12 } });
     await flushPromises();
     expect(wrapper.get("[data-verification-steward]").text()).toBe("Jana Malá");

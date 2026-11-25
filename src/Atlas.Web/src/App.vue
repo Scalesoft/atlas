@@ -978,7 +978,7 @@ const commands = computed<WikiCommand[]>(() => {
   if (user.value.isWikiAdmin) items.push({ id: 'settings', label: t.common.wikiAdmin, detail: t.common.settings, icon: 'settings', keywords: ['nastavení'], run: openAdministration });
   if (currentSpace.value && spaceCanManage(currentSpace.value)) items.push({ id: 'space-settings', label: t.common.spaceSettings, detail: currentSpace.value.name, icon: 'settings', run: () => openSettings(spaceSettingsHash(currentSpace.value!.id)) });
   // Stav obsahu is every editor's of the space (5.2 §6), its one section of the space settings.
-  if (currentSpace.value && spaceCanWrite(currentSpace.value)) { const space = currentSpace.value; items.push({ id: 'content-health', label: t.cmd.contentHealth, detail: space.name, icon: 'shield-check', keywords: ['ověření', 'verification'], run: () => spaceMenu(space, 'content-health') }); }
+  if (currentSpace.value && spaceCanWrite(currentSpace.value)) { const space = currentSpace.value; items.push({ id: 'content-health', label: t.cmd.contentHealth, detail: space.name, icon: 'shield-check', keywords: ['overeni', 'verification'], run: () => spaceMenu(space, 'content-health') }); }
   if (currentSpace.value && projectorEnabled.value) {
     const space = currentSpace.value;
     items.push(

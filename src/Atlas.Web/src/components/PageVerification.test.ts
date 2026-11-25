@@ -7,7 +7,7 @@ import { verificationIcon, verificationLabel, verificationTone, type PageVerific
 const day = 86_400_000;
 const at = (days: number) => new Date(Date.now() + days * day).toISOString();
 const sample = (state: VerificationState, over: Partial<Verification> = {}): Verification => ({ state, stewardId: "u1", stewardName: "Jana Malá", verifiedAt: at(-30), verifiedUntil: at(90), verifiedVersion: 3, changedSinceVerification: false, verifiedByName: "Petr Test", intervalMonths: null, spaceIntervalMonths: 6, ...over });
-const api = () => ({ change: vi.fn(async (_: string, change: object) => sample("verified", { verifiedUntil: at(180), ...change })), report: vi.fn(async () => {}) });
+const api = () => ({ read: vi.fn(), change: vi.fn(async (_: string, change: object) => sample("verified", { verifiedUntil: at(180), ...change })), report: vi.fn(async () => {}) });
 const people = vi.fn(async () => [{ id: "u2", name: "Eva Nováková" }, { id: "u3", name: "Eva Dvořáková" }]);
 
 let wrapper: VueWrapper | undefined;
