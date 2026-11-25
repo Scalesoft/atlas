@@ -57,6 +57,12 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - Pracující glyf AI střídá 24 náhodných rušných variant; při omezeném pohybu jemně dýchá.
 - Blok kontaktu: vystředěné ikony sdílení a jeden rám.
 
+### Profil osoby
+- Jeden profil pro každý kontakt (dok kontaktu `ContentDetail`), editovatelný na místě přes stejné úložiště objektů; vizitky ve stránce a karta kontaktu na tabuli beze změny, proklik do profilu (`#/library/contacts?contact=<id>`).
+- Kontakt účtu: kompetence jako hvězdicový `SkillGraph` (`GET /api/skills/graph?contactId=`, MCP `atlas_get_skill_graph` `contactId`), kalendář aktivity (`ActivityHeatmap`) a „Co se změnilo“ jedné osoby bez časového limitu s filtrem prostoru; `/api|/api/v1/me/changes?author=&space=`, `/me/changes/days?author=`, MCP `atlas_list_recent_changes` `authorId`, `spaceId`. Stejná práva jako všude (`RelationNodes`), AI vyloučení platí.
+- Omnisearch: kolega je jeden výsledek z adresáře kontaktů, Enter otevře profil. Úryvky hledání a karty stránek na tabuli ukazují čitelný text místo zápisu bloků dialektu (`SearchText`).
+- Správce wiki: část Účet v profilu (dřív `PersonPeek`), řádek ve Správa wiki → Lidé otevře profil; „Vytvořit účet“ z kontaktu (`CreateBuiltinUser.ContactId`, propojení v téže transakci, 409 pro kontakt jiné osoby, soukromý nebo v koši).
+
 ### Soukromé prostory
 - Prostor vyloučený z AI a MCP je skrytý i osobním tokenům `/api/v1` (rozhodnuto ve sdílených přístupových branách; guard test projde každý nástroj MCP a každou routu `/api/v1`).
 - Odkaz na stránku, kterou čtenář nesmí otevřít, ukazuje „Stránka není dostupná“ místo uloženého titulku; „Použito na“ a vazby objektu neprozradí počty skrytých použití ani hran.
