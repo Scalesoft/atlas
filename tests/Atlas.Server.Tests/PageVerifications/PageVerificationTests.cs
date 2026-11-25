@@ -222,28 +222,6 @@ public sealed class PageVerificationTests
         }
     }
 
-    /// <summary>Security L1: a later report without a note never shows an earlier reporter's note under the later reporter's name.</summary>
-    [PostgreSqlFact]
-    public async Task A_report_without_a_note_does_not_keep_another_reporters_note()
-    {
-        await using var f = await BoardsFixture.CreateAsync(outbox: true);
-        await f.Host.ExecuteAsync("""UPDATE "Space" SET "VerificationIntervalMonths"=6 WHERE "Id"=:id""", f.SpaceId);
-        var page = await f.As<PageDto>(f.Writer, new CreatePage(new CreatePageRequest(f.SpaceId, null, "Postup", Atlas.Server.Tests.Attachments.AttachmentFixture.Rich("Postup"), "Postup")));
-        await f.As<PageDto>(f.Writer, new PublishPage(page.Id, new PublishPageRequest(page.Version)));
-        async Task<Atlas.Server.Features.Notifications.Contracts.NotificationDto> ReportAsync(Atlas.Server.Platform.Identity.UserAccount reporter, string? note)
-        {
-            Assert.Equal(1, (await f.As<PageOutdatedReport>(reporter, new ReportPageOutdated(page.Id, new ReportPageOutdatedRequest(note)))).Notified);
-            await Atlas.Server.Tests.Events.OutboxTests.DrainAsync(f.Host);
-            return Assert.Single((await f.As<Atlas.Server.Features.Notifications.Contracts.NotificationList>(f.Writer,
-                new Atlas.Server.Features.Notifications.Queries.ListNotifications(null))).Items, x => x.Kind == NotificationKinds.ReportedOutdated);
-        }
-
-        var first = await ReportAsync(f.Reader, "Staré číslo.");
-        Assert.Equal(((Guid?)f.Reader.Id, "Staré číslo."), (first.ActorId, first.Excerpt));
-        var second = await ReportAsync(f.Admin, null);
-        Assert.Equal(((Guid?)f.Admin.Id, (string?)null, 2), (second.ActorId, second.Excerpt, second.Count));
-    }
-
     [PostgreSqlFact]
     public async Task The_bulk_change_needs_the_space_write_right_and_selects_only_pages_the_actor_may_edit()
     {
@@ -335,9 +313,9 @@ public sealed class PageVerificationTests
         // The same reader again, at once: the read item stays read, counts nothing and keeps its note.
         var again = await ReportAsync(f.Reader, "Pořád staré.");
         Assert.Equal((true, 1, "Staré číslo."), (again.Read, again.Count, again.Excerpt));
-        // Another reader raises it as before; a report without a note keeps the earlier one.
+        // Another reader raises it as before; their report without a note never shows the first reader's note under their name.
         var other = await ReportAsync(f.Admin, null);
-        Assert.Equal((false, 1, f.Admin.Id, "Staré číslo."), (other.Read, other.Count, other.ActorId, other.Excerpt));
+        Assert.Equal((false, 1, f.Admin.Id, (string?)null), (other.Read, other.Count, other.ActorId, other.Excerpt));
     }
 
     [PostgreSqlFact]
