@@ -62,7 +62,8 @@ public static partial class AnswerValidator
         return new ValidatedAnswer(true, kept, kept.SelectMany(sentence => sentence.Sources).Distinct().Order().ToArray(), invalid, dropped);
     }
 
-    /// <summary>R8: removes citation markers, HTML tags, Markdown images and links (keeps link text), trims to 600 characters.</summary>
+    /// <summary>R8: removes citation markers, HTML tags, Markdown images and links (keeps link text) and a leading list marker (a point is
+    /// a sentence of its own, the UI draws the list), trims to 600 characters.</summary>
     public static string Clean(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -74,6 +75,7 @@ public static partial class AnswerValidator
         cleaned = HtmlTag().Replace(cleaned, "");
         cleaned = CitationMarker().Replace(cleaned, "");
         cleaned = Whitespace().Replace(cleaned, " ").Trim();
+        cleaned = ListMarker().Replace(cleaned, "");
         return cleaned.Length <= MaxSentenceLength ? cleaned : cleaned[..MaxSentenceLength].TrimEnd();
     }
 
@@ -98,6 +100,9 @@ public static partial class AnswerValidator
 
     [GeneratedRegex(@"\[([^\]]+)\]\([^)]*\)")]
     private static partial Regex MarkdownLink();
+
+    [GeneratedRegex(@"^[-•–*]\s+")]
+    private static partial Regex ListMarker();
 
     [GeneratedRegex(@"</?[A-Za-z][^>]*>")]
     private static partial Regex HtmlTag();

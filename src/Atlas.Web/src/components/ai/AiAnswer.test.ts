@@ -150,6 +150,20 @@ describe("AiAnswer content", () => {
     expect(document.querySelectorAll("[data-cite]")).toHaveLength(0);
   });
 
+  it("draws the quick overview as a lead sentence and points with bold key facts", () => {
+    mountAnswer({ state: "done", format: "lead", sources: [source(1), source(2)], sentences: [
+      { text: "Zakázka běží, je **z třetiny** hotová.", sources: [1] },
+      { text: "Čeká se na **termín** od zákazníka.", sources: [2] },
+      { text: "Chybí **DNS záznam**.", sources: [2] },
+    ] });
+    const items = [...document.querySelectorAll("ul.ai-answer-sentences > li[data-ai-sentence]")];
+    expect(items).toHaveLength(3);
+    expect(items.map((item) => item.classList.contains("is-lead"))).toEqual([true, false, false]);
+    expect(items.map((item) => item.querySelector("strong")!.textContent)).toEqual(["z třetiny", "termín", "DNS záznam"]);
+    expect(items[1]!.querySelector("[data-cite='2']")).not.toBeNull();
+    expect(document.querySelector(".ai-answer-sentences")!.textContent).not.toContain("**");
+  });
+
   it("lists the cited sources under a finished answer and leaves the uncited ones to its provenance", () => {
     mountAnswer({ state: "done", sources: [source(1), source(2), source(3), source(4)], sentences: [{ text: "Stav [3] a dodávka [4].", sources: [3, 4] }] });
     const chips = () => [...document.querySelectorAll(".ai-answer-sources [data-source-chip]")].map((chip) => chip.getAttribute("data-source-chip"));

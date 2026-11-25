@@ -12,9 +12,11 @@ public static class AnswerPrompt
     public const string V2 = "answer@2";
     /// <summary>Answers from partly matching sources and says what they lack; links names and abbreviations to sources.</summary>
     public const string V3 = "answer@3";
+    /// <summary>A quick overview: one short lead sentence, then short single-fact points with one key value in bold.</summary>
+    public const string V4 = "answer@4";
 
     /// <summary>The version new answers are produced with and stamped on messages.</summary>
-    public const string Version = V3;
+    public const string Version = V4;
 
     /// <summary>Every shipped version and its embedded resource name.</summary>
     public static IReadOnlyDictionary<string, string> Resources { get; } = new Dictionary<string, string>
@@ -22,6 +24,7 @@ public static class AnswerPrompt
         [V1] = "Atlas.Server.Features.Assistant.Prompts.answer.system.v1.txt",
         [V2] = "Atlas.Server.Features.Assistant.Prompts.answer.system.v2.txt",
         [V3] = "Atlas.Server.Features.Assistant.Prompts.answer.system.v3.txt",
+        [V4] = "Atlas.Server.Features.Assistant.Prompts.answer.system.v4.txt",
     };
 
     /// <summary>The system text of the current version.</summary>

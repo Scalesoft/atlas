@@ -10,7 +10,7 @@ export const source = (number: number, extra: Partial<AiSourceView> = {}): AiSou
 export const sources = [source(1), source(2), source(3)];
 export const sentences: AiSentenceView[] = [
   { text: "Připojíte se klientem `FortiClient` a firemním účtem.", sources: [1] },
-  { text: "Notebook musí mít platný certifikát zařízení.", sources: [2] },
+  { text: "Notebook musí mít **platný certifikát** zařízení.", sources: [2] },
   { text: "Poprvé požádejte o certifikát den předem.", sources: [2, 3] },
 ];
 export const provenance: AiProvenanceView = { location: "company", provider: "LM Studio", model: "gemma-4-26b" };
