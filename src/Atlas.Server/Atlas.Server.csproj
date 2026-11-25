@@ -1,24 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup><TargetFramework>net11.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><UserSecretsId>scaleatlas-server</UserSecretsId></PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="1.10.2" />
-    <PackageReference Include="Anthropic" Version="13.8.0" />
+    <PackageReference Include="AngleSharp" Version="1.11.0" />
+    <PackageReference Include="Anthropic" Version="13.14.0" />
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageReference Include="Markdig" Version="1.6.0" />
-    <PackageReference Include="PuppeteerSharp" Version="25.15.0" />
-    <PackageReference Include="OpenIddict.Client.AspNetCore" Version="7.8.0" /><PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="7.8.0" /><PackageReference Include="OpenIddict.Client.DataProtection" Version="7.8.0" /><PackageReference Include="OpenIddict.Core" Version="7.8.0" /><PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
+    <PackageReference Include="PuppeteerSharp" Version="25.18.1" />
+    <PackageReference Include="OpenIddict.Client.AspNetCore" Version="7.9.0" /><PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="7.9.0" /><PackageReference Include="OpenIddict.Client.DataProtection" Version="7.9.0" /><PackageReference Include="OpenIddict.Core" Version="7.9.0" /><PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="11.0.1" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="11.0.1" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.4.0" />
     <PackageReference Include="NHibernate" Version="5.7.1" />
-    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="Npgsql" Version="11.0.0" />
     <PackageReference Include="OpenAI" Version="2.15.0" />
     <PackageReference Include="SMBLibrary" Version="1.5.8.1" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.21.0" />
-    <PackageReference Include="WolverineFx" Version="6.64.0" />
-    <PackageReference Include="WolverineFx.Postgresql" Version="6.64.0" />
-    <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.64.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="3.2.0" />
+    <PackageReference Include="WolverineFx" Version="6.65.1" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="6.65.1" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.65.1" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
   </ItemGroup>
   <!-- Development settings (developer sign-in on) stay out of every publish; a published build run in Development names its switches. -->
