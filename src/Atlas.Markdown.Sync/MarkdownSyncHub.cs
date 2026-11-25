@@ -117,6 +117,11 @@ public sealed partial class MarkdownSyncHub(
         {
             await LeaveInternalAsync(documentId, connectionGone: true).ConfigureAwait(false);
         }
+        // A join running alongside adds its peer (under the gate) before JoinedDocs: one the snapshot missed would keep its colour.
+        foreach (var doc in registry.All().Where(doc => doc.Peers.ContainsKey(Context.ConnectionId)))
+        {
+            await LeaveInternalAsync(doc.DocumentId, connectionGone: true).ConfigureAwait(false);
+        }
 
         await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
     }

@@ -334,18 +334,26 @@ public sealed class ViewSessions
 
     public async Task DisconnectAsync(string connectionId)
     {
-        string[] views;
-        lock (m_lock)
+        // A join running alongside may add a view after a snapshot: leave until none is left, or its session and colour would stay.
+        // Each key of Views has its open session (Remove takes both together), so every pass leaves what it saw.
+        for (var views = ViewsOf(connectionId); views.Length > 0; views = ViewsOf(connectionId))
         {
-            views = m_participants.TryGetValue(connectionId, out var participant) ? participant.Views.ToArray() : [];
-        }
-        foreach (var key in views)
-        {
-            await LeaveAsync(connectionId, key);
+            foreach (var key in views)
+            {
+                await LeaveAsync(connectionId, key);
+            }
         }
         lock (m_lock)
         {
             m_participants.Remove(connectionId);
+        }
+    }
+
+    private string[] ViewsOf(string connectionId)
+    {
+        lock (m_lock)
+        {
+            return m_participants.TryGetValue(connectionId, out var participant) ? participant.Views.ToArray() : [];
         }
     }
 
