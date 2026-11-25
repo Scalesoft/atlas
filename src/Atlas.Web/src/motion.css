@@ -629,11 +629,6 @@
   from { opacity: 1; transform: none; }
   to { opacity: 0; transform: translate(calc(var(--atlas-rise) * 10), 0) scale(var(--st-pop-from, .8)); }
 }
-/* The send plane nudges forward and settles when a quick reply goes (CommentSendButton); under reduced motion the distance is 0: a dip of opacity. */
-@keyframes atlas-send-nudge {
-  40% { opacity: .4; transform: translate(calc(var(--atlas-rise) * 2), calc(var(--atlas-rise) * -2)); }
-  100% { opacity: 1; transform: none; }
-}
 /* A panel slides in from its edge (the gallery's stand-in for the dock; the dock itself is WorkspaceSidePanel's own motion). */
 @keyframes st-slide-in {
   from { opacity: 0; transform: translateX(calc(var(--atlas-rise) * 6)); }

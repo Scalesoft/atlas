@@ -307,7 +307,7 @@ Dva povrchy jedné diskuse, nikdy oba naráz:
   na původní místo, rozepsané zůstane jako koncept. Peek je dosažitelný Tabem (bubliny jsou tlačítka).
 - **Rychlá odpověď a odeslání:** „Odpovědět“ u bubliny rozevře pod ní pole odpovědi (stejný `CommentComposer` jako v panelu, tedy `@`,
   `[[`, koncept); Enter odešle, Shift+Enter píše nový řádek, Esc pole složí. Vedle pole je **papírové letadélko**
-  (`CommentSendButton`, jedna implementace v bublině i v panelu): tlumené u prázdného pole, akcentové s textem, popojede při odeslání,
+  (`SendButton`, jedna implementace v bublině, v panelu i v asistentovi): tlumené u prázdného pole, akcentové s textem, při odeslání odletí,
   Tabem dosažitelné, popisek „Odeslat (Enter)" cs/en. Odeslaná odpověď odletí jako bublina do panelu. Panel odesílá Enterem stejně;
   diskuse tabule zůstává u Ctrl+Enter a textového tlačítka, dokud vlastník neřekne jinak.
 - **Citace výběru:** je-li ve stránce označený text, nový komentář začne jeho citací (`> text`) a kurzorem pod ní. Je to
