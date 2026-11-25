@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { automaticCollaboratorColorId, collaboratorChoices, loadPreferredColors, preferredColorChanged, preferredColorEvent, themedCollaboratorColor } from "./collaboratorColors";
+import { computed } from "vue";
+import { automaticCollaboratorColorId, collaboratorChoices, loadPreferredColors, preferredColorChanged, preferredColorEvent, themedCollaboratorColor, themedUserColor } from "./collaboratorColors";
 import { userColor } from "./objectPresence";
 
 const api = vi.hoisted(() => vi.fn());
@@ -44,4 +45,13 @@ it("draws an account where no presence comes in its „Moje barva“ once known,
     expect(userColor(id)).toBe(automatic);
     expect(announced).toHaveBeenCalledOnce();
   } finally { window.removeEventListener(preferredColorEvent, announced); }
+});
+
+it("redraws a person's themed colour when the theme switches", async () => {
+  const id = "00000000-0000-0000-0000-000000000004";
+  const swatch = collaboratorChoices.find((choice) => choice.id === automaticCollaboratorColorId(id))!.swatch;
+  const drawn = computed(() => themedUserColor(id));
+  expect(drawn.value).toBe(swatch.light);
+  document.documentElement.dataset.mode = "dark";
+  await vi.waitFor(() => expect(drawn.value).toBe(swatch.dark));
 });

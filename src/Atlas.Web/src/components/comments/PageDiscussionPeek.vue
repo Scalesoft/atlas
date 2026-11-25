@@ -6,7 +6,7 @@ import { focusWhenPresent } from "../../keyboard/navigation";
 import { lazyComponent } from "../../lazyComponent";
 import { drafts } from "../../lib/unsavedWork";
 import type { DiscussionBubble } from "../../comments/pageDiscussionFeed";
-import { themedCollaboratorColor, userColor } from "../../live/collaboratorColors";
+import { themedUserColor } from "../../live/collaboratorColors";
 import AtlasIcon from "../AtlasIcon.vue";
 import SubjectAvatar from "../settings/SubjectAvatar.vue";
 import t from "../../i18n/components-search";
@@ -102,7 +102,7 @@ async function send(bubble: DiscussionBubble, markdown: string) {
     @pointerenter="hold" @pointerleave="release" @focusin="hold" @focusout="release">
     <li v-for="(bubble, index) in bubbles" :key="bubble.id" class="peek-bubble" :style="{ '--peek-index': index }" :data-bubble-id="bubble.id" :data-sent="sent === bubble.id || undefined" data-peek-bubble>
       <button type="button" class="peek-open" :aria-label="t.comments.peek.from(bubble.authorName, bubble.text)" @click="emit('open')">
-        <SubjectAvatar kind="user" :name="bubble.authorName" :color="themedCollaboratorColor(userColor(bubble.authorId))" size="sm" />
+        <SubjectAvatar kind="user" :name="bubble.authorName" :color="themedUserColor(bubble.authorId)" size="sm" />
         <span class="peek-main">
           <strong class="peek-author">{{ bubble.authorName }}</strong>
           <span class="peek-text">{{ bubble.text }}</span>

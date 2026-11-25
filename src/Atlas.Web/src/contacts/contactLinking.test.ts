@@ -158,8 +158,11 @@ describe("contact usage for the read-only card", () => {
   });
 });
 
-it("paints a person's mention chip in the colour of their caret and avatars (one colour per person)", async () => {
-  const { userColor } = await import("../live/objectPresence");
-  expect(contactPluginOptions().userColor).toBe(userColor);
+it("paints a person's mention chip in the colour of their caret and avatars (one colour per person), the dark variant on a dark surface", async () => {
+  const { themedCollaboratorColor, themedUserColor, userColor } = await import("../live/collaboratorColors");
+  expect(contactPluginOptions().userColor).toBe(themedUserColor);
   expect(contactPluginOptions().userColor!(id)).toBe(userColor(id));
+  document.documentElement.dataset.mode = "dark";
+  try { expect(contactPluginOptions().userColor!(id)).toBe(themedCollaboratorColor(userColor(id))); expect(contactPluginOptions().userColor!(id)).not.toBe(userColor(id)); }
+  finally { delete document.documentElement.dataset.mode; }
 });
