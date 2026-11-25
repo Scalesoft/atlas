@@ -273,3 +273,55 @@ Rozhodnout po schválení této části; každý by dostal vlastní specifikaci.
 - **Vložení sekce jiné stránky** (výňatek) — náročnější kvůli Yjs.
 
 Na 5.3+: strukturovaná data / typované objekty, kalendáře a rezervace (intranetový směr 5.x).
+
+## 12. Chat na stránce (dočasný)
+
+Přidáno 2026-11-25 na přání vlastníka (scéna „Bring the team“ v promo filmu: plovoucí vlákno pod avatary vpravo nahoře,
+zmínka a odpověď). Prototyp: `page-chat-prototype.html` (scratchpad session, ne v repozitáři).
+
+**Co to je:** krátké zprávy mezi lidmi, kteří mají stránku **právě otevřenou**. Nic se neukládá do databáze, historie,
+zálohy ani do AI. Na trvalou domluvu jsou komentáře a chat na ně umí jednu zprávu povýšit.
+
+### 12.1 Chování
+
+- **Vstup:** tlačítko bubliny za avatary spolupracovníků (`CollaboratorAvatars`), klávesa **Alt C**. Bez dalšího člověka
+  na stránce se tlačítko nezobrazuje.
+- **Karta:** plovoucí karta pod avatary, mimo textový sloupec; nemodální, psaní ve stránce běží dál. Esc zavře a vrátí
+  kurzor do textu na původní místo.
+- **Citace:** když je ve stránce označený text, zpráva ho ocituje. Klik na citaci posune stránku a krátce zvýrazní místo
+  barvou autora. Citace se kotví přes Yjs relativní pozici, takže přežije souběžné úpravy.
+- **Zmínka:** `@` nabídne jen lidi na stránce, první je předvybraný, Enter ho vloží. Zmíněnému přijde zvýrazněná bublina.
+  Kdo na stránce není, toho chat nezmíní; nabídne „Napsat komentář“, který upozorní standardně.
+- **Zavřená karta:** příchozí zpráva vyletí jako bublina od avataru odesílatele a po 5 s odejde (zmínka 9 s); nejvýš tři
+  naráz, zbytek je počítadlo na tlačítku. Indikátor „píše…“.
+- **Akce u zprávy:** 👍 a **Do komentáře**: vytvoří skutečný komentář (existující `Comments`) u citovaného místa, nebo
+  ke stránce, s autorem zprávy jako autorem komentáře; jen vlastní zprávu, cizí jen s jejím autorem na stránce (návrh).
+- **Odchod:** zprávy odešlého zůstávají u těch, kdo je viděli, se štítkem „odešla“. Kdo přijde později, vidí jen zprávy lidí,
+  kteří tu ještě jsou. Když odejdou všichni, chat po zavření zmizí.
+- Motion: karta vyrůstá z tlačítka, zprávy najíždějí zdola, bubliny padají od avataru, avatary přicházejí a odcházejí;
+  vše přes motion tokeny a s respektem k `prefers-reduced-motion`. Tmavý motiv v šedých.
+
+### 12.2 Technika (nejmenší změna)
+
+- **Přenos:** pole `chat` v Yjs awareness stránky (stejná cesta jako `pointer` v `collaborationPresence.ts`): posledních
+  nejvýš 10 vlastních zpráv `{ id, text ≤ 500 znaků, quote?, mentions[], at, reactions }`. Server už identitu odesílatele
+  přepisuje sám (`AuthorityAwareness`: pole `user` z přihlášení), takže zprávu nejde podvrhnout. Rozpočet 16 KB / 30 zpráv
+  za sekundu (`MaxAwarenessBytes`, `MaxAwarenessPerSecond`) stačí.
+- **Klient** skládá zprávy ze stavů všech klientů, deduplikuje podle `id` a drží v paměti, co už viděl (proto zprávy odešlého
+  nezmizí). Žádná nová tabulka, endpoint ani job.
+- **Čtenáři:** server dnes čtenářům (`presenceOnly`) propouští jen `user`. Aby mohli psát i čtenáři, povolit pro ně pole
+  `chat` s limitem délky. Otázka O10.
+- **Do komentáře** volá existující API komentářů; MCP parita: komentáře MCP už umí, samotný chat je efemérní a do MCP nejde
+  (agent na stránce chat nečte ani nepíše).
+- Lokalizace cs + en, galerie: příklad karty a bubliny v `CollaborationMotionExample` (rozšíření, ne nová sdílená komponenta,
+  pokud to jde; jinak `PageChat.vue` s popisem rozdílu od komentářů).
+- Testy: Vitest (sloučení stavů a deduplikace, zmínka, citace, převod na komentář, klávesnice), server test, že čtenář
+  pošle `chat` jen do limitu a nic jiného.
+
+### 12.3 Otázky pro vlastníka
+
+| # | Otázka | Návrh |
+|---|---|---|
+| O10 | Smí psát i čtenáři (bez práva úprav)? | ano, ptají se autora; jen text do 500 znaků |
+| O11 | Kdo smí zprávu převést na komentář? | autor zprávy (vlastní zprávy) |
+| O12 | Chat i na tabulích? | v 5.2 jen stránky; tabule mají stejnou awareness, snadno později |
