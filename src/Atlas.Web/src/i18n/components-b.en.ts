@@ -202,6 +202,8 @@ const en: ComponentsBMessages = {
     lockEditing: "Lock editing",
     unlock: "Unlock",
     lock: "Lock",
+    discussion: "Discussion",
+    discussionCount: (count: number) => (count ? `Discussion, comments: ${count}` : "Discussion"),
   },
   outline: {
     onThisPage: "On this page",

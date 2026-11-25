@@ -11,7 +11,10 @@ const comment = (id: string, authorId = "colleague", body = `Text **${id}**`): O
 
 function setup(pages: ObjectComment[][]) {
   const answers = [...pages];
-  const api = { page: vi.fn(async () => { const items = answers.shift() ?? []; return { items, hasMore: false, count: items.filter(item => !item.deleted).length, canPost: true }; }) };
+  const api = {
+    page: vi.fn(async () => { const items = answers.shift() ?? []; return { items, hasMore: false, count: items.filter(item => !item.deleted).length, canPost: true }; }),
+    counts: vi.fn(async (ids: readonly string[]) => Object.fromEntries(ids.map(id => [id, 7]))),
+  };
   let listener: { changed?(change: unknown, version: number): void } = {};
   const close = vi.fn(), stop = vi.fn();
   const views = { open: vi.fn(() => ({ watch: (_id: string, next: typeof listener) => { listener = next; return stop; }, close })) } as never;
@@ -63,11 +66,33 @@ describe("usePageDiscussionFeed", () => {
     await settle();
     expect(s.feed.bubbles.value).toEqual([]);
     expect(s.feed.unread.value).toBe(0);
-    s.notify();
+    // The open thread reads the list: the feed takes the notice's count and reads nothing itself.
+    s.notify({ kind: "comments", count: 3, latestId: "ccc" });
     await settle();
+    expect(s.api.page).toHaveBeenCalledTimes(2);
     expect(s.feed.count.value).toBe(3);
     expect(s.feed.unread.value).toBe(0);
     expect(s.feed.bubbles.value).toEqual([]);
+    // Closed again: one read seeds what the thread showed, no bubble comes back.
+    s.open.value = false;
+    await settle();
+    expect(s.api.page).toHaveBeenCalledTimes(3);
+    expect(s.feed.bubbles.value).toEqual([]);
+  });
+
+  it("takes the count from a notice whose newest comment it knows (an edit, a deletion) without reading, and only counts when it starts open", async () => {
+    const s = setup([[comment("bb"), comment("a")]]);
+    await settle();
+    s.notify({ kind: "comments", count: 1, latestId: "bb" });
+    await settle();
+    expect(s.api.page).toHaveBeenCalledTimes(1);
+    expect(s.feed.count.value).toBe(1);
+    const open = setup([]);
+    open.open.value = true;
+    open.page.value = "p2";
+    await settle();
+    expect(open.api.counts).toHaveBeenCalledWith(["p2"]);
+    expect(open.feed.count.value).toBe(7);
   });
 
   it("keeps a bubble counted as unread when it is dismissed, and the newest few when many arrive", async () => {
@@ -113,7 +138,7 @@ describe("usePageDiscussionFeed: a reply being written, and late answers", () =>
 
   it("ignores an older answer that arrives after a newer one", async () => {
     const waiting: ((count: number) => void)[] = [];
-    const api = { page: vi.fn(() => new Promise<{ items: ObjectComment[]; hasMore: boolean; count: number; canPost: boolean }>(resolve => waiting.push(count => resolve({ items: [], hasMore: false, count, canPost: true })))) };
+    const api = { counts: vi.fn(), page: vi.fn(() => new Promise<{ items: ObjectComment[]; hasMore: boolean; count: number; canPost: boolean }>(resolve => waiting.push(count => resolve({ items: [], hasMore: false, count, canPost: true })))) };
     let listener: { changed?(change: unknown, version: number): void } = {};
     const views = { open: vi.fn(() => ({ watch: (_id: string, next: typeof listener) => { listener = next; return vi.fn(); }, close: vi.fn() })) } as never;
     const feed = effectScope().run(() => usePageDiscussionFeed(() => "p1", { selfId: () => "ME", open: () => false }, api, views))!;

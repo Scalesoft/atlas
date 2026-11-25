@@ -13,7 +13,8 @@ const comment = { id: "c1", authorId: "user-2", authorName: "Petr Svoboda", body
 
 let wrapper: VueWrapper | undefined;
 let requested: string[] = [];
-afterEach(() => { wrapper?.unmount(); wrapper = undefined; resetBrowser(); });
+const width = (value: number) => Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value });
+afterEach(() => { wrapper?.unmount(); wrapper = undefined; resetBrowser(); width(1024); });
 async function settle() { await vi.dynamicImportSettled(); await flushPromises(); await flushPromises(); await vi.dynamicImportSettled(); await flushPromises(); }
 
 async function start(hash: string, extra?: Route) {
@@ -34,7 +35,11 @@ async function start(hash: string, extra?: Route) {
 }
 
 describe("App: comments", () => {
-  it("shows „Komentáře“ under the page being read, read only after the page", async () => {
+  it("shows „Komentáře“ under the page being read on a phone (no dock there), read only after the page; wider, the dock's Diskuse is the one thread", async () => {
+    const wide = await start(pageLink(page.id));
+    expect(wide.find("[data-comment-thread]").exists()).toBe(false);
+    wide.unmount();
+    width(760);
     const app = await start(pageLink(page.id));
     await vi.waitFor(() => expect(app.find("[data-comment-thread] [data-comment-id]").exists()).toBe(true));
     const thread = app.get("[data-comment-thread]");
@@ -44,6 +49,8 @@ describe("App: comments", () => {
     expect(requested.indexOf(`/api/objects/${page.id}/comments`)).toBeGreaterThan(requested.indexOf(`/api/pages/${page.id}`));
     // The page's editor services (`[[` pages, people) come with the thread, not with the shell's first screen, yet reach the composer.
     expect(app.findComponent({ name: "CommentThread" }).props("host")).toMatchObject({ pages: expect.anything(), people: expect.anything() });
+    // One send behaviour with the dock: Enter sends there too.
+    expect(app.findComponent({ name: "CommentThread" }).props("quick")).toBe(true);
   });
 
   it("shows comment hits of the search as their own group leading to the page's heading", async () => {

@@ -18,7 +18,7 @@ const CommentComposer = lazyComponent(() => import("./CommentComposer.vue"));
  * The quiet edge of a page's discussion, under the co-editors' avatars (the dock's Diskuse is the whole thread; this is its latest
  * words): each new comment of a colleague drops in as a bubble from the corner of the avatars, stays a few seconds (still while
  * it is pointed at or holds focus) and goes. A click, Enter on it or „Odpovědět“ opens the discussion with the caret in the field
- * (`open`). While the discussion is open the host passes no bubbles and sets `docked`: the ones on screen fly to the right, toward
+ * (`open`). While the dock is shown (any tab) the host passes no bubbles and sets `docked`: the ones on screen fly to the right, toward
  * the dock, instead of fading up. Never both surfaces at once. Reduced motion keeps the fades only (the distances are tokens).
  * A live region, so a screen reader hears a new comment; the bubbles are buttons, so the keyboard reaches them (Alt C is the
  * shortcut into the discussion, this is its glance).

@@ -303,6 +303,9 @@ Dva povrchy jedné diskuse, nikdy oba naráz:
 - **Předání:** otevřením panelu bubliny nahoře odlétnou doprava k panelu (tokenová vzdálenost, jedna po druhé po 40 ms)
   a nová fronta se nehromadí; počet nepřečtených se vynuluje. Zavřením se peek vrací a nové komentáře se znovu objevují nahoře.
   Co přišlo při otevřeném panelu, četl čtenář v jeho seznamu.
+  Nikdy oba chaty naráz: bubliny odejdou, kdykoli je dok zobrazený (kterákoli záložka), čekají ve feedu a vrátí se po jeho zavření.
+  Feed při otevřeném vlákně nečte seznam (počet bere z vlákna a z oznámení relace, při startu s otevřeným vláknem z `/comments/counts`);
+  sekce pod obsahem je jen na telefonu (≤ 760 px), kde dok není; tam ji otevírá „Diskuse“ s počtem v dolní liště a v menu ⋯.
 - **Klávesnice:** **Alt C** přepíná (otevře panel s kurzorem v poli, podruhé zavře), **Esc** zavře panel a vrátí kurzor do textu
   na původní místo, rozepsané zůstane jako koncept. Peek je dosažitelný Tabem (bubliny jsou tlačítka).
 - **Rychlá odpověď a odeslání:** „Odpovědět“ u bubliny rozevře pod ní pole odpovědi (stejný `CommentComposer` jako v panelu, tedy `@`,
