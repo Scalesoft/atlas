@@ -56,9 +56,9 @@ test(`history stays separate from the document on desktop and mobile (${mode})`,
   await expect.poll(() => page.evaluate(() => [...(CSS.highlights.get('atlas-history-added') ?? [])].map(range => (range as Range).toString().trim()).join('|'))).toBe('a chybové logy');
   // Only words were added: the earlier wording stays folded away.
   await expect(panel.locator('.rendered-before')).toBeHidden();
-  await panel.getByRole('button', { name: 'Markdown', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Markdown', exact: true }).click();
   await expect(panel.locator('.text-diff del').filter({ hasText: 'restartujte' })).toBeVisible();
-  await panel.getByRole('button', { name: 'Náhled', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Náhled', exact: true }).click();
   await expect(panel.locator('.rendered-item[data-kind="removed"]').filter({ hasText: 'restartujte' })).toBeVisible();
   await expect(panel.locator('.history-context')).toContainText('Historická verze');
   await expect(panel.locator('.history-restore-confirm')).toHaveCount(0);
@@ -80,15 +80,15 @@ test(`history stays separate from the document on desktop and mobile (${mode})`,
   await expect(panel.locator('.hv-size').first()).toContainText('+1 −2');
   await page.screenshot({ path: `artifacts/history-desktop-${mode}.png`, animations: 'disabled' });
   await panel.locator('[data-revision="r37"]').click();
-  await panel.getByRole('button', { name: 'Celá verze', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Celá verze', exact: true }).click();
   await expect(panel.locator('.md-renderer')).toContainText('restartujte');
   // The full version reads rendered or as its stored Markdown; the choice is shared with the change view.
-  await panel.getByRole('button', { name: 'Markdown', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Markdown', exact: true }).click();
   await expect(panel.locator('.history-source')).toContainText('Starý postup: restartujte');
-  await panel.getByRole('button', { name: 'Změny', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Změny', exact: true }).click();
   await expect(panel.locator('.text-diff')).toBeVisible();
-  await panel.getByRole('button', { name: 'Náhled', exact: true }).click();
-  await panel.getByRole('button', { name: 'Celá verze', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Náhled', exact: true }).click();
+  await panel.getByRole('radio', { name: 'Celá verze', exact: true }).click();
   await expect(panel.locator('.md-renderer')).toContainText('restartujte');
   await panel.locator('[data-revision="r37"]').focus();
   await page.keyboard.press('ArrowDown');

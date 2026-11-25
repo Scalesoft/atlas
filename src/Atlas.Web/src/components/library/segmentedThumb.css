@@ -5,7 +5,7 @@
    (placed) and, once it is ready, that it glides on the base token and the move curve like the underline of the tabs. */
 [data-segmented] { position: relative; }
 [data-segmented] > * { position: relative; z-index: 1; }
-[data-segmented]::before {
+[data-thumb]::before {
   content: "";
   position: absolute;
   z-index: 0;
@@ -15,9 +15,8 @@
   width: var(--thumb-w, 0px);
   border-radius: var(--thumb-radius, 0px);
   background: var(--thumb-bg, var(--surface));
-  box-shadow: var(--thumb-shadow, 0 1px 2px color-mix(in srgb, var(--text) 10%, transparent));
+  box-shadow: var(--thumb-shadow, var(--shadow));
   transform: translateX(var(--thumb-x, 0px));
   pointer-events: none;
 }
-[data-segmented]:not([data-thumb])::before { display: none; }
-[data-segmented][data-thumb="ready"]::before { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout), width var(--atlas-motion-base) var(--atlas-ease-inout); }
+[data-thumb="ready"]::before { transition: transform var(--atlas-motion-base) var(--atlas-ease-inout), width var(--atlas-motion-base) var(--atlas-ease-inout); }

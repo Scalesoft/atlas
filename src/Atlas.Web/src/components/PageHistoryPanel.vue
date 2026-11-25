@@ -14,7 +14,8 @@ import HistoryVersionBody from "./history/HistoryVersionBody.vue";
 import AppDialog from "./AppDialog.vue";
 import LoadingRegion from "./LoadingRegion.vue";
 import LoadingSkeleton from "./LoadingSkeleton.vue";
-import { useSegmentedThumb } from "./library/segmentedThumb";
+import OptionPills from "./settings/OptionPills.vue";
+import type { ChoiceOption } from "./settings/types";
 import InlineReveal from "./settings/InlineReveal.vue";
 import EmptyState from "./settings/EmptyState.vue";
 import ErrorState from "./settings/ErrorState.vue";
@@ -59,11 +60,8 @@ const filtering = ref(false);
 const filterError = ref("");
 const versionsElement = ref<HTMLElement>();
 const changesView = ref<{ scrollToHeading: (text: string) => boolean }>();
-// The raised segment of Změny | Celá verze (and of the version filter) is one thumb that glides to the chosen option (segmentedThumb.ts).
-const viewTrack = ref<HTMLElement>();
-const viewThumb = useSegmentedThumb(viewTrack, '[aria-pressed="true"]', mode);
-const kindTrack = ref<HTMLElement>();
-const kindThumb = useSegmentedThumb(kindTrack, '[aria-pressed="true"]', kind);
+const modeOptions = (): ChoiceOption[] => [{ value: "changes", label: t.panel.modeChanges }, { value: "version", label: t.panel.modeVersion }];
+const kindOptions = (): ChoiceOption[] => kinds.map((option) => ({ value: option.id, label: option.label }));
 // Steps (the saved checkpoints) of expanded versions, loaded lazily by `group`.
 type StepState = { items: PageRevisionSummary[]; loading: boolean; error: string };
 const expanded = ref<string[]>([]);
@@ -323,7 +321,7 @@ onBeforeUnmount(() => {
         <div class="history-list-heading"><span>{{ t.panel.versions(items.length) }}{{ nextBeforeVersion !== null ? '+' : '' }}</span><Button variant="ghost" size="icon-sm" :aria-label="t.panel.refresh" :disabled="loading || busy || filtering" @click="load()"><AtlasIcon name="refresh-cw" :size="14" /></Button></div>
         <HistoryActivityChart class="history-activity-slot" :items="items" :focus="pointed ?? selectedItem?.activeFrom" @pick="pickBucket" />
         <div class="history-filters">
-          <div ref="kindTrack" v-bind="kindThumb" class="history-view-switch history-kind-switch" role="group" :aria-label="t.panel.kindLabel"><button v-for="option in kinds" :key="option.id" :aria-pressed="kind === option.id" @click="kind = option.id">{{ option.label }}</button></div>
+          <OptionPills segmented class="history-kind-switch" :model-value="kind" :options="kindOptions()" :label="t.panel.kindLabel" hide-label @update:model-value="kind = $event as HistoryFilter" />
           <SearchField v-model="author" :label="t.panel.searchAuthorLabel" :placeholder="t.panel.searchAuthor" wide :disabled="busy" />
           <label class="history-only-deletions"><input v-model="onlyDeletions" type="checkbox" :disabled="busy" /> {{ t.panel.onlyDeletions }}</label>
         </div>
@@ -367,7 +365,7 @@ onBeforeUnmount(() => {
             <ul v-if="selectedLines.length" class="history-preview-changes" :aria-label="t.panel.componentChanges"><li v-for="line in selectedLines" :key="line">{{ line }}</li></ul>
             <div v-if="selectedChanges?.sections.length" class="history-sections" role="group" :aria-label="t.panel.changedSections"><button v-for="section in selectedChanges.sections" :key="section" class="history-section-chip" :title="t.panel.showSection(section)" @click="showSection(section)">{{ section }}</button></div></div>
           <Button variant="outline" size="sm" :disabled="previewLoading || busy || exporting" :aria-busy="exporting" data-history-pdf @click="exportPdf"><AtlasIcon name="download" :size="14" />{{ exporting ? t.panel.pdfBusy : t.panel.pdf }}</Button>
-          <div ref="viewTrack" v-bind="viewThumb" class="history-view-switch" role="group" :aria-label="t.panel.viewLabel"><button :aria-pressed="mode === 'changes'" @click="mode = 'changes'">{{ t.panel.modeChanges }}</button><button :aria-pressed="mode === 'version'" @click="mode = 'version'">{{ t.panel.modeVersion }}</button></div>
+          <OptionPills segmented :model-value="mode" :options="modeOptions()" :label="t.panel.viewLabel" hide-label @update:model-value="mode = $event as 'changes' | 'version'" />
         </div>
         <p v-if="exportError" class="notice error" role="alert">{{ exportError }}</p>
         <div class="history-preview-body">
@@ -403,8 +401,8 @@ onBeforeUnmount(() => {
 .history-list-heading { display: flex; align-items: center; justify-content: space-between; color: var(--muted); padding: 8px 16px 0; font-size: 11px; }
 .history-filters { padding: 4px 16px 14px; display: grid; gap: 10px; font-size: 12px; color: var(--muted); }
 .history-activity-slot { display: block; }
-.history-kind-switch { display: flex; }
-.history-kind-switch button { flex: 1; padding: 3px 4px; font-size: 11px; white-space: nowrap; }
+.history-kind-switch :deep(.option-pills-group) { display: flex; }
+.history-kind-switch :deep(.option-pill) { flex: 1; justify-content: center; padding: 0 4px; font-size: 12px; white-space: nowrap; }
 .history-row { position: relative; }
 .history-steps-toggle { position: absolute; right: 10px; bottom: 6px; display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; transition: color var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
 .history-steps-toggle :deep(svg) { rotate: -90deg; transition: rotate var(--atlas-motion-base) var(--atlas-ease-out); }
@@ -435,7 +433,7 @@ onBeforeUnmount(() => {
 .history-version { display: grid; grid-template-columns: minmax(5ch, max-content) minmax(0, 1fr) auto; column-gap: 9px; row-gap: 3px; width: 100%; min-height: 53px; padding: 9px 18px; border: 0; background: transparent; text-align: left; color: var(--text); border-radius: 0; cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .history-version:hover { background: var(--hover); } }
 .history-version[aria-current] { background: var(--navigation-selected-bg); }
-.history-version:focus-visible, .history-view-switch button:focus-visible, .history-restore-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.history-version:focus-visible, .history-restore-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .history-preview-channel { margin-top: 6px; font-size: 12px; color: var(--muted); }
 .history-preview-heading .history-preview-summary { margin-top: 8px; font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
 .addition { color: var(--success, #23794b); }
@@ -454,12 +452,6 @@ onBeforeUnmount(() => {
 .history-preview-identity { flex: 1 1 240px; min-width: min(240px, 100%); }
 .history-preview-heading h3 { margin: 0 0 5px; font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
 .history-preview-heading p { margin: 0; font-size: 11px; color: var(--muted); }
-.history-view-switch { --thumb-inset: 3px; --thumb-radius: calc(6px - 1px - 3px); --thumb-shadow: var(--shadow); display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 6px; background: var(--sidebar); }
-.history-view-switch button { border: 0; border-radius: calc(6px - 1px - 3px); background: transparent; color: var(--muted); padding: 3px 9px; font-size: 12px; cursor: pointer; transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out), box-shadow var(--atlas-motion-fast) var(--atlas-ease-out); }
-.history-view-switch button[aria-pressed=true] { color: var(--text); background: var(--surface); box-shadow: var(--shadow); }
-/* While the thumb is drawn it carries the raised segment; without it (reduced motion) the chosen option fades its own. */
-.history-view-switch[data-thumb] button[aria-pressed=true] { background: transparent; box-shadow: none; }
-@media (hover: hover) and (pointer: fine) { .history-view-switch button:hover:not([aria-pressed=true]) { color: var(--text); } }
 .history-preview-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 24px; }
 .history-preview-body > .md-renderer { padding-top: 20px; }
 .history-restore { border-top: 1px solid var(--line); padding: 10px 24px; flex-shrink: 0; }

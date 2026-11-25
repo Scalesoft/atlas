@@ -136,7 +136,7 @@ it("gives Karty / Seznam one thumb that is placed first and then follows the cho
     const view = render();
     const frame = () => new Promise<void>((done) => requestAnimationFrame(() => done()));
     await flushPromises(); await frame(); await frame(); await flushPromises();
-    const switcher = view.get("[data-library-view]");
+    const switcher = view.get("[data-library-view] .option-pills-group");
     // Placed without motion first, then ready for the glide (the CSS transition hangs on data-thumb).
     expect(switcher.attributes("style")).toContain("--thumb-x: 2px");
     expect(switcher.attributes("style")).toContain("--thumb-w: 74px");

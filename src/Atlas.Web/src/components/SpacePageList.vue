@@ -16,7 +16,6 @@ import { isBoardNode, type TreeNodeType, type TreePage } from '../treeMove';
 import AtlasIcon from './AtlasIcon.vue';
 import PageIcon from './PageIcon.vue';
 import LoadingRegion from './LoadingRegion.vue';
-import { useSegmentedThumb } from './library/segmentedThumb';
 import ErrorState from './settings/ErrorState.vue';
 import OptionPills from './settings/OptionPills.vue';
 import StatTile from './settings/StatTile.vue';
@@ -225,8 +224,7 @@ const showDetail = (row: DetailRow, focus = true) => showObjectDetail(row, detai
 
 // ---- Seznam / Vazby: the same objects as a graph of what leads where.
 const view = ref<'list' | 'graph'>('list');
-const switchTrack = ref<HTMLElement>();
-const switchThumb = useSegmentedThumb(switchTrack, '[aria-pressed="true"]', view);
+const viewOptions = (): ChoiceOption[] => [{ value: 'list', label: t.content.viewList, icon: 'list' }, { value: 'graph', label: t.content.viewGraph, icon: 'network' }];
 const depth = ref<'1' | '2'>('1');
 const depthOptions = (): ChoiceOption[] => [{ value: '1', label: t.content.step1, icon: 'arrow-right' }, { value: '2', label: t.content.step2, icon: 'workflow' }];
 /** A node of the graph the list has no row for, when the dock asked for its neighbourhood. */
@@ -346,11 +344,7 @@ async function publish() {
         <Button v-if="canWrite && drafts.length" data-select-pages variant="ghost" class="space-list-select" :aria-pressed="selecting" :disabled="busy" @click="selecting = !selecting">
           <AtlasIcon :name="selecting ? 'close' : 'check'" :size="15" />{{ selecting ? t.content.endSelect : t.content.selectDrafts(drafts.length) }}
         </Button>
-        <!-- The switch's thumb glides to the chosen option (segmentedThumb.ts); the content only fades. -->
-        <div ref="switchTrack" v-bind="switchThumb" class="content-view-switch" role="group" :aria-label="t.content.viewLabel">
-          <button type="button" data-content-view="list" :aria-pressed="view === 'list'" @click="view = 'list'"><AtlasIcon name="list" :size="14" />{{ t.content.viewList }}</button>
-          <button type="button" data-content-view="graph" :aria-pressed="view === 'graph'" @click="view = 'graph'"><AtlasIcon name="network" :size="14" />{{ t.content.viewGraph }}</button>
-        </div>
+        <OptionPills v-model="view" segmented class="content-view-switch" :options="viewOptions()" :label="t.content.viewLabel" hide-label />
       </div>
       <!-- Unfolds in height and opacity (InlineReveal) instead of pushing the table down in one frame. -->
       <InlineReveal :open="choosing && visibleDrafts.length > 0">
@@ -516,14 +510,7 @@ input[type=checkbox] { position: relative; z-index: 1; width: 16px; height: 16px
 .content-view { min-width: 0; }
 .content-view-enter-active { animation: st-fade-in var(--atlas-motion-base) var(--atlas-ease-out) both; }
 .content-view-leave-active { animation: st-fade-out var(--atlas-motion-fast) var(--atlas-ease-in) both; }
-/* The same segmented switch as „Náhled | Markdown“ of the history: one look for one kind of control. */
-.content-view-switch { --thumb-inset: 3px; --thumb-radius: calc(8px - 1px - 3px); --thumb-shadow: var(--shadow); display: inline-flex; gap: 2px; margin-left: auto; padding: 3px; border: 1px solid var(--line); border-radius: 8px; background: var(--sidebar); }
-.content-view-switch button { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 12px; border: 0; border-radius: calc(8px - 1px - 3px); background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
-  transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out); }
-.content-view-switch button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
-.content-view-switch[data-thumb] button[aria-pressed="true"] { background: transparent; box-shadow: none; }
-@media (hover: hover) and (pointer: fine) { .content-view-switch button:hover:not([aria-pressed="true"]) { color: var(--text); } }
-.content-view-switch button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+.content-view-switch { margin-left: auto; }
 .space-list-select ~ .content-view-switch { margin-left: 0; }
 
 .is-obsah { --space-row-columns: minmax(0, 1fr) 72px 104px 84px 84px; --space-row-areas: "pick main used links comments changed"; }
@@ -542,7 +529,8 @@ input[type=checkbox] { position: relative; z-index: 1; width: 16px; height: 16px
 .content-scope { flex: none; padding: 1px 8px; border-radius: 999px; background: var(--info-bg); color: var(--info); font-size: 11.5px; font-weight: 600; }
 .content-row-detail { flex: none; display: grid; place-items: center; width: 28px; height: 28px; margin-left: auto; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; opacity: 0;
   transition: opacity var(--atlas-motion-fast) var(--atlas-ease-out), background-color var(--atlas-motion-fast) var(--atlas-ease-out); }
-.content-row:hover .content-row-detail, .content-row:focus-within .content-row-detail, .content-row.is-open .content-row-detail { opacity: 1; }
+.content-row:focus-within .content-row-detail, .content-row.is-open .content-row-detail { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .content-row:hover .content-row-detail { opacity: 1; } }
 @media (hover: none) { .content-row-detail { opacity: 1; } }
 @media (hover: hover) and (pointer: fine) { .content-row-detail:hover { background: var(--hover); color: var(--text); } }
 .content-row-detail:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

@@ -320,7 +320,7 @@ it('gives Celá verze | Porovnat změny one thumb that is placed first and then 
     await tick();
     await wrapper.get('button[aria-label="Náhled: Upravený článek"]').trigger('click');
     await tick(); await frame(); await frame(); await tick();
-    const track = wrapper.get('.approval-preview-tabs');
+    const track = wrapper.get('.approval-preview-tabs .option-pills-group');
     expect(track.attributes('data-segmented')).toBeDefined();
     expect(track.attributes('style')).toContain('--thumb-x: 3px');
     expect(track.attributes('style')).toContain('--thumb-w: 72px');

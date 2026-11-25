@@ -96,7 +96,7 @@ describe("page history", () => {
   });
   it("opens on changes against the immediate predecessor, with an explicitly historical full-version view", async () => {
     await open({}, false);
-    expect(wrapper!.find(".history-preview-heading [aria-pressed=\"true\"]").text()).toBe("Změny");
+    expect(wrapper!.find(".history-preview-heading [aria-checked=\"true\"]").text()).toBe("Změny");
     expect(wrapper!.text()).toContain("Historická verze");
     expect(wrapper!.get("del").text()).toContain("2");
     expect(wrapper!.get("ins").text()).toContain("3");
@@ -153,7 +153,7 @@ describe("page history", () => {
     try {
       const view = await open({}, false);
       await flushPromises(); await frame(); await frame(); await flushPromises();
-      const track = view.get(".history-view-switch:not(.history-kind-switch)");
+      const track = view.get(".history-preview-heading .option-pills-group");
       expect(track.attributes("data-segmented")).toBeDefined();
       expect(track.attributes("style")).toContain("--thumb-x: 3px");
       expect(track.attributes("style")).toContain("--thumb-w: 54px");
