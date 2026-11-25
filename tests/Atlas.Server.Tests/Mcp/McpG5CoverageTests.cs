@@ -96,6 +96,7 @@ public sealed class McpG5CoverageTests
         var tools = f.Site.Services.GetServices<McpServerTool>().Select(tool => tool.ProtocolTool).OrderBy(tool => tool.Name, StringComparer.Ordinal).ToArray();
         Assert.Empty(reaching.Keys.Except(tools.Select(tool => tool.Name)));
         var failures = new List<string>();
+        var sent = 0;
         foreach (var tool in tools)
         {
             var unknown = reaching.ContainsKey(tool.Name) ? [] : UnknownIds(tool.InputSchema, ids);
@@ -107,6 +108,11 @@ public sealed class McpG5CoverageTests
             var calls = reaching.TryGetValue(tool.Name, out var own) ? own : Plain(tool.InputSchema, ids, page.Version);
             foreach (var arguments in calls)
             {
+                // A token may send 120 requests a minute ("personal-api"): the sweep takes a fresh one before it runs out.
+                if (++sent % 80 == 0)
+                {
+                    agent = await f.ClientAsync(await f.AdminTokenAsync("read", "write"));
+                }
                 var result = await CallAsync(agent, tool.Name, arguments);
                 var answer = Text(result) + result.StructuredContent?.GetRawText();
                 var code = result.IsError == true ? Structured(result)["code"]?.GetValue<string>() : null;

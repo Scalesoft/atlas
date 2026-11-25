@@ -98,6 +98,10 @@ public sealed class ModuleCommandCoverageTests
         [typeof(SetJobPaused)] = "Pausing every trigger of a job is an operational setting, like the module settings: the web's and the API's (3.3 plan §4.7, decision O5).",
         [typeof(SetNotificationPreference)] = "An account's own setting, not an object: the web's only (inbox spec §9, decision 7).",
         [typeof(NamedVersion)] = "The answer of NameVersion, not a command.",
+        // 5.2: the MCP tools' own messages, G5 first and then the covered command.
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetMcpVerification)] = "atlas_set_verification's G5 wrapper of SetPageVerification, not a user command.",
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.SetMcpSpaceVerification)] = "atlas_set_verification's G5 wrapper of SetSpaceVerification, not a user command.",
+        [typeof(Atlas.Server.Features.PageVerifications.Commands.ReportMcpOutdated)] = "atlas_report_outdated's G5 wrapper of ReportPageOutdated, not a user command.",
         [typeof(Atlas.Server.Features.Comments.Commands.EditComment)] = "An agent corrects itself with a new comment; editing a posted one stays the web's (5.2 scope: read and answer).",
         [typeof(Atlas.Server.Features.Comments.Commands.DeleteComment)] = "Deleting a comment stays the web's, where its author or the object's manager sees what goes (5.2 scope: read and answer).",
     };
