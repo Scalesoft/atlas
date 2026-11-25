@@ -289,7 +289,7 @@ const PageOutline = lazyComponent(pageChrome.outline);
 const PageMobileBar = lazyComponent(() => import("./components/PageMobileBar.vue"));
 const PageUndoWedge = lazyComponent(() => import("./components/PageUndoWedge.vue"));
 import type { PageSideTab } from "./components/PageSidePanel.vue";
-import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearch";
+import { pageSearchFocus, pageSearchQuery } from "./editor/pageSearchState";
 import { quoteMarkdown, requestedComment, requestedQuote } from "./comments/commentFocus";
 import { articleArrives } from "./editor/articleMotion";
 import { useStageHeight } from "./components/library/stageHeight";
@@ -315,7 +315,9 @@ import type DocumentEditorComponent from "./components/DocumentEditor.vue";
 import { editorAssistEnabled, loadEditorAssist } from "./assist/loadAssist";
 import type { AtlasAssistFactory } from "./assist/types";
 import { detectSecrets } from "./assist/rules/secretDetector";
-import ReadonlySelectionActions, {type ReadonlySelection} from "./components/ai/ReadonlySelectionActions.vue";
+// The bar under a reader's selection comes with the first selection, not with the first screen.
+import type { ReadonlySelection } from "./components/ai/ReadonlySelectionActions.vue";
+const ReadonlySelectionActions = lazyComponent(() => import("./components/ai/ReadonlySelectionActions.vue"));
 const PageSummaryAnswer = lazyComponent(() => import("./components/ai/PageSummary.vue"));
 import { usePublishAssistant } from "./publishing/usePublishAssistant";
 import { createPublishControlLoader } from "./publishing/publishControlLoader";
@@ -5397,7 +5399,7 @@ onUnmounted(() => {
         </span>
       </footer>
     </AppDialog>
-    <ReadonlySelectionActions :selection="readonlySelection" :enabled="!editorActive" :explain-enabled="assistant.canAnswer.value" @ask="selectionAction('ask', $event)" @explain="selectionAction('explain', $event)" @summarize="selectionAction('summarize', $event)" @find="findSelection" @close="readonlySelection = null" />
+    <ReadonlySelectionActions v-if="readonlySelection" :selection="readonlySelection" :enabled="!editorActive" :explain-enabled="assistant.canAnswer.value" @ask="selectionAction('ask', $event)" @explain="selectionAction('explain', $event)" @summarize="selectionAction('summarize', $event)" @find="findSelection" @close="readonlySelection = null" />
     <Toaster dir="ltr" position="bottom-right" :theme="dark ? 'dark' : 'light'" :duration="4000" close-button :toast-options="{ closeButtonAriaLabel: t.common.close }"
       :offset="{ bottom: 'var(--atlas-toast-bottom, 24px)' }" :mobile-offset="{ top: 68, bottom: 'var(--atlas-toast-bottom, 16px)' }" /><!-- A toast at the top (Co je nového) stays under the phone's top bar, not over its menu and search. -->
     <ContactLastUsageDialog />
