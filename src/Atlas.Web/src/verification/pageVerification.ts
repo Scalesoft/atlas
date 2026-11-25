@@ -74,7 +74,6 @@ export interface ContentHealthItem {
   stewardId: string | null;
   stewardName: string | null;
   verifiedUntil: string | null;
-  isPublished: boolean;
   /** The reader may edit the page: only then can it verify it or set its owner (a space writer may only read some pages). */
   canEdit: boolean;
   views: number;

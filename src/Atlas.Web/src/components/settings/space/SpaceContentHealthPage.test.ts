@@ -7,7 +7,7 @@ import type { ContentHealth, ContentHealthItem, ContentHealthQuery } from "../..
 import SpaceContentHealthPage from "./SpaceContentHealthPage.vue";
 
 const day = 86_400_000;
-const item = (n: number, over: Partial<ContentHealthItem> = {}): ContentHealthItem => ({ pageId: `p${n}`, title: `Stránka ${n}`, path: ["Provoz"], state: "verified", stewardId: "u1", stewardName: "Jana Malá", verifiedUntil: new Date(Date.now() + 90 * day).toISOString(), isPublished: true, canEdit: true, views: 10, readers: 4, lastViewedAt: null, lastPublishedAt: "2026-10-01T08:00:00Z", ...over });
+const item = (n: number, over: Partial<ContentHealthItem> = {}): ContentHealthItem => ({ pageId: `p${n}`, title: `Stránka ${n}`, path: ["Provoz"], state: "verified", stewardId: "u1", stewardName: "Jana Malá", verifiedUntil: new Date(Date.now() + 90 * day).toISOString(), canEdit: true, views: 10, readers: 4, lastViewedAt: null, lastPublishedAt: "2026-10-01T08:00:00Z", ...over });
 const rows = [item(1, { state: "expired", readers: 40 }), item(2, { state: "expiring", readers: 12 }), item(3, { state: "unverified", stewardId: null, stewardName: null, readers: 0, views: 0 }), item(4)];
 const health = (items = rows, over: Partial<ContentHealth> = {}): ContentHealth => ({ summary: { verified: 1, expiring: 1, expired: 1, unverified: 1, withoutSteward: 1 }, items, nextCursor: null, enabled: true, ...over });
 

@@ -16,7 +16,7 @@ import type { ContentHealth, ContentHealthApi, ContentHealthItem, VerificationSt
 const day = 86_400_000, at = (days: number) => new Date(Date.now() + days * day).toISOString();
 const row = (n: number, title: string, state: VerificationState, readers: number, over: Partial<ContentHealthItem> = {}): ContentHealthItem => ({
   pageId: `00000000-0000-4000-8000-0000000001${String(n).padStart(2, "0")}`, title, path: ["Provoz"], state, stewardId: "u1", stewardName: "Jana Nováková",
-  verifiedUntil: state === "unverified" ? null : at(state === "expired" ? -12 : state === "expiring" ? 9 : 120), isPublished: true, canEdit: true, views: readers * 3, readers, lastViewedAt: at(-2), lastPublishedAt: at(-40 - n), ...over,
+  verifiedUntil: state === "unverified" ? null : at(state === "expired" ? -12 : state === "expiring" ? 9 : 120), canEdit: true, views: readers * 3, readers, lastViewedAt: at(-2), lastPublishedAt: at(-40 - n), ...over,
 });
 const pages = (): ContentHealthItem[] => [
   row(1, "Přístup VPN", "expired", 48), row(2, "Zálohování databáze", "expiring", 31, { path: ["Provoz", "Databáze"] }), row(3, "Nový přístupový formulář", "unverified", 22, { stewardId: null, stewardName: null }),
