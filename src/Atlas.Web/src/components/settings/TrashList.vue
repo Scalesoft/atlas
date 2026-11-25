@@ -57,7 +57,7 @@ let purgedAt: number | undefined;
 /** „Co s tím jde dělat“ of a row (P2): what the row's two buttons do. */
 const rowActions = computed<ActionMenuItem[]>(() => [
   { id: "restore", label: t.trash.restore, icon: "undo-2", disabled: !!busy.value },
-  ...(props.purge ? [{ id: "purge", label: t.trash.purge, icon: "trash", destructive: true, group: "purge", disabled: !!busy.value }] : []),
+  ...(props.purge ? [{ id: "purge", label: t.trash.purge, icon: "trash", shortcut: "Delete", destructive: true, group: "purge", disabled: !!busy.value }] : []),
 ]);
 
 function focusRow(index: number) {
