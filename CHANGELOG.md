@@ -20,7 +20,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - Panel stránky ukazuje počet čtenářů za 90 dní, stejných kalendářních dní jako Stav obsahu.
 
 ### AI a API
-- MCP `atlas_set_verification`, `atlas_list_content_health` a `atlas_report_outdated`; `atlas_get_page` a `atlas_search` nesou stav ověření a vypršelé ověření AI v odpovědi zmíní. Ověření přes MCP nebo API je označené „přes AI“.
+- MCP `atlas_set_verification`, `atlas_list_content_health` a `atlas_report_outdated`; `atlas_get_page` a `atlas_search` nesou stav ověření (u hitů, položek stromu a odkazů na stránky pole `verificationState`, v seznamu prostorů `verificationOn`) a vypršelé ověření AI v odpovědi zmíní. Ověření přes MCP nebo API je označené „přes AI“.
 - `/api/v1`: `GET|PUT /pages/{id}/verification`, `POST /pages/{id}/verification/report`, `GET /spaces/{id}/content-health`, `POST /spaces/{id}/content-health/bulk`; `GET /pages/{id}` nese blok `verification`.
 - Diskuse pro AI: MCP `atlas_list_comments`, `atlas_post_comment`, `atlas_edit_comment` a `atlas_delete_comment` (odpověď, zmínka, úprava vlastního a smazání jako na webu: autor, nebo správce objektu), `/api/v1`: `GET|POST /objects/{id}/comments`, `PUT|DELETE /objects/{id}/comments/{commentId}`.
 
@@ -34,6 +34,33 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 ### Tabule
 - Karta kontaktu se přizpůsobí velikosti (jméno, role, vizitka); vizitka .vcf a QR kód v panelu nástrojů tabule místo na kartě, QR se načte až při použití.
 - Konec spojnice lze přetáhnout na jiný objekt (i dotykem), ostatní vidí náhled čáry; L na vybrané spojnici přepojí její konec, Shift+L začátek.
+
+### Sjednocené ovládání (`docs/ux-concepts.md`)
+- Jedno řádkové menu (`SettingsListRow`, `ActionMenu`) a menu záměrů stromu a seznamů s Delete a F2; záměry mohou být destruktivní, oddělené nebo vypnuté; „Přidat do stromu…“ v Obsahu, Použito na, Vazbách a Osnově.
+- Hromadný výběr (select-all s pomlčkou při částečném výběru) v Obsahu, Schvalování a Stavu obsahu; Stav obsahu: klávesa S (G→S), řádkové menu.
+- Zpětná vazba: výsledková lišta v nastavení a profilu, jinde toast; potvrzení publikace je toast (hlavička nechává jen čip stavu); smazání stránky či tabule jedním potvrzením se Zpět pro toho, kdo smí obnovit; Ctrl+Z vezme zpět toast, který je ještě vidět; sdílený dotaz na neuložené změny.
+- Ctrl+K je jen hledání (i na tabuli); filtry omnisearch na `FilterMenu` (Upraveno, Obsah, Řazení), bez panelu filtrů, Ctrl+Shift+F a čtyř čipů.
+- Jedno pravidlo data (`RelativeTime`), jedno `LoadMoreButton`, `OptionPills` jako přepínač zobrazení, `ErrorState` a `LoadingNote`, jedno pravidlo iniciál; avatary všech uživatelů v barvě uživatele (`SubjectAvatar userId`).
+- Hranice telefonu 760 px pro dolní lištu stránky i shell; sekce nastavení na telefonu v levém panelu (spodní list Sekce zaniká).
+- Karta kontaktu stejná na stránce i tabuli, vnitřní osoba v barvě uživatele; kontakt upravený ve stránce hlásí „Kontakt upraven“ se Zpět; účty v Lidé › Účty otevírají detail ve sdíleném doku.
+- Tabule: kontakty v textech jako na stránce, kopie tabule jako Markdown na stránku, „Diskuse“ jedné položky, Ctrl+F v příkazovém panelu; stejné avatary spolupracovníků nahoře jako na stránce.
+
+### Opravy
+- Neuložená práce mimo stránku se před zavřením karty zeptá a při odhlášení se koncepty smažou.
+- `ActionMenu` zůstává v dialogu a je ostylované i před načtením editoru.
+- Hromadné „Nastavit garanta“ nabízí výběr osoby.
+- „Co to blokuje“: dva čtenáři naráz už nezpůsobí deadlock (40P01); indexy stránek se nejdřív obnoví najednou.
+- Nová stránka nebo tabule se ve stromu vlevo ukáže hned (jeden signál změny jako u přejmenování).
+- Vzdálený kurzor ve složené sekci (zobrazení jen nadpisů) stojí na řádku nadpisu, na stránkách i tabulích.
+- Odpověď omnisearch uvádí jen zdroje, které cituje, a začíná stručným přehledem.
+- Asistent ukáže, které nástroje zapíná volba „nástroje“ (`GET /api/assistant/tools`).
+- Pracující glyf AI střídá 24 náhodných rušných variant; při omezeném pohybu jemně dýchá.
+- Blok kontaktu: vystředěné ikony sdílení a jeden rám.
+
+### Soukromé prostory
+- Prostor vyloučený z AI a MCP je skrytý i osobním tokenům `/api/v1` (rozhodnuto ve sdílených přístupových branách; guard test projde každý nástroj MCP a každou routu `/api/v1`).
+- Odkaz na stránku, kterou čtenář nesmí otevřít, ukazuje „Stránka není dostupná“ místo uloženého titulku; „Použito na“ a vazby objektu neprozradí počty skrytých použití ani hran.
+- **Nekompatibilní změny `/api/v1`:** seznam použití objektu nemá `hidden` a `total` počítá jen viditelná použití; počet použití má `hidden` jako boolean a už nemá `visible`; inventář použití nemá `hidden`; `GET /objects/{id}/relations` nemá `hidden` a vynechá hrany k nečitelnému konci; REST hledání běží v rozsahu AI (bez „Mysleli jste“, bez hitů zdrojů a prostorů); vyloučené prostory dávají tokenům 404 nebo se vynechají.
 
 ### Závislosti
 - Tiptap 3.35.0, ProseMirror (model 1.25.13, view 1.43.1), y-tiptap 3.3.1 bez vlastní záplaty; vzdálené změny mapují pozice podle toho, co se opravdu změnilo.
