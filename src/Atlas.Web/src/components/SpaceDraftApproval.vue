@@ -26,6 +26,7 @@ import { approveRequest, normalizeChangeSummary } from '../publishing/publicatio
 import { createPresenceRoster } from '../live/objectPresence';
 import { viewSessions } from '../live/viewSession';
 import { locale } from '../i18n';
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 interface Draft {
   id: string;
@@ -303,7 +304,7 @@ void load();
         </article>
       </TransitionGroup>
       <EmptyState v-else icon="circle-check" :title="t.approval.noDrafts" :text="t.approval.noDraftsText" />
-      <Button v-if="hasMore" variant="outline" :aria-busy="loadingMore" :disabled="loading || loadingMore || busy || confirming || queryPending" @click="load(true)">{{ t.approval.loadMore }}</Button>
+      <LoadMoreButton v-if="hasMore" :busy="loadingMore" :disabled="loading || busy || confirming || queryPending" @click="load(true)" />
       </LoadingRegion>
       <AppDialog :title="t.approval.confirmTitle" :open="confirming" @close="confirming = false">
         <div class="approval-confirm" role="group" :aria-label="t.approval.confirmLabel">

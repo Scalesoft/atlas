@@ -26,6 +26,7 @@ import { errorMessage } from "../../api";
 import { formatDate, formatDateTime } from "../../formatDate";
 import { shareLinkMaxDays, sharingApi, type ShareLink, type SharingPolicy } from "../../sharing";
 import t from "../../i18n/components-sharing";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * „Anonymní odkazy“ of one page: the links with their state and a confirmed Zneplatnit (the words of Nastavení
@@ -251,7 +252,7 @@ onUnmounted(() => { disposed = true; issued.value = undefined; });
       </SettingsList>
       <EmptyState v-else compact icon="link" :title="t.links.emptyTitle" :text="canCreate ? t.links.emptyText : undefined" />
       <div v-if="hasMore" class="st-actions">
-        <Button variant="outline" size="sm" type="button" :disabled="busy" data-load-more @click="more"><AtlasIcon name="down" :size="15" />{{ t.links.loadMore }}</Button>
+        <LoadMoreButton :busy="busy" data-load-more @click="more" />
       </div>
       <p class="st-note"><AtlasIcon name="info" :size="15" />{{ t.links.standalone }}</p>
     </SettingsSection>

@@ -35,6 +35,7 @@ import { lazyComponent } from '../lazyComponent';
 import { rovingInit, rowKeys } from '../keyboard/navigation';
 // The rows enter one after another with the settings design system's step (--st-stagger).
 import './settings/settings.css';
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 // The graph (Vue Flow and the board canvas) loads when it is first shown, not with the list. While its chunk comes it is the region's
 // own skeleton again (one canvas-high row, without a second fade-in), so the placeholder does not blink.
@@ -385,7 +386,7 @@ async function publish() {
               </template>
               <div class="space-page-foot">
                 <span aria-live="polite">{{ shownText }}</span>
-                <Button v-if="nextCursor" variant="outline" size="sm" data-more-pages :disabled="loading" @click="loadMore">{{ t.content.loadMore }}</Button>
+                <LoadMoreButton v-if="nextCursor" data-more-pages :busy="loading" @click="loadMore" />
               </div>
             </div>
             <EmptyState v-else compact :icon="allUsed ? 'check' : 'search'" :title="allUsed ? t.content.allUsedTitle : filtered ? t.content.noMatchTitle : t.content.emptyTitle"

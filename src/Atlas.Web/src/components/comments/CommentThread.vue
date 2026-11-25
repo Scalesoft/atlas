@@ -20,6 +20,7 @@ import SubjectAvatar from "../settings/SubjectAvatar.vue";
 import { Button } from "../ui/button";
 import CommentComposer from "./CommentComposer.vue";
 import t from "../../i18n/components-search";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * The discussion of one object (comments spec §5), the one thread of a page (a section under its content), of a board (its
@@ -241,8 +242,7 @@ const hidden = () => status.value === "missing" || (!!props.title && status.valu
     </TransitionGroup>
 
     <EmptyState v-if="status === 'ready' && canPost && !items.length && !title" compact icon="quote" :title="t.comments.emptyTitle" :text="t.comments.emptyText" data-comments-empty />
-    <Button v-if="hasMore" class="comment-older" variant="outline" size="sm" type="button" :disabled="loadingOlder" :aria-busy="loadingOlder || undefined"
-      data-comment-older @click="thread.older().catch(failure => (actionError = errorMessage(failure)))">{{ t.comments.older }}</Button>
+    <LoadMoreButton v-if="hasMore" older class="comment-older" :busy="loadingOlder" data-comment-older @click="thread.older().catch(failure => (actionError = errorMessage(failure)))" />
     <p v-if="status === 'failed'" class="comment-thread-error" role="alert">
       <AtlasIcon name="triangle-alert" :size="15" />{{ error }} <Button variant="ghost" size="sm" type="button" @click="thread.load()">{{ t.comments.retry }}</Button></p>
 

@@ -12,6 +12,7 @@ import EmptyState from "../settings/EmptyState.vue";
 import ErrorState from "../settings/ErrorState.vue";
 import { disclosureHooks } from "../settings/disclosure";
 import { Button } from "../ui/button";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * „Použito na“ (plan 3.1 M5, U1): where ONE object is used, the same panel for a contact, a board, a page, a template and a catalog
@@ -140,7 +141,7 @@ function drag(event: DragEvent, place: Place) {
             </section>
           </div>
           <p v-if="page.hidden" class="usage-hidden" data-usage-hidden><AtlasIcon name="lock" :size="14" />{{ t.usage.hidden(page.items.length > 0, page.hidden) }}</p>
-          <Button v-if="page.nextCursor" variant="outline" size="sm" class="usage-more" :disabled="loading" data-usage-more @click="load(true)">{{ t.usage.loadMore }}</Button>
+          <LoadMoreButton v-if="page.nextCursor" class="usage-more" :busy="loading" data-usage-more @click="load(true)" />
         </template>
       </LoadingRegion>
     </Transition>

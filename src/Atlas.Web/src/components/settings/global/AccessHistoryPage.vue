@@ -14,6 +14,7 @@ import type { ActivityItem } from "../activity";
 import { auditActivity, auditCategoryLabels, loadAccessAudit } from "../auditActivity";
 import { useSettingsContext } from "../context";
 import t from "../../../i18n/settings-global";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 // Audit (wiki administrator): password releases and refusals, access requests, protection, network and
 // proxy changes, fresh sign-ins and every access change of accounts, groups, spaces, pages and vaults as
@@ -73,9 +74,7 @@ onBeforeUnmount(() => controller?.abort());
         <ActivityLog :items="items" :label="t.audit.title" :categories="auditCategoryLabels" />
         <p class="st-note"><AtlasIcon name="info" :size="15" />{{ t.audit.note }}</p>
         <div v-if="hasMore" class="st-actions">
-          <Button variant="outline" size="sm" type="button" :disabled="loading" data-audit-more @click="load(true)">
-            <AtlasIcon :name="loading ? 'loader-circle' : 'history'" :size="15" :class="{ 'atlas-spinner': loading }" />{{ t.audit.older }}
-          </Button>
+          <LoadMoreButton older :busy="loading" data-audit-more @click="load(true)" />
         </div>
       </template>
       <p v-if="since" class="st-note" data-audit-coverage>

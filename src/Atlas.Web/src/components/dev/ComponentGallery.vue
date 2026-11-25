@@ -19,6 +19,7 @@ import { requirementKeymap } from "../../projector/requirementKeymap";
 import InlineRevealExample from "./InlineRevealExample.vue";
 import StubbedPopoverExample from "./StubbedPopoverExample.vue";
 import LoadingSkeleton from "../LoadingSkeleton.vue";
+import LoadMoreButton from "../LoadMoreButton.vue";
 import LoadingRegion from "../LoadingRegion.vue";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -314,7 +315,8 @@ const galleryVersions: PageRevisionSummary[] = [
   galleryVersion(2, {}),
 ];
 const resultVisible = ref(true);
-const retried = ref(false);
+const retried = ref(false), loadMoreBusy = ref(false);
+const demoLoadMore = () => { loadMoreBusy.value = true; setTimeout(() => { loadMoreBusy.value = false; }, 1200); };
 // LoadingRegion demo: the first load shows a skeleton, later refreshes keep the rows in place.
 const regionReady = ref(true), regionLoading = ref(false);
 const regionRows = ref(["Provozní řád", "Onboarding"]);
@@ -570,6 +572,13 @@ const steps: FlowStep[] = [
           <EmptyState title="Zatím žádné položky" text="Zde bude obsah po přidání první položky." icon="folder" />
           <EmptyState inline icon="search" title="Nic neodpovídá hledání. Zkuste jiné slovo." />
           <LoadingSkeleton :rows="2" label="Ukázka načítání" />
+        </SettingsSection>
+        <SettingsSection title="LoadMoreButton" description="LoadMoreButton.vue — jediné tlačítko „Načíst další“ pro seznamy stránkované kurzorem nebo offsetem (D10): bez ikony, běžící načítání je stav busy tlačítka (točítko, zakázané, aria-busy), „Starší…“ (older) jen v historii. U seznamu, který už řádky ukazuje, failed přidá tichou větu „Načtení dalších selhalo“ a tlačítko se stane opakováním. Samo se nenačítá nic; automaticky se dál načítá jen hledání (jeho vlastní hlídač na konci výsledků). Ruční tlačítko ve vlastním stylu místo tohoto je zakázané.">
+          <div class="flex flex-wrap items-start gap-3">
+            <LoadMoreButton :busy="loadMoreBusy" @click="demoLoadMore" />
+            <LoadMoreButton older />
+            <LoadMoreButton failed />
+          </div>
         </SettingsSection>
         <SettingsSection title="HistoryChanges" description="HistoryChanges.vue — změny verze stránky jako vykreslené bloky (Přidáno / Odstraněno / Upraveno se zvýrazněnými slovy), nezměněné bloky sbalené; přepínač Náhled | Markdown. Lišta nejdřív řekne počet změn, počty slov doplní, až je spočítá mimo hlavní vlákno; změny se vykreslují odshora po několika na snímek („Načítám další změny…“), šipky ↑ ↓ na změně nebo na tlačítkách mezi nimi skáčou. Bloky, které se liší jen neviditelně (identita nadpisu, prázdné a výchozí atributy starší revize), se za změnu nepočítají. Použití: historie stránky, schvalování konceptů, karta návrhu konceptu v asistentovi (prop label místo řádku verzí, jen Markdown; ukázka v AssistantPanel, scény Návrh úpravy sekce a Přeformátování).">
           <HistoryChanges :revision="galleryHistoryAfter" :previous="galleryHistoryBefore" />

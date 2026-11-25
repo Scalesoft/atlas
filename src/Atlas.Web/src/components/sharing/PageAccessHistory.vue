@@ -11,6 +11,7 @@ import { errorMessage } from "../../api";
 import { channelMark, tokenText } from "../../channel";
 import { sharingApi, type PageAccessEvent, type PageCatalogMark } from "../../sharing";
 import t from "../../i18n/components-sharing";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * „Historie otevření“ of one page for its managers: who opened the page or one of its anonymous links and what
@@ -94,7 +95,7 @@ onUnmounted(() => { disposed = true; request++; });
       <ActivityTimeline :items="markItems" :label="t.history.catalog" empty-title="" empty-text="" />
     </div>
     <div v-if="nextBeforeId" class="st-actions">
-      <Button variant="outline" size="sm" type="button" :disabled="loading" data-load-older @click="load(nextBeforeId)"><AtlasIcon name="down" :size="15" />{{ t.history.older }}</Button>
+      <LoadMoreButton older :busy="loading" data-load-older @click="load(nextBeforeId)" />
     </div>
   </SettingsSection>
 </template>

@@ -11,6 +11,7 @@ import { rowKeys } from "../../keyboard/navigation";
 import type { LibraryView } from "../../shellRoute";
 import type { DashboardCardDefinition } from "./dashboardCards";
 import t from "../../i18n/components-home";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 // Co se změnilo: the newest change of each page the reader may read, Vše · Změny od AI · Moje stránky; „Načíst další“ follows the cursor.
 const props = defineProps<{ card: DashboardCardDefinition }>();
@@ -61,7 +62,7 @@ onBeforeUnmount(() => abort?.abort());
     </ul>
     <div v-if="next || (error && items.length)" class="changes-more">
       <p v-if="error && items.length" class="changes-error" role="alert">{{ error }}</p>
-      <Button variant="outline" size="sm" :disabled="loading" :aria-busy="loading" @click="load(true)"><AtlasIcon name="refresh" :size="15" />{{ t.changes.more }}</Button>
+      <LoadMoreButton :busy="loading" @click="load(true)" />
     </div>
   </DashboardCard>
 </template>

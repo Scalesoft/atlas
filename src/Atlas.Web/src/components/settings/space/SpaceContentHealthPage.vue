@@ -30,6 +30,7 @@ import { useSettingsContext } from "../context";
 import { useSettingsFlash } from "../flash";
 import { useSettingsRoute } from "../useSettingsRoute";
 import type { ChoiceOption } from "../types";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * Stav obsahu (5.2, plan §6): what of a space is verified, what expires and what people actually read, in existing parts only: StatTile row that sets
@@ -287,7 +288,7 @@ const empty = computed(() => !!data.value && !loading.value && !items.value.leng
               </SettingsListRow>
             </SettingsList>
             <EmptyState v-if="empty" compact icon="search" :title="t.health.emptyTitle" :text="t.health.emptyText" />
-            <Button v-if="data?.nextCursor" variant="outline" size="sm" type="button" :disabled="loading" class="health-more" data-health-more @click="load(true)">{{ t.health.more }}</Button>
+            <LoadMoreButton v-if="data?.nextCursor" class="health-more" :busy="loading" data-health-more @click="load(true)" />
           </div>
           <p class="health-keys">{{ t.health.keys }}</p>
         </SettingsSection>

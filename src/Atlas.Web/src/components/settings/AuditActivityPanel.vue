@@ -10,6 +10,7 @@ import ErrorState from "./ErrorState.vue";
 import SettingsSection from "./SettingsSection.vue";
 import type { ActivityItem } from "./activity";
 import { auditActivity, loadAccessAudit, type AccessAuditFilter } from "./auditActivity";
+import LoadMoreButton from "../LoadMoreButton.vue";
 
 /**
  * Činnost of one person, group or space: the access audit narrowed on the server (userId as actor or subject, groupId,
@@ -54,9 +55,7 @@ onBeforeUnmount(() => controller?.abort());
     <ErrorState v-else-if="error && !items.length" :title="t.panel.failed" :text="error" :busy="loading" @retry="load()" />
     <ActivityTimeline v-else :items="items" :label="label" :empty-title="t.panel.emptyTitle" :empty-text="emptyText ?? t.panel.emptyText" />
     <div class="st-actions audit-panel-actions">
-      <Button v-if="hasMore" variant="outline" size="sm" type="button" :disabled="loading" data-audit-more @click="load(true)">
-        <AtlasIcon :name="loading ? 'loader-circle' : 'history'" :size="15" :class="{ 'atlas-spinner': loading }" />{{ t.panel.older }}
-      </Button>
+      <LoadMoreButton v-if="hasMore" older :busy="loading" data-audit-more @click="load(true)" />
       <a v-if="historyHref" class="st-link" :href="historyHref" data-audit-history><AtlasIcon name="scroll-text" :size="15" />{{ t.panel.wholeAudit }}</a>
     </div>
   </SettingsSection>

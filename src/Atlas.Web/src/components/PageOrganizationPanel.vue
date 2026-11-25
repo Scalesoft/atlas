@@ -17,6 +17,7 @@ import LoadingNote from "./settings/LoadingNote.vue";
 import TrashList from "./settings/TrashList.vue";
 import InlineReveal from "./settings/InlineReveal.vue";
 import SearchableChoiceList from "./settings/SearchableChoiceList.vue";
+import LoadMoreButton from "./LoadMoreButton.vue";
 
 const props = defineProps<{
   spaceId: string;
@@ -328,7 +329,7 @@ onBeforeUnmount(() => {
           <TrashList v-model:items="trashItems" class="organization-trash-list" :label="t.org.pagesInTrash" :icon="item => item.type === 'board' ? 'layout-dashboard' : 'page'"
             :detail="trashDetail" :restore="selectTrash" :purge="item => objectApi.purge(item.id)" :loaded="!!tree" :loading="loading"
             :empty-title="t.org.trashEmpty" :empty-text="t.org.trashEmptyText" @left="purged">
-            <Button variant="outline" v-if="hasMore" class="organization-more" :disabled="loading || busy" :aria-busy="loading" @click="load(true)">{{ t.org.loadMore }}</Button>
+            <LoadMoreButton v-if="hasMore" class="organization-more" :busy="loading" :disabled="busy" @click="load(true)" />
             <template #purge="{ item }">
               <p v-if="item.type === 'board'">{{ t.org.board }} <strong>{{ item.title }}</strong> {{ t.org.purgeBoard }}</p>
               <p v-else>{{ t.org.page }} <strong>{{ item.title }}</strong> {{ t.org.purgePage }}</p>

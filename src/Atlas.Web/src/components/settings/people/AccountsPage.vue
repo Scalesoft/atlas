@@ -34,6 +34,7 @@ import { accountSourceLabels, accountStatus, accountStatusLabels, type AccountSt
 import InviteAccountWizard from "./InviteAccountWizard.vue";
 import type { InviteDraft } from "./types";
 import "./people.css";
+import LoadMoreButton from "../../LoadMoreButton.vue";
 
 /**
  * Nastavení wiki → Kdo → Lidé (wiki administrator only). `sub` is the third path segment:
@@ -411,7 +412,7 @@ function replace(saved: DirectoryUser) {
           <EmptyState v-else-if="users.length || search.trim()" compact icon="search" :title="users.length ? t.accounts.noneMatch(users.length) : t.accounts.nobodyMatches" :text="t.accounts.tryOther" />
           <EmptyState v-else compact icon="account" :title="t.accounts.emptyTitle" :text="t.accounts.emptyText" />
           <div v-if="more" class="st-actions">
-            <Button variant="outline" type="button" :disabled="loadingMore" data-more-accounts @click="loadMore"><AtlasIcon :name="loadingMore ? 'loader-circle' : 'plus'" :size="16" :class="{ 'atlas-spinner': loadingMore }" />{{ t.common.loadMore }}</Button>
+            <LoadMoreButton :busy="loadingMore" data-more-accounts @click="loadMore" />
           </div>
         </div>
         <!-- The slot is always there: its column opens and closes with the summary, and the summary leaves into it. -->
