@@ -15,6 +15,13 @@ it("turns backticks into code and leaves tags, links and urls as text", () => {
   expect(tokenizeSentence("")).toEqual([]);
 });
 
+it("turns a **bold** key fact into a strong token and leaves stray asterisks as text", () => {
+  expect(tokenizeSentence("Hotovo **34 %**, `vpn` čeká.")).toEqual([
+    { kind: "text", text: "Hotovo " }, { kind: "strong", text: "34 %" }, { kind: "text", text: ", " }, { kind: "code", text: "vpn" }, { kind: "text", text: " čeká." },
+  ]);
+  expect(tokenizeSentence("Jen *jedna* a ** nic")).toEqual([{ kind: "text", text: "Jen *jedna* a ** nic" }]);
+});
+
 it("builds the current page route at its heading and labels sources", () => {
   expect(sourceRoute({ pageId: "p 1", headingId: "h/2" })).toBe("#/pages/p%201?heading=h%2F2");
   expect(sourceRoute({ pageId: "p1", headingId: null })).toBe("#/pages/p1");

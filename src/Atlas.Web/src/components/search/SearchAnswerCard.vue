@@ -28,7 +28,7 @@ function submitFeedback(feedback: { rating: "down"; reason: string | null; note:
 </script>
 <template>
   <div v-if="answer.visible.value" ref="root" class="search-answer-card" data-search-answer>
-    <AiAnswer :state="answer.state.value === 'canceled' ? 'offer' : answer.state.value" variant="compact"
+    <AiAnswer :state="answer.state.value === 'canceled' ? 'offer' : answer.state.value" variant="compact" format="lead"
       :sources="answer.sources.value" :sentences="answer.message.value?.sentences" :provenance="answer.message.value?.provenance"
       :created-at="answer.message.value?.createdAt" :scope="answer.message.value?.scope" :rating="answer.rating.value"
       :source-origin="sourceOrigin"

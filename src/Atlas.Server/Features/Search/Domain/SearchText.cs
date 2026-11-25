@@ -101,7 +101,7 @@ public static partial class SearchText
         .Distinct(StringComparer.Ordinal).Where(token => token.Length >= 3 && !IsFunctionWord(token)).Take(16).ToArray();
 
     /// <summary>A word matches its prefix or its stem (indexed beside the exact words, migration 2026102030).</summary>
-    private static string WordTerm(string token) => Stem(token) is var stem && stem != token ? $"({token}:* | {stem})" : token + ":*";
+    public static string WordTerm(string token) => Stem(token) is var stem && stem != token ? $"({token}:* | {stem})" : token + ":*";
 
     /// <summary>The most common Czech (and English) question and function words, normalized (no diacritics).</summary>
     public static bool IsFunctionWord(string normalized) => FunctionWords.Contains(normalized);
@@ -112,7 +112,8 @@ public static partial class SearchText
         "komu", "ktery", "ktera", "ktere", "kterou", "kterym", "kolik", "muzu", "mohu", "muze", "muzeme", "lze", "mam", "mame", "mate",
         "musim", "musi", "chci", "potrebuji", "pro", "pri", "pod", "nad", "pred", "mezi", "bez", "nebo", "ale", "ani", "jsou", "jsem",
         "jsme", "jste", "byt", "bude", "budu", "neni", "nejsou", "tak", "take", "tento", "tato", "toto", "tyto", "ten", "tam", "tady",
-        "jen", "jeste", "aby", "abych", "jako", "nas", "vas", "jeho", "jeji", "jejich", "svuj", "sve", "the", "and", "how",
+        "jen", "jeste", "aby", "abych", "jako", "nas", "vas", "nam", "vam", "nami", "vami", "mne", "mnou", "tebe", "tobe", "tebou",
+        "jim", "jimi", "nim", "nimi", "nich", "jemu", "nemu", "jeho", "jeji", "jejich", "svuj", "sve", "the", "and", "how",
         "what", "where", "when", "who", "why", "for", "with", "can", "does",
         "co", "je", "to", "se", "si", "na", "do", "po", "za", "ze", "od", "ve", "ke", "ku", "ty", "ta", "by", "mi", "mu", "ji", "a", "i",
         "o", "u", "k", "s", "v", "z", "is", "of", "in", "on", "an",

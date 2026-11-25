@@ -27,7 +27,7 @@ public sealed partial class PromptFilesTests
         Assert.Equal(AnswerPrompt.Resources.Count, AnswerPrompt.Resources.Keys.Distinct().Count());
         Assert.Contains(AnswerPrompt.Version, AnswerPrompt.Resources.Keys);
         Assert.Equal("answer@1", AnswerPrompt.V1);
-        Assert.Equal("answer@3", AnswerPrompt.Version);
+        Assert.Equal("answer@4", AnswerPrompt.Version);
         Assert.Equal(AnswerPrompt.SystemFor(AnswerPrompt.Version), AnswerPrompt.System);
     }
 
@@ -42,6 +42,10 @@ public sealed partial class PromptFilesTests
         Assert.Contains("sources", text);         // numbers only in the sources field
         Assert.Contains("answerable", text);      // abstention
         Assert.Contains("česky", text);
+        // the quick overview the search's right column renders as a lead and points (AiAnswer format "lead")
+        Assert.Contains("první věta je krátká přímá odpověď", text);
+        Assert.Contains("každý bod je samostatná věta v poli sentences", text);
+        Assert.Contains("**takto**", text);       // the only Markdown the UI renders besides `code`
         Assert.DoesNotContain("\r", text);
     }
 

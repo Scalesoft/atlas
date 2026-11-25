@@ -2,23 +2,23 @@ import type { AiSourceView } from "../../ai/assistantApi";
 import { buildShellHashEncoded } from "../../shellRoute";
 import t from "../../i18n/ai";
 
-/** A piece of a sentence: plain text or inline code. Nothing else is ever rendered from model text (plan R8, O5). */
+/** A piece of a sentence: plain text, inline code or a **bold** key fact. Nothing else is ever rendered from model text (plan R8, O5). */
 export interface SentenceToken {
-  kind: "text" | "code";
+  kind: "text" | "code" | "strong";
   text: string;
 }
 
 /**
- * Splits a sentence at `code` spans. A tag, a link or a URL stays text: the template prints tokens through interpolation, so the
- * browser never parses them. An unpaired backtick stays text too.
+ * Splits a sentence at `code` and **bold** spans. A tag, a link or a URL stays text: the template prints tokens through
+ * interpolation, so the browser never parses them. An unpaired backtick or asterisks stay text too.
  */
 export function tokenizeSentence(text: string): SentenceToken[] {
   const tokens: SentenceToken[] = [];
-  const code = /`([^`\r\n]+)`/g;
+  const span = /`([^`\r\n]+)`|\*\*([^*\r\n]+)\*\*/g;
   let from = 0;
-  for (let match = code.exec(text); match; match = code.exec(text)) {
+  for (let match = span.exec(text); match; match = span.exec(text)) {
     if (match.index > from) tokens.push({ kind: "text", text: text.slice(from, match.index) });
-    tokens.push({ kind: "code", text: match[1]! });
+    tokens.push(match[1] !== undefined ? { kind: "code", text: match[1] } : { kind: "strong", text: match[2]! });
     from = match.index + match[0].length;
   }
   if (from < text.length) tokens.push({ kind: "text", text: text.slice(from) });

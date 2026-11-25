@@ -54,6 +54,8 @@ public sealed class AnswerValidatorTests
     [InlineData("Obrázek ![kanárek](http://evil.example/a.png) zmizí.", "Obrázek zmizí.")]
     [InlineData("Otevřete [Service Desk](https://sd.example/odkaz) a založte požadavek.", "Otevřete Service Desk a založte požadavek.")]
     [InlineData("Použijte `rdp.example.test` jako bránu.", "Použijte `rdp.example.test` jako bránu.")]
+    [InlineData("- Hotovo **34 %** [3].", "Hotovo **34 %**.")]
+    [InlineData("• Čeká se na **termín**.", "Čeká se na **termín**.")]
     public void Sentence_text_is_plain_text_without_citation_markers_html_images_and_link_targets(string raw, string expected)
     {
         var result = AnswerValidator.Validate(new AnswerResult(true, [Sentence(raw, 1)]), 1);

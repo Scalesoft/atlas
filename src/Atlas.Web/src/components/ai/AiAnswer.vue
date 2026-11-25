@@ -28,7 +28,7 @@ import { answerTurnStatus, type AiTaskKind } from "../../ai/aiStatus";
  *
  * It is presentational: the parent owns the state (see ai/answerTurn.ts) and passes it in; nothing here calls the server.
  *
- * - Sentences are plain text with `code` spans (aiAnswerText.ts); a citation exists only for a number that is in `sources`.
+ * - Sentences are plain text with `code` and **bold** spans (aiAnswerText.ts); a citation exists only for a number that is in `sources`.
  * - Fokus se nepřesouvá. A finished answer is announced once by a hidden live region.
  * - While the model works, the one AI status line (AiStatus) says what happens: in `compact` the card's heading glyph takes the
  *   state of the step and the line below it says the verb, the sources found, the time and Zastavit, over an indeterminate bar;
@@ -44,7 +44,8 @@ export type AiAnswerState = "offer" | "retrieving" | "preparing" | "done" | "no_
 const props = withDefaults(defineProps<{
   state: AiAnswerState;
   variant?: "compact" | "full";
-  format?: "paragraph" | "bullets";
+  /** `lead`: the quick overview of search, its first sentence as the answer and the rest as points (prompt answer@4). */
+  format?: "paragraph" | "bullets" | "lead";
   truncated?: boolean;
   sentences?: readonly AiSentenceView[];
   sources?: readonly AiSourceView[];
@@ -101,12 +102,18 @@ const cited = (sentence: AiSentenceView) => [...new Set(sentence.sources)].map((
 function splitTail(tokens: SentenceToken[]): { tokens: SentenceToken[]; tail: SentenceToken[] } {
   const last = tokens.at(-1);
   if (!last) return { tokens, tail: [] };
-  if (last.kind === "code") return last.text.length <= 32 ? { tokens: tokens.slice(0, -1), tail: [last] } : { tokens, tail: [] };
+  if (last.kind !== "text") return last.text.length <= 32 ? { tokens: tokens.slice(0, -1), tail: [last] } : { tokens, tail: [] };
   const word = /\S+\s*$/.exec(last.text);
   if (!word || word[0].length > 32) return { tokens, tail: [] };
   const head = last.text.slice(0, word.index);
   return { tokens: [...tokens.slice(0, -1), ...(head ? [{ kind: "text" as const, text: head }] : [])], tail: [{ kind: "text", text: word[0] }] };
 }
+/** The finished answer lists the sources its sentences cite; the rest stay in its provenance („Podklady odpovědi“). */
+const listed = computed(() => {
+  const numbers = new Set(props.sentences.flatMap((sentence) => sentence.sources));
+  const used = props.sources.filter((source) => numbers.has(source.number));
+  return used.length ? used : props.sources;
+});
 const rows = computed(() => props.sentences.map((sentence) => {
   const citations = cited(sentence);
   const tokens = tokenizeSentence(sentence.text);
@@ -301,10 +308,10 @@ onMounted(() => {
           />
         </AiStatus>
         <div v-else class="ai-answer-body" data-ai-body>
-          <component :is="format === 'bullets' ? 'ul' : 'div'" ref="text" class="ai-answer-sentences" :class="{ 'is-bullets': format === 'bullets' }">
-          <component :is="format === 'bullets' ? 'li' : 'span'" v-for="(row, index) in rows" :key="index" class="ai-sentence" :class="{ 'is-hl': highlighted !== null && row.citations.some((c) => c.number === highlighted) }" data-ai-sentence>
-            <template v-for="(token, t) in row.tokens" :key="t"><code v-if="token.kind === 'code'">{{ token.text }}</code><template v-else>{{ token.text }}</template></template>
-            <span :class="{ 'ai-sentence-tail': row.tail.length }"><template v-for="(token, t) in row.tail" :key="t"><code v-if="token.kind === 'code'">{{ token.text }}</code><template v-else>{{ token.text }}</template></template><AiCitation
+          <component :is="format === 'paragraph' ? 'div' : 'ul'" ref="text" class="ai-answer-sentences" :class="{ 'is-bullets': format !== 'paragraph' }">
+          <component :is="format === 'paragraph' ? 'span' : 'li'" v-for="(row, index) in rows" :key="index" class="ai-sentence" :class="{ 'is-hl': highlighted !== null && row.citations.some((c) => c.number === highlighted), 'is-lead': format === 'lead' && index === 0 }" data-ai-sentence>
+            <template v-for="(token, t) in row.tokens" :key="t"><code v-if="token.kind === 'code'">{{ token.text }}</code><strong v-else-if="token.kind === 'strong'">{{ token.text }}</strong><template v-else>{{ token.text }}</template></template>
+            <span :class="{ 'ai-sentence-tail': row.tail.length }"><template v-for="(token, t) in row.tail" :key="t"><code v-if="token.kind === 'code'">{{ token.text }}</code><strong v-else-if="token.kind === 'strong'">{{ token.text }}</strong><template v-else>{{ token.text }}</template></template><AiCitation
               v-for="source in row.citations"
               :key="source.number"
               :source="source"
@@ -323,10 +330,10 @@ onMounted(() => {
             </InlineReveal>
           </div>
           <details v-if="sources.length && collapsibleSources && !provenance" class="ai-answer-fold" data-ai-sources-fold>
-            <summary>{{ t.answer.sourcesToggle(sources.length) }}</summary>
+            <summary>{{ t.answer.sourcesToggle(listed.length) }}</summary>
             <AiSourceList
               class="ai-answer-tray"
-              :sources="sources"
+              :sources="listed"
               :highlighted="highlighted"
               @highlight="highlight"
               @open-source="(source, newTab) => emit('open-source', source, newTab)"
@@ -336,7 +343,7 @@ onMounted(() => {
             <span class="ai-answer-sources-label" aria-hidden="true">{{ t.answer.sourcesLabel }}</span>
             <AiSourceList
               class="ai-answer-tray"
-              :sources="sources"
+              :sources="listed"
               :highlighted="highlighted"
               :hidden-numbers="hiddenNumbers"
               @highlight="highlight"
@@ -377,6 +384,8 @@ onMounted(() => {
 .ai-answer-bubble :deep(.ai-answer-tray) { padding-top: 8px; border-top: 1px solid var(--refresh-soft-line, var(--line)); }
 .ai-answer-sentences.is-bullets { margin: 0; padding-left: 20px; }
 .ai-answer-sentences.is-bullets .ai-sentence { margin: 4px 0; }
+/* The quick overview: the answer in one line, its points below it in the list's rhythm. */
+.ai-answer-sentences.is-bullets .ai-sentence.is-lead { margin: 0 0 6px -20px; list-style: none; }
 .ai-answer.is-card { padding: 14px 16px; border-radius: 12px; background: var(--surface); overflow: hidden; }
 .ai-answer.is-solid { background: linear-gradient(180deg, var(--ai-wash), var(--surface) 60%); }
 /* Once it runs, the outline is the joined line solidify() ends on. */
@@ -407,6 +416,7 @@ onMounted(() => {
 .ai-sentence { margin-right: .3em; border-radius: 4px; transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), box-shadow var(--atlas-motion-fast) var(--atlas-ease-out); }
 .ai-sentence.is-hl { background: var(--accent-soft); box-shadow: 0 0 0 2px var(--accent-soft); }
 .ai-sentence-tail { white-space: nowrap; }
+.ai-sentence strong { font-weight: 650; }
 .ai-sentence code { padding: 1px 4px; border-radius: 4px; background: var(--hover); font-size: .92em; }
 .ai-answer-notice { margin: 4px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
 .ai-answer-rate { display: flex; justify-content: flex-end; margin-top: 8px; }
