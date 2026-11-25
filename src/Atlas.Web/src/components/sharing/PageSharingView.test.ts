@@ -82,7 +82,7 @@ it("offers link validity only up to the server's 30 days and says so before crea
   expect(page.get("[data-link-limit]").text()).toBe("nejvýš 30 dní");
   expect(new Date(date.attributes("max")!).getTime()).toBeLessThanOrEqual(Date.now() + 30 * 86_400_000);
   await date.setValue(new Date(Date.now() + 40 * 86_400_000).toISOString().slice(0, 16)); await flushPromises();
-  expect(page.get(".page-link-error").text()).toContain("nejvýš 30 dní od teď");
+  expect(page.get(".page-link-date [role=alert]").text()).toContain("nejvýš 30 dní od teď");
   expect(page.get("[data-flow-next]").attributes("disabled")).toBeDefined();
   expect(sharingApi.createLink).not.toHaveBeenCalled();
 });

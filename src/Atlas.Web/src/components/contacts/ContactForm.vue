@@ -26,29 +26,23 @@ function update(key: keyof ContactFormValues, value: string | number) { values.v
 
 <template>
   <form class="contact-form" novalidate data-contact-form @submit.prevent="emit('submit')">
-    <FormField class="wide" :label="t.formView.name">
-      <Input :model-value="values.name" autocomplete="off" required :disabled="busy" :aria-invalid="!!errors.name" data-contact-name @update:model-value="update('name', $event)" />
-      <small v-if="errors.name" class="contact-form-error" role="alert">{{ errors.name }}</small>
+    <FormField class="wide" :label="t.formView.name" :error="errors.name" v-slot="{ describedBy }">
+      <Input :model-value="values.name" autocomplete="off" required :disabled="busy" :aria-invalid="!!errors.name" :aria-describedby="describedBy" data-contact-name @update:model-value="update('name', $event)" />
     </FormField>
-    <FormField :label="t.formView.title">
-      <Input :model-value="values.title" autocomplete="off" :disabled="busy" :aria-invalid="!!errors.title" @update:model-value="update('title', $event)" />
-      <small v-if="errors.title" class="contact-form-error" role="alert">{{ errors.title }}</small>
+    <FormField :label="t.formView.title" :error="errors.title" v-slot="{ describedBy }">
+      <Input :model-value="values.title" autocomplete="off" :disabled="busy" :aria-invalid="!!errors.title" :aria-describedby="describedBy" @update:model-value="update('title', $event)" />
     </FormField>
-    <FormField :label="t.formView.organization">
-      <Input :model-value="values.organization" autocomplete="off" :disabled="busy" :aria-invalid="!!errors.organization" @update:model-value="update('organization', $event)" />
-      <small v-if="errors.organization" class="contact-form-error" role="alert">{{ errors.organization }}</small>
+    <FormField :label="t.formView.organization" :error="errors.organization" v-slot="{ describedBy }">
+      <Input :model-value="values.organization" autocomplete="off" :disabled="busy" :aria-invalid="!!errors.organization" :aria-describedby="describedBy" @update:model-value="update('organization', $event)" />
     </FormField>
-    <FormField :label="t.formView.department">
-      <Input :model-value="values.department" autocomplete="off" :disabled="busy" :aria-invalid="!!errors.department" @update:model-value="update('department', $event)" />
-      <small v-if="errors.department" class="contact-form-error" role="alert">{{ errors.department }}</small>
+    <FormField :label="t.formView.department" :error="errors.department" v-slot="{ describedBy }">
+      <Input :model-value="values.department" autocomplete="off" :disabled="busy" :aria-invalid="!!errors.department" :aria-describedby="describedBy" @update:model-value="update('department', $event)" />
     </FormField>
-    <FormField class="wide" :label="t.formView.emails">
-      <Textarea :model-value="values.emails" rows="2" :disabled="busy" :aria-invalid="!!errors.emails" data-contact-emails @update:model-value="update('emails', $event)" />
-      <small v-if="errors.emails" class="contact-form-error" role="alert">{{ errors.emails }}</small>
+    <FormField class="wide" :label="t.formView.emails" :error="errors.emails" v-slot="{ describedBy }">
+      <Textarea :model-value="values.emails" rows="2" :disabled="busy" :aria-invalid="!!errors.emails" :aria-describedby="describedBy" data-contact-emails @update:model-value="update('emails', $event)" />
     </FormField>
-    <FormField class="wide" :label="t.formView.phones">
-      <Textarea :model-value="values.phones" rows="2" :disabled="busy" :aria-invalid="!!errors.phones" data-contact-phones @update:model-value="update('phones', $event)" />
-      <small v-if="errors.phones" class="contact-form-error" role="alert">{{ errors.phones }}</small>
+    <FormField class="wide" :label="t.formView.phones" :error="errors.phones" v-slot="{ describedBy }">
+      <Textarea :model-value="values.phones" rows="2" :disabled="busy" :aria-invalid="!!errors.phones" :aria-describedby="describedBy" data-contact-phones @update:model-value="update('phones', $event)" />
     </FormField>
     <div class="wide contact-form-more">
       <Button variant="ghost" size="sm" type="button" aria-controls="contact-form-more" :aria-expanded="more" data-contact-more @click="more = !more">
@@ -56,13 +50,11 @@ function update(key: keyof ContactFormValues, value: string | number) { values.v
       </Button>
       <InlineReveal id="contact-form-more" v-model:open="more">
         <div class="contact-form-grid">
-          <FormField class="wide" :label="t.formView.website">
-            <Input :model-value="values.website" autocomplete="off" inputmode="url" :disabled="busy" :aria-invalid="!!errors.website" data-contact-website @update:model-value="update('website', $event)" />
-            <small v-if="errors.website" class="contact-form-error" role="alert">{{ errors.website }}</small>
+          <FormField class="wide" :label="t.formView.website" :error="errors.website" v-slot="{ describedBy }">
+            <Input :model-value="values.website" autocomplete="off" inputmode="url" :disabled="busy" :aria-invalid="!!errors.website" :aria-describedby="describedBy" data-contact-website @update:model-value="update('website', $event)" />
           </FormField>
-          <FormField class="wide" :label="t.formView.address">
-            <Textarea :model-value="values.address" rows="2" :disabled="busy" :aria-invalid="!!errors.address" @update:model-value="update('address', $event)" />
-            <small v-if="errors.address" class="contact-form-error" role="alert">{{ errors.address }}</small>
+          <FormField class="wide" :label="t.formView.address" :error="errors.address" v-slot="{ describedBy }">
+            <Textarea :model-value="values.address" rows="2" :disabled="busy" :aria-invalid="!!errors.address" :aria-describedby="describedBy" @update:model-value="update('address', $event)" />
           </FormField>
         </div>
       </InlineReveal>
@@ -79,6 +71,5 @@ function update(key: keyof ContactFormValues, value: string | number) { values.v
 .wide { grid-column: 1 / -1; }
 .contact-form-more { margin: -4px 0 8px; }
 .contact-form-more :deep(.inline-reveal-inner) { padding-top: 6px; }
-.contact-form-error { color: var(--error); font-size: 12.5px; }
 .contact-form-actions { display: flex; justify-content: flex-end; }
 </style>

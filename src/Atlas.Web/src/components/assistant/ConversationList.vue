@@ -35,6 +35,8 @@ const emit = defineEmits<{ open: [id: string]; more: []; back: []; retry: [] }>(
         icon="quote"
         :data-conversation="item.id"
         :data-available="item.available && !!item.title"
+        :menu="item.available && item.title ? [{ id: 'open', label: t.list.open, icon: 'arrow-right' }] : undefined"
+        @select="emit('open', item.id)"
       >
         <template v-if="item.available && item.title" #actions>
           <Button type="button" variant="outline" size="sm" @click="emit('open', item.id)">{{ t.list.open }}</Button>

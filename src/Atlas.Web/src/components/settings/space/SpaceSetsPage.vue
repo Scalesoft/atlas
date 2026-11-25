@@ -83,7 +83,7 @@ const differs = (preset: ProjectorPreset) => preset.differs?.length
             <EmptyState v-if="!pages.length" compact icon="book-open" :title="t.sets.noCatalog"
               :text="t.sets.noCatalogText" />
             <SettingsList v-else :label="t.sets.catalogPages">
-              <SettingsListRow v-for="page in pages" :key="page.pageId" :title="titles.get(page.pageId) ?? (pages.length > 1 ? t.sets.catalogNumbered(pages.indexOf(page) + 1) : t.sets.catalog)" :description="page.description" icon="book-open" data-sets-catalog>
+              <SettingsListRow v-for="page in pages" :key="page.pageId" :title="titles.get(page.pageId) ?? (pages.length > 1 ? t.sets.catalogNumbered(pages.indexOf(page) + 1) : t.sets.catalog)" :description="page.description" icon="book-open" data-sets-catalog :menu="[{ id: 'open', label: t.sets.open, icon: 'arrow-right' }]" @select="context.openPage(page.pageId)">
                 <template #meta>
                   <StatusBadge v-for="[name, modules] in page.products" :key="name" size="sm" :label="`${name} (${t.sets.modules(modules)})`" />
                   <StatusBadge v-for="warning in catalog.warnings" :key="warning" size="sm" tone="warning" icon="triangle-alert" :label="warning" data-sets-catalog-warning />
@@ -98,7 +98,7 @@ const differs = (preset: ProjectorPreset) => preset.differs?.length
             <EmptyState v-if="!presets.length" compact icon="layout-template" :title="t.sets.noSets"
               :text="t.sets.noSetsText" />
             <SettingsList v-else :label="t.sets.spaceSets">
-              <SettingsListRow v-for="preset in presets" :key="preset.pageId" :title="preset.title" :description="preset.summary || undefined" icon="layout-template" :data-sets-preset="preset.pageId">
+              <SettingsListRow v-for="preset in presets" :key="preset.pageId" :title="preset.title" :description="preset.summary || undefined" icon="layout-template" :data-sets-preset="preset.pageId" :menu="[{ id: 'open', label: t.sets.open, icon: 'arrow-right' }]" @select="context.openPage(preset.pageId)">
                 <template #meta>
                   <StatusBadge size="sm" :label="`${t.sets.requirements(preset.requirements)} · ${setMeta(preset)}`" />
                   <StatusBadge v-if="differs(preset)" size="sm" tone="warning" icon="triangle-alert" :label="differs(preset)" :title="preset.differs!.join(', ')" data-sets-differs />

@@ -117,7 +117,7 @@ const description = computed(() => t.gaps.description(minimumUsers.value, retent
           <ErrorState v-if="resolveError" :title="t.gaps.resolveFailed" :text="resolveError.text" :busy="busy !== null" @retry="resolve(resolveError.gap)" />
           <div :aria-busy="loading" class="gap-rows">
             <SettingsList v-if="items.length" :label="t.gaps.list">
-              <SettingsListRow v-for="gap in items" :key="gap.normalizedQuery" :title="t.gaps.quoted(gap.query)" :description="seen(gap)" icon="search" :data-search-gap="gap.normalizedQuery">
+              <SettingsListRow v-for="gap in items" :key="gap.normalizedQuery" :title="t.gaps.quoted(gap.query)" :description="seen(gap)" icon="search" :data-search-gap="gap.normalizedQuery" :menu="[{ id: 'create', label: t.gaps.createPage, icon: 'file-plus' }, { id: 'resolve', label: t.gaps.markResolved, icon: 'circle-check', disabled: busy !== null }]" @select="$event === 'create' ? context.newPage(spaceId, { title: gap.query }) : resolve(gap)">
                 <template v-if="gap.unanswered || gap.reported" #meta>
                   <StatusBadge v-if="gap.unanswered" tone="neutral" icon="circle-help" :label="t.gaps.unanswered(gap.unanswered)" size="sm" data-gap-unanswered />
                   <StatusBadge v-if="gap.reported" tone="neutral" icon="megaphone" :label="t.gaps.reported(gap.reported)" size="sm" data-gap-reported />

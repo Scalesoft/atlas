@@ -192,7 +192,7 @@ function detail(link: ShareLink) {
       <InlineReveal :open="links.length > 0 || policy.enabled">
       <SettingsSection :title="t.sharing.spaceLinks" icon="link" :count="links.length" :description="active ? t.sharing.validNow(active, hasMore) : undefined">
         <SettingsList v-if="links.length" :label="t.sharing.list">
-          <SettingsListRow v-for="link in links" :key="link.id" :title="link.pageTitle" :description="detail(link)" icon="file-text" :data-share-link="link.id">
+          <SettingsListRow v-for="link in links" :key="link.id" :title="link.pageTitle" :description="detail(link)" icon="file-text" :data-share-link="link.id" :menu="link.status === 'active' && !busy ? [{ id: 'revoke', label: t.sharing.revoke, icon: 'unlink', shortcut: 'Delete', destructive: true }] : undefined" :menu-label="t.sharing.revokeLink(link.name)" @select="revoking = link; revokeError = ''">
             <template #meta>
               <StatusBadge :tone="statusBadge[link.status].tone" :icon="statusBadge[link.status].icon" :label="link.status === 'active' ? t.sharing.until(formatDateTime(link.expiresAt)) : statusBadge[link.status].label" size="sm" />
             </template>
