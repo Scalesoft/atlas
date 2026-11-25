@@ -108,8 +108,10 @@ watch([status, requestedComment], () => void revealRequested());
 // A selection of the page asked for the discussion: the field opens (an empty page section unfolds) with it quoted and the caret under it.
 async function takeQuote() {
   const text = requestedQuote.value;
-  if (!text || !props.quotes || status.value !== "ready" || !canPost.value) return;
+  if (!text || !props.quotes || status.value !== "ready") return;
   requestedQuote.value = undefined;
+  // A reader who cannot comment gets no field and no stale quote for later.
+  if (!canPost.value) return;
   composing.value = true;
   await nextTick();
   await composer.value?.quote(text);

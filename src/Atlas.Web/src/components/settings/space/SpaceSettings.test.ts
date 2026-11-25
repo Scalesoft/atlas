@@ -101,6 +101,23 @@ describe("SpaceSettings cross link", () => {
     await settle();
     expect(wrapper!.find("[data-global-settings]").exists()).toBe(false);
   });
+
+  it("gives a space writer Stav obsahu only, and nothing of the administrator's sections", async () => {
+    spaces[0]!.role = "Writer";
+    try {
+      open("content-health");
+      await settle();
+      const links = () => wrapper!.findAll("nav a").map((link) => link.attributes("href"));
+      expect(links()).toEqual(["#/spaces/provoz/settings/content-health"]);
+      expect(wrapper!.text()).toContain("Stav obsahu");
+      wrapper!.unmount();
+      open("access");
+      await settle();
+      // A direct link to an administrator's section shows nothing of it.
+      expect(wrapper!.text()).not.toContain("Pozvat");
+      expect(wrapper!.findAll("nav a").map((link) => link.attributes("href"))).toEqual(["#/spaces/provoz/settings/content-health"]);
+    } finally { spaces[0]!.role = "Admin"; }
+  });
 });
 
 describe("SpaceSettings pages", () => {

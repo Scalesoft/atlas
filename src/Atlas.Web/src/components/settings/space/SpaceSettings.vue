@@ -57,7 +57,10 @@ const space = computed(() => context.spaces.find((item) => item.id === props.spa
 // Sady a katalog (plan 3.5 C) only with the projector module, whose catalog and sets it shows.
 const projector = computed(() => useModules().enabled("projector"));
 
+// A space writer reaches only Stav obsahu here (the server lets editors read it); the rest is the administrator's.
+const manages = computed(() => context.isWikiAdmin || space.value?.role === "Admin");
 const groups = computed<SettingsNavGroup[]>(() => {
+  if (!manages.value) return [{ id: "knowledge", label: t.nav.knowledge, items: [{ path: "content-health", label: tv.health.nav, icon: "shield-check" }] }];
   const vaults = registry.inSpace(props.spaceId);
   const troubled = vaults.filter((vault) => vault.status !== "unlocked").length;
   return [
@@ -106,6 +109,7 @@ const groups = computed<SettingsNavGroup[]>(() => {
 });
 
 const segments = computed(() => router.route.value.segments);
+const current = computed(() => (manages.value || segments.value[0] === "content-health" ? segments.value[0] : ""));
 // The pages swap with the shared page hooks (pageSwap.ts): the new one starts at the top, the old one fades where the reader saw it.
 const swap = usePageSwap(() => router.route.value.path);
 
@@ -138,19 +142,19 @@ function openWikiSettings(event: MouseEvent) {
          page starts at its top: scrolled down in the old one, the reader would otherwise see the new page's header above
          the fold for the length of the fade and then the scroll would jump when the old page is gone. -->
     <Transition name="st-page" @before-enter="swap.beforeEnter" @before-leave="swap.beforeLeave">
-    <SpaceGeneralPage v-if="segments[0] === 'general'" key="general" :space-id="spaceId" />
-    <SpaceSharingPage v-else-if="segments[0] === 'sharing'" key="sharing" :space-id="spaceId" />
-    <PageTemplatesPage v-else-if="segments[0] === 'templates'" key="templates" :space="space" @select="context.openPage($event)" @create="context.newTemplate(spaceId)" />
-    <SpaceSetsPage v-else-if="segments[0] === 'sets' && projector" key="sets" :space-id="spaceId" />
-    <SpaceTrashCleanupPage v-else-if="segments[0] === 'trash'" key="trash" :space-id="spaceId" />
-    <SpaceSearchGapsPage v-else-if="segments[0] === 'search-gaps'" key="search-gaps" :space-id="spaceId" />
-    <SpaceContentHealthPage v-else-if="segments[0] === 'content-health'" key="content-health" :space-id="spaceId" />
-    <SpaceAiPage v-else-if="segments[0] === 'ai' && spaceAiAvailable" key="ai" :space-id="spaceId" :ai="aiAvailable" :mcp="context.mcpEnabled === true"><DuplicatePagesSection :space-id="spaceId" /></SpaceAiPage>
-    <SpaceAccessPage v-else-if="segments[0] === 'access'" :key="`access-${segments.slice(1).join('/')}`" :space-id="spaceId" :part="segments.slice(1)" />
-    <AddVaultPage v-else-if="segments[0] === 'vaults' && segments[1] === 'new'" key="vault-new" :space-id="spaceId" back-path="vaults" />
-    <VaultDetailPage v-else-if="segments[0] === 'vaults' && segments[1]" :key="`vault-${segments[1]}`" :space-id="spaceId" :vault-id="segments[1]" :tab="segments[2] ?? 'status'" />
-    <SpaceVaultsPage v-else-if="segments[0] === 'vaults'" key="vaults" :space-id="spaceId" />
-    <AccessRequestsPage v-else-if="segments[0] === 'requests'" key="requests" :space-id="spaceId" />
+    <SpaceGeneralPage v-if="current === 'general'" key="general" :space-id="spaceId" />
+    <SpaceSharingPage v-else-if="current === 'sharing'" key="sharing" :space-id="spaceId" />
+    <PageTemplatesPage v-else-if="current === 'templates'" key="templates" :space="space" @select="context.openPage($event)" @create="context.newTemplate(spaceId)" />
+    <SpaceSetsPage v-else-if="current === 'sets' && projector" key="sets" :space-id="spaceId" />
+    <SpaceTrashCleanupPage v-else-if="current === 'trash'" key="trash" :space-id="spaceId" />
+    <SpaceSearchGapsPage v-else-if="current === 'search-gaps'" key="search-gaps" :space-id="spaceId" />
+    <SpaceContentHealthPage v-else-if="current === 'content-health'" key="content-health" :space-id="spaceId" />
+    <SpaceAiPage v-else-if="current === 'ai' && spaceAiAvailable" key="ai" :space-id="spaceId" :ai="aiAvailable" :mcp="context.mcpEnabled === true"><DuplicatePagesSection :space-id="spaceId" /></SpaceAiPage>
+    <SpaceAccessPage v-else-if="current === 'access'" :key="`access-${segments.slice(1).join('/')}`" :space-id="spaceId" :part="segments.slice(1)" />
+    <AddVaultPage v-else-if="current === 'vaults' && segments[1] === 'new'" key="vault-new" :space-id="spaceId" back-path="vaults" />
+    <VaultDetailPage v-else-if="current === 'vaults' && segments[1]" :key="`vault-${segments[1]}`" :space-id="spaceId" :vault-id="segments[1]" :tab="segments[2] ?? 'status'" />
+    <SpaceVaultsPage v-else-if="current === 'vaults'" key="vaults" :space-id="spaceId" />
+    <AccessRequestsPage v-else-if="current === 'requests'" key="requests" :space-id="spaceId" />
     <EmptyState v-else icon="compass" :title="t.missing.title" :text="t.missing.text">
       <Button as-child variant="outline"><a :href="router.href('general')"><AtlasIcon name="back" :size="16" />{{ t.nav.generalSettings }}</a></Button>
     </EmptyState>

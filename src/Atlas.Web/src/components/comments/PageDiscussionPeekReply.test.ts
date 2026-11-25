@@ -66,4 +66,17 @@ describe("PageDiscussionPeek quick reply", () => {
     expect(view.get("[data-peek-reply] [role=alert]").text()).toContain("Nepodařilo se odeslat");
     expect(editor()!.getText()).toBe("Souhlasím");
   });
+
+  it("keeps an unsent reply as a draft of the page when the bubble goes, and drops it once sent", async () => {
+    wrapper = mount(PageDiscussionPeek, { props: { bubbles: [bubble], reply: vi.fn(async () => undefined), draftScope: "p1", ttl: 100_000 }, attachTo: document.body });
+    const view = wrapper;
+    await view.get(".peek-reply").trigger("click");
+    await vi.waitFor(() => expect(editor()).toBeDefined());
+    editor()!.commands.insertContent("Napůl napsané");
+    await flushPromises();
+    expect(view.emitted("replying")![0]).toEqual(["a", true]);
+    await view.setProps({ bubbles: [] });
+    await flushPromises();
+    expect([...drafts.keys()]).toEqual(["comment-reply:p1:a"]);
+  });
 });
