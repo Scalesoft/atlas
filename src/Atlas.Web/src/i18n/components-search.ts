@@ -12,7 +12,7 @@ const cs = {
     jobFailed: "Selhala úloha na pozadí",
     verificationReminders: "Připomínky ověření stránek",
     verificationExpiring: "Ověření stránky brzy vyprší",
-    verificationExpired: "Ověření stránky vypršelo",
+    verificationExpired: "Ověření stránky dnes vyprší",
     outdatedReports: "Nahlášené neaktuální stránky",
     reportedOutdated: "nahlásil(a) stránku jako neaktuální",
     stewardDeactivated: "Deaktivovaný garant stránek",

@@ -11,7 +11,7 @@ const en: ComponentsSearchMessages = {
     jobFailed: "Background job failed",
     verificationReminders: "Page verification reminders",
     verificationExpiring: "Page verification expires soon",
-    verificationExpired: "Page verification expired",
+    verificationExpired: "Page verification expires today",
     outdatedReports: "Pages reported as outdated",
     reportedOutdated: "reported the page as outdated",
     stewardDeactivated: "Deactivated page owner",

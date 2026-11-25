@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { formatActivityTime, formatAgo, formatDate, formatDateTime, formatDay, formatShortDate } from "./formatDate";
+import { formatActivityTime, formatAgo, formatDate, formatDateTime, formatDay, formatShortDate, pragueDate } from "./formatDate";
 
 describe("cs-CZ timestamps", () => {
   it("formats a timestamp with the year and a 24-hour time", () => {
@@ -56,5 +56,10 @@ describe("cs-CZ timestamps", () => {
     const text = formatActivityTime("2026-03-28T23:30:00Z");
     expect(text).toContain("29.");
     expect(text).toContain("0:30");
+  });
+  it("gives the Prague day of a moment, as the server reads a bare date", () => {
+    expect(pragueDate("2026-11-24T23:30:00Z")).toBe("2026-11-25");
+    expect(pragueDate("2026-11-24T23:30:00Z", 1)).toBe("2026-11-26");
+    expect(pragueDate("2026-12-31T12:00:00Z", 1)).toBe("2027-01-01");
   });
 });

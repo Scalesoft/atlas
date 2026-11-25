@@ -14,7 +14,7 @@ vi.mock("../../../composables/useAiCapabilities", () => ({ useAiCapabilities: ()
 // The chunk of this page never arrives (offline, or replaced by a deployment); no other test opens it.
 vi.mock("./SpaceSharingPage.vue", async () => { throw new Error("Failed to fetch dynamically imported module"); });
 
-const spaces: Space[] = [{ id: "provoz", name: "Provoz", icon: "book-open", color: "blue", role: "Admin", pinPolicy: "None", pinned: false, pageCount: 0, lastChangedAt: null }];
+const spaces: Space[] = [{ id: "provoz", name: "Provoz", icon: "book-open", color: "blue", role: "Admin", pinPolicy: "None", pinned: false, pageCount: 0, lastChangedAt: null, verificationOn: true }];
 let wrapper: VueWrapper | undefined;
 function open(section: string, mcpEnabled = false, isWikiAdmin = false) {
   history.replaceState(null, "", `/#/spaces/provoz/settings/${section}`);

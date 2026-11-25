@@ -1,12 +1,18 @@
+<script lang="ts">
+import { reactive } from "vue";
+// Pages reported in this session, with how many people were told: a page cannot be reported again and again (module scope: the chip is keyed by its page).
+const reportedPages = reactive(new Map<string, number>());
+</script>
+
 <script setup lang="ts">
 import t from "../i18n/verification";
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import { errorMessage } from "../api";
-import { formatDate } from "../formatDate";
+import { formatDate, pragueDate } from "../formatDate";
 import { animateAtlas, motionMs } from "../motion/aiMotion";
-import { pageAccounts } from "../contacts/contactSources";
 import { useAccountSearch, type PageAccountSource } from "../contacts/useAccountSearch";
-import { pageVerificationApi, verificationIcon, verificationLabel, verificationShown, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
+import { pageVerificationApi, verificationIcon, verificationLabel, verificationTone, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
+import { verificationShown } from "../verification/verificationMark";
 import AtlasIcon from "./AtlasIcon.vue";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -20,20 +26,19 @@ import StatusBadge from "./settings/StatusBadge.vue";
  * popover. It draws from the page's own data at once (the bundle), never blocks reading and adds no bar above the text. In the popover: who is the
  * owner, who verified when, „Změněno po ověření“; an editor verifies (V), verifies until a date, or changes the owner (the people search: first result
  * preselected, Enter picks); a reader reports the page as outdated. Every change is `PUT /pages/{id}/verification`, whose answer replaces the state.
+ * Offline an editor keeps the editor's actions, disabled (`online`). „Porovnat verze“ only for whoever may open the history (an editor).
  */
 const props = withDefaults(defineProps<{
   pageId: string;
   verification: PageVerification | null | undefined;
   canEdit: boolean;
   isPublished: boolean;
+  online?: boolean;
   api?: PageVerificationApi;
   /** The people an owner may be (the page's accounts); the gallery passes local ones. */
   people?: PageAccountSource;
-}>(), { api: () => pageVerificationApi, people: (pageId: string, text: string, signal: AbortSignal) => pageAccounts(pageId)(text, signal) });
+}>(), { online: true, api: () => pageVerificationApi, people: undefined });
 const emit = defineEmits<{ change: [value: PageVerification]; openHistory: [] }>();
-
-// Pages reported in this session: a page cannot be reported again and again.
-const reportedPages = reactive(new Set<string>());
 
 type View = "main" | "steward" | "date" | "report";
 const open = defineModel<boolean>("open", { default: false });
@@ -41,7 +46,8 @@ const view = ref<View>("main");
 const busy = ref(false);
 const error = ref("");
 const note = ref("");
-const reported = computed(() => reportedPages.has(props.pageId));
+/** The people told by this session's report of the page; undefined before it. */
+const reported = computed(() => reportedPages.get(props.pageId));
 let closing: ReturnType<typeof setTimeout> | undefined;
 const until = ref("");
 const root = ref<HTMLElement>();
@@ -52,7 +58,8 @@ const tooltip = computed(() => {
   const v = value.value;
   return v?.verifiedUntil ? t.tooltip(formatDate(v.verifiedUntil), v.stewardName) : t.tooltipNone;
 });
-const tomorrow = () => new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+// The server reads a bare date in Europe/Prague: so is tomorrow here.
+const tomorrow = () => pragueDate(Date.now(), 1);
 
 async function run(change: VerificationChange, back = true) {
   if (busy.value) return;
@@ -71,7 +78,7 @@ async function run(change: VerificationChange, back = true) {
     busy.value = false;
   }
 }
-const verify = () => { if (props.canEdit && props.isPublished) void run({ verify: true }); };
+const verify = () => { if (props.canEdit && props.isPublished && props.online) void run({ verify: true }); };
 
 const confirmedAt = ref<string | null>(null);
 async function show(next: View) {
@@ -87,6 +94,21 @@ async function show(next: View) {
   root.value?.querySelector<HTMLElement>("[data-step-focus], input, textarea, button:not([disabled])")?.focus();
 }
 watch(open, (isOpen) => { if (!isOpen) { view.value = "main"; error.value = ""; note.value = ""; } });
+
+// „Nastavit garanta“ from the page panel: the chip comes into view, its popover opens on the owner search, and closing it returns the keyboard to that link.
+let opener: HTMLElement | null = null;
+async function openSteward() {
+  opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  document.querySelector<HTMLElement>("[data-page-verification-chip]")?.scrollIntoView?.({ block: "nearest" });
+  open.value = true;
+  await nextTick();
+  await show("steward");
+}
+function closeFocus(event: Event) {
+  if (opener?.isConnected) { event.preventDefault(); opener.focus(); }
+  opener = null;
+}
+defineExpose({ openSteward });
 watch(() => props.pageId, () => { open.value = false; });
 
 /** V verifies, as the popover's hint says; not while a field has the keys. */
@@ -103,7 +125,8 @@ onBeforeUnmount(() => clearTimeout(closing));
 const pickSteward = (id: string) => void run({ stewardId: id });
 
 function openUntil() {
-  until.value = value.value?.verifiedUntil?.slice(0, 10) && value.value.verifiedUntil.slice(0, 10) > tomorrow() ? value.value.verifiedUntil.slice(0, 10) : tomorrow();
+  const current = value.value?.verifiedUntil ? pragueDate(value.value.verifiedUntil) : "";
+  until.value = current > tomorrow() ? current : tomorrow();
   void show("date");
 }
 async function sendReport() {
@@ -111,8 +134,8 @@ async function sendReport() {
   busy.value = true;
   error.value = "";
   try {
-    await props.api.report(props.pageId, note.value);
-    reportedPages.add(props.pageId);
+    const { notified } = await props.api.report(props.pageId, note.value);
+    reportedPages.set(props.pageId, notified);
     note.value = "";
     // The sent form is gone: the keyboard moves to the status, which the screen reader reads, and the popover closes by itself.
     await nextTick();
@@ -133,7 +156,7 @@ async function sendReport() {
         <StatusBadge :key="value.verifiedAt ?? ''" :tone="verificationTone(value.state)" :icon="verificationIcon(value.state)" :label="label" size="sm" :confirmed="!!value.verifiedAt && value.verifiedAt === confirmedAt" />
       </button>
     </PopoverTrigger>
-    <PopoverContent class="page-verification-pop" align="start" :side-offset="6" data-page-verification-popover @keydown="keydown">
+    <PopoverContent class="page-verification-pop" align="start" :side-offset="6" data-page-verification-popover @keydown="keydown" @close-auto-focus="closeFocus">
       <div :key="view" ref="root" class="page-verification-view" :aria-label="t.popoverTitle" role="group">
         <template v-if="view === 'main'">
           <dl class="page-verification-facts">
@@ -143,16 +166,16 @@ async function sendReport() {
           </dl>
           <p v-if="value.changedSinceVerification" class="page-verification-changed" data-verification-changed>
             <AtlasIcon name="history" :size="14" />{{ t.changed }}
-            <button type="button" class="page-verification-link" @click="open = false; emit('openHistory')">{{ t.compare }}</button>
+            <Button v-if="canEdit" variant="link" size="xs" type="button" class="h-auto p-0" data-verification-compare @click="open = false; emit('openHistory')">{{ t.compare }}</Button>
           </p>
           <div v-if="canEdit" class="page-verification-actions">
-            <Button size="sm" type="button" :disabled="busy || !isPublished" data-step-focus data-verification-verify @click="verify"><AtlasIcon name="shield-check" :size="15" />{{ t.verify }}<kbd>V</kbd></Button>
-            <Button variant="outline" size="sm" type="button" :disabled="busy || !isPublished" data-verification-until @click="openUntil"><AtlasIcon name="calendar" :size="15" />{{ t.verifyUntil }}</Button>
-            <Button variant="outline" size="sm" type="button" :disabled="busy" data-verification-steward-change @click="show('steward')"><AtlasIcon name="user" :size="15" />{{ t.changeSteward }}</Button>
+            <Button size="sm" type="button" :disabled="busy || !isPublished || !online" data-step-focus data-verification-verify @click="verify"><AtlasIcon name="shield-check" :size="15" />{{ t.verify }}<kbd>V</kbd></Button>
+            <Button variant="outline" size="sm" type="button" :disabled="busy || !isPublished || !online" data-verification-until @click="openUntil"><AtlasIcon name="calendar" :size="15" />{{ t.verifyUntil }}</Button>
+            <Button variant="outline" size="sm" type="button" :disabled="busy || !online" data-verification-steward-change @click="show('steward')"><AtlasIcon name="user" :size="15" />{{ t.changeSteward }}</Button>
           </div>
           <p v-if="canEdit && !isPublished" class="page-verification-note">{{ t.needsPublication }}</p>
           <div v-else-if="!canEdit" class="page-verification-actions">
-            <Button variant="outline" size="sm" type="button" data-step-focus data-verification-report @click="show('report')"><AtlasIcon name="megaphone" :size="15" />{{ t.report }}</Button>
+            <Button variant="outline" size="sm" type="button" :disabled="!online" data-step-focus data-verification-report @click="show('report')"><AtlasIcon name="megaphone" :size="15" />{{ t.report }}</Button>
           </div>
         </template>
 
@@ -173,7 +196,7 @@ async function sendReport() {
         </form>
 
         <form v-else class="page-verification-form" @submit.prevent="sendReport">
-          <p v-if="reported" class="page-verification-note" role="status" tabindex="-1" data-verification-reported><AtlasIcon name="circle-check" :size="15" />{{ t.reportSent }}</p>
+          <p v-if="reported !== undefined" class="page-verification-note" role="status" tabindex="-1" data-verification-reported><AtlasIcon :name="reported ? 'circle-check' : 'info'" :size="15" />{{ reported ? t.reportSent : t.reportNobody }}</p>
           <template v-else>
             <label class="page-verification-field"><span>{{ t.reportNote }}</span><Textarea v-model="note" maxlength="500" rows="3" data-step-focus data-verification-note /></label>
             <div class="page-verification-actions">
@@ -204,10 +227,7 @@ async function sendReport() {
 .page-verification-facts dt { color: var(--muted); }
 .page-verification-facts dd { margin: 0; overflow-wrap: anywhere; }
 .page-verification-changed { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; color: var(--warning); font-size: 13px; }
-.page-verification-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
-.page-verification-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 .page-verification-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-.page-verification-actions kbd { margin-left: 4px; padding: 0 4px; border-radius: 4px; background: color-mix(in srgb, currentColor 18%, transparent); font: 600 11px var(--font-mono, ui-monospace, monospace); }
 .page-verification-note { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
 .page-verification-form { display: grid; gap: 10px; }
 .page-verification-field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }

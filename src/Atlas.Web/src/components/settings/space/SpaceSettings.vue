@@ -59,8 +59,10 @@ const projector = computed(() => useModules().enabled("projector"));
 
 // A space writer reaches only Stav obsahu here (the server lets editors read it); the rest is the administrator's.
 const manages = computed(() => context.isWikiAdmin || space.value?.role === "Admin");
+// Stav obsahu is offered only while the space verifies its pages (Obecné switches it on); off, these settings are the ones of 5.1.
+const contentHealth = computed(() => (space.value?.verificationOn ? [{ path: "content-health", label: tv.health.nav, icon: "shield-check" }] : []));
 const groups = computed<SettingsNavGroup[]>(() => {
-  if (!manages.value) return [{ id: "knowledge", label: t.nav.knowledge, items: [{ path: "content-health", label: tv.health.nav, icon: "shield-check" }] }];
+  if (!manages.value) return [{ id: "knowledge", label: t.nav.knowledge, items: contentHealth.value }];
   const vaults = registry.inSpace(props.spaceId);
   const troubled = vaults.filter((vault) => vault.status !== "unlocked").length;
   return [
@@ -84,7 +86,7 @@ const groups = computed<SettingsNavGroup[]>(() => {
         ...(spaceAiAvailable.value ? [{ path: "ai", label: t.nav.ai, icon: "ai" }] : []),
         { path: "search-gaps", label: t.nav.searchGaps, icon: "search" },
         // Ověřený obsah (5.2): the space's content health (what is verified, what expires, what is read).
-        { path: "content-health", label: tv.health.nav, icon: "shield-check" },
+        ...contentHealth.value,
       ],
     },
     {

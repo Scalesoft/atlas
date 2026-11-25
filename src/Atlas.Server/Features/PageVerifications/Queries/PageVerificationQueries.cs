@@ -98,7 +98,7 @@ public sealed class PageVerificationQueryHandler(ISession session, PageGate gate
         return new ContentHealthList(space.VerificationIntervalMonths is not null, summary, page.Select(row => new ContentHealthItem(row.Read.PageId, row.Read.Title,
                 Ancestors(row.Read, byId), row.State, row.StewardId, row.StewardName, row.Until,
                 row.VerifiedVersion is { } verified && row.Read.PublishedVersion > verified, row.Read.Readers, row.Read.Views, row.Read.LastViewedAt,
-                row.Read.LastPublishedAt, row.Read.PublishedVersion, row.VerifiedVersion)).ToArray(),
+                row.Read.LastPublishedAt, row.Read.PublishedVersion, row.VerifiedVersion, row.Read.CanEdit)).ToArray(),
             ordered.Count, ordered.Count > offset + query.Limit ? (offset + query.Limit).ToString(System.Globalization.CultureInfo.InvariantCulture) : null);
     }
 

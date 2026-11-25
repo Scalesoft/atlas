@@ -9,3 +9,6 @@ export function verificationMark(state: string | null | undefined) {
   if (state === "expired") return { icon: "shield-alert", warn: true };
   return null;
 }
+
+/** The one rule of when a page's verification shows (chip, panel facts): switched on. The server answers „off“ for a template too. */
+export const verificationShown = <T extends { state: string }>(value: T | null | undefined): value is T => !!value && value.state !== "off";

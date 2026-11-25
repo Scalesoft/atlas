@@ -77,3 +77,10 @@ const pragueDateTimeFormat = new Intl.DateTimeFormat(locale, { timeZone: "Europe
 export function formatActivityTime(value: string): string {
   return pragueDateTimeFormat.format(new Date(value));
 }
+
+const pragueDayFormat = new Intl.DateTimeFormat("en", { timeZone: "Europe/Prague", year: "numeric", month: "2-digit", day: "2-digit" });
+/** The Europe/Prague calendar day (YYYY-MM-DD) of a moment, `days` later: the day the server reads a bare date as (a UTC date is a day early after Prague midnight). */
+export function pragueDate(value: string | number | Date, days = 0): string {
+  const parts = Object.fromEntries(pragueDayFormat.formatToParts(new Date(value)).map((part) => [part.type, part.value]));
+  return new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day) + days)).toISOString().slice(0, 10);
+}

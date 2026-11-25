@@ -10,6 +10,7 @@ import { Switch } from "../../ui/switch";
 import AtlasIcon from "../../AtlasIcon.vue";
 import OptionPills from "../OptionPills.vue";
 import { publicationLabels, type PublicationMode } from "../../../publishing/pagePublication";
+import { verificationIntervals } from "../../../verification/pageVerification";
 import ConfirmDialog from "../ConfirmDialog.vue";
 import SettingsRow from "../SettingsRow.vue";
 import SettingsSection from "../SettingsSection.vue";
@@ -41,7 +42,7 @@ const conflict = ref("");
 const draft = reactive({ name: "", icon: "book-open", color: "blue", description: "", pinPolicy: "None" as SpacePinPolicy, commentsEnabled: true, publicationMode: "Manual" as PublicationMode, verificationIntervalMonths: null as number | null });
 const fields = ["name", "icon", "color", "description", "pinPolicy", "commentsEnabled", "publicationMode", "verificationIntervalMonths"] as const;
 // Ověřování obsahu (5.2): Vypnuto (the default) or the interval of the space's pages; the pills carry strings, the draft the months.
-const verificationOptions = [{ value: "0", label: tv.general.off }, ...[3, 6, 12].map((months) => ({ value: String(months), label: tv.months(months) }))];
+const verificationOptions = [{ value: "0", label: tv.general.off }, ...verificationIntervals.map((months) => ({ value: String(months), label: tv.months(months) }))];
 const verificationChoice = computed({ get: () => String(draft.verificationIntervalMonths ?? 0), set: (value: string) => { draft.verificationIntervalMonths = Number(value) || null; } });
 /** The server keeps the interval when the key is null or missing: off is sent as 0. */
 const savedInterval = () => draft.verificationIntervalMonths ?? 0;

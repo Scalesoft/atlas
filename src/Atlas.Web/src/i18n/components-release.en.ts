@@ -45,9 +45,9 @@ const en: ReleaseMessages = {
       verified: "Verified", expiring: "Expires in 14 days", expired: "Verification expired", reminder: "Expires in 14 days: a reminder to its owner", verify: "Verify", today: "verified today by Jana",
     },
     health: {
-      tiles: ["Verified", "Expiring", "Expired", "No owner"], counts: [42, 5, 3, 2], readers: (count) => `${count} readers`,
+      tiles: ["Verified", "Expires soon", "Expired", "No owner"], counts: [42, 5, 3, 2], readers: (count) => `${count} readers`,
       pages: [{ title: "Leave and holidays", state: "verified", readers: 38 }, { title: "Server outage procedure", state: "expired", readers: 214 }, { title: "New starters", state: "expiring", readers: 96 }],
-      states: { verified: "Verified", expiring: "Expiring", expired: "Expired" },
+      states: { verified: "Verified", expiring: "Expires soon", expired: "Expired" },
     },
     discussion: { title: "Launch plan", name: "Jana", text: "I added the suppliers' contacts.", reply: "Reply", answer: "Thanks, I'll have a look.", send: "Send", dock: "Discussion" },
     color: { title: "My colour", auto: "Automatic", you: "You", other: "Petr", line: "Launch on Friday" },

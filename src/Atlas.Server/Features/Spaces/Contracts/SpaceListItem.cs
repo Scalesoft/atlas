@@ -21,6 +21,9 @@ public sealed record SpaceListItem(Guid Id, string Name, string Icon, string Col
     /// one otherwise. Null without pages.</summary>
     public DateTime? LastChangedAt { get; init; }
 
+    /// <summary>Ověřený obsah (5.2): the space verifies its pages (an interval is set), so its menu offers Stav obsahu; off it looks as before.</summary>
+    public bool VerificationOn { get; init; }
+
     /// <summary>The image of the space, shown to whoever lists it, ItemAccessOnly included; never null. An automatic pick is
     /// computed from what this account sees of the space.</summary>
     public SpaceCoverDto Cover { get; init; } = SpaceCoverDto.Unmatched;

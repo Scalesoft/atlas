@@ -5,7 +5,8 @@ import type { MarkdownRichValue } from "@atlas/markdown/core";
 import { errorMessage } from "../api";
 import { channelText } from "../channel";
 import tv from "../i18n/verification";
-import { pageVerificationApi, verificationShown, type PageVerification, type PageVerificationApi } from "../verification/pageVerification";
+import { pageVerificationApi, verificationIntervals, type PageVerification, type PageVerificationApi, type VerificationChange } from "../verification/pageVerification";
+import { verificationShown } from "../verification/verificationMark";
 import { formatDate, formatDateTime } from "../formatDate";
 import { historyApi, type PageRevisionSummary } from "../history";
 import { animateAtlas, motionMs, riseIn, RISE_IN_ROWS } from "../motion/aiMotion";
@@ -189,11 +190,11 @@ const verificationSaving = shallowRef(false);
 const verificationError = shallowRef("");
 const intervalChoices = computed(() => [
   { value: "inherit", label: tv.bySpace(props.verification?.spaceIntervalMonths ?? null) },
-  ...[3, 6, 12].map((months) => ({ value: String(months), label: tv.months(months) })),
+  ...verificationIntervals.map((months) => ({ value: String(months), label: tv.months(months) })),
   { value: "0", label: tv.never },
 ]);
 async function setIntervalChoice(choice: string) {
-  const intervalMonths = choice === "inherit" ? null : Number(choice) as 0 | 3 | 6 | 12;
+  const intervalMonths = choice === "inherit" ? null : Number(choice) as NonNullable<VerificationChange["intervalMonths"]>;
   if (verificationSaving.value || intervalMonths === (props.verification?.intervalMonths ?? null)) return;
   verificationSaving.value = true;
   verificationError.value = "";
@@ -224,14 +225,14 @@ const ownAccess = computed(() => {
         <template v-if="verificationShown(verification)">
           <dt>{{ tv.steward }}</dt>
           <dd data-verification-steward>
-            <button v-if="canEdit" type="button" class="page-side-link" data-verification-steward-open @click="emit('openVerification')">{{ verification.stewardName ?? tv.setForEditor }}</button>
+            <Button v-if="canEdit" variant="link" size="xs" type="button" class="h-auto p-0" data-verification-steward-open @click="emit('openVerification')">{{ verification.stewardName ?? tv.setForEditor }}</Button>
             <template v-else>{{ verification.stewardName ?? tv.noSteward }}</template>
           </dd>
             <dt>{{ tv.verifiedRow }}</dt>
             <dd data-verification-row>{{ tv.verifiedRowText(verification.verifiedAt ? formatDate(verification.verifiedAt) : null, verification.verifiedUntil ? formatDate(verification.verifiedUntil) : null) }}<template v-if="verification.changedSinceVerification"><br><span class="page-side-warn">{{ tv.changedVersions(verification.verifiedVersion, publishedVersion ?? version) }}</span></template></dd>
           <template v-if="readers !== undefined">
             <dt>{{ tv.readership }}</dt>
-            <dd><button type="button" class="page-side-link" :aria-label="tv.readershipOpen" data-verification-readers @click="emit('openReadership')">{{ tv.readershipText(readers) }}</button></dd>
+            <dd><Button variant="link" size="xs" type="button" class="h-auto p-0" :aria-label="tv.readershipOpen" data-verification-readers @click="emit('openReadership')">{{ tv.readershipText(readers) }}</Button></dd>
           </template>
         </template>
       </dl>
@@ -322,9 +323,6 @@ const ownAccess = computed(() => {
 .page-side-chip[data-tone="success"] { background: var(--success-bg, var(--hover)); color: var(--success, var(--muted)); }
 .page-side-action { align-self: flex-start; }
 .page-side-publication { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.page-side-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-align: left; cursor: pointer; }
-@media (hover: hover) and (pointer: fine) { .page-side-link:hover { text-decoration: underline; } }
-.page-side-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
 .page-side-warn { color: var(--warning); }
 .page-side-publication-skeleton { min-height: 84px; }
 </style>
