@@ -125,6 +125,7 @@ const cs = {  card: {
     gone: "Kontakt už v adresáři není nebo ho nemůžete číst.",
     readOnly: "Údaje kontaktu může měnit jen ten, kdo smí upravovat adresář.",
     saved: "Změna se uloží do adresáře kontaktů.",
+    edited: "Kontakt upraven.",
     onPage: "Na této stránce",
     role: "Role",
     rolePlaceholder: "Např. PM projektu",

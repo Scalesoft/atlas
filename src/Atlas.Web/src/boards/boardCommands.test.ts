@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { iconMarkup } from "@atlas/markdown/icons";
 import { describe, expect, it } from "vitest";
-import { boardCommands, findCommands, itemCommands, type CommandContext } from "./boardCommands";
+import { actionCommands, boardCommands, findCommands, itemCommands, type CommandContext } from "./boardCommands";
 import type { BoardItem } from "./boardModel";
 import type { EditorBlockModule } from "./editorBlocks";
 
@@ -60,6 +60,17 @@ describe("the board's command panel (objects spec §5.2)", () => {
   it("leaves a reader only what changes nothing", () => {
     expect(ids({ canEdit: false, selection: [item("p", "page", { targetResourceId: "page-1" }), item("n", "note")] })).toEqual(["board:settings", "board:detail"]);
     expect(ids({ canEdit: false, selection: [item("p", "page", { targetResourceId: "page-1" })] })).toEqual(["selection:detail", "board:settings", "board:detail"]);
+  });
+
+  it("2B: a contact card offers its detail, business card and QR code as rows, to a reader too; a board's card no detail", () => {
+    const contact = item("c", "object", { targetResourceId: "contact-1", props: { typeId: "atlas.contact", objectId: "contact-1" } });
+    const rows = (canEdit: boolean, chosen = contact) => actionCommands(context({ canEdit, selection: [chosen] }), {}).map(command => command.id);
+    expect(rows(false)).toEqual(["selection:detail", "selection:vcard", "selection:qr"]);
+    expect(rows(true).slice(0, 3)).toEqual(["selection:detail", "selection:vcard", "selection:qr"]);
+    // Nothing else opens it: its detail takes Ctrl+Enter.
+    expect(actionCommands(context({ selection: [contact] }), {})[0]!.description).toBe("Ctrl+Enter");
+    expect(ids({ canEdit: false, selection: [contact] })).toEqual(["selection:detail", "board:settings", "board:detail"]);
+    expect(rows(false, item("b", "object", { targetResourceId: "board-1", props: { typeId: "atlas.board" } }))).toEqual([]);
   });
 
   it("finds a command by its title or keywords, without regard to case and accents, the title's start first", () => {

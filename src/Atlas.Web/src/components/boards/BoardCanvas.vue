@@ -30,7 +30,10 @@ import {
   type Alignment, type BoardEdge as FlowEdge, type BoardNode as FlowNode, type Point,
 } from "../../boards/boardFlow";
 import type { MarkdownIntention, MarkdownIntentionsMenu } from "@atlas/markdown/core";
-import { actionCommands, boardCommands, itemCommands, onlyCards, type ItemOffer } from "../../boards/boardCommands";
+import { actionCommands, boardCommands, itemCommands, onlyCards, opensDetail, type ItemOffer } from "../../boards/boardCommands";
+import { contactCardShare } from "../../boards/contactCardShare";
+import { downloadCard } from "../../contacts/contactShare";
+import type { ContactData } from "../../contacts/contactData";
 import { boardIntentionRows, hasBoardIntentions } from "../../boards/boardIntentions";
 import { readPageTarget } from "../../boards/boardTargets";
 import { editPage } from "../../boards/pageEditing";
@@ -937,7 +940,7 @@ function startEdit(id: string, at?: EditPoint) {
   const item = byId.value.get(id);
   if (!item) return;
   // A reader (or the lock) edits nothing, the page over the board neither: the gesture reads the card instead (J1.3, K13).
-  if (!props.canEdit) { if (opensAs(item)) open(item); return; }
+  if (!props.canEdit) { if (opensAs(item)) open(item); else if (opensDetail(item)) showDetail(item); return; }
   // A page's preview („Náhled“) is edited where its text is, as a board text (3.6, no „Upravit“); PagePreview asks the page's own right.
   const preview = item.kind === "page" && item.props?.display === "preview" && !!item.targetResourceId;
   const page = preview ? undefined : pageToEdit(item);
@@ -1030,6 +1033,22 @@ const followed = (item: BoardViewItem) => {
   const object = item.kind === "links" && item.props?.objectId ? liveObjects.get(item.props.objectId) : undefined;
   return object?.available ? object : undefined;
 };
+/**
+ * „Otevřít detail“: a page card's in the board's object detail (the host's dock), an object card's (a contact) in the dock of the
+ * object as Obsah and the tree show it (ContentDetail: its card, Umí, Vazby, Použito na, Diskuse), as a page shows a contact.
+ */
+function showDetail(item: BoardViewItem) {
+  if (item.kind === "page") { emit("openDetail", item.id); return; }
+  const object = liveObjects.get(item.targetResourceId ?? "");
+  if (!object?.available) return;
+  void import("../../objects/objectDetail").then(({ showObjectDetail }) =>
+    showObjectDetail({ id: object.id, typeId: object.typeId, title: object.title, spaceId: props.blockHost?.links?.spaceId() ?? "" }, { onOpen: openTarget }));
+}
+/** The live contact of a contact card, for its business card. */
+function contactData(item: BoardViewItem | undefined) {
+  const object = item?.kind === "object" ? liveObjects.get(item.targetResourceId ?? "") : undefined;
+  return object?.available && object.typeId === "atlas.contact" && object.data ? object.data as unknown as ContactData : undefined;
+}
 function open(item: BoardViewItem) {
   const object = followed(item);
   if (object) { openTarget(object.id, object.typeId); return; }
@@ -1503,6 +1522,7 @@ function onKeydown(event: KeyboardEvent) {
     handled();
     const item = byId.value.get(single.value);
     if (item && opensAs(item)) open(item);
+    else if (item && opensDetail(item)) showDetail(item);
     return;
   }
   if (undoKeys(event)) return;
@@ -1514,6 +1534,8 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
   if (mod && key === "d") { handled(); duplicate(); return; }
+  // Find, as in a page: the board's find is its command panel, which lists the items matching what is typed.
+  if (mod && key === "f" && !event.altKey && !event.shiftKey) { handled(); openPanel(false); return; }
   if (mod && key === "g") { handled(); if (event.shiftKey) ungroup(); else group(); return; }
   // Ctrl/⌘+K is the application's search on a board too (not handled here); the board's commands are on / and in the actions menu (Ctrl+.).
   if (mod && (event.key === "'" || event.code === "Quote")) { handled(); changeSettings({ snapToGrid: !props.settings.snapToGrid }); return; }
@@ -1812,7 +1834,9 @@ const actions: Record<string, () => void> = {
   "board:detail": () => emit("openDetail", null),
   "selection:group": group, "selection:ungroup": ungroup, "selection:collapse": () => setCollapsed(true), "selection:expand": () => setCollapsed(false),
   "selection:duplicate": duplicate, "selection:delete": removeSelection,
-  "selection:detail": () => { if (single.value) emit("openDetail", single.value); },
+  "selection:detail": () => { const item = single.value && byId.value.get(single.value); if (item) showDetail(item); },
+  "selection:vcard": () => { const data = contactData(single.value ? byId.value.get(single.value) : undefined); if (data) void downloadCard(data); },
+  "selection:qr": () => { if (single.value) contactCardShare.toggle(single.value); },
   "selection:to-page": () => { if (single.value) void convertToPage(single.value); },
   ...Object.fromEntries(alignCommands.map(how => [`selection:align-${how}`, () => align(how)])),
 };
@@ -1925,7 +1949,7 @@ const toolbarAt = computed(() => {
   if (!selectedItems.value.length || dragging.value || editing.value) return null;
   // A reader's toolbar holds only reading actions (open, detail, select a frame's content): none for anything else (contract §7).
   const only = selectedItems.value.length === 1 ? selectedItems.value[0]! : undefined;
-  if (!props.canEdit && !(only && (only.kind === "page" || only.kind === "frame" || only.kind === "group" || isBoardCard(only)))) return null;
+  if (!props.canEdit && !(only && (only.kind === "page" || only.kind === "frame" || only.kind === "group" || isBoardCard(only) || contactData(only)))) return null;
   const linked = selectedItems.value.flatMap(item => (item.kind === "connector" ? [byId.value.get(item.from ?? ""), byId.value.get(item.to ?? "")] : [item])).filter((item): item is BoardViewItem => !!item);
   if (!linked.length) return null;
   // The observed size, not rect(): read while the nodes patch, rect() forced a layout of the whole canvas mid-update (UX SB4-3).

@@ -28,7 +28,7 @@ import type { ChoiceOption } from "../../settings/types";
 import BoardPickList from "./BoardPickList.vue";
 import BoardPickerPanel from "./BoardPickerPanel.vue";
 import type { ContactSearch } from "../../../contacts/contactHits";
-import { findPeople, searchWiki } from "../../../contacts/contactSources";
+import { findPeople, learnAlias, searchWiki } from "../../../contacts/contactSources";
 import { maxPicked, useMultiPick } from "./useMultiPick";
 
 /**
@@ -37,14 +37,17 @@ import { maxPicked, useMultiPick } from "./useMultiPick";
  * most 100 at once, and „Nový kontakt“, a form revealed under the list (InlineReveal). On confirmation every pick that is not in the
  * directory yet is linked to it first (`link`, contactLinking.ts: matched, what the match asks shown in the panel by ContactMatchPanel,
  * then resolved), so each card shows the one live contact. It emits the objects; a contact the board shows already is placed and
- * said by the board. Before anything is typed it lists the contacts last added (at most 8). `search` (the wiki search), `directory` (the object path) and `link` are replaced by the gallery. Private to the board.
+ * said by the board. Before anything is typed it lists the contacts last added (at most 8). A directory contact picked after typing
+ * learns what was typed as its alias on confirmation, as ContactPicker teaches it (`learn`, contactSources.ts `learnAlias`).
+ * `search` (the wiki search), `directory` (the object path), `link` and `learn` are replaced by the gallery. Private to the board.
  */
-const props = defineProps<{ open: boolean; search?: ContactSearch; directory?: Pick<ObjectApi, "list">; link?: (contact: MarkdownContact, ask: ContactAsk) => Promise<MarkdownContact | null>; anchor?: HTMLElement | null }>();
+const props = defineProps<{ open: boolean; search?: ContactSearch; directory?: Pick<ObjectApi, "list">; link?: (contact: MarkdownContact, ask: ContactAsk) => Promise<MarkdownContact | null>;
+  learn?: typeof learnAlias; anchor?: HTMLElement | null }>();
 const emit = defineEmits<{ pick: [objects: PickedObject[]]; cancel: [] }>();
 
 const minLength = 2;
 const directory = computed(() => props.directory ?? objectApi);
-type ContactPick = { objectId: string } | { contact: MarkdownContact };
+type ContactPick = { objectId: string; contact?: MarkdownContact } | { contact: MarkdownContact };
 interface Found { options: ChoiceOption[]; picks: Map<string, ContactPick> }
 const query = ref("");
 const options = ref<ChoiceOption[]>([]);
@@ -52,6 +55,12 @@ const searched = ref(false), loading = ref(false), failed = ref(false), busy = r
 const basket = useMultiPick(maxPicked);
 /** Every contact offered or made while the picker is open, by the value of its option: a pick outlives the next search. */
 const picks = new Map<string, ContactPick>();
+/** What was typed when an option was ticked, by its value: the alias its contact learns on confirmation. */
+const typed = new Map<string, string>();
+function toggle(option: ChoiceOption) {
+  if (query.value.trim()) typed.set(option.value, query.value); else typed.delete(option.value);
+  basket.toggle(option);
+}
 const creating = ref(false);
 const form = ref(emptyContactForm());
 const errors = ref<ContactFormErrors>({});
@@ -65,7 +74,7 @@ async function find(text: string, signal: AbortSignal): Promise<Found> {
   const hits = await findPeople(text, signal, { directory: directory.value, wiki: props.search ?? searchWiki });
   const found: Found = { options: [], picks: new Map() };
   for (const hit of hits) {
-    found.picks.set(hit.key, hit.objectId ? { objectId: hit.objectId } : { contact: hit.contact });
+    found.picks.set(hit.key, hit.objectId ? { objectId: hit.objectId, contact: hit.contact } : { contact: hit.contact });
     found.options.push({ value: hit.key, label: hit.contact.name, icon: "user",
       description: hit.objectId ? contactSubtitle(hit.contact) || t.contactPicker.inDirectory : t.contactPicker.onlyInPage(hit.origin.replace(people.sources.pagePrefix, "")) });
   }
@@ -99,7 +108,7 @@ watch(() => props.open, open => {
   if (open) return;
   lookup.cancel();
   query.value = ""; options.value = []; searched.value = false; loading.value = false; failed.value = false;
-  basket.clear(); picks.clear(); deciding.value?.answer(null);
+  basket.clear(); picks.clear(); typed.clear(); deciding.value?.answer(null);
   creating.value = false; form.value = emptyContactForm(); errors.value = {}; note.value = "";
 });
 onBeforeUnmount(lookup.cancel);
@@ -149,6 +158,10 @@ async function confirm() {
       } catch (failure) { refused.push(`${option.label}: ${errorMessage(failure)}`); }
     }
     if (refused.length) { note.value = t.contactPicker.refused(refused.join(" ")); return; }
+    for (const option of basket.picked.value) {
+      const pick = picks.get(option.value), query = typed.get(option.value);
+      if (pick && "objectId" in pick && pick.contact && query) (props.learn ?? learnAlias)({ contact: pick.contact, objectId: pick.objectId }, query);
+    }
     recent.value = [...added, ...recent.value].filter((entry, at, all) => all.findIndex(other => other.objectId === entry.objectId) === at).slice(0, 8);
     emit("pick", [...new Map(objects.map(object => [object.objectId, object])).values()]);
   } finally {
@@ -160,7 +173,7 @@ async function confirm() {
 <template>
   <BoardPickerPanel :open="open" :anchor="anchor" :title="t.contactPicker.title" @close="emit('cancel')">
     <div class="board-contact-picker" data-board-contact-picker>
-      <BoardPickList v-model:query="query" :options="shown":picked="basket.picked.value" :loading="loading" :label="t.contactPicker.label" :placeholder="t.contactPicker.placeholder" :empty-text="emptyText" @toggle="basket.toggle" @confirm="busy || confirm()" />
+      <BoardPickList v-model:query="query" :options="shown":picked="basket.picked.value" :loading="loading" :label="t.contactPicker.label" :placeholder="t.contactPicker.placeholder" :empty-text="emptyText" @toggle="toggle" @confirm="busy || confirm()" />
       <LoadingNote :active="loading" :label="t.contactPicker.searching" />
       <div class="board-contact-new">
         <button type="button" class="md-btn" aria-controls="board-contact-new" :aria-expanded="creating" data-board-contact-new @click="creating = !creating"><AtlasIcon name="plus" :size="15" />{{ t.contactPicker.newContact }}</button>

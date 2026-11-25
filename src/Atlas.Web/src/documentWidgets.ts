@@ -73,10 +73,13 @@ export interface DocumentWriteCapabilities {
 /**
  * Where a document is displayed. Only the policy differs; the registered node types never do. `edit` is the live page in the app,
  * read or written: its read services are always on, its write capabilities follow `canWrite()` (absent: always, `editor.isEditable`
- * decides). History and the public view never write.
+ * decides). `read` is a static render of something live in the app (a board's texts at rest, a page's preview on a board): its
+ * contacts are live with the reader's card, as a page shows them, and nothing else differs from history. History and the public view
+ * keep the snapshot of their time. None of the three writes.
  */
 export type DocumentWidgetContext =
   | ({ kind: "edit"; canWrite?: () => boolean } & DocumentReadServices & DocumentWriteCapabilities)
+  | { kind: "read" }
   | { kind: "history" }
   | { kind: "public" };
 
@@ -95,6 +98,7 @@ export function openApiPolicy(context: DocumentWidgetContext): OpenApiPluginOpti
         ...(context.openDetail ? { openDetail: context.openDetail } : {}),
       };
     }
+    case "read":
     case "history":
     case "public":
       return { allowRequests: false };
@@ -158,7 +162,8 @@ function widgets(context: DocumentWidgetContext) {
   // Directories only while editing: history and public views render the stored contact and page snapshots.
   // Live contacts wherever a page is shown in the app (reading too); history and public views keep the snapshot of their time.
   const contacts = context.kind === "edit" ? gateContactWrites({ ...(context.contacts && { directory: context.contacts, suggestions: true }), ...contactPluginOptions(context.contactHost),
-    ...(context.people && { pick: pickContact(context.people) }), ...(context.knownPeople && { known: context.knownPeople }), ...(context.contactUsage && { usage: context.contactUsage }) }, context.canWrite) : { qrCode: drawContactQr, userColor: themedUserColor };
+    ...(context.people && { pick: pickContact(context.people) }), ...(context.knownPeople && { known: context.knownPeople }), ...(context.contactUsage && { usage: context.contactUsage }) }, context.canWrite)
+    : context.kind === "read" ? contactPluginOptions() : { qrCode: drawContactQr, userColor: themedUserColor };
   const pages = context.kind === "edit" && context.pages ? { source: context.pages, typing: true } : {};
   const people = context.kind === "edit" ? context.people : undefined;
   return [people ? withContactPicker(createContactsPlugin(contacts), people) : createContactsPlugin(contacts), createChartsPlugin(), createConcealedContentPlugin(), createDiagramsPlugin(),

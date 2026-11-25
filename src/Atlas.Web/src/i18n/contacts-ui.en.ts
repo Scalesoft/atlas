@@ -125,6 +125,7 @@ const en: ContactsUiMessages = {  card: {
     gone: "The contact is no longer in the directory or you can't read it.",
     readOnly: "Only someone who may edit the directory can change the contact's details.",
     saved: "The change is saved to the contact directory.",
+    edited: "Contact updated.",
     onPage: "On this page",
     role: "Role",
     rolePlaceholder: "E.g. project PM",

@@ -190,3 +190,16 @@ it("opens with the contacts last added, a page's contact as the directory contac
   expect(link).toHaveBeenCalledOnce();
   expect(wrapper!.emitted("pick")![1]).toEqual([[{ objectId: "new:Jana Nováková", typeId: "atlas.contact" }]]);
 });
+
+it("2B: teaches a directory contact what was typed for it on confirmation, as ContactPicker does; a page's contact teaches nothing", async () => {
+  const learn = vi.fn();
+  wrapper = mount(BoardContactPicker, { attachTo: document.body, props: { open: true, search: search(), directory: directory(), link: linking(), learn } });
+  await nextTick();
+  await find("novak");
+  await box("Petr").setValue(true);
+  await box("Jana").setValue(true);
+  expect(learn).not.toHaveBeenCalled();
+  await confirm();
+  expect(learn).toHaveBeenCalledOnce();
+  expect(learn).toHaveBeenCalledWith({ contact: expect.objectContaining({ name: "Petr Novák" }), objectId: "c-petr" }, "novak");
+});
