@@ -42,7 +42,7 @@ it('sends the selected immutable version and revision only after confirmation', 
   queue();
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat: Nový článek"]').setValue(true);
+  await wrapper.get('[role=checkbox][aria-label="Vybrat: Nový článek"]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   expect(api).not.toHaveBeenCalledWith(expect.stringContaining('/approve'), expect.anything());
   await wrapper.get('[data-confirm-approval]').trigger('click');
@@ -55,7 +55,7 @@ it('sends the optional change summary with the approval and refuses an invalid o
   queue();
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   const summary = wrapper.get('input[name="changeSummary"]');
   await summary.setValue('x'.repeat(501));
@@ -75,11 +75,12 @@ it('clears selection on filter changes and limits select all to loaded rows', as
   queue([first], 3);
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
-  expect(wrapper.text()).toContain('1 vybráno');
+  await wrapper.get('[data-bulk-all]').trigger('click');
+  expect(wrapper.get('[data-bulk-bar]').text()).toContain('Vybráno: 1');
   await choose('[data-draft-kind]', 'changes');
   await tick();
-  expect(wrapper.find('[data-review-selection]').attributes('disabled')).toBeDefined();
+  // Nothing is selected any more: the bar with its action has folded away.
+  expect(wrapper.find('[data-review-selection]').exists()).toBe(false);
 });
 
 it('continues after stale rows, reports each failure, and never retries an approval', async () => {
@@ -92,7 +93,7 @@ it('continues after stale rows, reports each failure, and never retries an appro
   });
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await tick();
@@ -118,7 +119,7 @@ it('after draft_changed reads the row again and approves the newer revision only
   vi.mocked(historyApi.revision).mockImplementation(async (_pageId, revisionId) => ({ id: revisionId, title: revisionId, markdown: revisionId, contentJson: '{"type":"doc","content":[]}' }) as never);
   wrapper = mount(SpaceDraftApproval, { attachTo: document.body, props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat: Upravený článek"]').setValue(true);
+  await wrapper.get('[role=checkbox][aria-label="Vybrat: Upravený článek"]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await tick();
@@ -175,7 +176,7 @@ it('stops queued approvals when the space view unmounts', async () => {
   });
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   wrapper.unmount(); finish({});
@@ -191,7 +192,7 @@ it('stops after authorization failure and requires reloading before another appr
   });
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await tick();
@@ -212,11 +213,11 @@ it('select all excludes a row whose approval failed', async () => {
   });
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat: Nový článek"]').setValue(true);
+  await wrapper.get('[role=checkbox][aria-label="Vybrat: Nový článek"]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await tick();
@@ -234,7 +235,7 @@ it('holds confirmation while more rows are loading', async () => {
   });
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat: Nový článek"]').setValue(true);
+  await wrapper.get('[role=checkbox][aria-label="Vybrat: Nový článek"]').trigger('click');
   await wrapper.findAll('button').find(button => button.text() === 'Načíst další')!.trigger('click');
   expect(wrapper.get('[data-review-selection]').attributes('disabled')).toBeDefined();
   finish({ items: [second], total: 3 });
@@ -284,7 +285,7 @@ it('stops the old queue if the space prop changes during an approval', async () 
   });
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await wrapper.setProps({ spaceId: 'other' });
@@ -354,7 +355,7 @@ it('requests one tree refresh after multiple successful approvals', async () => 
   queue();
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: 'space', dark: false, accent: 'blue' } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get('[data-review-selection]').trigger('click');
   await wrapper.get('[data-confirm-approval]').trigger('click');
   await tick();
@@ -386,7 +387,7 @@ it.each([[1, "Publikovat 1 stránku?"], [2, "Publikovat 2 stránky?"], [5, "Publ
   queue(Array.from({ length: selected }, (_, index) => ({ ...first, id: `draft-${index}`, title: `Koncept ${index}` })));
   wrapper = mount(SpaceDraftApproval, { props: { spaceId: "space", dark: false, accent: "blue" } });
   await tick();
-  await wrapper.get('input[aria-label="Vybrat načtené koncepty"]').setValue(true);
+  await wrapper.get('[data-bulk-all]').trigger('click');
   await wrapper.get("[data-review-selection]").trigger("click");
   expect(wrapper.get(".approval-confirm strong").text()).toBe(question);
 });
