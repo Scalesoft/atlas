@@ -73,7 +73,9 @@ span.md-module > * { min-width: 0; }
 
 /* What everyone may do with a block (readActions.ts): at the end of its first line, the same for a reader and a writer. */
 .md-read-actions { position: absolute; top: 0; right: 0; display: flex; gap: 4px; opacity: 0; transition: opacity var(--md-motion-fast) var(--md-motion-ease); }
-.md-module:hover .md-read-actions, .md-module:focus-within .md-read-actions, .md-module.ProseMirror-selectednode .md-read-actions { opacity: 1; }
+.md-module:focus-within .md-read-actions, .md-module.ProseMirror-selectednode .md-read-actions { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .md-module:hover .md-read-actions { opacity: 1; } }
+@media (hover: none) { .md-read-actions { opacity: 1; } }
 .md-read-action {
   display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 1px solid var(--line, #d4e4e7); border-radius: 6px;
   background: var(--bg-2, #fff); color: var(--text-dim, #667085); cursor: pointer; transition: color var(--md-motion-fast) var(--md-motion-ease), border-color var(--md-motion-fast) var(--md-motion-ease);

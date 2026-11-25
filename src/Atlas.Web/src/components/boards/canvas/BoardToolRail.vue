@@ -2,6 +2,7 @@
 import t from "../../../i18n/boards";
 import AtlasIcon from "../../AtlasIcon.vue";
 import { Button } from "../../ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../ui/tooltip";
 import type { BoardTool } from "./boardCanvasContext";
 import BoardToolGlyph from "./BoardToolGlyph.vue";
 import type { BoardToolIcon } from "./boardToolIcons";
@@ -30,20 +31,20 @@ const tools: { id: BoardTool; label: string; key: string; glyph?: BoardToolIcon;
 <template>
   <div class="board-rail" role="toolbar" :aria-label="t.rail.label" :aria-orientation="orientation" data-board-rail>
     <template v-for="item in tools" :key="item.id">
-      <Button v-if="canEdit || !item.edit" variant="ghost" size="icon-sm" type="button" :aria-label="item.label" :title="`${item.label} (${item.key})`"
+      <Tooltip v-if="canEdit || !item.edit"><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" type="button" :aria-label="item.label"
         :aria-pressed="tool === item.id" :data-board-tool="item.id" @click="emit('tool', item.id)">
         <BoardToolGlyph v-if="item.glyph" :name="item.glyph" :size="18" /><AtlasIcon v-else :name="item.icon!" :size="18" />
-      </Button>
+      </Button></TooltipTrigger><TooltipContent>{{ `${item.label} (${item.key})` }}</TooltipContent></Tooltip>
     </template>
-    <Button v-if="multiSelect !== undefined" variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.multi" :title="t.rail.multiTitle"
-      :aria-pressed="multiSelect" data-board-multi-select @click="emit('multiSelect')"><AtlasIcon name="list-checks" :size="18" /></Button>
+    <Tooltip v-if="multiSelect !== undefined"><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.multi"
+      :aria-pressed="multiSelect" data-board-multi-select @click="emit('multiSelect')"><AtlasIcon name="list-checks" :size="18" /></Button></TooltipTrigger><TooltipContent>{{ t.rail.multiTitle }}</TooltipContent></Tooltip>
     <template v-if="canEdit">
-      <Button v-if="canPickPage" variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.page" :title="t.rail.pageTitle" data-board-tool="page" @click="emit('pickPage')"><AtlasIcon name="page" :size="18" /></Button>
-      <Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.component" :title="t.rail.componentTitle" aria-haspopup="listbox" data-board-tool="component"
-        @click="emit('components')"><BoardToolGlyph name="blocks" :size="18" /></Button>
+      <Tooltip v-if="canPickPage"><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.page" data-board-tool="page" @click="emit('pickPage')"><AtlasIcon name="page" :size="18" /></Button></TooltipTrigger><TooltipContent>{{ t.rail.pageTitle }}</TooltipContent></Tooltip>
+      <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.component" aria-haspopup="listbox" data-board-tool="component"
+        @click="emit('components')"><BoardToolGlyph name="blocks" :size="18" /></Button></TooltipTrigger><TooltipContent>{{ t.rail.componentTitle }}</TooltipContent></Tooltip>
       <span class="board-rail-gap" />
-      <Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.undo" :title="t.rail.undoTitle" :disabled="!canUndo" data-board-undo @click="emit('undo')"><AtlasIcon name="undo-2" :size="16" /></Button>
-      <Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.redo" :title="t.rail.redoTitle" :disabled="!canRedo" data-board-redo @click="emit('redo')"><AtlasIcon name="redo-2" :size="16" /></Button>
+      <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.undo" :disabled="!canUndo" data-board-undo @click="emit('undo')"><AtlasIcon name="undo-2" :size="16" /></Button></TooltipTrigger><TooltipContent>{{ t.rail.undoTitle }}</TooltipContent></Tooltip>
+      <Tooltip><TooltipTrigger as-child><Button variant="ghost" size="icon-sm" type="button" :aria-label="t.rail.redo" :disabled="!canRedo" data-board-redo @click="emit('redo')"><AtlasIcon name="redo-2" :size="16" /></Button></TooltipTrigger><TooltipContent>{{ t.rail.redoTitle }}</TooltipContent></Tooltip>
     </template>
   </div>
 </template>

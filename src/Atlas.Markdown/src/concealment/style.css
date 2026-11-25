@@ -205,7 +205,9 @@
   position: absolute; z-index: 6; inset-block-end: calc(100% + 6px); inset-inline-start: 0; flex-wrap: nowrap;
   pointer-events: none; opacity: 0; transition: opacity var(--md-conceal-enter) var(--md-conceal-ease);
 }
-.md-concealed[data-concealed-layout="inline"]:is(:hover, :focus-within) .md-concealed__controls { opacity: 1; }
+.md-concealed[data-concealed-layout="inline"]:focus-within .md-concealed__controls { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .md-concealed[data-concealed-layout="inline"]:hover .md-concealed__controls { opacity: 1; } }
+@media (hover: none) { .md-concealed[data-concealed-layout="inline"] .md-concealed__controls { opacity: 1; } }
 .md-concealed[data-concealed-layout="inline"] .md-concealed__status { white-space: nowrap; font-size: .72rem; }
 .md-concealed[data-concealed-layout="inline"] .md-concealed__skeleton span { height: .2em; width: 65%; }
 .md-concealed[data-concealed-layout="inline"] .md-concealed__skeleton span:nth-child(3) { display: none; }

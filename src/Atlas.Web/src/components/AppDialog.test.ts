@@ -313,7 +313,7 @@ it("the side panel slides in and a plain dialog has a short entrance", async () 
   try {
     open({ size: "side" });
     expect(animate).toHaveBeenCalledTimes(1);
-    expect((animate.mock.calls[0] as unknown as [Keyframe[]])[0][0]).toMatchObject({ opacity: 0, transform: "translateX(24px)" });
+    expect((animate.mock.calls[0] as unknown as [Keyframe[]])[0][0]).toMatchObject({ opacity: 0, transform: "translateX(100%)" });
     wrapper!.unmount();
     animate.mockClear();
     open();
@@ -337,7 +337,7 @@ it("a plain dialog leaves on the way it came and a side panel slides back to its
     const side = open({ size: "side" });
     animate.mockClear();
     await wrapper!.setProps({ open: false });
-    expect((animate.mock.calls.at(-1) as unknown as [Keyframe[]])[0].at(-1)).toMatchObject({ opacity: 0, transform: "translateX(24px)" });
+    expect((animate.mock.calls.at(-1) as unknown as [Keyframe[]])[0].at(-1)).toMatchObject({ opacity: 0, transform: "translateX(100%)" });
     expect(side.hasAttribute("inert")).toBe(true);
   } finally { Reflect.deleteProperty(HTMLElement.prototype, "animate"); }
 });

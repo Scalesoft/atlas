@@ -164,7 +164,9 @@
   border: 1px solid var(--line, #d4e4e7); border-radius: 6px; background: var(--bg-2, #fff); color: var(--text-dim, #667085); cursor: pointer;
   opacity: 0; transition: opacity var(--md-motion-fast) var(--md-motion-ease), color var(--md-motion-fast) var(--md-motion-ease);
 }
-.md-code-block:hover .md-code-copy, .md-code-block:focus-within .md-code-copy, .md-code-copy[data-state] { opacity: 1; }
+.md-code-block:focus-within .md-code-copy, .md-code-copy[data-state] { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .md-code-block:hover .md-code-copy { opacity: 1; } }
+@media (hover: none) { .md-code-copy { opacity: 1; } }
 .md-code-copy:hover { color: var(--text, #233044); }
 .md-code-copy[data-state=copied] { color: var(--accent, #2f7f90); }
 @media (hover: none) { .md-code-copy { opacity: 1; width: 44px; height: 44px; } }

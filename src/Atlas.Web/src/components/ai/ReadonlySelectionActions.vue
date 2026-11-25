@@ -11,7 +11,7 @@ import aiQuota from "../../i18n/ai-quota";
 
 /**
  * The toolbar under text selected on a read page (refresh 2.5, board „Asistent – vstupy a průběh“): one quiet bar on the popover
- * surface (as every menu, in light and dark) that starts from the selection, below it — the browser's own selection menu (Edge's mini menu) takes the space above. It leads with Kopírovat; with the assistant available the AI actions follow, all backed by the one assistant capability:
+ * surface (as every menu, in light and dark) that starts from the selection, above it with a fine pointer (as the editor's bar), below it on touch where the phone's own selection menu takes the space above. It leads with Kopírovat; with the assistant available the AI actions follow, all backed by the one assistant capability:
  * Zeptat se (the panel opens with the selection attached to the next question), Vysvětlit and Shrnout (a new conversation
  * about the page asks at once). Then the actions that need no model: Kopírovat odkaz na sekci and Kde se to ještě zmiňuje
  * (the search with the selection). Focus stays in the text; the bar never takes it on its own.
@@ -24,6 +24,8 @@ export interface ReadonlySelection {text:string|null;searchText?:string|null;sec
 const props=withDefaults(defineProps<{selection:ReadonlySelection|null;enabled:boolean;explainEnabled?:boolean}>(),{explainEnabled:true});
 const emit=defineEmits<{ask:[text:string];explain:[text:string];summarize:[text:string];find:[text:string];close:[]}>();
 const reference=computed(()=>props.selection ? {getBoundingClientRect:()=>props.selection!.anchorRect} : undefined);
+// Above the selection like the writer's bar; a touch screen keeps it below, clear of the phone's own selection menu.
+const side=typeof matchMedia==="function"&&matchMedia("(pointer: fine)").matches?"top":"bottom";
 // Every button is a reading intent: the one rule makes them all depend on canAnswer (`explainEnabled`).
 const sendable=computed(()=>aiIntentAvailable("ask",{editing:false,canAnswer:props.explainEnabled,transform:false}) ? aiText(props.selection?.text) : null);
 // The gallery passes only `text`; the page passes `searchText`, null for a secret (nothing to search for).
@@ -66,7 +68,7 @@ function onEscape(){
 onMounted(()=>document.addEventListener("keydown",onPageKeydown));
 onBeforeUnmount(()=>document.removeEventListener("keydown",onPageKeydown));
 </script>
-<template><Popover :open="shown" @update:open="value=>{if(!value)emit('close')}"><PopoverAnchor :reference="reference" /><PopoverContent v-if="shown && selection" role="toolbar" :aria-label="aiQuota.selection.toolbar" side="bottom" align="start" :side-offset="8" class="readonly-selection-actions w-auto" data-readonly-actions @open-auto-focus.prevent @close-auto-focus.prevent @escape-key-down="onEscape" @keydown="onBarKeydown">
+<template><Popover :open="shown" @update:open="value=>{if(!value)emit('close')}"><PopoverAnchor :reference="reference" /><PopoverContent v-if="shown && selection" role="toolbar" :aria-label="aiQuota.selection.toolbar" :side="side" align="start" :side-offset="8" class="readonly-selection-actions w-auto" data-readonly-actions @open-auto-focus.prevent @close-auto-focus.prevent @escape-key-down="onEscape" @keydown="onBarKeydown">
   <Button type="button" variant="ghost" size="sm" data-readonly-copy @mousedown.prevent @click="copy"><AtlasIcon name="copy" :size="14" />{{ aiQuota.selection.copy }}</Button>
   <template v-if="sendable">
     <span class="readonly-selection-glyph"><AiGlyph state="suggest" :size="15" /></span>
