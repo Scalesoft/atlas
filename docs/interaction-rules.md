@@ -61,7 +61,7 @@ Tři zásady nad vším:
 
 - **Ctrl+Z / Ctrl+Y** vrací poslední změnu odkudkoli: z pole, z čipu, ze štítku nebo tlačítka komponenty, na tabuli, v panelu.
 - Jedna akce = jeden krok zpět (převod na čip, výběr rozsahu, výměna hesla, přejmenování).
-- Každé smazání objektu nebo položky, přesun do koše, přejmenování, přesun a převod ukáže oznámení s **„Zpět“**. Jeden systém oznámení. Smazání bloku ve stránce oznámení nemá (je to text, Zpět je u kurzoru).
+- Každé smazání objektu nebo položky, přesun do koše, přejmenování, přesun a převod ukáže oznámení s **„Zpět“**. Dva systémy zpětné vazby, jedno pravidlo: rám nastavení a profil ukazují výsledkový pruh (`flash`), jinde je toast (`useToast`); vratná akce má vždy toast se „Zpět“. Smazání bloku ve stránce oznámení nemá (je to text, Zpět je u kurzoru).
 
 ## P7 Fokus
 

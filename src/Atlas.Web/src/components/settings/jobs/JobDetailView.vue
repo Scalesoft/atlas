@@ -13,7 +13,6 @@ import { Switch } from "../../ui/switch";
 import ErrorState from "../ErrorState.vue";
 import LoadingNote from "../LoadingNote.vue";
 import LiveUpdateNote from "../LiveUpdateNote.vue";
-import ResultBanner from "../ResultBanner.vue";
 import SettingsList from "../SettingsList.vue";
 import SettingsListRow from "../SettingsListRow.vue";
 import SettingsPage from "../SettingsPage.vue";
@@ -21,6 +20,7 @@ import SettingsRow from "../SettingsRow.vue";
 import SettingsSection from "../SettingsSection.vue";
 import StatusBadge from "../StatusBadge.vue";
 import SummaryList from "../SummaryList.vue";
+import { useSettingsFlash } from "../flash";
 import { useSettingsRoute } from "../useSettingsRoute";
 import { durationText, focusReturned, jobHeads, nextText, pausedBadge, rememberJob, returnFocus, runBadge, runMoment, summaryText, triggerLabel } from "./jobFormat";
 
@@ -40,8 +40,7 @@ const loading = ref(true), error = ref(""), busy = ref(""), more = ref(false);
 const root = ref<HTMLElement>();
 /** The switch's own value: it moves when touched and is put back when the server refuses. */
 const paused = ref(false);
-const notice = ref<{ key: number; text: string }>();
-let noticeKey = 0;
+const flash = useSettingsFlash();
 
 const job = computed(() => page.value?.job);
 /** The heading: the job's own answer, until it comes what the list (or an earlier visit) showed of it. */
@@ -87,7 +86,7 @@ async function act(name: string, work: () => Promise<unknown>, text: string) {
   busy.value = name;
   try {
     await work();
-    notice.value = { key: ++noticeKey, text };
+    flash.notify(text);
     await load();
     return true;
   } catch (failure) {
@@ -129,7 +128,6 @@ onMounted(async () => {
     <template v-if="!head || head.known" #actions>
       <Button variant="outline" type="button" :disabled="!job || busy === 'run'" :aria-busy="busy === 'run'" data-job-run-now @click="runNow"><AtlasIcon name="refresh" :size="16" />{{ t.runNow }}</Button>
     </template>
-    <ResultBanner v-if="notice" :key="notice.key" :message="notice.text" @dismiss="notice = undefined" />
     <ErrorState v-if="error" :title="job ? t.detail.actionFailed : t.detail.loadFailed" :text="error" @retry="load" />
     <LiveUpdateNote v-if="liveOff" @refresh="refresh" />
     <LoadingRegion :loading="loading" :ready="!!job || !!error" :rows="3" row-height="56px" :label="t.detail.loading">

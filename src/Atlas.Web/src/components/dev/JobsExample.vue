@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, provide } from "vue";
 import type { LogApi, LogEntry, LogLevel } from "../../logs/logApi";
 import type { Job, JobApi, JobLogEntry, JobRun, JobState, JobSummary, SystemService } from "../../jobs/jobApi";
 import JobsPage from "../settings/jobs/JobsPage.vue";
+import ResultBanner from "../settings/ResultBanner.vue";
+import { createSettingsFlash, provideSettingsFlash } from "../settings/flash";
 import { useSettingsRoute } from "../settings/useSettingsRoute";
 import { createFakeLiveFeed } from "../../live/fakeLiveFeed";
 import { liveFeedSourceKey } from "../../live/liveFeed";
@@ -13,6 +15,9 @@ import { liveFeedSourceKey } from "../../live/liveFeed";
 // „Záloha ZIP“ first, then retry its failed run: the page opens the queued one), the way the real runtime merges it; a paused job's waiting
 // run waits.
 const router = useSettingsRoute();
+// The shell is not here, so the example shows the result bar itself, as the shell does.
+const flash = createSettingsFlash(router);
+provideSettingsFlash(flash);
 /** The path below `layouts/jobs`: the list, `{id}`, or `{id}/runs/{runId}`. */
 const part = computed(() => router.route.value.segments.slice(2));
 
@@ -142,7 +147,7 @@ polls.set(7, 1);
 </script>
 
 <template>
-  <div class="jobs-example"><JobsPage :key="part.join('/')" :part="part" base="layouts/jobs" :api="api" :log-api="logApi" /></div>
+  <div class="jobs-example"><ResultBanner v-if="flash.message.value" :key="flash.message.value.key" :message="flash.message.value.text" :icon="flash.message.value.icon" @dismiss="flash.dismiss()" /><JobsPage :key="part.join('/')" :part="part" base="layouts/jobs" :api="api" :log-api="logApi" /></div>
 </template>
 
 <style scoped>

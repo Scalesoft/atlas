@@ -2,7 +2,7 @@
 
 Once Atlas introduces an interaction concept, every page, board, object and settings screen uses the same component and
 behaviour for it. A new variant needs a reason in the component gallery (`/?gallery=1`, P16). Detailed rules:
-[interaction-rules.md](interaction-rules.md). Phone = viewport at most 760 px (pending owner decision D1; AGENTS.md says 680 px today).
+[interaction-rules.md](interaction-rules.md). Phone = viewport at most 760 px (owner decision D1; AGENTS.md still says 680 px and is to be aligned).
 Motion uses tokens only (`--atlas-motion-*`) and reduced motion is respected everywhere. Items marked "pending" wait for the owner.
 
 | Concept | Canonical component | Behaviour rules |
@@ -15,15 +15,15 @@ Motion uses tokens only (`--atlas-motion-*`) and reduced motion is respected eve
 | Actions menu "Co s tím jde dělat" (P2) | Editor intentions menu; list rows use `RowActionsMenu` | Ctrl+Space, Alt+Enter, Ctrl+., Shift+F10, menu key, right button; first row preselected; typing filters. |
 | Visible "..." / "Nový" / choice menu | `ActionDisclosure`, `ActionMenu`, `FilterMenu` in the editor menu look | No title, no x; non-modal; works inside dialogs; 44 px rows on phone. |
 | Label of an icon-only button | `ui/tooltip` (also on keyboard focus); menu triggers keep `title` | Hover or focus; not shown on touch. |
-| Notification | `useToast` (4 s, errors 8 s, `undo` = "Zpět"); settings frame and profile: result bar via `flash` (pending owner decision D3) | Never steals focus. Reversible action: always a toast with "Zpět". The publication state of a page becomes a toast (pending owner decision D4). |
-| Delete | Trash plus toast "Zpět"; `ConfirmDialog` only when irreversible or when the user cannot restore | Permanent deletion without trash is "Smazat trvale". Undo instead of confirmation for those who may restore (pending owner decision D5). |
+| Notification | `useToast` (4 s, errors 8 s, `undo` = "Zpět"); settings frame and profile: result bar via `flash`, everywhere else a toast | Never steals focus. Reversible action: always a toast with "Zpět". The publication state of a page becomes a toast. |
+| Delete | Trash plus toast "Zpět"; `ConfirmDialog` only when irreversible or when the user cannot restore | Permanent deletion without trash is "Smazat trvale". Undo instead of confirmation for those who may restore. |
 | Loading | `LoadingSkeleton`, `LoadingRegion`, `LoadingNote`; `ui/button busy` for actions | Show at once with a sized skeleton; no hand-made spinners or bare "Načítání...". |
 | Empty / error | `EmptyState`, `ErrorState` with Retry; `.notice.error` plus link button in compact rows | A failed region offers Retry. |
 | List of items | `SettingsList` + `SettingsListRow`, `TrashList`; columns: `ui/table` or `div role=table` | Arrow keys between rows; Delete and F2 act on the row. |
 | Bulk selection | `ui/checkbox` appearing on hover or focus; bar above the list | Start by ticking, no separate "Vybrat" mode. |
 | Search field / picker (P8) | `SearchField` in app chrome, `md-input` in editor and board panels; `useSearchKeys` | First result preselected; Enter takes it; first Esc clears, second closes. |
 | View switch / tabs | `OptionPills`, `SettingsTabs`, dock tabs | Radiogroup: one Tab stop, arrows select. Board dock tabs follow the page order. |
-| Status / date / person | `StatusBadge` (icon plus word); `formatDate.ts`; `SubjectAvatar` | Date: list row "ago" plus exact title; table column short date plus title; detail date and time (pending owner decision D9). Every user in their own colour (pending owner decision D8). |
-| Load more | `LoadMoreButton`, "Načíst další" (pending owner decision D10) | Automatic only in search. |
+| Status / date / person | `StatusBadge` (icon plus word); `formatDate.ts`; `SubjectAvatar` | Date: list row "ago" plus exact title; table column short date plus title; detail date and time. Every user in their own colour. |
+| Load more | `LoadMoreButton`, "Načíst další" | Automatic only in search. |
 | Discussion | `PageDiscussionButton` + `CommentThread` in the dock | Pages and boards alike; phone: page below content, board in the dock. |
-| Contact card | Editor block and `ContactCard` render the same data | Change one, check the other (pending owner decision D7). |
+| Contact card | Editor block and `ContactCard` render the same data | Change one, check the other. |

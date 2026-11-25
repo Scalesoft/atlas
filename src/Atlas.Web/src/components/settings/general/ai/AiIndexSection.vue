@@ -9,7 +9,6 @@ import ErrorState from "../../ErrorState.vue";
 import FlowProgress from "../../FlowProgress.vue";
 import ImpactPreview from "../../ImpactPreview.vue";
 import LoadingNote from "../../LoadingNote.vue";
-import ResultBanner from "../../ResultBanner.vue";
 import SettingsList from "../../SettingsList.vue";
 import SettingsListRow from "../../SettingsListRow.vue";
 import SettingsSection from "../../SettingsSection.vue";
@@ -21,6 +20,7 @@ import type { SavedAiProfile } from "./aiSavedProfiles";
 import { formatNumber } from "../../../../i18n";
 import t from "../../../../i18n/settings-ai";
 import { isIndexBuildComplete, isMissingEndpoint, pagesText, type AiProfileView, type GenerationMode, type GenerationState, type GenerationView, type IndexStatus } from "./aiAdmin";
+import { useSettingsFlash } from "../../flash";
 
 /**
  * Index: the generations of the knowledge index and the actions that start one. Postavit index (the
@@ -45,7 +45,7 @@ const loading = ref(true);
 const loadError = ref("");
 const selectionError = ref("");
 const flow = ref<GenerationMode>();
-const result = ref("");
+const flash = useSettingsFlash();
 let disposed = false;
 /** The flow opens by itself only when the page is first entered; leaving it must not pull the user back. */
 let entered = false;
@@ -119,12 +119,12 @@ function openRequested() {
   else if (router.route.value.query.action === "replace" && active.value && profileReady.value) flow.value = "replace";
 }
 function open(mode: GenerationMode) {
-  result.value = "";
+  flash.dismiss();
   flow.value = mode;
 }
 async function finished(message: string) {
   flow.value = undefined;
-  result.value = message;
+  flash.notify(message);
   if (router.route.value.query.action) router.setQuery({});
   await load();
   emit("changed");
@@ -144,7 +144,6 @@ onBeforeUnmount(() => (disposed = true));
     <ErrorState v-if="selectionError" :title="t.index.selectionFailed" :text="selectionError" :busy="loading" data-ai-saved-selection-error @retry="load">
       <a class="st-link" :href="router.href('general/modules/ai/embeddings')">{{ t.index.selectProfile }}</a>
     </ErrorState>
-    <ResultBanner v-if="result" :message="result" data-ai-index-result @dismiss="result = ''" />
     <ErrorState v-if="loadError" :title="t.index.loadFailed" :text="loadError" :busy="loading" @retry="load" />
     <LoadingNote v-else-if="loading && !status && !missing" :label="t.index.loading" />
     <EmptyState v-else-if="missing" icon="database" :title="t.index.missingTitle" :text="t.index.missingText" data-ai-index-missing />

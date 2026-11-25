@@ -37,8 +37,9 @@ export interface Toaster {
  * The one notification system (docs/interaction-rules.md P6): every delete, move to the trash, rename, move and conversion
  * confirms here with `undo` („Zpět“). Only the short publication state of the open page („Stránka byla publikována.“)
  * still shows in the page header's status slot (App.vue `confirmDocument`), until the owner decides whether it becomes a toast too.
- * Not routed through it: the settings frame and profile show a result bar (`flash`), and `whatsNew/notice.ts` is its own
- * notice; whether they become toasts is an owner decision (docs/ux-concepts.md).
+ * Two feedback systems, one rule (owner decision D3): the settings frame and the profile show the result bar (`flash`, a
+ * persistent line plus the glowing row, which a restore result needs); everywhere else a toast. A reversible action always
+ * gets a toast with „Zpět“, wherever it happens. `whatsNew/notice.ts` is its own notice.
  *
  * Transient confirmations only. Anything a form field owns -- a validation
  * error, a pending state -- stays inline next to that field: moving it into a
