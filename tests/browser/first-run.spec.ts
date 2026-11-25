@@ -203,10 +203,10 @@ test('first install → editor/search/theme → account activation → group Rea
   await page.getByRole('navigation', { name: 'Správa wiki', exact: true }).getByRole('link', { name: /^Lidé(\s|$)/ }).click()
   const ownAccount = page.locator('[data-account]').filter({ hasText: 'browser-admin' })
   await ownAccount.locator('[data-open-account]').click()
-  // On a wide screen the name opens a preview beside the table first (2.5); its button opens the whole card.
-  const peek = page.locator('[data-person-peek]')
-  await expect(page.locator('[data-person-peek], .settings-tabs [data-tab="account"]').first()).toBeVisible()
-  if (await peek.isVisible()) await peek.locator('[data-person-peek-open]').click()
+  // On a wide screen the name opens the person's profile beside the table first (5.2), whose account part opens the whole card.
+  const peek = page.locator('[data-person-account]')
+  await expect(page.locator('[data-person-account], .settings-tabs [data-tab="account"]').first()).toBeVisible()
+  if (await peek.isVisible()) await peek.locator('[data-person-account-open]').click()
   // The person's card opens on Přístupy; the API permission is on its Účet tab.
   await page.locator('.settings-tabs [data-tab="account"]').click()
   // The ceiling is a radio group (Bez API · Čtení · Zápis); the account starts without the API.

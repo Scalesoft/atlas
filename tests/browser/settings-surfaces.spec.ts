@@ -56,9 +56,9 @@ test('settings rows keep labels, switches and actions visible from phone to desk
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.setViewportSize({ width: 1280, height: 900 });
 
-  // A click on the name shows the person in the dock; the full card opens from there, on Přístupy; the switches are on its Účet tab.
+  // A click on the name shows the person's profile in the dock; its account part opens the full card, on Přístupy; the switches are on its Účet tab.
   await ownRow.locator('[data-open-account]').click();
-  await page.locator('[data-person-peek-open]').click();
+  await page.locator('[data-person-account-open]').click();
   await page.locator('.settings-tabs [data-tab="account"]').click();
   for (const label of ['Účet je aktivní', 'Správce wiki'])
     await expectSwitchRow(page.getByRole('switch', { name: label, exact: true }));
