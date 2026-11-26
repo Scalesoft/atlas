@@ -1,26 +1,50 @@
-import { defineAsyncComponent, defineComponent, ref, type Component } from "vue";
+import { defineAsyncComponent, defineComponent, type Component } from "vue";
 import { withTexts } from "./i18n";
 
-/**
- * Set once a lazily loaded chunk stays unavailable after a retry. A deploy replaces every
- * hashed chunk, so a tab opened before it asks for a file the server no longer has; the shell
- * watches this flag to offer a reload instead of a dead action.
- */
-export const buildOutdated = ref(false);
-
 const Missing = defineComponent({ name: "MissingChunk", render: () => null });
+const reloadKey = "atlas.newBuildReload";
 
-/** Runs a chunk loader, once more when it fails; a second failure sets buildOutdated and rethrows. */
+/**
+ * A deploy replaces every hashed chunk, so a tab opened before it asks for files the server no longer has. Vite's import
+ * wrapper reports every failed dynamic import (lazy components, loadChunk and plain `import()` alike) as `vite:preloadError`.
+ * When this page's HTML, asked again, now starts another entry script, the tab loads the current build at the address it
+ * already shows. No answer or the same entry (a network failure) leaves the failure to the place that asked; at most one
+ * reload a minute, so servers answering with different builds cannot loop.
+ */
+export function reloadOnNewBuild(win: Window = window): void {
+  let checking: Promise<void> | undefined;
+  win.addEventListener("vite:preloadError", () => {
+    checking ??= newBuildDeployed(win)
+      .then((deployed) => { if (deployed && claimReload(win)) win.location.reload(); }, () => {})
+      .finally(() => { checking = undefined; });
+  });
+}
+
+async function newBuildDeployed(win: Window): Promise<boolean> {
+  const running = win.document.querySelector<HTMLScriptElement>("script[type=module][src]")?.src;
+  if (!running) return false;
+  const response = await win.fetch(win.location.origin + win.location.pathname, { cache: "no-store" });
+  if (!response.ok) return false;
+  const current = new DOMParser().parseFromString(await response.text(), "text/html").querySelector("script[type=module][src]")?.getAttribute("src");
+  return !!current && new URL(current, response.url || win.location.href).href !== running;
+}
+
+function claimReload(win: Window): boolean {
+  try {
+    if (Date.now() - Number(win.sessionStorage.getItem(reloadKey) ?? 0) < 60_000) return false;
+    win.sessionStorage.setItem(reloadKey, String(Date.now()));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Runs a chunk loader, once more when it fails (a flaky request); a second failure rethrows. */
 export async function loadChunk<T>(loader: () => Promise<T>): Promise<T> {
   try {
     return await loader();
   } catch {
-    try {
-      return await loader();
-    } catch (error) {
-      buildOutdated.value = true;
-      throw error;
-    }
+    return await loader();
   }
 }
 

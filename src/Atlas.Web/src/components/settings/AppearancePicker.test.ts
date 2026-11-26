@@ -100,23 +100,20 @@ describe("AppearancePicker", () => {
   });
 
   // Pointing at or focusing the disclosure only warms the chunks: it is a hint, so a failure there says nothing to the shell.
-  it("does not flag the build as outdated when the prefetch on pointing or focusing fails, and opening still loads", async () => {
+  it("shows no failure when the prefetch on pointing or focusing fails, and opening still loads", async () => {
     pack.catalogFailures = 100;
     await picker();
-    const { buildOutdated } = await import("../../lazyComponent");
     more().element.focus();
     await more().trigger("pointerenter");
     // The prefetch has asked for the catalog and that request has failed: the mocked module counts its failures down.
     await vi.waitFor(() => expect(pack.catalogFailures).toBeLessThan(100));
     await flushPromises();
-    expect(buildOutdated.value).toBe(false);
     expect(wrapper.find('[role="alert"]').exists()).toBe(false);
 
     pack.catalogFailures = 0;
     await more().trigger("click");
     await browserShown();
     expect(options()).toHaveLength(87);
-    expect(buildOutdated.value).toBe(false);
   });
 
   it("keeps a stored pack icon in the first common place and names it in Czech in the preview", async () => {

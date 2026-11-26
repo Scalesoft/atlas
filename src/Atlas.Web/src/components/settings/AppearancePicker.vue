@@ -55,7 +55,7 @@ const browserBusy = ref(false);
 let browserRequest: Promise<void> | undefined;
 /**
  * Pointing at or focusing the disclosure warms the three chunks early. It is a hint: plain imports whose failure is ignored,
- * so it neither flags the build as outdated (loadChunk does after its retry) nor leaves a failure behind; opening asks again.
+ * so it leaves no failure behind; opening asks again.
  */
 function prefetchBrowser() {
   if (browser.value) return;

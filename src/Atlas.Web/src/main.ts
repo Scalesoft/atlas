@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { lazyComponent } from "./lazyComponent";
+import { lazyComponent, reloadOnNewBuild } from "./lazyComponent";
 import "@fontsource-variable/dm-sans";
 import App from "./App.vue";
 import "./styles/tailwind.css";
@@ -21,6 +21,7 @@ import { textsLoaded } from "./i18n";
 const root = import.meta.env.DEV && new URLSearchParams(location.search).get("gallery") === "1"
   ? lazyComponent(() => import("./components/dev/ComponentGallery.vue"))
   : App;
+reloadOnNewBuild();
 const mount = () => createApp(root).mount("#app");
 // The Hub popup of a fresh sign-in lands here after its callback and only closes itself. Another language than Czech mounts
 // once the texts of the first view are in (src/i18n): nothing renders twice.

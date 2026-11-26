@@ -6,7 +6,7 @@ import { iconPackPart, iconPackPartCount } from "./iconPackPart";
 const pack = { markupLoads: 0, markupFailures: 0 };
 
 // Every case starts from a pack that was never requested (module state is the cache).
-const load = async () => ({ ...(await import("./iconPack")), ...(await import("./lazyComponent")) });
+const load = () => import("./iconPack");
 
 beforeEach(() => {
   vi.resetModules();
@@ -52,15 +52,14 @@ describe("icon pack drawings", () => {
     expect(pack.markupLoads).toBe(iconPackPartCount);
   });
 
-  // A deploy replaces the hashed pack file like any chunk: one retry, then the shell is told and the next call tries again.
-  it("rejects after a retry, flags the build, and a later call recovers", async () => {
-    const { buildOutdated, iconPackMarkup, iconPackUnavailable, loadIconPackMarkup } = await load();
+  // A deploy replaces the hashed pack file like any chunk: one retry, then the next call tries again.
+  it("rejects after a retry and a later call recovers", async () => {
+    const { iconPackMarkup, iconPackUnavailable, loadIconPackMarkup } = await load();
     pack.markupFailures = 2;
     const results = await Promise.allSettled([loadIconPackMarkup("dog"), loadIconPackMarkup("dog")]);
     expect(results.map((result) => result.status)).toEqual(["rejected", "rejected"]);
     expect(pack.markupLoads).toBe(2);
     expect(iconPackUnavailable.value).toBe(true);
-    expect(buildOutdated.value).toBe(true);
     expect(iconPackMarkup.value).toBeNull();
 
     await loadIconPackMarkup("dog");
