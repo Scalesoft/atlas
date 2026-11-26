@@ -64,6 +64,7 @@ paths = [
   '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/document\-schema/web\-document\.json$''',
   '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-web\-document/expected\.jsonl$''',
   '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/MarkdownDocumentValidatorTests\.cs$''',
+  '''(^|/)tests/Atlas\.Yjs\.Tests/Fixtures/yjs\-writer/cases\.json\.gz$''',
 ]
 
 [[rules.allowlists]]
@@ -109,6 +110,7 @@ paths = [
   '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-secrets\-v2/expected\.jsonl$''',
   '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-secrets\-v3/expected\.jsonl$''',
   '''(^|/)tests/Atlas\.Markdown\.Sync\.Tests/Fixtures/yjs\-materializer/fixture\-secrets\-v4/expected\.jsonl$''',
+  '''(^|/)tests/Atlas\.Yjs\.Tests/Fixtures/yjs\-writer/cases\.json\.gz$''',
 ]
 
 [[rules.allowlists]]
