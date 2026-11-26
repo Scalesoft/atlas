@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
@@ -59,6 +60,9 @@ internal sealed class AtlasHttpSite : WebApplicationFactory<Program>
     public string Password { get; } = Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
 
     public CaptureLoggerProvider Logs { get; } = new();
+
+    /// <summary>The logs of every live site, for <see cref="Json"/> to find the server's record of a failed request.</summary>
+    private static readonly ConditionalWeakTable<CaptureLoggerProvider, object> s_siteLogs = new();
 
     /// <summary>Runs before the host is torn down; a fixture holding an in-flight upstream request releases it here.</summary>
     public Action? OnDisposing { get; set; }
@@ -147,6 +151,7 @@ internal sealed class AtlasHttpSite : WebApplicationFactory<Program>
             logging.ClearProviders();
             logging.AddProvider(Logs);
         });
+        WatchLogs(Logs);
         builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(m_settings));
         builder.ConfigureServices(SharedHandlerCompiler.Register);
         builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, TestClientAddress>());
@@ -279,8 +284,39 @@ internal sealed class AtlasHttpSite : WebApplicationFactory<Program>
 
     public static async Task<JsonNode> Json(HttpResponseMessage response, HttpStatusCode expected)
     {
-        Assert.Equal(expected, response.StatusCode);
+        if (response.StatusCode != expected)
+        {
+            Assert.Fail(await UnexpectedAnswerAsync(response, expected));
+        }
         return (await response.Content.ReadFromJsonAsync<JsonNode>())!;
+    }
+
+    internal static void WatchLogs(CaptureLoggerProvider logs) => s_siteLogs.AddOrUpdate(logs, logs);
+
+    /// <summary>
+    /// The request, the answer's body and, when the body names a traceId (an unhandled error), the server's log lines of that request
+    /// with the exception, which the problem body leaves out: an intermittent 500 on CI is then readable from the failure alone.
+    /// </summary>
+    internal static async Task<string> UnexpectedAnswerAsync(HttpResponseMessage response, HttpStatusCode expected)
+    {
+        var body = await response.Content.ReadAsStringAsync();
+        var failure = $"Expected {(int)expected} {expected}, got {(int)response.StatusCode} {response.StatusCode} for "
+            + $"{response.RequestMessage?.Method} {response.RequestMessage?.RequestUri?.PathAndQuery}: {body}";
+        string? traceId;
+        try
+        {
+            traceId = JsonNode.Parse(body)?["traceId"]?.GetValue<string>();
+        }
+        catch (Exception e) when (e is System.Text.Json.JsonException or InvalidOperationException)
+        {
+            traceId = null;
+        }
+        if (string.IsNullOrEmpty(traceId))
+        {
+            return failure;
+        }
+        var logged = s_siteLogs.SelectMany(site => site.Key.Messages).Where(line => line.Contains(traceId, StringComparison.Ordinal)).ToArray();
+        return failure + "\nServer log of the request:\n" + (logged.Length == 0 ? "(none)" : string.Join('\n', logged));
     }
 
     public async Task<JsonNode> CompleteSetupAsync(HttpClient admin, string workspaceName = "Atlas tests",
