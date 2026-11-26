@@ -8,7 +8,7 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Authors>Atlas contributors</Authors>
-    <VersionPrefix>5.2.0</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
+    <VersionPrefix>5.3.0</VersionPrefix>
+    <VersionSuffix>dev</VersionSuffix>
   </PropertyGroup>
 </Project>
