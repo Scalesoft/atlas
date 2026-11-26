@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Server, Markdown sync, Yjs and YouTrack tests of .github/workflows/ci.yml (every pull request, develop, and main before
-# release.yml tags and publishes anything). The batches keep each test process small and the failure diagnostics intact.
+# Server, Markdown sync, Yjs and YouTrack tests of .github/workflows/ci.yml (every pull request, develop, and main for a
+# commit develop never tested). The batches keep each test process small and the failure diagnostics intact.
 #
 # Expects: ATLAS_TEST_CONNECTION/ATLAS_TEST_DATABASE pointing at a throwaway PostgreSQL with pgvector (the image docker-compose.yml pins),
 # the .NET SDK from global.json. Runs on a GitHub-hosted ubuntu-latest runner.

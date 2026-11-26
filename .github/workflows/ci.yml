@@ -1,7 +1,8 @@
 name: CI
 
 # Every pull request into develop or main and every push to develop: the release tooling tests, the editor, the web frontend
-# and the server suites. release.yml calls the same jobs on main before it tags and publishes anything.
+# and the server suites. release.yml calls the same jobs on main only for a commit no push to develop has passed.
+# The secret scan runs first: a leak fails the run in seconds instead of after the suites.
 on:
   pull_request:
     branches: [develop, main]
@@ -41,6 +42,7 @@ jobs:
 
   web:
     name: Editor and web
+    needs: public-source
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -70,6 +72,7 @@ jobs:
 
   server:
     name: Server
+    needs: public-source
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:

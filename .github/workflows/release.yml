@@ -1,8 +1,10 @@
 name: Release
 
-# A push to main is a release: the CI jobs, then the image ghcr.io/<owner>/atlas:<version> (linux/amd64), the Git tag
-# v<version> (version.json) and the GitHub release. The database is the official pgvector image docker-compose.yml pins.
+# A push to main is a release: the image ghcr.io/<owner>/atlas:<version> (linux/amd64), the Git tag v<version>
+# (version.json) and the GitHub release. The database is the official pgvector image docker-compose.yml pins.
 # Nothing is deployed from here; installations pick a released version themselves.
+# A commit is tested once: main is develop fast-forwarded, so the release reuses the CI run that passed the same commit on
+# its push to develop. Only a commit no such run passed (a hotfix merged into main) runs the CI jobs here.
 on:
   push:
     branches: [main]
@@ -15,12 +17,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  tested:
+    name: CI of this commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      passed: ${{ steps.find.outputs.passed }}
+    steps:
+      - id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          passed=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$GITHUB_SHA&event=push&status=success&per_page=1" --jq '.total_count')
+          if [[ "$passed" -gt 0 ]]; then
+            echo "CI passed $GITHUB_SHA on its push to develop; the release reuses it."
+            echo 'passed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo "No passed CI run of $GITHUB_SHA on develop; the release runs the CI jobs."
+            echo 'passed=false' >> "$GITHUB_OUTPUT"
+          fi
+
   ci:
+    needs: tested
+    if: needs.tested.outputs.passed != 'true'
     uses: ./.github/workflows/ci.yml
 
   publish:
     name: Tag and publish
-    needs: ci
+    needs: [tested, ci]
+    # Runs after a skipped ci (the commit already passed) and after a passed one, never after a failure.
+    if: ${{ !failure() && !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
