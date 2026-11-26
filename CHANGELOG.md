@@ -6,7 +6,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 
 ## 5.2 · Unerring Ume
 
-*5.2.0 — 2026-11-25*
+*5.2.0 — 2026-11-26*
 
 ### Ověřený obsah
 - Stránka má garanta a datum, do kdy je ověřená; prostor ověřování zapíná v nastavení s intervalem 3, 6 nebo 12 měsíců, stránka může mít vlastní interval nebo se neověřovat. Výchozí stav: vypnuto, prostor vypadá jako v 5.1.
