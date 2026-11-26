@@ -76,6 +76,11 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 - Migrace 2026112400: tabulka `PageVerification` a sloupec `Space.VerificationIntervalMonths`; žádná konverze dat. Instalační záloha (Git, ZIP) ověření nese, wiki archiv ne.
 - Úloha `content-verification` každý den v 5:15 UTC.
 
+### 5.2.1 — 2026-11-26
+
+#### Opravy
+- Záložka otevřená před nasazením: líně načítaná část (chunk) staré verze už na serveru není. Každý neúspěšný dynamický import hlásí Vite jako `vite:preloadError`; Atlas pak znovu načte HTML stránky a když spouští jiný vstupní skript, obnoví záložku na stejné adrese (nejvýš jednou za minutu). Výpadek sítě, kdy je build stejný, nechá chybu místu, které import volalo. Nahrazuje nepoužitý příznak `buildOutdated`.
+
 ## 5.1 · Tandem Tangerine
 
 *5.1.0 — 2026-11-24*
