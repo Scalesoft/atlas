@@ -53,6 +53,16 @@ it('exposes the panel as a menu and its actions as menu items', async () => {
   expect(items().map(item => item.textContent)).toEqual(['Export', 'Uspořádat']);
 });
 
+// The editor's stylesheet (loaded with any page that has an editor) hides `.md-context-popover:not([data-positioned])` with opacity 0; the
+// editor's own popovers get the attribute when they are placed, a Reka panel never does. Without it the menu showed for its 140 ms enter
+// animation and then stayed at opacity 0, open but invisible (5.2.0 and 5.2.1, the top bar's page menu and the space menu).
+it('marks its panel as placed, or the editor stylesheet leaves the open menu at opacity 0', async () => {
+  const trigger = open();
+  await trigger.trigger('click'); await settle();
+  expect(menu()!.classList).toContain('md-context-popover');
+  expect(menu()!.hasAttribute('data-positioned')).toBe(true);
+});
+
 it('treats an action added after the first render as a menu item', async () => {
   wrapper = mount({
     components: { ActionDisclosure, ActionDisclosureItem },
