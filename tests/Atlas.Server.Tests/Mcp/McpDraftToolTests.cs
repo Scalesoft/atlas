@@ -469,6 +469,30 @@ public sealed class McpDraftToolTests
         Assert.Equal(2, Structured(created)["warnings"]!.AsArray().Count);
     }
 
+    [PostgreSqlFact]
+    public async Task A_callout_marker_with_its_text_on_one_line_is_a_callout_and_warns_with_the_canonical_form()
+    {
+        await using var f = await McpSite.CreateAsync();
+        var space = await f.FirstSpaceAsync();
+        var (_, client) = await DraftClientAsync(f);
+
+        var created = await CallAsync(client, "atlas_create_draft", new
+        {
+            spaceId = space, title = Word(), markdown = "# Soubor VPN\n\n> [!WARNING] Kdo soubor dostane, má přístup do sítě.\n"
+        });
+
+        Assert.True(created.IsError != true, Text(created));
+        var warning = Assert.Single(Structured(created)["warnings"]!.AsArray())!.GetValue<string>();
+        Assert.Contains("Řádek 3", warning, StringComparison.Ordinal);
+        Assert.Contains("> [!WARNING]", warning, StringComparison.Ordinal);
+        Assert.Contains("atlas_get_syntax component=callout", warning, StringComparison.Ordinal);
+        var id = Structured(created)["pageId"]!.GetValue<string>();
+        var json = await CurrentAsync<string>(f, id, "ContentJson");
+        Assert.Contains("\"callout\"", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("[!WARNING]", json, StringComparison.Ordinal);
+        // Read back, it is the editor's own form: the marker alone, the text on the next line.
+        Assert.Contains("> [!WARNING]\n> Kdo soubor dostane, má přístup do sítě.", Text(await CallAsync(client, "atlas_get_page", new { pageId = id, version = "working" })), StringComparison.Ordinal);
+    }
     // ---- helpers ----
 
     /// <summary>3.6 AI parity of the history: the ids atlas_get_history lists are what naming, a version's steps, restore and undo take.</summary>
