@@ -75,7 +75,7 @@ function moveAmongShown(event: KeyboardEvent) {
       @keydown.up="openAtLast"
     ><slot name="trigger"><AtlasIcon name="more" :size="18" /></slot></Button></DropdownMenuTrigger>
     <DropdownMenuContent :id="panelId" class="md-editor atlas-document-editor md-context-popover md-context-menu md-context-menu-compact board-menu action-disclosure-panel" :class="theme"
-      align="end" :side-offset="6" :collision-padding="12" :aria-label="label" @open-auto-focus="focusFirstAction" @keydown.capture="moveAmongShown">
+      align="end" :side-offset="6" :collision-padding="12" :aria-label="label" data-positioned @open-auto-focus="focusFirstAction" @keydown.capture="moveAmongShown">
       <div class="md-context-popover-body"><slot /></div>
     </DropdownMenuContent>
   </DropdownMenu>
