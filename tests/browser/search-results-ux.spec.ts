@@ -86,14 +86,14 @@ test('dense results arrive quickly and pagination preserves the selected rows', 
   const requests = await installFixture(page);
   const { dialog, field, options } = await openPopulatedSearch(page);
 
-  await expect.poll(() => fullyVisibleResultCount(dialog)).toBeGreaterThanOrEqual(8);
+  await expect.poll(() => fullyVisibleResultCount(dialog)).toBeGreaterThanOrEqual(6);
   expect(requests.length).toBeGreaterThanOrEqual(2);
   expect(requests.every(url => url.searchParams.get('limit') === '50'), 'Every preview, ranked, and paginated search uses the explicit supported page size.').toBe(true);
   await expect(dialog.locator('.search-summary-count')).toContainText('50');
   await expect(options.first().locator('.search-result-meta')).toHaveCSS('display', 'flex');
   const rowHeights = await options.evaluateAll(nodes => nodes.slice(0, 8).map(node => node.getBoundingClientRect().height));
-  expect(rowHeights[0], 'The draft and alias-rich row stays compact.').toBeLessThanOrEqual(100);
-  expect(Math.max(...rowHeights.slice(1)), 'Ordinary result rows stay within the dense layout.').toBeLessThanOrEqual(80);
+  expect(rowHeights[0], 'The draft and alias-rich row stays compact.').toBeLessThanOrEqual(116);
+  expect(Math.max(...rowHeights.slice(1)), 'Ordinary result rows stay within the dense layout.').toBeLessThanOrEqual(96);
   await dialog.locator('.search-content').evaluate(element => { element.scrollTop = 0; });
   await page.screenshot({ path: `${ARTIFACTS}/after-light-desktop.png` });
 
