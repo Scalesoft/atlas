@@ -19,9 +19,11 @@ function type() {
     <p class="st-muted">
       Stav ukládání (SaveState.vue) říká, co se děje s prací, která se ukládá sama: stránka po úhozech a tabule po každém kroku.
       Nemá tlačítko, nic nepotvrzuje a změny ohlašuje čtečce. Tam, kde uživatel ukládá vlastním tlačítkem (nastavení, profil), zůstává SaveBar.
+      „Uloženo“ po chvíli zeslábne na tichou ikonu (slovo zůstává čtečce a v popisku); plný čip si nechávají jen stavy, které je třeba vidět:
+      Ukládám…, offline, pozastaveno a chyba. Další změna čip vrátí hned. Řádek se nikdy nepohne, rezervované místo zůstává.
     </p>
     <div class="save-state-row">
-      <figure v-for="state in states" :key="state"><SaveState :state="state" error="Server odmítl uložení." /><figcaption>{{ state }}</figcaption></figure>
+      <figure v-for="state in states" :key="state"><SaveState :state="state" error="Server odmítl uložení." /><figcaption>{{ state }}{{ state === "saved" ? " (po chvíli tichá ikona)" : "" }}</figcaption></figure>
     </div>
     <div class="save-state-row">
       <SaveState :state="live" />
