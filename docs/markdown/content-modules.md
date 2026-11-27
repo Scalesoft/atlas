@@ -110,6 +110,9 @@ i v režimu čtení má box stejné záhlaví s ikonou a názvem varianty (Pozn�
 Upozornění, Důležité, Pozor).
 Obsah boxu zůstává běžně editovatelný, včetně vložených odstavců a dalších bloků.
 
+Jak komponenty zapisují agenty (MCP, REST) popisuje [oddíl Pravidla pro text stránek](../mcp-claude-code.md#pravidla-pro-text-stránek)
+a nástroj `atlas_get_syntax`; tento dokument to neopakuje.
+
 ## Kontakty a přílohy
 
 Kontakty fungují jako vizitka, seznam nebo zmínka v textu. Mají více telefonů
