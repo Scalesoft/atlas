@@ -84,6 +84,7 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 ### 5.2.2 — 2026-11-27
 
 #### Opravy
+- Nabídky „⋯“ v liště stránky, u prostoru (strom, záhlaví prostoru) a v hlavičce asistenta se po otevření ukázaly jen na 140 ms a pak zůstaly neviditelné. `ActionDisclosure` nese třídu editorového popoveru (od 5.2.0); styl editoru, načtený na každé stránce s editorem, skrývá `.md-context-popover:not([data-positioned])` průhledností 0. Popovery editoru dostávají `data-positioned` při umístění a `ActionMenu` ho nastavuje sám, panel v `ActionDisclosure` ne. Po doběhnutí vstupní animace tak zůstala nabídka otevřená, zaměřená a neviditelná. Panel má `data-positioned`, test to hlídá.
 - Karta osoby: blok „Umí“ (`.md-contact-skills`) se přidával do panelu bez bočního odsazení a jeho implicitní sloupec gridu se nezužoval, takže chipy a „Ohodnotit“ seděly na okrajích a dlouhé téma kartu roztáhlo. Blok má odsazení 16 px jako ostatní oddíly, sloupec je zúžitelný a každý chip nese název v `title`.
 - Stav ukládání v záhlaví stránky: čip stál za skrytými tichými akcemi („Přidat tagy“, „Přidat ikonu“), které si drží místo, a plaval ~210 px od „Upraveno“. Teď následuje poslední viditelnou položku řádku (slot pro „Ukládám…“ zůstává rezervovaný) a „Uloženo“ po `--atlas-motion-quiet-after` zeslábne na tichou ikonu; ostatní stavy ukazují plný čip.
 - Vyhledávání: text palety zvětšen (dotaz 20 px, názvy výsledků 16 px, text a meta 13–14 px) jednou škálou `--search-fs-*` pro všechna zobrazení.
