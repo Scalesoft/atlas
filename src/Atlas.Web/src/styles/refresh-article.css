@@ -109,13 +109,14 @@
 /* Tags read as quiet neutral chips in the row; their colours stay in the tag editor. */
 .atlas .document-meta > .page-tags:not(.md-editor *) { margin: 0; gap: 6px; }
 /* While reading the chips are items of the row itself: they follow „Upraveno“ and wrap one by one under it, at any
-   number and length (board 03). The writer's quiet actions come last, so the hidden „Přidat ikonu“ leaves no hole
-   between the date and the first tag, and a long row can never push the page sideways. */
+   number and length (board 03). The writer's quiet actions (opacity 0 until the header is pointed at) come after the save
+   state, so they leave no hole between the date and the state, and a long row can never push the page sideways. */
 .atlas .document-header .document-meta > .page-tags:not(.md-editor *),
 .atlas .document-header .document-meta > .page-tags > .tag-chip-list:not(.md-editor *) { display: contents; }
-.atlas .document-header .document-meta > .page-icon-edit:not(.md-editor *) { order: 1; }
-/* The save state ends the row (after the writer's quiet actions) in a slot as wide as „Ukládám…“, there from the first frame: a
-   state arriving neither moves nor wraps the row (F1: the badge wrapped and the text dropped 28 px on every save). */
+.atlas .document-header .document-meta :is(.page-icon-edit, .page-tags .edit-page-tags):not(.md-editor *) { order: 3; }
+/* The save state follows the last visible item of the row (date, tags) in a slot as wide as „Ukládám…“, there from the first frame: a
+   state arriving neither moves nor wraps the row (F1: the badge wrapped and the text dropped 28 px on every save). The hidden
+   „Přidat ikonu“ and „Přidat tagy“ keep their room after it; before it they held ~210 px of nothing between the date and the chip. */
 .atlas .document-header .document-meta > .document-save-state:not(.md-editor *) { order: 2; display: inline-flex; align-items: center; min-width: 88px; min-height: 24px; }
 /* Only the chips of the row: the tag editor's dialog sits inside .page-tags, and its chips keep their tone, border and
    hash (page-tags.css) instead of vanishing into the field's own background. */
