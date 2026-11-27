@@ -23,6 +23,9 @@ const skill = (tagId: string, name: string, score: number | null, extra: Partial
   ({ tagId, name, score, self: score === null ? null : Math.round(score), peers: 0, fewPeers: false, raters: [], evidence: 0, ...extra });
 const people: Record<string, ContactSkills> = {
   [ids.martin]: { contactId: ids.martin, name: "Pavel Horák", self: false, suggested: [], skills: [
+    // Long names come first (the card shows the best six) and must truncate inside the card, not widen it.
+    skill("long", "Správa informovaných souhlasů a jejich verzí v nemocničním informačním systému", 4.8, { peers: 2 }),
+    skill("long2", "Integrace-zdravotnických-standardů-HL7-FHIR-a-IHE-XDS", 4.7, { peers: 2 }),
     skill("csharp", "C#", 4.6, { peers: 4 }), skill("consent", "Informované souhlasy", 4.2, { peers: 3, selfNote: "vývoj · Orion", evidence: 6 }),
     skill("dotnet", ".NET", 4.5, { peers: 3 }), skill("pg", "PostgreSQL", 4), skill("nh", "NHibernate", 3, { fewPeers: true }), skill("vue", "Vue", 2),
     skill("docker", "Docker", 2), skill("hl7", "HL7", 1)] },

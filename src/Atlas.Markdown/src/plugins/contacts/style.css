@@ -103,7 +103,7 @@
 }
 
 /* „Umí“: the topics the person knows, each with five dots of its level; it fades in under the name when the host answers. */
-.md-contact-skills { display: grid; gap: 6px; margin: -4px 0 14px; animation: md-contact-skills-in var(--md-motion-menu) var(--md-motion-ease) both; }
+.md-contact-skills { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: -4px 0 14px; padding: 0 16px; animation: md-contact-skills-in var(--md-motion-menu) var(--md-motion-ease) both; }
 .md-contact-skills[hidden] { display: none; }
 .md-contact-skills-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; }
 .md-contact-skills-head > strong { color: var(--text-dim, #49676e); font-size: 12px; }
