@@ -7,10 +7,10 @@
 /* ---------- Command mode (Příkazy) ---------- */
 .atlas .command-hint:not(.md-editor):not(.md-editor *) {
   display: flex; justify-content: space-between; gap: 12px; margin: 6px 12px 8px;
-  color: var(--muted); font-size: 12px;
+  color: var(--muted); font-size: var(--search-fs-meta, 13px);
 }
 .atlas .command-result:not(.md-editor):not(.md-editor *) {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px;
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px;
   margin: 0 0 2px; padding: 8px 12px; border: 0;
   border-radius: 10px; background: transparent; color: var(--text);
   text-align: left; font: inherit; scroll-margin-block: 8px;
@@ -25,15 +25,20 @@
 /* The label is the span with the text; the AI glyph of "Asistent" is a span too and took half the row (its label began at x 631 of 1120). */
 .atlas .command-result > span:not(.ai-glyph):not(.md-editor):not(.md-editor *) { display: grid; gap: 2px; flex: 1; min-width: 0; }
 .atlas .command-result > .ai-glyph:not(.md-editor):not(.md-editor *) { flex: none; }
-.atlas .command-result strong:not(.md-editor):not(.md-editor *) { font-size: 14px; font-weight: 600; }
+.atlas .command-result strong:not(.md-editor):not(.md-editor *) { font-size: var(--search-fs-title, 16px); font-weight: 600; }
 .atlas .command-result small:not(.md-editor):not(.md-editor *) {
-  color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--muted); font-size: var(--search-fs-meta, 13px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .atlas .command-result kbd:not(.md-editor):not(.md-editor *) { opacity: 0; }
 .atlas .command-result.active kbd:not(.md-editor):not(.md-editor *) { opacity: 1; }
 .atlas .command-empty:not(.md-editor):not(.md-editor *) { padding: 24px 12px; color: var(--muted); }
 
 /* ---------- The dialog ---------- */
+/* The palette's type scale, one place for every surface of it (window, whole page, phone): the query and the result title carry the
+   eye, the body text of the chrome (tabs, chips, snippet) and the secondary text (space, date, status, hints) step down from them. */
+.atlas .app-dialog.search-dialog:not(.md-editor *) {
+  --search-fs-query: 20px; --search-fs-title: 16px; --search-fs-body: 14px; --search-fs-meta: 13px; --search-fs-micro: 12px;
+}
 .atlas .app-dialog.search-dialog[data-size]:not(.md-editor *) {
   width: min(1120px, calc(100vw - 48px));
   max-width: 1120px;
@@ -62,17 +67,17 @@
 /* The header holds the field row and the tab row; the dialog's title stays for assistive technology only. */
 .atlas .app-dialog.search-dialog .search-top:not(.md-editor *) {
   position: relative; display: block; min-height: 0; margin: 0; padding: 0; border: 0;
-  background: var(--surface); color: var(--text); font-size: 14px;
+  background: var(--surface); color: var(--text); font-size: var(--search-fs-body);
 }
 .atlas .app-dialog.search-dialog .search-top > h2:not(.md-editor *) {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 /* Close: the board's Esc key chip on a pointer device, the cross on touch and narrow screens. */
 .atlas .app-dialog.search-dialog .search-top > [data-slot="button"]:not(.md-editor *) {
-  position: absolute; top: 18px; right: 16px; z-index: 2;
-  width: auto; min-width: 0; height: 24px; min-height: 0; padding: 0 7px; margin: 0;
+  position: absolute; top: 20px; right: 16px; z-index: 2;
+  width: auto; min-width: 0; height: 26px; min-height: 0; padding: 0 8px; margin: 0;
   border-radius: 6px; background: var(--hover); color: var(--muted);
-  font-size: 11px; font-weight: 650; letter-spacing: .02em;
+  font-size: var(--search-fs-micro); font-weight: 650; letter-spacing: .02em;
 }
 .atlas .app-dialog.search-dialog .search-top > [data-slot="button"]:not(.md-editor *)::after { content: "Esc"; }
 .atlas .app-dialog.search-dialog .search-top > [data-slot="button"] > svg:not(.md-editor *) { display: none; }
@@ -80,18 +85,20 @@
 
 /* Row 1: the field, the meaning status, the scope chips. */
 .atlas .app-dialog.search-dialog .search-query-controls:not(.md-editor *) {
-  display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 0 64px 0 20px;
+  display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 0 64px 0 20px;
   border-bottom: 1px solid var(--refresh-soft-line, var(--line)); background: transparent;
 }
 .atlas .app-dialog.search-dialog .omnisearch-input:not(.md-editor *) {
-  flex: 1; min-width: 0; min-height: 58px; gap: 12px; padding: 0;
+  /* The wrapper carries the size too: shell.css floors an input on a phone or a touch screen at `max(16px, 1em)`, and its 1em is the wrapper's. */
+  flex: 1; min-width: 0; min-height: 62px; gap: 12px; padding: 0; font-size: var(--search-fs-query);
   border: 0; border-radius: 0; background: transparent; box-shadow: none; color: var(--accent);
 }
 .atlas .app-dialog.search-dialog .omnisearch-input:focus-within:not(.md-editor *) { border: 0; box-shadow: none; }
-.atlas .app-dialog.search-dialog .omnisearch-input input:not(.md-editor *) { height: auto; padding: 0; border: 0; background: transparent; box-shadow: none; font-size: 18px; line-height: 1.4; color: var(--text); }
+.atlas .app-dialog.search-dialog .omnisearch-input input:not(.md-editor *) { height: auto; padding: 0; border: 0; background: transparent; box-shadow: none; font-size: var(--search-fs-query); line-height: 1.4; color: var(--text); }
 .atlas .app-dialog.search-dialog .omnisearch-input input::placeholder { color: var(--muted); }
 .atlas .app-dialog.search-dialog .search-meaning-status:not(.md-editor *) { flex: none; max-width: 40%; }
 .atlas .app-dialog.search-dialog .search-scope:not(.md-editor *) { display: flex; flex: 0 1 auto; flex-wrap: wrap; min-width: 0; align-items: center; gap: 8px; }
+.atlas .app-dialog.search-dialog .search-scope .filter-menu-trigger:not(.md-editor *) { min-height: 36px; font-size: var(--search-fs-body); }
 
 /* Typing ">" (or choosing Příkazy) takes the scope chips away while the dialog narrows; they used to vanish in one frame, so the
    field widened by their width (and its clear button jumped right by 216 px) at once. They fold into the field's side instead
@@ -109,14 +116,14 @@
 
 /* Row 2: the modes as tabs, the sources on the right. */
 .atlas .app-dialog.search-dialog .search-tabs:not(.md-editor *) {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; min-height: 44px; padding: 6px 16px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; min-height: 48px; padding: 6px 16px;
   border-bottom: 1px solid var(--refresh-soft-line, var(--line));
 }
 .atlas .app-dialog.search-dialog .search-tabs .search-modes:not(.md-editor *) { display: flex; gap: 4px; margin: 0; order: 0; }
 .atlas .app-dialog.search-dialog .search-tabs .search-modes > button:not(.md-editor *) {
-  display: inline-flex; align-items: center; gap: 6px; height: 30px; min-height: 30px; padding: 0 10px;
+  display: inline-flex; align-items: center; gap: 6px; height: 34px; min-height: 34px; padding: 0 12px;
   border: 0; border-radius: 8px; background: transparent; color: var(--muted);
-  font: inherit; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer;
+  font: inherit; font-size: var(--search-fs-body); font-weight: 500; white-space: nowrap; cursor: pointer;
   transition: background-color var(--atlas-motion-fast) var(--atlas-ease-out), color var(--atlas-motion-fast) var(--atlas-ease-out);
 }
 @media (hover: hover) and (pointer: fine) { .atlas .app-dialog.search-dialog .search-tabs .search-modes > button:hover:not(.md-editor *) { background: var(--hover); color: var(--text); } }
@@ -124,8 +131,8 @@
   border: 0; background: var(--accent-soft); color: var(--accent); font-weight: 600;
 }
 .atlas .app-dialog.search-dialog .search-tabs .search-modes > button > svg:not(.md-editor *) { color: currentColor; }
-.atlas .app-dialog.search-dialog .search-tabs .search-modes kbd:not(.md-editor *) { margin-left: 2px; padding: 0 5px; font-size: 11px; line-height: 17px; }
-.atlas .app-dialog.search-dialog .search-mode-count:not(.md-editor *) { color: var(--muted); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.atlas .app-dialog.search-dialog .search-tabs .search-modes kbd:not(.md-editor *) { margin-left: 2px; padding: 0 5px; font-size: var(--search-fs-micro); line-height: 18px; }
+.atlas .app-dialog.search-dialog .search-mode-count:not(.md-editor *) { color: var(--muted); font-size: var(--search-fs-meta); font-weight: 500; font-variant-numeric: tabular-nums; }
 /* The count unfolds out of the "Vše" tab and folds back into it: the tabs beside it (Zeptat se, Příkazy) used to jump by its
    width, and its 6 px gap, in one frame whenever a query got its first results or was cleared. */
 .atlas .app-dialog.search-dialog .search-mode-count.search-count-enter-active:not(.md-editor *),
@@ -139,13 +146,13 @@
 .atlas .app-dialog.search-dialog .search-tabs .search-source-status:not(.md-editor *),
 .atlas .app-dialog.search-dialog .search-scope-note:not(.md-editor *) {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; min-height: 0; margin: 0 0 0 auto;
-  color: var(--muted); font-size: 12px;
+  color: var(--muted); font-size: var(--search-fs-meta);
 }
 .atlas .app-dialog.search-dialog .search-tabs .search-source-status > span:not(.md-editor *) { gap: 6px; padding: 0; border: 0; border-radius: 0; }
 .atlas .app-dialog.search-dialog .search-tabs .search-source-status i:not(.md-editor *) { width: 6px; height: 6px; background: var(--success); }
 .atlas .app-dialog.search-dialog .search-tabs .search-source-status [data-loading="true"] i:not(.md-editor *) { background: var(--accent); }
 .atlas .app-dialog.search-dialog .search-tabs .search-source-status [data-error="true"] i:not(.md-editor *) { background: var(--warning); }
-.atlas .app-dialog.search-dialog .search-tabs .search-source-status small:not(.md-editor *) { margin: 0; font-size: 12px; }
+.atlas .app-dialog.search-dialog .search-tabs .search-source-status small:not(.md-editor *) { margin: 0; font-size: var(--search-fs-meta); }
 
 /* ---------- Results and the answer, side by side ---------- */
 .atlas .app-dialog.search-dialog .search-columns:not(.md-editor *) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0fr); flex: 1; min-height: 0; container-type: inline-size; transition: grid-template-columns var(--atlas-motion-slow) var(--atlas-ease-out), grid-template-rows var(--atlas-motion-slow) var(--atlas-ease-out); }
@@ -169,8 +176,8 @@
   border-inline-start: 1px solid var(--refresh-soft-line, var(--line));
   background: color-mix(in srgb, var(--canvas) 45%, var(--surface));
 }
-.atlas .app-dialog.search-dialog .search-answer-idle h2:not(.md-editor *) { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; font-weight: 600; }
-.atlas .app-dialog.search-dialog .search-answer-idle p:not(.md-editor *) { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.atlas .app-dialog.search-dialog .search-answer-idle h2:not(.md-editor *) { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: var(--search-fs-title); font-weight: 600; }
+.atlas .app-dialog.search-dialog .search-answer-idle p:not(.md-editor *) { margin: 0; color: var(--muted); font-size: var(--search-fs-body); line-height: 1.6; }
 
 /* One empty state for the lists of pages and of commands: the same inset and colour as `.command-empty`, in line with the rows' content. */
 .atlas .app-dialog.search-dialog .search-content > p[role="status"]:not(.visually-hidden, .md-editor *),
@@ -190,7 +197,7 @@
 .atlas .app-dialog.search-dialog .search-group:not(.md-editor *) { margin: 0 0 6px; }
 /* "Měli jste na mysli" stood 4 px from the row edge, in line with neither the edge nor the rows' content (12 px). */
 .atlas .app-dialog.search-dialog :is(.search-did-you-mean, .search-relaxed):not(.md-editor *) { margin: 10px 12px 0; }
-.atlas .app-dialog.search-dialog .search-group-title:not(.md-editor *) { margin: 0; padding: 8px 12px 4px; font-size: 11px; letter-spacing: .06em; }
+.atlas .app-dialog.search-dialog .search-group-title:not(.md-editor *) { margin: 0; padding: 8px 12px 4px; font-size: var(--search-fs-micro); letter-spacing: .06em; }
 .atlas .app-dialog.search-dialog .search-result:not(.md-editor *) {
   /* The third column exists only for a row that has something in it (the "opens elsewhere" arrow of a YouTrack row): an empty
      `auto` track still kept its 12 px gap, so the date ended 24 px from the row's edge while the icon began 12 px from it. */
@@ -210,32 +217,32 @@
 .atlas .app-dialog.search-dialog .search-result > svg:not(.md-editor *) { grid-column: 3; grid-row: 1; margin-top: 3px; color: var(--muted); }
 .atlas .app-dialog.search-dialog .search-result-head:not(.md-editor *) { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
 .atlas .app-dialog.search-dialog .search-result-title:not(.md-editor *) {
-  display: block; flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 600; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap;
+  display: block; flex: 1; min-width: 0; overflow: hidden; font-size: var(--search-fs-title); font-weight: 600; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap;
 }
-.atlas .app-dialog.search-dialog .search-result-when:not(.md-editor *) { flex: none; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.atlas .app-dialog.search-dialog .search-result .search-result-meta:not(.md-editor *) { gap: 2px 8px; margin: 3px 0 0; font-size: 12px; }
-.atlas .app-dialog.search-dialog .search-result-meta .search-result-context:not(.md-editor *) { flex: 0 1 auto; max-width: 70%; font-size: 12px; }
+.atlas .app-dialog.search-dialog .search-result-when:not(.md-editor *) { flex: none; color: var(--muted); font-size: var(--search-fs-meta); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.atlas .app-dialog.search-dialog .search-result .search-result-meta:not(.md-editor *) { gap: 2px 8px; margin: 3px 0 0; font-size: var(--search-fs-meta); }
+.atlas .app-dialog.search-dialog .search-result-meta .search-result-context:not(.md-editor *) { flex: 0 1 auto; max-width: 70%; font-size: var(--search-fs-meta); }
 .atlas .app-dialog.search-dialog .search-space-dot:not(.md-editor *) {
-  display: inline-block; width: 8px; height: 8px; margin: 0 6px 0 0; border-radius: 2px; vertical-align: 0;
+  display: inline-block; width: 9px; height: 9px; margin: 0 6px 0 0; border-radius: 2px; vertical-align: 0;
   background: var(--appearance-ink, var(--muted));
 }
-.atlas .app-dialog.search-dialog .search-snippet:not(.md-editor *) { margin-top: 3px; color: color-mix(in srgb, var(--text) 78%, var(--muted)); font-size: 13px; line-height: 1.45; }
+.atlas .app-dialog.search-dialog .search-snippet:not(.md-editor *) { margin-top: 3px; color: color-mix(in srgb, var(--text) 78%, var(--muted)); font-size: var(--search-fs-body); line-height: 1.45; }
 /* No padding on a transparent match: it would only open a gap inside the word ("Onb oarding"). */
 .atlas .app-dialog.search-dialog .search-result mark:not(.md-editor *) { padding: 0; margin: 0; background: transparent; color: var(--accent); font-weight: 650; }
-.atlas .app-dialog.search-dialog .search-result .search-alias:not(.md-editor *) { margin-top: 3px; font-size: 12px; }
+.atlas .app-dialog.search-dialog .search-result .search-alias:not(.md-editor *) { margin-top: 3px; font-size: var(--search-fs-meta); }
 
 /* ---------- Footer: the keyboard, the count, more ---------- */
 .atlas .app-dialog.search-dialog .search-footer:not(.md-editor *) {
   /* 45 = the 32 px "Načíst další výsledky" button, the padding and the border: the footer keeps its height with and without it. */
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; min-height: 45px; padding: 6px 20px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; min-height: 48px; padding: 6px 20px;
   border-top: 1px solid var(--refresh-soft-line, var(--line)); background: color-mix(in srgb, var(--canvas) 70%, var(--surface));
-  color: var(--muted); font-size: 12px;
+  color: var(--muted); font-size: var(--search-fs-meta);
 }
 .atlas .app-dialog.search-dialog .search-keyboard-hint:not(.md-editor *) { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
 .atlas .app-dialog.search-dialog .search-keyboard-hint > span:not(.md-editor *) { display: inline-flex; align-items: center; gap: 6px; }
 .atlas .app-dialog.search-dialog .search-footer kbd:not(.md-editor *) {
-  min-width: 20px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface);
-  color: var(--muted); font: inherit; font-size: 11px; text-align: center;
+  min-width: 22px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface);
+  color: var(--muted); font: inherit; font-size: var(--search-fs-micro); text-align: center;
 }
 /* The count and "Načíst další výsledky" are one group pinned to the right: when the footer wraps, the group moves to the next line
    together (the button used to land alone at the left edge of its own line). */
@@ -273,8 +280,7 @@
   .atlas .app-dialog.search-dialog[data-size][data-command-mode="true"]:not(.md-editor *) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0; }
   .atlas .app-dialog.search-dialog .search-query-controls:not(.md-editor *) { padding: 0 52px 8px 14px; }
   .atlas .app-dialog.search-dialog .search-view-toggle:not(.md-editor *) { display: none; }
-  .atlas .app-dialog.search-dialog .omnisearch-input:not(.md-editor *) { min-height: 56px; }
-  .atlas .app-dialog.search-dialog .omnisearch-input input:not(.md-editor *) { font-size: 16px; }
+  .atlas .app-dialog.search-dialog .omnisearch-input:not(.md-editor *) { min-height: 58px; --search-fs-query: 18px; }
   .atlas .app-dialog.search-dialog .search-meaning-status .ai-status-label { display: none; }
   .atlas .app-dialog.search-dialog .search-tabs:not(.md-editor *) { padding: 6px 10px; }
   .atlas .app-dialog.search-dialog .search-tabs .search-source-status:not(.md-editor *),

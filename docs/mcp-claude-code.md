@@ -19,7 +19,7 @@ Všechno běží pod vaším jménem a s vašimi právy. Změny nesou štítek �
 
 | Rozsah tokenu | Nástroje |
 |---|---|
-| **Čtení** (19) | `atlas_search`, `atlas_list_spaces`, `atlas_list_pages`, `atlas_get_page`, `atlas_get_backlinks`, `atlas_get_history`, `atlas_list_attachments`, `atlas_get_attachment`, `atlas_download_attachment`, `atlas_get_labels`, `atlas_list_appearance`, `atlas_suggest_tags`, `atlas_find_pages_by_tag`, `atlas_list_trash`, `atlas_get_space_tree`, `atlas_find_mentions`, `atlas_explain_access`, `atlas_list_content_health`, `atlas_list_comments` |
+| **Čtení** (20) | `atlas_get_syntax`, `atlas_search`, `atlas_list_spaces`, `atlas_list_pages`, `atlas_get_page`, `atlas_get_backlinks`, `atlas_get_history`, `atlas_list_attachments`, `atlas_get_attachment`, `atlas_download_attachment`, `atlas_get_labels`, `atlas_list_appearance`, `atlas_suggest_tags`, `atlas_find_pages_by_tag`, `atlas_list_trash`, `atlas_get_space_tree`, `atlas_find_mentions`, `atlas_explain_access`, `atlas_list_content_health`, `atlas_list_comments` |
 | **Zápis** (navíc všechny zápisové nástroje) | mimo jiné `atlas_create_draft`, `atlas_update_section`, `atlas_insert_section`, `atlas_replace_page`, `atlas_rename_page`, `atlas_upload_attachment`, `atlas_update_embed`, `atlas_set_decoration`, `atlas_set_tags`, `atlas_apply_labels`, `atlas_publish`, `atlas_set_publication`, `atlas_set_verification`, `atlas_report_outdated`, `atlas_post_comment`, `atlas_edit_comment`, `atlas_delete_comment`, `atlas_move_page`, `atlas_arrange_pages`, `atlas_move_page_to_space`, `atlas_trash_page`, `atlas_restore_page` |
 
 Od verze 3.6 má token jen dva rozsahy, **Čtení** a **Zápis**. Dřívější rozsahy Koncepty, Publikace a Přímá publikace se při upgradu převedly na Zápis. Zápis nikdy nepřekročí vaše práva a nesahá do prostorů vyloučených z AI.
@@ -157,6 +157,22 @@ Nová stránka, která ještě nebyla publikována, se čtenářům ukáže až 
 Viz oddíl [Publikace](#publikace). Token potřebuje rozsah Zápis.
 
 ### Pravidla pro text stránek
+
+- **Syntaxi komponent vrací nástroj `atlas_get_syntax`** (rozsah Čtení, nečte obsah wiki). Bez argumentu dá přehled všech komponent, s `component` (id z tabulky níže) přesnou syntaxi, všechny volby a jejich hodnoty, minimální a plný příklad, nejčastější chyby a co psát místo nich; u komponent jen pro čtení řekne, že je z Markdownu vytvořit nelze. Odpověď je česky a vychází z jediného zdroje v kódu (`MarkdownSyntaxReference`, vedle čtečky `MarkdownToRich`); server ji posílá i v instrukcích při připojení, popisy argumentů zápisových nástrojů na ni odkazují a test drží každý příklad platný (čte se a zapisuje beze změny) a každou komponentu editoru v referenci. Tento oddíl je jen shrnutí; `docs/markdown/content-modules.md` popisuje komponenty z pohledu editoru.
+- **Informační box** je GitHub alert: citace, jejíž první řádek je jen značka `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` nebo `[!CAUTION]`; text je na dalších řádcích citace. Značku pište samu na řádku (`> [!WARNING]` a pod ní `> Text`), ne `> [!WARNING] Text`.
+
+  | Id | Co to je | Stav |
+  |---|---|---|
+  | `text` | odstavce, nadpisy, formátování, odkazy, citace, kód, čára | lze psát |
+  | `list`, `task-list`, `timed-list` | odrážky a čísla, úkoly `- [ ]`, časové záznamy `- 3. 11. 2026 17:19 — text` | lze psát |
+  | `callout` | informační box `> [!WARNING]` | lze psát |
+  | `table`, `a-table` | tabulka GFM; tabulka se sloučenými buňkami (`a-table`) | lze psát |
+  | `math`, `diagram` | vzorec `$…$`, `$$`; diagram Mermaid | lze psát |
+  | `contact`, `chart`, `overview` | `a-contact`, `a-chart`, `a-overview` | lze psát |
+  | `page-link`, `image` | `[[Název]]`, obrázek přílohy | lze psát |
+  | `attachment`, `openapi`, `secret`, `concealed`, `toc`, `youtrack` | karta souboru, OpenAPI, odkaz na heslo, skrytý obsah, obsah dokumentu, úkol YouTrack | jen čtení (`⟦c:N⟧`) |
+  | `requirement` | požadavky nasazení | píšou `projector_*` |
+  | `emoji`, `html` | emoji komponenta, syrové HTML | nepodporováno |
 
 - **Vzorce a diagramy jsou text.** Vložený vzorec je `$E = mc^2$`, blokový řádky `$$` (začátek i konec na vlastním řádku, bez prázdného řádku uvnitř) nebo ```` ```math ````, diagram Mermaid ```` ```mermaid ````. Server je čte stejně jako editor: `$` musí přiléhat k obsahu a za uzavíracím `$` nesmí být číslice ani písmeno (`$5 a $10` zůstane textem), neuzavřené `$$` zůstane textem a zdroj, který editor odmítne (HTML nebo `%%{…}` v diagramu, prázdný vzorec), zůstane blokem kódu. Diagram s titulkem a vzorec, který Markdown nepřenese, zůstávají značkou `⟦c:N⟧`.
 - **Kontakty a grafy jsou text** v dialektu editoru (jmenný prostor `a-`). Kontakt jako blok je ```` ```a-contact ```` se seznamem kontaktů v YAML (klíče v tomto pořadí: `name` povinné, `title`, `organization`, `department`, `username`, `phones`, `emails`, `website`, `address`, `photo`, `kind` `auto`/`internal`/`external`, `directoryId`, `internalUser` s `id`, `name`, `photo`); kontakt v textu je odkaz `[Jméno](a-contact:?name=…&phone=…&email=…)` s procentovým kódováním hodnot (mezera `%20`, `+` zůstává), telefony a e-maily jako opakované klíče `phone` a `email`, popisek se nečte:

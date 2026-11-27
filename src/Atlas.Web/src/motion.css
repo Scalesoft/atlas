@@ -31,6 +31,7 @@
 @property --atlas-motion-spin { syntax: "<time>"; inherits: true; initial-value: 800ms; }
 @property --atlas-motion-pulse { syntax: "<time>"; inherits: true; initial-value: 1000ms; }
 @property --atlas-motion-defer { syntax: "<time>"; inherits: true; initial-value: 150ms; }
+@property --atlas-motion-quiet-after { syntax: "<time>"; inherits: true; initial-value: 2500ms; }
 @property --atlas-brand-hero { syntax: "<time>"; inherits: true; initial-value: 2600ms; }
 @property --atlas-brand-ink { syntax: "<time>"; inherits: true; initial-value: 2200ms; }
 @property --atlas-brand-living { syntax: "<time>"; inherits: true; initial-value: 3000ms; }
@@ -95,6 +96,8 @@
   --atlas-motion-pulse: calc(1000ms * var(--atlas-motion-scale, 1));
   /* A progress indicator waits this long, so a fast answer never flashes it. */
   --atlas-motion-defer: calc(150ms * var(--atlas-motion-scale, 1));
+  /* A finished state (Uloženo) stays in full this long, then goes quiet; the next change brings it back at once. */
+  --atlas-motion-quiet-after: calc(2500ms * var(--atlas-motion-scale, 1));
   --atlas-ease-out: cubic-bezier(.22, 1, .36, 1);
   --atlas-ease-inout: cubic-bezier(.65, 0, .35, 1);
   /* The prototype has no ease-in: exits use the same curve and are only shorter (plan O4). */
@@ -461,6 +464,9 @@
   to { opacity: 0; transform: translateY(calc(var(--atlas-rise) * -.75)); }
 }
 @keyframes st-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* SaveState.vue: „Uloženo“ goes quiet (the fill and the word fade, the icon stays muted). */
+@keyframes save-state-quiet { to { color: var(--muted); background-color: transparent; } }
+@keyframes save-state-quiet-word { to { opacity: 0; } }
 /* A bar of a value grows from its start once (skill bars, a spread of levels): along its length, from the left or from the bottom. */
 @keyframes atlas-bar-grow { from { scale: 0 1; } }
 @keyframes atlas-bar-rise { from { scale: 1 0; } }

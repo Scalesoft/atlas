@@ -43,6 +43,14 @@ it("reads the export's state once on opening: the feed's subscription reads it, 
   expect(calls.filter(call => call.method === "GET")).toHaveLength(2);
 });
 
+it("asks once for a page the server answers 404 and not again on a reconnect, a new version or closed settings", async () => {
+  const calls = fakeApi(() => new Response(JSON.stringify({ status: 404 }), { status: 404, headers: { "Content-Type": "application/problem+json" } }));
+  wrapper = mountStatus(); await flushPromises();
+  feed.resubscribe(); feed.fail(); await wrapper.setProps({ version: 2, settingsOpen: true }); await wrapper.setProps({ settingsOpen: false }); await flushPromises();
+  expect(calls.filter(call => call.method === "GET")).toHaveLength(1);
+  expect(wrapper.find("[data-pdf-status]").exists()).toBe(false);
+});
+
 it("shows nothing for a page without an enabled export", async () => {
   fakeApi(() => state({ settings: { enabled: false }, status: "paused" }));
   wrapper = mountStatus(); await flushPromises();

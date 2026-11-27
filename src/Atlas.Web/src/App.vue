@@ -3503,7 +3503,13 @@ function pageWentAway(pageId: string) {
 // the tab is looked at, and followPage opens it when it is readable again (the banner and the read-only state go with the reopen).
 watch(pageGone, (id, _before, onCleanup) => {
   if (!id) return;
-  const again = () => { if (document.visibilityState !== "hidden") void followPage(id, true); };
+  // Waking a tab fires focus and visibilitychange together, and a page that is still gone answers 404 to each: one read at a time.
+  let reading = false;
+  const again = () => {
+    if (reading || document.visibilityState === "hidden") return;
+    reading = true;
+    void followPage(id, true).finally(() => { reading = false; });
+  };
   window.addEventListener("focus", again);
   document.addEventListener("visibilitychange", again);
   onCleanup(() => { window.removeEventListener("focus", again); document.removeEventListener("visibilitychange", again); });

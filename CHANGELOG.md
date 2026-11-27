@@ -81,6 +81,19 @@ Každá menší nebo větší verze má nadpis s kódovým jménem (`## 3.5 · P
 #### Opravy
 - Záložka otevřená před nasazením: líně načítaná část (chunk) staré verze už na serveru není. Každý neúspěšný dynamický import hlásí Vite jako `vite:preloadError`; Atlas pak znovu načte HTML stránky a když spouští jiný vstupní skript, obnoví záložku na stejné adrese (nejvýš jednou za minutu). Výpadek sítě, kdy je build stejný, nechá chybu místu, které import volalo. Nahrazuje nepoužitý příznak `buildOutdated`.
 
+### 5.2.2 — 2026-11-27
+
+#### Opravy
+- Nabídky „⋯“ v liště stránky, u prostoru (strom, záhlaví prostoru) a v hlavičce asistenta se po otevření ukázaly jen na 140 ms a pak zůstaly neviditelné. `ActionDisclosure` nese třídu editorového popoveru (od 5.2.0); styl editoru, načtený na každé stránce s editorem, skrývá `.md-context-popover:not([data-positioned])` průhledností 0. Popovery editoru dostávají `data-positioned` při umístění a `ActionMenu` ho nastavuje sám, panel v `ActionDisclosure` ne. Po doběhnutí vstupní animace tak zůstala nabídka otevřená, zaměřená a neviditelná. Panel má `data-positioned`, test to hlídá.
+- Karta osoby: blok „Umí“ (`.md-contact-skills`) se přidával do panelu bez bočního odsazení a jeho implicitní sloupec gridu se nezužoval, takže chipy a „Ohodnotit“ seděly na okrajích a dlouhé téma kartu roztáhlo. Blok má odsazení 16 px jako ostatní oddíly, sloupec je zúžitelný a každý chip nese název v `title`.
+- Stav ukládání v záhlaví stránky: čip stál za skrytými tichými akcemi („Přidat tagy“, „Přidat ikonu“), které si drží místo, a plaval ~210 px od „Upraveno“. Teď následuje poslední viditelnou položku řádku (slot pro „Ukládám…“ zůstává rezervovaný) a „Uloženo“ po `--atlas-motion-quiet-after` zeslábne na tichou ikonu; ostatní stavy ukazují plný čip.
+- Vyhledávání: text palety zvětšen (dotaz 20 px, názvy výsledků 16 px, text a meta 13–14 px) jednou škálou `--search-fs-*` pro všechna zobrazení.
+- Stránka, na kterou server odpoví 404 nebo 403, se už nenačítá znovu při obnovení spojení, nové verzi ani probuzení karty: `PagePdfExportStatus` se zeptá jednou a probuzení karty (focus a visibilitychange zároveň) sdílí jedno čtení stránky.
+
+#### AI a API
+- Nový MCP nástroj `atlas_get_syntax` (rozsah Čtení): reference zápisu každé komponenty stránky (informační box, tabulka, seznamy, vzorec, diagram, kontakt, graf, přehled, odkazy…) s přesnou syntaxí, volbami, příklady a častými chybami; co jde jen číst, je označeno. Reference je na jednom místě v kódu (`MarkdownSyntaxReference`) a plní ji nástroj, instrukce serveru, popisy zápisových nástrojů i `docs/mcp-claude-code.md`; test selže pro uzel editoru bez záznamu.
+- Zápis Markdownu přes MCP a REST nenechá zdroj komponenty jako text: `> [!WARNING] text` na jednom řádku se čte jako informační box a vrátí upozornění s kanonickým tvarem; neznámý druh boxu nebo značka mimo citaci je `400 invalid_document`; upozornění (MCP i REST `warnings`) hlásí také neuzavřený nebo odmítnutý vzorec a diagram, zahozené volby bloku, jména komponent jinak psaná, úkoly mimo odrážkový seznam a odstavec `{#id}`, který žádný graf nezná.
+
 ## 5.1 · Tandem Tangerine
 
 *5.1.0 — 2026-11-24*

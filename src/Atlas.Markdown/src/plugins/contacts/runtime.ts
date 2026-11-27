@@ -229,7 +229,7 @@ function skillsOf(panel: HTMLElement, objectId: string, options: ContactsPluginO
       const chip = doc.createElement('a'); chip.className = 'md-contact-skill'; chip.href = skill.url
       const level = Math.max(0, Math.min(5, Math.round(skill.level ?? 0)))
       chip.setAttribute('aria-label', skill.level === null ? skill.name : contactsStrings.skillLevel(skill.name, level))
-      if (skill.detail) chip.title = skill.detail
+      chip.title = skill.detail ? `${skill.name} — ${skill.detail}` : skill.name
       const name = doc.createElement('span'); name.textContent = skill.name; chip.append(name)
       if (skill.level !== null) {
         const dots = doc.createElement('span'); dots.className = 'md-contact-skill-level'; dots.setAttribute('aria-hidden', 'true')

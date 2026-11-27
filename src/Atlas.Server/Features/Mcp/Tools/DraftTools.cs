@@ -45,7 +45,11 @@ public sealed partial class McpDraftTools
         "odkaz ke stažení souboru [název](/api/attachments/{attachmentId}/download); šířku a zarovnání obrázku nastaví atlas_update_embed. " +
         "Obrázky z jiných adres se převedou na odkaz.";
 
-    private const string Components = ContactRule + " Kontakt a graf píšete Markdownem: kontakt jako blok ```a-contact s jedním kontaktem v YAML (- name: Jana Nová / objectId: <contactId> / role: PM projektu), " +
+    /// <summary>The pointer every Markdown argument of a write tool carries: the syntax of components has one source, atlas_get_syntax.</summary>
+    public const string SyntaxHint = "Komponenty (informační box, tabulka, vzorec, diagram, kontakt, graf, přehled…): syntaxi a volby vrací " + McpSyntaxTools.ToolName +
+        "; informační box je citace se značkou na vlastním řádku (`> [!WARNING]`, pod ní `> text`).";
+
+    private const string Components = SyntaxHint + " " + ContactRule + " Kontakt a graf píšete Markdownem: kontakt jako blok ```a-contact s jedním kontaktem v YAML (- name: Jana Nová / objectId: <contactId> / role: PM projektu), " +
         "několik lidí = několik bloků za sebou (mezi ně smíte dát nadpisy), nebo v textu [Jana Nová](a-contact:?name=Jana%20Nová&objectId=<contactId>); contactId najdete přes atlas_list_entities, nebo ho vrátí atlas_upsert_contact. " +
         "Kontakt bez objectId server propojí s adresářem podle e-mailu či účtu, jinak ho založí (výsledek uvede contacts.used, contacts.created a contacts.warnings); " +
         "role je místní role nebo poznámka na stránce, údaje kontaktu se mění jen v adresáři. Graf jako blok ```a-chart s hlavičkou (title, kind: bar|line|pie|doughnut), " +
@@ -91,7 +95,7 @@ public sealed partial class McpDraftTools
     public Task<CallToolResult> CreateDraftAsync(
         [Description("spaceId z atlas_list_spaces.")] string spaceId,
         [Description("Název stránky (nejvýše 200 znaků).")] string title,
-        [Description("Obsah stránky v Markdownu (bez značek ⟦c:N⟧).")] string? markdown = null,
+        [Description("Obsah stránky v Markdownu (bez značek ⟦c:N⟧). " + SyntaxHint)] string? markdown = null,
         [Description("Volitelně pageId rodičovské stránky ve stejném prostoru.")] string? parentId = null,
         [Description("Volitelně pageId šablony ve stejném prostoru.")] string? templatePageId = null,
         [Description(LinkParameter)] string? link = null,
@@ -125,7 +129,7 @@ public sealed partial class McpDraftTools
         [Description("pageId stránky.")] string pageId,
         [Description("expectedVersion z posledního čtení pracovní verze.")] int expectedVersion,
         [Description("headingId sekce ze seznamu sekcí (atlas_get_page).")] string headingId,
-        [Description("Celá nová sekce v Markdownu včetně řádku nadpisu.")] string markdown,
+        [Description("Celá nová sekce v Markdownu včetně řádku nadpisu. " + SyntaxHint)] string markdown,
         [Description("true zahodí formátování, které upravené bloky nemohou zachovat (jinak chyba formatting_lost).")] bool resetFormatting = false,
         [Description(LinkParameter)] string? link = null,
         CancellationToken ct = default)
@@ -146,7 +150,7 @@ public sealed partial class McpDraftTools
         [Description("expectedVersion z posledního čtení pracovní verze.")] int expectedVersion,
         [Description("Text nadpisu nové sekce (jeden řádek).")] string heading,
         [Description("Úroveň nadpisu 1–6.")] int level,
-        [Description("Text sekce pod nadpisem v Markdownu.")] string? markdown = null,
+        [Description("Text sekce pod nadpisem v Markdownu. " + SyntaxHint)] string? markdown = null,
         [Description("Vložit za sekci s tímto headingId (včetně jejích podsekcí).")] string? afterHeadingId = null,
         [Description("Bez afterHeadingId: \"start\" nebo \"end\" (výchozí).")] string? position = null,
         [Description(LinkParameter)] string? link = null,
@@ -187,7 +191,7 @@ public sealed partial class McpDraftTools
     public Task<CallToolResult> ReplacePageAsync(
         [Description("pageId stránky.")] string pageId,
         [Description("expectedVersion z posledního čtení pracovní verze.")] int expectedVersion,
-        [Description("Celý nový text stránky v Markdownu.")] string markdown,
+        [Description("Celý nový text stránky v Markdownu. " + SyntaxHint)] string markdown,
         [Description("Čísla N značek ⟦c:N⟧, jejichž komponenty se mají odstranit (jejich značky v Markdownu chybí), např. [3, 5].")] int[]? removeComponents = null,
         [Description("true zahodí formátování, které upravené bloky nemohou zachovat (jinak chyba formatting_lost).")] bool resetFormatting = false,
         [Description(LinkParameter)] string? link = null,
