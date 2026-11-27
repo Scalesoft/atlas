@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import t from "../i18n/components-b";
 import { computed, onBeforeUnmount, ref, watch } from "vue";
-import { api, errorMessage, post } from "../api";
+import { ApiError, api, errorMessage, post } from "../api";
 import { formatTime } from "../formatDate";
 import { pageTopic, useLiveFeed } from "../live/liveFeed";
 import { Button } from "./ui/button";
@@ -20,13 +20,20 @@ interface ExportState { settings: { enabled: boolean }; status: "paused" | "pend
 const state = ref<ExportState>();
 const retrying = ref(false), retryError = ref("");
 let disposed = false, generation = 0, lastRead = 0, timer: ReturnType<typeof setTimeout> | undefined;
+// A page the server does not return (trashed, or no longer readable) is asked for once: no reconnect, new version or closed settings asks
+// again. The page reopening (App.vue remounts this keyed by page) starts afresh.
+let gone = false;
 async function load() {
+  if (gone) return;
   const current = ++generation;
   lastRead = Date.now();
   try {
     const result = await api<ExportState>("/pages/" + encodeURIComponent(props.pageId) + "/pdf-export");
     if (!disposed && current === generation) state.value = result;
-  } catch { if (!disposed && current === generation) state.value = undefined; }
+  } catch (failure) {
+    if (failure instanceof ApiError && (failure.status === 404 || failure.status === 403)) gone = true;
+    if (!disposed && current === generation) state.value = undefined;
+  }
 }
 // The feed reads the state as its subscription takes effect (at once on the page's channel, already joined): no read of its own on
 // mounting, which asked twice per page open. Without the feed (refused, offline) it is read once then.
