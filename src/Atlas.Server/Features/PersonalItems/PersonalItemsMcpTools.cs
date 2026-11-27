@@ -5,6 +5,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Wolverine;
 using Atlas.Server.Features.Mcp;
+using Atlas.Server.Features.Mcp.Tools;
 using Atlas.Server.Features.Objects.Commands;
 using Atlas.Server.Features.Objects.Contracts;
 using Atlas.Server.Features.Objects.Queries;
@@ -67,7 +68,7 @@ public sealed class PersonalItemsMcpTools(IMessageBus bus)
         "(nejvýše 200 znaků), text plný Markdown. Do koše ji přesune atlas_trash_note.")]
     public async Task<CallToolResult> CreateNoteAsync(
         [Description("Název poznámky, jeden řádek.")] string title,
-        [Description("Volitelně text poznámky v Markdownu.")] string? text = null,
+        [Description("Volitelně text poznámky v Markdownu. " + McpDraftTools.SyntaxHint)] string? text = null,
         CancellationToken ct = default)
     {
         var created = await bus.InvokeAsync<ObjectDto>(new CreateObject(NoteObjectType.Id, ObjectScopes.Private, null,
@@ -84,7 +85,7 @@ public sealed class PersonalItemsMcpTools(IMessageBus bus)
     public async Task<CallToolResult> EditNoteAsync(
         [Description("noteId poznámky.")] string noteId,
         [Description("Volitelně nový název, jeden řádek.")] string? title = null,
-        [Description("Volitelně nový celý text v Markdownu.")] string? text = null,
+        [Description("Volitelně nový celý text v Markdownu. " + McpDraftTools.SyntaxHint)] string? text = null,
         [Description("Volitelně verze, na kterou se změna smí zapsat (version z atlas_get_note).")] long? expectedVersion = null,
         CancellationToken ct = default)
     {

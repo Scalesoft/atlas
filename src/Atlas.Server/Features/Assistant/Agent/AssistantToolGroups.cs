@@ -52,7 +52,7 @@ public static class AssistantToolGroups
         new("nasazeni", ["projector_create_deployment"], ["projekt", "nasazen", "zakazk"], NeedsVerb: ["zaloz(?!il)", "vytvor(?!il)", "nov[ayeo]"],
             Needs: "pozadavky", Projector: true),
         new("stitky", ["atlas_apply_labels", "atlas_suggest_tags"], ["tag", "stitk", "stitek", "ikon", "barv", "otaguj", "ostitkuj"], NeedsVerb: WriteVerbs, Needs: "struktura"),
-        new("koncepty", ["atlas_create_draft", "atlas_update_section", "atlas_insert_section", "atlas_replace_page", "atlas_rename_page"],
+        new("koncepty", ["atlas_create_draft", "atlas_update_section", "atlas_insert_section", "atlas_replace_page", "atlas_rename_page", "atlas_get_syntax"],
             ["napis", "uprav(?!il)", "preformatuj", "zaloz(?!il)", "vytvor(?!il)", "prepis(?!al)", "prejmenuj", "nahrad(?!il)", "sekc", "koncept", "navrh(?!l)",
              "konvert", "zkonvert", "(?:na|do) kontakt"],
             Needs: "struktura"),

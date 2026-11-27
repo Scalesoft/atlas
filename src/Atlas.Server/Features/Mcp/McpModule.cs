@@ -20,6 +20,7 @@ using Atlas.Server.Features.PageOrganization.Queries;
 using Atlas.Server.Features.PageTags;
 using Atlas.Server.Features.Pages.Commands;
 using Atlas.Server.Features.PersonalApi;
+using Atlas.Server.Platform.Content;
 
 namespace Atlas.Server.Features.Mcp;
 
@@ -38,9 +39,11 @@ namespace Atlas.Server.Features.Mcp;
 /// </summary>
 public static class McpModule
 {
-    public const string Instructions = "Atlas je firemní wiki. Nástroje čtou stránky, ke kterým má přístup vlastník tokenu, a jen z prostorů, " +
+    public static readonly string Instructions = "Atlas je firemní wiki. Nástroje čtou stránky, ke kterým má přístup vlastník tokenu, a jen z prostorů, " +
         "které nejsou vyloučené z AI a nástrojů MCP. " + McpText.TrustNotice + " Zástupné značky ⟦c:N⟧ označují komponenty (odkazy na hesla, " +
-        "přílohy…), jejichž obsah nástroje nevracejí; kontakty, grafy a přehledy jsou Markdown dialektu editoru (```a-contact, [Jméno](a-contact:?name=…&objectId=…), ```a-chart, ```a-overview). Kontakt je jedna entita. Vždy odkazuj na existující, nikdy nevytvářej kopii ani textovou náhradu. Časovou odrážku (záznamy s datem a časem) zapište jako odrážky „- 3. 11. 2026 17:19 — text“ (čas lze vynechat). Token má rozsah Čtení, nebo Zápis; zápisové nástroje " +
+        "přílohy…), jejichž obsah nástroje nevracejí a které z Markdownu nevytvoříte. Text stránek píšete Markdownem editoru; komponenty, které lze psát: " +
+        MarkdownSyntaxReference.WritableSummary + ". Než komponentu poprvé napíšete, zavolejte " + McpSyntaxTools.ToolName + " (bez argumentu přehled, component = přesná syntaxe, volby, příklady). " +
+        "Informační box je citace se značkou na vlastním řádku: „> [!WARNING]“ a pod ní „> text“. Kontakt je jedna entita. Vždy odkazuj na existující, nikdy nevytvářej kopii ani textovou náhradu. Časovou odrážku (záznamy s datem a časem) zapište jako odrážky „- 3. 11. 2026 17:19 — text“ (čas lze vynechat). Token má rozsah Čtení, nebo Zápis; zápisové nástroje " +
         "(rozsah Zápis) mění stránku živě, jako by ji upravoval vlastník tokenu, a nikdy víc, než smí on. " + McpText.Publication + " Do stránky, kterou má někdo otevřenou, píšete živě jako další spolupracovník. Nástroje organizace stránek (přesun, řazení, koš) mění strom " +
         "hned a jde je vrátit. Nahrání přílohy (atlas_upload_attachment) stránku nemění, jen k ní přidá soubor připravený k vložení.";
 
@@ -136,6 +139,7 @@ public static class McpModule
             .WithTools<McpPublishTools>()
             .WithTools<McpAttachmentTools>()
             .WithTools<McpRelationTools>()
+            .WithTools<McpSyntaxTools>()
             .WithTools<McpLinkingTools>()
             .WithTools<ObjectTrashMcpTools>()
             .WithTools<Atlas.Server.Features.Jobs.JobMcpTools>()
