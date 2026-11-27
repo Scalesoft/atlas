@@ -73,8 +73,34 @@ public static partial class MarkdownToRich
         ["NOTE"] = "note", ["TIP"] = "tip", ["WARNING"] = "warning", ["IMPORTANT"] = "important", ["CAUTION"] = "caution",
     };
 
-    [GeneratedRegex(@"^\[!(?<kind>[A-Za-z]+)\][ \t]*$")]
+    // The marker of a GitHub alert; <text> is what follows it on the line (the editor writes none: its text starts the next line).
+    [GeneratedRegex(@"^\[!\s*(?<kind>[A-Za-z]+)\s*[:!]?\s*\](?<text>.*)$")]
     private static partial Regex AlertMarker();
+
+    // Other tools' boxes (Docusaurus, MkDocs): "!!! note", ":::warning".
+    [GeneratedRegex(@"^(?:!!!\+?|:::)[ \t]*(?:note|tip|warning|important|caution|info|danger|hint|attention|error|success)\b", RegexOptions.IgnoreCase)]
+    private static partial Regex Admonition();
+
+    [GeneratedRegex(@"^\[[ xX]?\](?![(\[:])")]
+    private static partial Regex TaskLike();
+
+    [GeneratedRegex(@"^[ \t]*\|.*\|[ \t]*$")]
+    private static partial Regex PipeLine();
+
+    // Fence languages that name a component the writer spells otherwise (the reader's code block keeps them as code).
+    private static readonly FrozenSet<string> ComponentLanguages = new[] { "contact", "contacts", "chart", "overview", "callout", "alert", "admonition", "note", "tip", "warning", "caution", "important", "a_contact", "a_chart", "a_table", "a_overview" }
+        .ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly FrozenSet<string> FormulaLanguages = new[] { "latex", "tex", "katex" }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>The MCP tool that describes every writable component (a sibling change); named in the warnings, never called.</summary>
+    private const string SyntaxTool = "atlas_get_syntax";
+
+    private const string MathNotClosed = "Vzorec $$ není uzavřený, je prázdný nebo má uvnitř prázdný řádek; zůstal textem. Zapište $$ na vlastní řádek, pod něj vzorec a $$ na konec, bez prázdného řádku uvnitř, nebo ```math (" + SyntaxTool + ").";
+
+    private const string CalloutKinds = "NOTE, TIP, WARNING, IMPORTANT a CAUTION";
+
+    private static string CanonicalCallout(string kind) => $"„> [!{kind}]“ a text na dalším řádku „> text“ ({SyntaxTool} component=callout)";
 
     [GeneratedRegex(@"^(?:atlas://pages/|/?#/pages/)(?<id>[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12})(?<heading>\?heading=[A-Za-z0-9][A-Za-z0-9._-]{0,127})?$")]
     private static partial Regex PageLink();
@@ -151,6 +177,10 @@ public static partial class MarkdownToRich
         {
             // Markdig's own nesting limit ("too deeply nested"): the client's input, as the converter's own depth limit below.
             throw new ApiException(400, "Markdown je příliš hluboce vnořený.", "invalid_markdown");
+        }
+        foreach (var line in dialect.FailedMath.Order())
+        {
+            conversion.Issue(false, line + 1, 1, "$$", MathNotClosed);
         }
         conversion.LinkChartTables(document);
         blocks = conversion.Blocks(document, depth);
@@ -307,6 +337,7 @@ public static partial class MarkdownToRich
                 for (var line = block.Line; line <= block.LastLine; line++)
                 {
                     dialect.Excluded.Add(line);
+                    dialect.FailedMath.Add(block.Line);
                 }
             }
         }
@@ -416,10 +447,6 @@ public static partial class MarkdownToRich
             }
             var named = document.Descendants<FencedCodeBlock>().Where(x => x.Info == MarkdownDialect.Chart)
                 .Select(x => MarkdownDialect.ChartTableId(x.Lines.ToString())).OfType<string>().ToHashSet(StringComparer.Ordinal);
-            if (named.Count == 0)
-            {
-                return;
-            }
             foreach (var table in document.Descendants<Table>().ToList())
             {
                 var parent = table.Parent;
@@ -429,9 +456,13 @@ public static partial class MarkdownToRich
                     continue;
                 }
                 var text = paragraph.Span.Start >= 0 && paragraph.Span.End < source.Length ? JsTrim(source.Substring(paragraph.Span.Start, paragraph.Span.Length)) : "";
-                if (MarkdownDialect.IdParagraph().Match(text) is not { Success: true } match || !MarkdownDialect.Id().IsMatch(match.Groups[1].Value)
-                    || !named.Remove(match.Groups[1].Value))
+                if (MarkdownDialect.IdParagraph().Match(text) is not { Success: true } match || !MarkdownDialect.Id().IsMatch(match.Groups[1].Value))
                 {
+                    continue;
+                }
+                if (!named.Remove(match.Groups[1].Value))
+                {
+                    Issue(false, paragraph.Line + 1, paragraph.Column + 1, text, $"Odstavec {text} pod tabulkou nepatří žádnému grafu a zůstal textem; graf se na tabulku odkazuje blokem ```a-chart s klíčem „source:“ a pod ním „  table: {match.Groups[1].Value}“ ({SyntaxTool}).");
                     continue;
                 }
                 m_linkedTables[table] = match.Groups[1].Value;
@@ -535,14 +566,20 @@ public static partial class MarkdownToRich
                         break;
                     }
                     case ParagraphBlock paragraph:
+                        LookAlike(paragraph);
                         Paragraphs(paragraph.Inline, depth, result);
                         break;
                     case MathBlock math:
-                        result.Add(math.Complete && Component("mathBlock", MathData(JsTrim(string.Join('\n', math.Content)))) is { } formula
-                            ? formula
-                            // As in the editor, an invalid formula leaves its source lines as text.
-                            : RichNodes.Node("paragraph", Lines(string.Join('\n', math.Source))));
+                    {
+                        var parsed = math.Complete ? Component("mathBlock", MathData(JsTrim(string.Join('\n', math.Content)))) : null;
+                        if (parsed is null)
+                        {
+                            Issue(false, math.Line + 1, 1, "$$", MathNotClosed);
+                        }
+                        // As in the editor, an invalid formula leaves its source lines as text.
+                        result.Add(parsed ?? RichNodes.Node("paragraph", Lines(string.Join('\n', math.Source))));
                         break;
+                    }
                     case FencedCodeBlock code when dialect.Components && dialect.Contacts && code.Info == MarkdownDialect.Contact:
                         // A ```a-contact fence listing several people is a card each (one contact per block, Atlas 3.2): split as the
                         // editor splits it, before validation, so one invalid item or a list over the limit refuses only its own part.
@@ -601,6 +638,10 @@ public static partial class MarkdownToRich
             var text = body ?? code.Lines.ToString();
             var info = code.Info ?? "";
             JsonObject Code(string language) => RichNodes.Node("codeBlock", RichNodes.Text(text), language.Length > 0 ? new JsonObject { ["language"] = language } : null);
+            if (dialect.Components)
+            {
+                WarnFence(code, info, offset);
+            }
             if (dialect.Components && info == "a-code")
             {
                 return Code((code.Arguments ?? "").Split((char[]?)null, 2, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "");
@@ -660,12 +701,55 @@ public static partial class MarkdownToRich
                 Issue(true, line, column, info, MarkdownDialect.InvalidComponent(info, reason));
                 return fallback;
             }
-            return info.ToLowerInvariant() switch
+            var formula = info.ToLowerInvariant() switch
             {
-                "math" when dialect.Math => Component("mathBlock", MathData(JsTrim(text))),
-                "mermaid" when dialect.Diagrams => Component("diagram", new JsonObject { ["version"] = 1, ["source"] = text, ["caption"] = "" }),
-                _ => null,
-            } ?? Code(info.Trim());
+                "math" when dialect.Math => ("mathBlock", MathData(JsTrim(text))),
+                "mermaid" when dialect.Diagrams => ("diagram", new JsonObject { ["version"] = 1, ["source"] = text, ["caption"] = "" }),
+                _ => (null, null),
+            };
+            if (formula.Item1 is not null && formula.Item2 is not null)
+            {
+                if (Refusal(formula.Item1, formula.Item2) is not { } refusal)
+                {
+                    return new JsonObject { ["type"] = formula.Item1, ["attrs"] = new JsonObject { ["data"] = formula.Item2 } };
+                }
+                // A code block with this language may already be stored (an earlier refused write), so it is a warning, not an error.
+                var (at, from) = Position(code.Line, new string(code.FencedChar, code.OpeningFencedCharCount));
+                Issue(false, at + offset, from, info, $"Blok ```{info.ToLowerInvariant()} zůstal blokem kódu, editor ho jako {(formula.Item1 == "diagram" ? "diagram" : "vzorec")} nepřijal: {refusal} Chcete-li ukázat zdroj jako kód, zapište ```a-code {info.ToLowerInvariant()} ({SyntaxTool}).");
+            }
+            return Code(info.Trim());
+        }
+
+        /// <summary>
+        /// A fence that names a component the reader did not take, as code: options after the language that are dropped, a component
+        /// name in capitals or spelled otherwise (<c>```chart</c>, <c>```a_chart</c>, <c>```latex</c>). Warnings only: such code may be stored already.
+        /// </summary>
+        private void WarnFence(FencedCodeBlock code, string info, int offset)
+        {
+            var kind = info.ToLowerInvariant();
+            var arguments = (code.Arguments ?? "").Trim();
+            string? message = null;
+            if (kind is "math" or "mermaid" or "a-contact" or "a-chart" or "a-table" or "a-overview" && arguments.Length > 0 && info == kind)
+            {
+                message = $"Za jazykem ```{kind} stojí „{arguments}“, což se zahazuje; blok žádné volby ani titulek nemá ({SyntaxTool}).";
+            }
+            else if (info != kind && kind.StartsWith("a-", StringComparison.Ordinal) && kind != "a-code")
+            {
+                message = $"Jazyk bloku se píše malými písmeny ```{kind}; ```{info} zůstal blokem kódu ({SyntaxTool}).";
+            }
+            else if (ComponentLanguages.Contains(info))
+            {
+                message = $"Blok ```{info} je jen kód, ne komponenta. Komponenta se píše ```a-contact, ```a-chart, ```a-table nebo ```a-overview, informační box citací „> [!NOTE]“ ({SyntaxTool}); kód s tímto jazykem zapište ```a-code {info}.";
+            }
+            else if (FormulaLanguages.Contains(info))
+            {
+                message = $"Blok ```{info} je jen kód; vzorec se píše $$ … $$ nebo ```math ({SyntaxTool}).";
+            }
+            if (message is not null)
+            {
+                var (line, column) = Position(code.Line, new string(code.FencedChar, code.OpeningFencedCharCount));
+                Issue(false, line + offset, column, info, message);
+            }
         }
 
         /// <summary>
@@ -758,21 +842,88 @@ public static partial class MarkdownToRich
 
         private JsonObject Quote(QuoteBlock quote, int depth)
         {
-            // A GitHub alert: the quote's first line is exactly [!NOTE] … [!CAUTION], as the editor writes a callout.
+            // A GitHub alert: the quote's first line is [!NOTE] … [!CAUTION], as the editor writes a callout (its text starts the next
+            // line). Agents also write the text after the marker on the same line; that reads as the same callout, with a warning.
             if (quote.FirstOrDefault() is ParagraphBlock first
                 && AlertMarker().Match(FirstLine(first)) is { Success: true } marker
                 && CalloutVariants.TryGetValue(marker.Groups["kind"].Value, out var variant))
             {
                 var content = new JsonArray();
-                var rest = (first.Inline ?? []).SkipWhile(x => x is not LineBreakInline).Skip(1).ToList();
-                if (rest.Count > 0)
+                var sameLine = marker.Groups["text"].Value.Trim().Length > 0;
+                var inlines = (first.Inline ?? []).ToList();
+                var rest = sameLine ? SkipMarker(inlines, marker.Groups["text"].Index) : inlines.SkipWhile(x => x is not LineBreakInline).Skip(1).ToList();
+                if (rest is not null)
                 {
-                    Paragraphs(rest, depth, content);
+                    if (sameLine)
+                    {
+                        var kind = marker.Groups["kind"].Value.ToUpperInvariant();
+                        var (line, column) = Position(first.Line, "[!");
+                        Issue(false, line, column, "[!" + kind + "]", $"Informační box [!{kind}] má text na řádku se značkou; přečteno jako box. Značka patří sama na první řádek: {CanonicalCallout(kind)}.");
+                    }
+                    if (rest.Count > 0)
+                    {
+                        Paragraphs(rest, depth, content);
+                    }
+                    RichNodes.Append(content, Blocks(quote.Skip(1), depth + 1));
+                    return RichNodes.Node("callout", RichNodes.NonEmpty(content), new JsonObject { ["variant"] = variant });
                 }
-                RichNodes.Append(content, Blocks(quote.Skip(1), depth + 1));
-                return RichNodes.Node("callout", RichNodes.NonEmpty(content), new JsonObject { ["variant"] = variant });
             }
             return RichNodes.Node("blockquote", RichNodes.NonEmpty(Blocks(quote, depth + 1)));
+        }
+
+        /// <summary>The inlines of a paragraph after its first <paramref name="length"/> source characters (the marker and its blanks); null when a non-text inline is in the way.</summary>
+        private static List<Inline>? SkipMarker(List<Inline> inlines, int length)
+        {
+            var rest = new List<Inline>();
+            foreach (var inline in inlines)
+            {
+                if (length <= 0)
+                {
+                    rest.Add(inline);
+                }
+                else if (inline is LiteralInline literal)
+                {
+                    var text = literal.Content.ToString();
+                    if (text.Length > length)
+                    {
+                        rest.Add(new LiteralInline(text[length..].TrimStart()));
+                    }
+                    length -= text.Length;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            return rest;
+        }
+
+        /// <summary>
+        /// A paragraph that looks like a component the reader did not take: <c>[!WARNING] …</c> outside a quote or with an unknown kind
+        /// (an issue, so 400 in strict mode: stored text never starts so, the writer escapes the bracket) and another tool's box
+        /// (<c>:::note</c>, a warning). The writer escapes <c>[</c>, so what it wrote earlier never reaches here.
+        /// </summary>
+        private void LookAlike(ParagraphBlock paragraph)
+        {
+            var text = FirstLine(paragraph);
+            var (line, column) = (paragraph.Line + 1, paragraph.Column + 1);
+            if (AlertMarker().Match(text) is { Success: true } marker)
+            {
+                var kind = marker.Groups["kind"].Value.ToUpperInvariant();
+                Issue(true, line, column, "[!" + kind + "]", CalloutVariants.ContainsKey(kind)
+                    ? $"Značka [!{kind}] stojí mimo citaci, takže by zůstala textem na stránce. Informační box se píše {CanonicalCallout(kind)}."
+                    : $"Neznámý informační box [!{kind}] (platí {CalloutKinds}); značka by zůstala textem na stránce. Informační box se píše {CanonicalCallout("WARNING")}.");
+            }
+            else if (Admonition().IsMatch(text))
+            {
+                Issue(false, line, column, text, $"„{text.Trim()}“ není informační box Atlasu a zůstal textem. Informační box se píše {CanonicalCallout("WARNING")}.");
+            }
+            else if (paragraph.Span.Start >= 0 && paragraph.Span.End < source.Length
+                && source.Substring(paragraph.Span.Start, paragraph.Span.Length).Split('\n').Select(x => x.TrimStart(' ', '\t', '>')).ToArray() is var lines
+                && lines.All(x => PipeLine().IsMatch(x)))
+            {
+                Issue(false, line, column, "|", $"Řádky s | nejsou tabulka a zůstaly textem; tabulka potřebuje hlavičku, pod ní řádek „| --- | --- |“ se stejným počtem sloupců a bez prázdného řádku mezi nimi ({SyntaxTool}).");
+            }
         }
 
         private void List(ListBlock list, int depth, JsonArray result)
@@ -805,6 +956,10 @@ public static partial class MarkdownToRich
                     if (TaskOf(item) is { } marker)
                     {
                         m_taskMarkers.Add(marker);
+                    }
+                    if (!tasks && item.FirstOrDefault() is ParagraphBlock lead && TaskLike().IsMatch(FirstLine(lead)))
+                    {
+                        Issue(false, lead.Line + 1, lead.Column + 1, "[ ]", "Odrážka začíná „" + FirstLine(lead).Split(']')[0] + "]“, ale úkol se píše „- [ ] text“ nebo „- [x] text“ (mezera uvnitř závorek i za nimi); zůstala obyčejnou odrážkou.");
                     }
                     var content = RichNodes.LeadingParagraph(Blocks(item, depth + 1));
                     if (TaskOf(item) is { } task)
@@ -958,6 +1113,7 @@ public static partial class MarkdownToRich
                         }
                         else
                         {
+                            Issue(false, math.Line + 1, math.Column + 1, "$", $"Vzorec {math.Markup}{content}{math.Markup} editor nepřijal a zůstal textem ({SyntaxTool}).");
                             AddText(result, LineBreakRun().Replace(math.Markup + content + math.Markup, " "), marks);
                         }
                         break;
@@ -1016,6 +1172,7 @@ public static partial class MarkdownToRich
                         // The box of a task item is its checked attribute; anywhere else the marker stays text.
                         if (!m_taskMarkers.Contains(task))
                         {
+                            Issue(false, task.Line + 1, task.Column + 1, "[ ]", "Zaškrtávací políčko stojí mimo odrážkový seznam, takže zůstalo textem. Úkol se píše „- [ ] text“ (a „- [x] text“ hotový) v odrážkovém seznamu.");
                             AddText(result, task.Checked ? "[x] " : "[ ] ", marks);
                         }
                         break;
@@ -1233,6 +1390,9 @@ public static partial class MarkdownToRich
 
         /// <summary>Lines of an unclosed <c>$$</c> of an earlier pass, where display math does not open.</summary>
         public HashSet<int> Excluded { get; } = [];
+
+        /// <summary>First lines of the <c>$$</c> blocks the editor does not read as a formula (unclosed, empty or with a blank line inside): text, and a warning.</summary>
+        public HashSet<int> FailedMath { get; } = [];
 
         /// <summary>
         /// The last inline scan per delimiter width that found no closer (markdownInput.ts <c>unmatched</c>): a later <c>$</c> of the
